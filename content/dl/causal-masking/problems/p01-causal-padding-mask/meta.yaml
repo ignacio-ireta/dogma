@@ -1,0 +1,13 @@
+id: dl/causal-masking/p01-causal-padding-mask
+version: 1
+title: Bottom-right causal mask with key padding
+language: python
+runtime: py-torch
+entry: causal_padding_mask
+difficulty: medium
+minutes: 20
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}  # boolean output: compared exactly, value unused
+banned_imports: [torch.nn]
+timeout_s: 30
+status: reviewed

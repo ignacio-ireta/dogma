@@ -1,0 +1,20 @@
+id: cml/bias-variance-decomposition
+title: Bias-variance decomposition
+tier: A
+requires: [cml/expectation-and-variance, cml/over-and-underfitting-early-stopping]
+aliases: [bias variance tradeoff, squared bias, irreducible error, expected test error, double descent, model variance, decomposition of mean squared error]
+objectives:
+  - Derive the decomposition of expected squared test error into squared bias, variance and irreducible noise, one step per line
+  - Implement the decomposition from a matrix of predictions over resampled training sets, and check the identity against a direct formula
+  - Explain how regularisation and model choice move bias and variance, and state the double-descent caveat honestly
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "Explain the bias-variance trade-off, and tell me when it does not hold." The strong answer derives the three terms,
+  says which one noise sets and which one the modeller can move, and mentions that over-parameterised models can
+  show a second descent.
+sources:
+  - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter 7 (bias, variance and model complexity)"
+  - "book: Bishop, Pattern Recognition and Machine Learning, section 3.2 (the bias-variance decomposition)"
+  - "book: Goodfellow, Bengio & Courville, Deep Learning, chapter 5 (capacity, overfitting and underfitting)"
+  - "paper: Belkin, Hsu, Ma & Mandal 2019, Reconciling modern machine-learning practice and the classical bias-variance trade-off (PNAS)"
+status: reviewed

@@ -1,0 +1,24 @@
+cards:
+  - id: dl/positional-encodings#1
+    type: qa
+    front: Why does self-attention need positional information?
+    back: "Its weighted sum is permutation-equivariant: shuffling the input rows shuffles the output rows the same way, so the model cannot see order without positions."
+  - id: dl/positional-encodings#2
+    type: qa
+    front: In the sinusoidal table, what does column 2i hold?
+    back: "sin(pos / 10000**(2i/d_model)). Column 2i+1 holds the matching cos with the same angle."
+  - id: dl/positional-encodings#3
+    type: cloze
+    text: "The lowest sinusoidal frequency has angle {{c1::pos}} because the exponent 2i/d_model is 0 at i = 0."
+  - id: dl/positional-encodings#4
+    type: qa
+    front: What does RoPE rotate, and by what angle?
+    back: "Adjacent pairs (2i, 2i+1) of each query and key row, by angle pos * 10000**(-2i/d)."
+  - id: dl/positional-encodings#5
+    type: qa
+    front: Why does a RoPE query-key score depend only on the offset m - n?
+    back: "Both vectors are rotated; the dot product of two rotated vectors depends only on the difference of their angles."
+  - id: dl/positional-encodings#6
+    type: qa
+    front: What happens to the norm of a vector after RoPE?
+    back: It is unchanged, because a rotation is orthogonal.

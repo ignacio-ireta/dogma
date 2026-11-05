@@ -1,0 +1,24 @@
+cards:
+  - id: llm/gpt-forward-pass#1
+    type: qa
+    front: Write the GPT forward pass as five stages, with the shape after each.
+    back: "Ids (B,T); embed to (B,T,D); N pre-norm blocks (B,T,D); final LayerNorm (B,T,D); LM head to (B,T,V) logits."
+  - id: llm/gpt-forward-pass#2
+    type: qa
+    front: What is the input embedding for token t in row b?
+    back: tok_emb[idx[b,t]] + pos_emb[t], a (D,) vector.
+  - id: llm/gpt-forward-pass#3
+    type: qa
+    front: What does weight tying set the LM head to?
+    back: The transpose of the token embedding table, tok_emb.T with shape (D, V).
+  - id: llm/gpt-forward-pass#4
+    type: qa
+    front: How many parameters does weight tying save?
+    back: V times D, the size of one extra (D, V) head matrix. There is no bias on the head.
+  - id: llm/gpt-forward-pass#5
+    type: qa
+    front: Why is there a final LayerNorm after the last block?
+    back: The pre-norm residual stream is not normalised, so the head would see an unnormalised scale.
+  - id: llm/gpt-forward-pass#6
+    type: cloze
+    text: "A forward pass with T tokens and vocabulary V returns logits of shape {{c1::(B, T, V)}}."

@@ -1,0 +1,10 @@
+version: 1
+source: test fixture for case packages (not the real outline)
+tracks:
+  - code: tst
+    order: 1
+    title: "Test track"
+    origin: local
+    topic_count: 1
+    topics:
+      - {id: tst/casey, title: "Casey case", tier: B, kind: case}

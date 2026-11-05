@@ -1,0 +1,18 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: llm/gqa-mqa-and-cross-layer-kv-sharing
+title: "GQA, MQA and cross-layer KV sharing"
+tier: A
+requires: [dl/multi-head-attention]
+aliases: [MQA, GQA, multi-query attention, grouped-query attention, KV heads, KV sharing, KV cache]
+objectives:
+  - "Implement grouped-query attention with an explicit mapping: query head h reads key and value head h // group_size"
+  - "Compute the KV-cache size per token for MHA, MQA and GQA from the number of key and value heads"
+  - "Explain the quality cost of sharing keys and values across heads, and where cross-layer sharing adds a further reduction"
+minutes: {lesson: 12, practice: 20, min_viable: 12}
+interview_angle: "Explain why long-context decoding is limited by KV-cache memory, and why GQA sets the number of key and value heads well below the number of query heads."
+sources:
+  - "corpus: library-papers/deepseek-v4-2026.pdf p.13 (GQA8 baseline, Ainslie et al. 2023)"
+  - "corpus: library-papers/deepseek-v4-2026.pdf p.11 (MQA, Shazeer 2019)"
+  - "corpus: library-papers/2604.12374.pdf p.8 (GQA with 32 query heads and 2 KV heads)"
+  - "corpus: library-papers/1706.03762.pdf p.4 (multi-head attention)"
+status: reviewed

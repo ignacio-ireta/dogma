@@ -1,0 +1,19 @@
+id: dl/xavier-and-he-initialization/p01-initialize-dense-weights
+version: 1
+title: Initialize a dense weight matrix
+language: python
+runtime: py-numpy
+entry: initialize_dense
+difficulty: medium
+minutes: 20
+core: true
+tolerance:
+  atol: 1.0e-09
+  rtol: 1.0e-09
+banned_imports:
+- torch
+- jax
+- scipy
+- sklearn
+timeout_s: 30
+status: reviewed

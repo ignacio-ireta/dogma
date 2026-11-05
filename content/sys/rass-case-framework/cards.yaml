@@ -1,0 +1,16 @@
+cards:
+  - id: sys/rass-case-framework#1
+    type: qa
+    front: What are the four RASS moves, in order?
+    back: Reframe, Ask, Structure, Synthesize.
+  - id: sys/rass-case-framework#2
+    type: qa
+    front: What is the Reframe's job?
+    back: Restate the problem, quantify it, and turn it into one question with a success metric.
+  - id: sys/rass-case-framework#3
+    type: cloze
+    text: "A metric comes from {{c1::the cost of each error type}}, not from habit."
+  - id: sys/rass-case-framework#4
+    type: qa
+    front: Why should the model be the last choice in a case answer?
+    back: The decision and the metric come first; a model is chosen to serve them.

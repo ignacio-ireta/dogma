@@ -1,0 +1,24 @@
+cards:
+  - id: cml/covariance-and-correlation#1
+    type: qa
+    front: What is the sample covariance matrix of an (n, d) data matrix X, with rows as observations?
+    back: "C = Xc^T Xc / (n − 1), where Xc is X with each column's mean subtracted."
+  - id: cml/covariance-and-correlation#2
+    type: qa
+    front: How is the correlation R_jk defined in terms of the covariance?
+    back: "R_jk = C_jk / sqrt(C_jj · C_kk). It is covariance divided by both standard deviations."
+  - id: cml/covariance-and-correlation#3
+    type: qa
+    front: Why is a covariance matrix positive semi-definite?
+    back: "For any v, vᵀCv = Var(Xv), and a variance is never negative."
+  - id: cml/covariance-and-correlation#4
+    type: cloze
+    text: "The correlation of two centred columns equals their {{c1::cosine}} similarity."
+  - id: cml/covariance-and-correlation#5
+    type: qa
+    front: Which divisor (n or n − 1) changes the correlation matrix?
+    back: "Neither. The divisor cancels in R_jk = C_jk / sqrt(C_jj · C_kk)."
+  - id: cml/covariance-and-correlation#6
+    type: qa
+    front: Can correlation be zero when one variable is a deterministic function of the other?
+    back: "Yes. For y = x² with x symmetric around zero, Cov(x, y) = 0, so the Pearson correlation is zero."

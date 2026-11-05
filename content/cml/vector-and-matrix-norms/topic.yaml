@@ -1,0 +1,18 @@
+id: cml/vector-and-matrix-norms
+title: Vector and matrix norms
+tier: A
+requires: [cml/vector-operations, cml/matrix-multiplication]
+aliases: [L1 norm, L2 norm, L-infinity norm, Lp norm, Frobenius norm, spectral norm, unit ball, weight decay, gradient clipping]
+objectives:
+  - Compute the Lp norm of a vector for p in {1, 2, ∞} and any real p ≥ 1, without overflow or underflow
+  - Explain why the unit balls of L1, L2 and L∞ differ, and what that means for regularisation
+  - Distinguish the Frobenius norm from the spectral norm for a matrix, and say what each measures
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "L1 versus L2 regularisation" is asked constantly, and the good answer is geometric. Gradient
+  clipping by norm and spectral normalisation show up in deep-learning interviews.
+sources:
+  - "book: Deisenroth, Faisal & Ong, Mathematics for Machine Learning, §3.1 (norms) and §3.3 (lengths and distances)"
+  - "book: Goodfellow, Bengio & Courville, Deep Learning, §2.5 (norms)"
+  - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, §3.4 (shrinkage methods: ridge and lasso)"
+status: reviewed

@@ -1,0 +1,17 @@
+id: llm/bpe-merge-training
+title: BPE merge training
+tier: A
+requires: [llm/word-and-character-tokenizers]
+aliases: [byte pair encoding, BPE, merge rules, subword vocabulary, merge list, pair counts, Sennrich BPE, tokenizer training]
+objectives:
+  - Learn k merges from a word-count table by repeatedly counting weighted adjacent pairs and merging the most frequent
+  - State and apply the tie-break and the end-of-word rule, and explain why merges are learned on word counts
+  - Explain why overlapping occurrences count, and why the vocabulary size is the initial size plus the number of merges
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "Walk me through training a subword vocabulary" is a common senior question. The interviewer checks the weighting, the
+  tie-break, the end-of-word marker and when to stop.
+sources:
+  - "paper: Sennrich, Haddow & Birch 2016, Neural Machine Translation of Rare Words with Subword Units (arXiv:1508.07909)"
+  - "paper: Radford et al. 2019, Language Models are Unsupervised Multitask Learners (GPT-2)"
+status: reviewed

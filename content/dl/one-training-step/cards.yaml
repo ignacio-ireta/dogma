@@ -1,0 +1,22 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: dl/one-training-step#1
+    type: qa
+    front: "What are the five lines of a training step, in order?"
+    back: "zero_grad, forward, loss, backward, optimizer step (update under no_grad for manual SGD)."
+  - id: dl/one-training-step#2
+    type: qa
+    front: "What bug does clearing gradients after backward cause?"
+    back: "The update uses zero or None gradients, so the model silently stops learning."
+  - id: dl/one-training-step#3
+    type: cloze
+    text: "Plain SGD updates each parameter as p <- p - {{c1::lr * p.grad}}, computed under torch.no_grad()."
+  - id: dl/one-training-step#4
+    type: qa
+    front: "Which loss should a training step return: before or after the update?"
+    back: "Before. It describes the parameters that produced the gradient."
+  - id: dl/one-training-step#5
+    type: qa
+    front: "How do you catch a stale-gradient bug in a test?"
+    back: "Call the step twice on one batch and compare with a reference optimizer's two steps."

@@ -1,0 +1,29 @@
+cards:
+  - id: dl/adam#1
+    type: qa
+    front: What does Adam's first moment m average, and what does the second moment v average?
+    back: m averages gradients; v averages squared gradients.
+  - id: dl/adam#2
+    type: qa
+    front: What is the bias-corrected first moment m_hat at step t?
+    back: m_hat = m / (1 - beta1**t).
+  - id: dl/adam#3
+    type: qa
+    front: Why does the step counter start at zero but the first update use t = 1?
+    back: The counter increments before bias correction, so the first correction divides by 1 - beta**1, not by 0.
+  - id: dl/adam#4
+    type: qa
+    front: Where does eps sit in the Adam update?
+    back: Outside the square root and after bias correction, in sqrt(v_hat) + eps.
+  - id: dl/adam#5
+    type: qa
+    front: What is the approximate per-coordinate step size of Adam?
+    back: About the learning rate eta for consistent gradients, because m_hat over sqrt(v_hat) is near plus or minus one.
+  - id: dl/adam#6
+    type: qa
+    front: Is an uncorrected Adam first step too small?
+    back: No. It is about 3 times too large at t = 1, because v is shrunk more than m.
+  - id: dl/adam#7
+    type: qa
+    front: What does AMSGrad change in Adam?
+    back: The denominator uses the running maximum of the second moment, so it cannot shrink.

@@ -1,0 +1,28 @@
+cards:
+  - id: math/determinants-and-trace#1
+    type: qa
+    front: What does a determinant of zero tell you about a square matrix?
+    back: It is singular. Its columns (and rows) are linearly dependent, so it has no inverse.
+  - id: math/determinants-and-trace#2
+    type: qa
+    front: What is det(AB) in terms of det A and det B?
+    back: det(AB) = det(A) · det(B). Determinants multiply.
+  - id: math/determinants-and-trace#3
+    type: cloze
+    text: "The trace of a square matrix is the sum of its {{c1::eigenvalues}}, and the determinant is their {{c2::product}}."
+  - id: math/determinants-and-trace#4
+    type: qa
+    front: How does swapping two rows change the determinant?
+    back: It negates the determinant. Each row swap in elimination flips the sign.
+  - id: math/determinants-and-trace#5
+    type: qa
+    front: Why is elimination O(n³) while cofactor expansion is O(n!)?
+    back: Elimination updates an n×n block once per pivot. Cofactor expansion recurses and sums n! signed products.
+  - id: math/determinants-and-trace#6
+    type: qa
+    front: How do you compute log|det A| without overflow?
+    back: Accumulate the sum of log|pivot| from an LU-style elimination, and track the sign from the row swaps (this is slogdet).
+  - id: math/determinants-and-trace#7
+    type: qa
+    front: What is det(cA) for an n×n matrix A and a scalar c?
+    back: c^n · det(A). Each of the n rows is scaled by c.

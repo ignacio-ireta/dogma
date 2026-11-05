@@ -1,0 +1,18 @@
+id: cml/rolling-statistics-stationarity-and-autocorrelation
+title: Rolling statistics, stationarity and autocorrelation
+tier: A
+requires: [cml/descriptive-statistics, cml/covariance-and-correlation]
+aliases: [rolling mean, moving average, stationarity, autocorrelation, ACF, PACF, unit root, differencing, ARIMA, seasonal naive, MASE, walk-forward]
+objectives:
+  - Implement a trailing rolling mean and sample standard deviation in one pass, with NaN for positions that have too few values
+  - Compute the biased sample autocorrelation at lags 0 to k, and read an ACF and PACF pair to propose AR, MA or ARIMA orders
+  - Run the forecasting procedure in order (baselines, stationarity, differencing, metric, walk-forward) and compute a MASE against the seasonal naive scale
+minutes: {lesson: 12, practice: 35, min_viable: 15}
+interview_angle: >-
+  "How would you forecast demand for this product?" The strong answer starts with the seasonal naive baseline, checks stationarity before any ARIMA model, chooses a scale-free metric, and evaluates on walk-forward origins instead of a random split.
+sources:
+  - "book: Hyndman & Athanasopoulos, Forecasting: Principles and Practice, chapters on the forecaster's toolbox (forecast accuracy and time-series cross-validation) and on ARIMA models"
+  - "book: Box, Jenkins, Reinsel & Ljung, Time Series Analysis: Forecasting and Control (5th ed.), chapters on identifying ARMA models from the autocorrelation and partial autocorrelation functions"
+  - "paper: Hyndman & Koehler 2006, Another look at measures of forecast accuracy (International Journal of Forecasting)"
+  - "paper: Dickey & Fuller 1979, Distribution of the Estimators for Autoregressive Time Series with a Unit Root (Journal of the American Statistical Association)"
+status: reviewed

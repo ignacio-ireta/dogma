@@ -1,0 +1,13 @@
+id: cml/lagrange-multipliers/p01-constrained-quadratic-min
+version: 3
+title: Constrained quadratic minimum
+language: python
+runtime: py-numpy
+entry: constrained_quadratic_min
+difficulty: medium
+minutes: 30
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-7}
+banned_imports: [scipy]
+timeout_s: 30
+status: reviewed

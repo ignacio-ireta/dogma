@@ -1,0 +1,26 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: inf/gpu-memory-and-capacity-sizing#1
+    type: qa
+    front: How does tensor parallelism shard the weights across a group of T GPUs?
+    back: Each GPU holds a slice of each matrix, so its share is the weight bytes divided by T, rounded up.
+  - id: inf/gpu-memory-and-capacity-sizing#2
+    type: qa
+    front: What must the tensor-parallel degree divide for the KV cache to split evenly?
+    back: The number of KV heads, because each KV head lives on exactly one GPU.
+  - id: inf/gpu-memory-and-capacity-sizing#3
+    type: cloze
+    text: "Usable memory per GPU is the memory times {{c1::(1 - reserve fraction)}}, floored to a whole byte."
+  - id: inf/gpu-memory-and-capacity-sizing#4
+    type: qa
+    front: Why does the first fitting degree give the minimum GPU count?
+    back: More GPUs shrink both the weight and cache shares, so the fit test is monotone in the degree.
+  - id: inf/gpu-memory-and-capacity-sizing#5
+    type: qa
+    front: What is the per-GPU cache cost of one 4096-token sequence at degree 4 for the 70B-class config?
+    back: 335,544,320 bytes, which is the full 1,342,177,280-byte sequence divided by four.
+  - id: inf/gpu-memory-and-capacity-sizing#6
+    type: qa
+    front: What does the reserve fraction cover?
+    back: Allocator fragmentation and runtime buffers, which take memory that the weights and cache cannot use.

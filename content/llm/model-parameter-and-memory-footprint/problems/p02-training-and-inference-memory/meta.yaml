@@ -1,0 +1,14 @@
+# Problem metadata (CONTENT_SPEC §6.2).
+id: llm/model-parameter-and-memory-footprint/p02-training-and-inference-memory
+version: 1                      # bump when tests, tolerances or the contract change
+title: Training and inference memory in bytes
+language: python                # python | sql
+runtime: py-stdlib              # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: estimate_memory          # the function or class name the learner implements
+difficulty: medium              # easy | medium | hard
+minutes: 20
+core: false                     # p02 is a deeper variant; p01 is the core problem
+tolerance: {atol: 0, rtol: 0}   # integer byte counts: exact equality, no tolerance
+banned_imports: [numpy, torch, jax, sklearn]
+timeout_s: 30
+status: reviewed

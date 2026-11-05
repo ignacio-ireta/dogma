@@ -1,0 +1,20 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: llm/model-parameter-and-memory-footprint
+title: "Model parameter and memory footprint"
+tier: A
+requires: [dl/counting-network-parameters, dl/transformer-block, dl/adam]
+aliases: [parameter count, memory budget, bytes per parameter, mixed precision memory, 16 bytes per parameter, weights gradients optimizer states]
+objectives:
+  - "Count the parameters of a decoder-only transformer from its config, component by component"
+  - "Turn a parameter count and a dtype into inference and training memory in bytes, with the assumptions stated"
+  - "Explain the 16-bytes-per-parameter rule for mixed-precision Adam and what it leaves out"
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: "Count parameters per component, then say bytes per parameter for weights, gradients and optimizer states, and name what the rule of thumb leaves out."
+sources:
+  - "library: AI-ML/12-Frontiers/Radford GPT-2 2019.md"
+  - "library: AI-ML/13-Scaling-and-Alignment/Touvron et al. — LLaMA 2023.md"
+  - "corpus: library-papers/1412.6980.pdf.md (Kingma and Ba, Adam, section 2)"
+  - "library: AI-ML/03-Optimization/Loshchilov AdamW 2019.md"
+  - "paper: Micikevicius et al. 2018, Mixed Precision Training (arXiv:1710.03740)"
+  - "paper: Rajbhandari et al. 2020, ZeRO: Memory Optimizations Toward Training Trillion Parameter Models (arXiv:1910.02054)"
+status: reviewed

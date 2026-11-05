@@ -1,0 +1,15 @@
+id: dl/adam/p01-adam-step
+version: 2
+title: "One Adam step with bias correction"
+language: python
+runtime: py-torch
+entry: adam_step
+difficulty: medium
+minutes: 30
+core: true
+# Oracle is torch.optim.Adam in float64 with the same moment recurrence. Differences are only
+# rounding, so the tolerance is tighter than the 1e-6 standard.
+tolerance: {atol: 1.0e-10, rtol: 1.0e-10}
+banned_imports: [torch.optim]
+timeout_s: 30
+status: reviewed

@@ -1,0 +1,14 @@
+id: cml/ranking-metrics/p01-ndcg-at-k
+version: 1                      # bump when tests, tolerances or the contract change
+title: NDCG at k for one query
+language: python
+runtime: py-numpy
+entry: ndcg_at_k
+difficulty: medium
+minutes: 25
+core: true
+# Values are ratios of sums of at most a few hundred terms, so 1e-9 is far above rounding noise.
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [sklearn]       # the library call is the oracle; the learner implements the ranking
+timeout_s: 30
+status: reviewed

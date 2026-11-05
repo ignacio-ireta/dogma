@@ -1,0 +1,18 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: llm/lora-adapters
+title: "LoRA adapters"
+tier: A
+requires: ['dl/dense-layer-forward-pass', 'dl/gradients-with-framework-autograd']
+aliases: [LoRA, low-rank adaptation, adapter, low-rank update, merge adapter, frozen base, alpha over r, zero-initialised B]
+objectives:
+  - "Implement the LoRA linear forward, W x + (alpha / r) B A x, with an option to merge the update into W first"
+  - "Start training at the base model: keep W frozen and initialise B to zero, so the first output equals the base output"
+  - "Check that gradients reach only A and B, using requires_grad flags and a finite-difference check"
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: "Write the layer as frozen base plus a scaled low-rank update. Then say what is trained, what is frozen, and why the merged and unmerged outputs are the same."
+sources:
+  - "library: AI-ML/02-Linear-Algebra/Eckart-Young Best Low-Rank Approximation 1936.md"
+  - "library: AI-ML/13-Scaling-and-Alignment/Touvron et al. — LLaMA 2023.md"
+  - "paper: Hu et al. 2021, LoRA: Low-Rank Adaptation of Large Language Models (arXiv:2106.09685); update in section 4.1, rank study in section 7"
+  - "source: library-refresh/01-Mathematics/05-Linear-Algebra/1990-2021 -- Library -- From Latent Semantic Analysis to Embeddings and Low-Rank Adaptation -- Concept Note.md"
+status: reviewed

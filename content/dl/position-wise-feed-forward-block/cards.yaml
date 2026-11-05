@@ -1,0 +1,20 @@
+cards:
+  - id: dl/position-wise-feed-forward-block#1
+    type: qa
+    front: What does "position-wise" mean for the feed-forward block?
+    back: The same two linear layers are applied to each token's feature vector independently; no information crosses positions.
+  - id: dl/position-wise-feed-forward-block#2
+    type: qa
+    front: What is the usual hidden width of the feed-forward block relative to d_model?
+    back: "About 4x: d_ff = 4 * d_model. Vaswani et al. used 2048 for d_model = 512."
+  - id: dl/position-wise-feed-forward-block#3
+    type: cloze
+    text: "The exact GELU is z * {{c1::Phi(z)}}, where Phi is the standard normal CDF."
+  - id: dl/position-wise-feed-forward-block#4
+    type: qa
+    front: Why is the SwiGLU hidden width about 2/3 of the plain 4x width?
+    back: "A gated block has three matrices instead of two, so d_ff = 8/3 * d_model keeps 3 * d * d_ff equal to 2 * d * 4d."
+  - id: dl/position-wise-feed-forward-block#5
+    type: qa
+    front: In SwiGLU, which path gets the SiLU?
+    back: The gate path, W @ x. The up path V @ x stays linear, and the two are multiplied elementwise.

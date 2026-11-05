@@ -1,0 +1,13 @@
+id: cml/missing-values-and-outliers/p01-impute-with-missing-indicators
+version: 3
+title: Imputation with missing-value indicators
+language: python
+runtime: py-data
+entry: impute_with_indicators
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [sklearn, scipy]
+timeout_s: 30
+status: reviewed

@@ -1,0 +1,2280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ML Concepts Visualized</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --border: #2a2d3a;
+    --text: #e0e0e6;
+    --muted: #8888a0;
+    --accent: #6c8aff;
+    --tp: #4ade80;
+    --fp: #f87171;
+    --tn: #60a5fa;
+    --fn: #fbbf24;
+    --positive: #4ade80;
+    --negative: #f87171;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  header {
+    text-align: center;
+    padding: 3rem 1rem 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  header h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.5rem;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 1.05rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  section h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+
+  section .subtitle {
+    color: var(--muted);
+    font-size: 0.92rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .formula {
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    background: rgba(108, 138, 255, 0.08);
+    border: 1px solid rgba(108, 138, 255, 0.15);
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    display: inline-block;
+    margin-bottom: 1.2rem;
+    font-size: 1.05rem;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  @media (max-width: 700px) {
+    .two-col { grid-template-columns: 1fr; }
+  }
+
+  canvas { display: block; }
+
+  .slider-group {
+    margin-bottom: 1rem;
+  }
+
+  .slider-group label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+    color: var(--muted);
+  }
+
+  .slider-group label strong {
+    color: var(--text);
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+    outline: none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid var(--bg);
+  }
+
+  .metrics-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 1.2rem;
+  }
+
+  .metric-card {
+    flex: 1;
+    min-width: 100px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.8rem;
+    text-align: center;
+    transition: border-color 0.3s, background 0.3s;
+  }
+
+  .metric-card.active {
+    border-color: var(--accent);
+    background: rgba(108, 138, 255, 0.06);
+  }
+
+  .metric-card .label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+
+  .metric-card .value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 1.2rem;
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    padding: 4px;
+  }
+
+  .tab-bar button {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 0.5rem 0.8rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab-bar button.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .explanation {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-top: 1rem;
+  }
+
+  .explanation strong {
+    color: var(--text);
+  }
+
+  .btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1.2rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    margin-right: 0.5rem;
+  }
+
+  .btn:hover { opacity: 0.85; }
+
+  .btn-outline {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  .btn-outline:hover { border-color: var(--accent); }
+
+  .btn-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .canvas-wrap canvas {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+  }
+
+  .side-by-side {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  @media (max-width: 700px) {
+    .side-by-side { grid-template-columns: 1fr; }
+  }
+
+  .side-by-side .panel-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    margin-bottom: 0.6rem;
+  }
+
+  .insight-box {
+    background: rgba(108, 138, 255, 0.08);
+    border: 1px solid rgba(108, 138, 255, 0.15);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    font-size: 0.88rem;
+    color: var(--text);
+    margin-top: 1rem;
+    line-height: 1.7;
+  }
+
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  .checkbox-group input[type="checkbox"] {
+    accent-color: var(--accent);
+    width: 16px;
+    height: 16px;
+  }
+  nav { display: flex; gap: 0.5rem; justify-content: center; padding: 1rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); }
+  nav a { color: var(--muted); text-decoration: none; font-size: 0.82rem; font-weight: 500; padding: 0.4rem 0.8rem; border-radius: 8px; transition: all 0.2s; }
+  nav a:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+  nav a.active { color: #fff; background: var(--accent); }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="ml-metrics.html">ML Metrics</a>
+  <a href="ml-concepts.html" class="active">ML Concepts</a>
+  <a href="probability-stats.html">Probability &amp; Stats</a>
+  <a href="model-selection.html">Model Selection</a>
+  <a href="sql-concepts.html">SQL Concepts</a>
+  <a href="data-wrangling.html">Pandas &amp; sklearn</a>
+  <a href="case-frameworks.html">Case Frameworks</a>
+</nav>
+
+<header>
+  <h1>ML Concepts Visualized</h1>
+  <p>Interactive explorations of core machine learning concepts &mdash; from bias-variance to ensemble methods.</p>
+</header>
+
+<div class="container">
+
+  <!-- ==================== 1. BIAS-VARIANCE TRADEOFF ==================== -->
+  <section id="sec-biasvar">
+    <h2>Bias-Variance Tradeoff</h2>
+    <p class="subtitle">See how model complexity affects the balance between underfitting and overfitting.</p>
+
+    <div class="two-col">
+      <div>
+        <canvas id="bv-canvas" width="500" height="380"></canvas>
+      </div>
+      <div>
+        <canvas id="bv-error-canvas" width="500" height="250"></canvas>
+        <div class="slider-group" style="margin-top:1rem;">
+          <label>Model Complexity (Polynomial Degree) <strong id="bv-degree-val">3</strong></label>
+          <input type="range" id="bv-degree" min="1" max="15" value="3">
+        </div>
+        <div class="metrics-row" id="bv-metrics"></div>
+        <div class="explanation">
+          <strong>High bias</strong> (low complexity) = model is too simple and underfits. <strong>High variance</strong> (high complexity) = model memorizes noise and overfits. The sweet spot minimizes total error.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 2. LEARNING CURVES ==================== -->
+  <section id="sec-learning">
+    <h2>Overfitting: Training vs Validation Curves</h2>
+    <p class="subtitle">Watch how training and validation loss evolve over epochs for different model complexities.</p>
+
+    <div class="tab-bar" id="lc-tabs">
+      <button class="active" data-scenario="underfit">Underfitting</button>
+      <button data-scenario="goodfit">Good Fit</button>
+      <button data-scenario="overfit">Overfitting</button>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <canvas id="lc-canvas" width="500" height="350"></canvas>
+      </div>
+      <div>
+        <div class="slider-group">
+          <label>Model Complexity <strong id="lc-complex-val">5</strong></label>
+          <input type="range" id="lc-complex" min="1" max="10" value="5">
+        </div>
+        <div class="slider-group">
+          <label>Training Data Size <strong id="lc-data-val">200</strong></label>
+          <input type="range" id="lc-data" min="20" max="500" value="200">
+        </div>
+        <div class="metrics-row" id="lc-metrics"></div>
+        <div class="explanation">
+          <strong>Underfitting:</strong> both curves are high. <strong>Good fit:</strong> both converge low with small gap. <strong>Overfitting:</strong> training loss keeps dropping but validation loss rises &mdash; the gap is the overfitting region.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 3. L1 vs L2 REGULARIZATION ==================== -->
+  <section id="sec-reg">
+    <h2>L1 vs L2 Regularization</h2>
+    <p class="subtitle">Visualize how Lasso (L1) and Ridge (L2) constrain model weights differently.</p>
+
+    <div class="tab-bar" id="reg-tabs">
+      <button class="active" data-type="l1">L1 (Lasso)</button>
+      <button data-type="l2">L2 (Ridge)</button>
+      <button data-type="elastic">Elastic Net</button>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <canvas id="reg-canvas" width="500" height="400"></canvas>
+      </div>
+      <div>
+        <canvas id="reg-weights-canvas" width="500" height="220"></canvas>
+        <div class="slider-group" style="margin-top:1rem;">
+          <label>Regularization Strength (&lambda;) <strong id="reg-lambda-val">1.0</strong></label>
+          <input type="range" id="reg-lambda" min="1" max="50" value="10">
+        </div>
+        <div class="explanation">
+          <strong>L1 (Lasso)</strong> pushes weights to exactly zero, producing sparse models (feature selection). <strong>L2 (Ridge)</strong> shrinks all weights toward zero evenly. <strong>Elastic Net</strong> combines both.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 4. GRADIENT DESCENT ==================== -->
+  <section id="sec-gd">
+    <h2>Gradient Descent</h2>
+    <p class="subtitle">Watch an optimizer navigate a loss landscape. Adjust the learning rate to see convergence, oscillation, or divergence.</p>
+
+    <div class="tab-bar" id="gd-tabs">
+      <button class="active" data-preset="good">Standard GD</button>
+      <button data-preset="high">Too High LR</button>
+      <button data-preset="low">Too Low LR</button>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <canvas id="gd-canvas" width="500" height="380"></canvas>
+      </div>
+      <div>
+        <div class="slider-group">
+          <label>Learning Rate <strong id="gd-lr-val">0.050</strong></label>
+          <input type="range" id="gd-lr" min="1" max="100" value="50">
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="gd-play">Play</button>
+          <button class="btn btn-outline" id="gd-reset">Reset</button>
+        </div>
+        <div class="metrics-row" id="gd-metrics"></div>
+        <div class="explanation">
+          <strong>Too small:</strong> very slow convergence or gets stuck. <strong>Too large:</strong> oscillates wildly or diverges. <strong>Just right:</strong> smooth convergence to the minimum.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 5. BAGGING VS BOOSTING ==================== -->
+  <section id="sec-ensemble">
+    <h2>Bagging vs Boosting</h2>
+    <p class="subtitle">Two strategies for building ensemble models: parallel averaging vs sequential error correction.</p>
+
+    <div class="side-by-side">
+      <div>
+        <div class="panel-title">Bagging (e.g., Random Forest)</div>
+        <canvas id="bag-canvas" width="500" height="350"></canvas>
+        <div class="btn-row" style="margin-top:0.8rem;">
+          <button class="btn btn-outline" id="bag-step">Next Step</button>
+          <button class="btn btn-outline" id="bag-reset">Reset</button>
+        </div>
+      </div>
+      <div>
+        <div class="panel-title">Boosting (e.g., XGBoost)</div>
+        <canvas id="boost-canvas" width="500" height="350"></canvas>
+        <div class="btn-row" style="margin-top:0.8rem;">
+          <button class="btn btn-outline" id="boost-step">Next Step</button>
+          <button class="btn btn-outline" id="boost-reset">Reset</button>
+        </div>
+      </div>
+    </div>
+    <div class="insight-box">
+      <strong>Bagging</strong> reduces <strong>variance</strong> by training models on random subsets in parallel, then averaging. <strong>Boosting</strong> reduces <strong>bias</strong> by training models sequentially, each correcting the mistakes of the previous.
+    </div>
+  </section>
+
+  <!-- ==================== 6. CROSS-VALIDATION ==================== -->
+  <section id="sec-cv">
+    <h2>Cross-Validation (K-Fold)</h2>
+    <p class="subtitle">See how data is systematically split into training and test folds to estimate model performance.</p>
+
+    <div class="two-col">
+      <div>
+        <canvas id="cv-canvas" width="500" height="350"></canvas>
+      </div>
+      <div>
+        <div class="slider-group">
+          <label>Number of Folds (K) <strong id="cv-k-val">5</strong></label>
+          <input type="range" id="cv-k" min="2" max="10" value="5">
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="cv-stratified"> <label for="cv-stratified">Stratified (maintain class balance)</label>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="cv-animate">Animate Folds</button>
+          <button class="btn btn-outline" id="cv-reset">Reset</button>
+        </div>
+        <canvas id="cv-bar-canvas" width="500" height="180" style="margin-top:0.8rem;"></canvas>
+        <div class="metrics-row" id="cv-metrics"></div>
+        <div class="explanation">
+          Each fold takes a turn being the test set. The final score is the <strong>mean &plusmn; std</strong> across folds, giving a robust estimate of generalization performance.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 7. DECISION BOUNDARIES ==================== -->
+  <section id="sec-db">
+    <h2>Decision Boundaries</h2>
+    <p class="subtitle">See how different classifiers partition the feature space to separate classes.</p>
+
+    <div class="tab-bar" id="db-tabs">
+      <button class="active" data-clf="logistic">Logistic Regression</button>
+      <button data-clf="knn">KNN</button>
+      <button data-clf="tree">Decision Tree</button>
+      <button data-clf="svm">SVM</button>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <canvas id="db-canvas" width="500" height="400"></canvas>
+      </div>
+      <div>
+        <div id="db-slider-wrap" class="slider-group" style="display:none;">
+          <label>K (neighbors) <strong id="db-k-val">5</strong></label>
+          <input type="range" id="db-k" min="1" max="25" value="5">
+        </div>
+        <div class="metrics-row" id="db-metrics"></div>
+        <div class="explanation" id="db-explanation">
+          <strong>Logistic Regression</strong> creates a linear boundary. Simple and interpretable, but cannot capture nonlinear patterns.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 8. K-MEANS CLUSTERING ==================== -->
+  <section id="sec-kmeans">
+    <h2>K-Means Clustering</h2>
+    <p class="subtitle">Step through the K-means algorithm: assign points to nearest centroid, then update centroids.</p>
+
+    <div class="two-col">
+      <div>
+        <canvas id="km-canvas" width="500" height="400"></canvas>
+      </div>
+      <div>
+        <div class="slider-group">
+          <label>Number of Clusters (K) <strong id="km-k-val">3</strong></label>
+          <input type="range" id="km-k" min="2" max="6" value="3">
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="km-step">Step</button>
+          <button class="btn btn-outline" id="km-reset">Reset</button>
+        </div>
+        <div class="metrics-row" id="km-metrics"></div>
+        <div class="explanation">
+          K-Means alternates between <strong>assignment</strong> (color points by nearest centroid) and <strong>update</strong> (move centroids to cluster means). It converges when assignments stop changing. The <strong>inertia</strong> (within-cluster sum of squares) measures compactness.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 9. ACTIVATION FUNCTIONS ==================== -->
+  <section id="sec-activation">
+    <h2>Activation Functions</h2>
+    <p class="subtitle">Explore the nonlinearities used in neural networks and their gradients.</p>
+
+    <div class="tab-bar" id="af-tabs">
+      <button class="active" data-fn="all">All</button>
+      <button data-fn="sigmoid">Sigmoid</button>
+      <button data-fn="relu">ReLU</button>
+      <button data-fn="tanh">Tanh</button>
+      <button data-fn="softmax">Softmax</button>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <canvas id="af-canvas" width="500" height="350"></canvas>
+      </div>
+      <div>
+        <canvas id="af-deriv-canvas" width="500" height="200"></canvas>
+        <div class="explanation" id="af-explanation" style="margin-top:0.8rem;">
+          Drag the vertical line on the plot to see output values. The <strong>derivative</strong> is shown below &mdash; important for understanding the <strong>vanishing gradient problem</strong> with sigmoid/tanh.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 10. FEATURE SCALING ==================== -->
+  <section id="sec-scaling">
+    <h2>Feature Scaling</h2>
+    <p class="subtitle">See how different scaling methods transform feature distributions.</p>
+
+    <div class="tab-bar" id="fs-tabs">
+      <button class="active" data-scale="raw">Raw</button>
+      <button data-scale="standard">StandardScaler (z-score)</button>
+      <button data-scale="minmax">MinMaxScaler (0-1)</button>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <canvas id="fs-canvas" width="500" height="400"></canvas>
+      </div>
+      <div>
+        <div class="metrics-row" id="fs-metrics"></div>
+        <div class="insight-box" style="margin-top:1rem;">
+          <strong>Needed for:</strong> distance-based (KNN, SVM) and gradient-based (logistic regression, neural nets).<br>
+          <strong>NOT needed for:</strong> tree-based models (Random Forest, XGBoost) &mdash; they split on feature values and are scale-invariant.
+        </div>
+        <div class="explanation">
+          <strong>StandardScaler</strong> subtracts the mean and divides by std (z-score normalization). <strong>MinMaxScaler</strong> maps features to [0, 1]. Without scaling, features with larger ranges dominate distance calculations and gradient updates.
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+// ─── Utilities ────────────────────────────────────────
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function lerp(a, b, t) { return a + (b - a) * t; }
+function gaussianRandom(mean, std) {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return mean + std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+}
+function makeMetricCards(container, metrics) {
+  container.innerHTML = metrics.map(m =>
+    `<div class="metric-card${m.active ? ' active' : ''}">
+      <div class="label">${m.label}</div>
+      <div class="value" style="${m.color ? 'color:' + m.color : ''}">${m.value}</div>
+    </div>`
+  ).join('');
+}
+
+function drawAxes(ctx, w, h, pad, xLabel, yLabel, xRange, yRange, gridLines) {
+  ctx.strokeStyle = '#2a2d3a';
+  ctx.lineWidth = 1;
+  ctx.fillStyle = '#8888a0';
+  ctx.font = '11px Inter, system-ui, sans-serif';
+  const pw = w - pad.l - pad.r;
+  const ph = h - pad.t - pad.b;
+
+  // Grid
+  if (gridLines !== false) {
+    const xSteps = 5, ySteps = 5;
+    for (let i = 0; i <= xSteps; i++) {
+      const x = pad.l + (pw * i / xSteps);
+      ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, h - pad.b); ctx.stroke();
+      const val = xRange[0] + (xRange[1] - xRange[0]) * i / xSteps;
+      ctx.textAlign = 'center';
+      ctx.fillText(Number.isInteger(val) ? val : val.toFixed(1), x, h - pad.b + 14);
+    }
+    for (let i = 0; i <= ySteps; i++) {
+      const y = pad.t + (ph * i / ySteps);
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+      const val = yRange[1] - (yRange[1] - yRange[0]) * i / ySteps;
+      ctx.textAlign = 'right';
+      ctx.fillText(Number.isInteger(val) ? val : val.toFixed(1), pad.l - 6, y + 4);
+    }
+  }
+
+  // Axes
+  ctx.strokeStyle = '#3a3d4a';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, h - pad.b); ctx.lineTo(w - pad.r, h - pad.b);
+  ctx.stroke();
+
+  // Labels
+  ctx.fillStyle = '#8888a0';
+  ctx.font = '12px Inter, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  if (xLabel) ctx.fillText(xLabel, pad.l + pw / 2, h - 4);
+  if (yLabel) {
+    ctx.save();
+    ctx.translate(12, pad.t + ph / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText(yLabel, 0, 0);
+    ctx.restore();
+  }
+}
+
+function mapX(val, xRange, pad, w) {
+  return pad.l + (val - xRange[0]) / (xRange[1] - xRange[0]) * (w - pad.l - pad.r);
+}
+function mapY(val, yRange, pad, h) {
+  return pad.t + (1 - (val - yRange[0]) / (yRange[1] - yRange[0])) * (h - pad.t - pad.b);
+}
+
+const DPR = window.devicePixelRatio || 1;
+function setupCanvas(id) {
+  const canvas = document.getElementById(id);
+  const rect = canvas.getBoundingClientRect();
+  const w = canvas.width;
+  const h = canvas.height;
+  canvas.width = w * DPR;
+  canvas.height = h * DPR;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(DPR, DPR);
+  return { canvas, ctx, w, h };
+}
+
+// ─── 1. Bias-Variance Tradeoff ─────────────────────────────────
+(function() {
+  const { canvas, ctx, w, h } = setupCanvas('bv-canvas');
+  const { canvas: ec, ctx: ectx, w: ew, h: eh } = setupCanvas('bv-error-canvas');
+  const pad = { t: 30, r: 20, b: 40, l: 50 };
+  const epad = { t: 20, r: 20, b: 40, l: 50 };
+
+  // Generate data
+  const seed = 42;
+  let rng = seed;
+  function seededRandom() { rng = (rng * 16807) % 2147483647; return (rng - 1) / 2147483646; }
+  function seededGaussian() {
+    let u = seededRandom(), v = seededRandom();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+
+  const N = 30;
+  const trainX = [], trainY = [], testX = [], testY = [];
+  rng = seed;
+  for (let i = 0; i < N; i++) {
+    const x = seededRandom() * 2 * Math.PI;
+    trainX.push(x); trainY.push(Math.sin(x) + seededGaussian() * 0.3);
+  }
+  for (let i = 0; i < N; i++) {
+    const x = seededRandom() * 2 * Math.PI;
+    testX.push(x); testY.push(Math.sin(x) + seededGaussian() * 0.3);
+  }
+
+  function polyFit(xs, ys, degree) {
+    const n = xs.length;
+    const m = degree + 1;
+    const X = [];
+    for (let i = 0; i < n; i++) {
+      const row = [];
+      for (let j = 0; j < m; j++) row.push(Math.pow(xs[i], j));
+      X.push(row);
+    }
+    // Normal equation: (X^T X)^-1 X^T y
+    const XtX = Array.from({ length: m }, () => new Array(m).fill(0));
+    const XtY = new Array(m).fill(0);
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < m; j++) {
+        XtY[j] += X[i][j] * ys[i];
+        for (let k = 0; k < m; k++) XtX[j][k] += X[i][j] * X[i][k];
+      }
+    }
+    // Add tiny regularization for numerical stability
+    for (let j = 0; j < m; j++) XtX[j][j] += 1e-8;
+    // Solve via Gaussian elimination
+    const aug = XtX.map((row, i) => [...row, XtY[i]]);
+    for (let col = 0; col < m; col++) {
+      let maxRow = col;
+      for (let row = col + 1; row < m; row++) {
+        if (Math.abs(aug[row][col]) > Math.abs(aug[maxRow][col])) maxRow = row;
+      }
+      [aug[col], aug[maxRow]] = [aug[maxRow], aug[col]];
+      if (Math.abs(aug[col][col]) < 1e-12) continue;
+      for (let row = 0; row < m; row++) {
+        if (row === col) continue;
+        const f = aug[row][col] / aug[col][col];
+        for (let j = col; j <= m; j++) aug[row][j] -= f * aug[col][j];
+      }
+    }
+    return aug.map((row, i) => row[m] / row[i]);
+  }
+
+  function polyEval(coeffs, x) {
+    let val = 0;
+    for (let i = 0; i < coeffs.length; i++) val += coeffs[i] * Math.pow(x, i);
+    return val;
+  }
+
+  function mse(xs, ys, coeffs) {
+    let sum = 0;
+    for (let i = 0; i < xs.length; i++) {
+      const err = ys[i] - polyEval(coeffs, xs[i]);
+      sum += err * err;
+    }
+    return sum / xs.length;
+  }
+
+  // Precompute errors for all degrees
+  const allTrainErrors = [], allTestErrors = [];
+  for (let d = 1; d <= 15; d++) {
+    const c = polyFit(trainX, trainY, d);
+    allTrainErrors.push(mse(trainX, trainY, c));
+    allTestErrors.push(mse(testX, testY, c));
+  }
+
+  function draw() {
+    const degree = +document.getElementById('bv-degree').value;
+    document.getElementById('bv-degree-val').textContent = degree;
+
+    const coeffs = polyFit(trainX, trainY, degree);
+    const trainErr = mse(trainX, trainY, coeffs);
+    const testErr = mse(testX, testY, coeffs);
+
+    // Main plot
+    ctx.clearRect(0, 0, w, h);
+    const xRange = [0, 2 * Math.PI], yRange = [-2, 2];
+    drawAxes(ctx, w, h, pad, 'x', 'y', xRange, yRange);
+
+    // True function
+    ctx.strokeStyle = 'rgba(136,136,160,0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    for (let px = 0; px <= 200; px++) {
+      const x = xRange[0] + (xRange[1] - xRange[0]) * px / 200;
+      const sx = mapX(x, xRange, pad, w), sy = mapY(Math.sin(x), yRange, pad, h);
+      px === 0 ? ctx.moveTo(sx, sy) : ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Fitted curve
+    let curveColor;
+    if (degree <= 3) curveColor = `hsl(${220 + (degree - 1) * 10}, 80%, 65%)`;
+    else if (degree <= 6) curveColor = '#4ade80';
+    else curveColor = `hsl(${0 + (degree - 7) * 3}, 80%, 65%)`;
+
+    ctx.strokeStyle = curveColor;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for (let px = 0; px <= 200; px++) {
+      const x = xRange[0] + (xRange[1] - xRange[0]) * px / 200;
+      let y = polyEval(coeffs, x);
+      y = clamp(y, yRange[0] - 1, yRange[1] + 1);
+      const sx = mapX(x, xRange, pad, w), sy = mapY(y, yRange, pad, h);
+      px === 0 ? ctx.moveTo(sx, sy) : ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+
+    // Data points
+    for (let i = 0; i < N; i++) {
+      const sx = mapX(trainX[i], xRange, pad, w);
+      const sy = mapY(trainY[i], yRange, pad, h);
+      ctx.beginPath(); ctx.arc(sx, sy, 4, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(108, 138, 255, 0.8)';
+      ctx.fill();
+    }
+
+    // Legend
+    ctx.font = '11px Inter, system-ui, sans-serif';
+    ctx.fillStyle = '#8888a0';
+    ctx.setLineDash([6, 4]);
+    ctx.strokeStyle = 'rgba(136,136,160,0.4)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(pad.l + 10, 18); ctx.lineTo(pad.l + 35, 18); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillText('True function (sin)', pad.l + 40, 22);
+
+    ctx.fillStyle = curveColor;
+    ctx.strokeStyle = curveColor; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(pad.l + 10, 34); ctx.lineTo(pad.l + 35, 34); ctx.stroke();
+    ctx.fillText('Fitted polynomial (degree ' + degree + ')', pad.l + 40, 38);
+
+    // Error plot
+    ectx.clearRect(0, 0, ew, eh);
+    const maxErr = Math.min(2, Math.max(0.5, ...allTrainErrors, ...allTestErrors));
+    const exRange = [1, 15], eyRange = [0, maxErr];
+    drawAxes(ectx, ew, eh, epad, 'Degree', 'Error (MSE)', exRange, eyRange);
+
+    // Train error line
+    ectx.strokeStyle = '#60a5fa';
+    ectx.lineWidth = 2;
+    ectx.beginPath();
+    for (let d = 0; d < 15; d++) {
+      const sx = mapX(d + 1, exRange, epad, ew);
+      const sy = mapY(Math.min(allTrainErrors[d], maxErr), eyRange, epad, eh);
+      d === 0 ? ectx.moveTo(sx, sy) : ectx.lineTo(sx, sy);
+    }
+    ectx.stroke();
+
+    // Test error line
+    ectx.strokeStyle = '#f87171';
+    ectx.lineWidth = 2;
+    ectx.beginPath();
+    for (let d = 0; d < 15; d++) {
+      const sx = mapX(d + 1, exRange, epad, ew);
+      const sy = mapY(Math.min(allTestErrors[d], maxErr), eyRange, epad, eh);
+      d === 0 ? ectx.moveTo(sx, sy) : ectx.lineTo(sx, sy);
+    }
+    ectx.stroke();
+
+    // Current degree marker
+    const cx = mapX(degree, exRange, epad, ew);
+    ectx.strokeStyle = '#e0e0e6';
+    ectx.setLineDash([4, 3]);
+    ectx.lineWidth = 1;
+    ectx.beginPath(); ectx.moveTo(cx, epad.t); ectx.lineTo(cx, eh - epad.b); ectx.stroke();
+    ectx.setLineDash([]);
+
+    // Legend
+    ectx.font = '11px Inter, system-ui, sans-serif';
+    ectx.fillStyle = '#60a5fa'; ectx.fillText('Train Error', ew - 140, 14);
+    ectx.fillStyle = '#f87171'; ectx.fillText('Test Error', ew - 70, 14);
+
+    makeMetricCards(document.getElementById('bv-metrics'), [
+      { label: 'Degree', value: degree },
+      { label: 'Train MSE', value: trainErr.toFixed(4), color: '#60a5fa' },
+      { label: 'Test MSE', value: testErr.toFixed(4), color: '#f87171', active: true },
+    ]);
+  }
+
+  document.getElementById('bv-degree').addEventListener('input', draw);
+  draw();
+})();
+
+// ─── 2. Learning Curves ────────────────────────────────────────
+(function() {
+  const { canvas, ctx, w, h } = setupCanvas('lc-canvas');
+  const pad = { t: 30, r: 20, b: 40, l: 50 };
+  let scenario = 'underfit';
+
+  function generateCurves(complexity, dataSize) {
+    const epochs = 100;
+    const train = [], val = [];
+    const baseNoise = 0.05;
+    const complexFactor = complexity / 10;
+    const dataSizeFactor = dataSize / 500;
+
+    for (let e = 0; e < epochs; e++) {
+      const t = (e + 1) / epochs;
+      let trainLoss, valLoss;
+
+      if (scenario === 'underfit') {
+        trainLoss = 0.7 - 0.2 * t + baseNoise * Math.sin(e * 0.3);
+        valLoss = 0.75 - 0.18 * t + baseNoise * Math.sin(e * 0.4);
+      } else if (scenario === 'overfit') {
+        trainLoss = 0.8 * Math.exp(-4 * t) + 0.02;
+        valLoss = 0.7 * Math.exp(-2 * t) + 0.15 + 0.3 * complexFactor * t;
+      } else {
+        trainLoss = 0.8 * Math.exp(-3 * t) + 0.05;
+        valLoss = 0.85 * Math.exp(-2.5 * t) + 0.08 + 0.05 * (1 - dataSizeFactor);
+      }
+
+      trainLoss *= (1.5 - complexFactor * 0.5);
+      valLoss *= (1.5 - complexFactor * 0.3);
+      trainLoss = Math.max(0.01, trainLoss);
+      valLoss = Math.max(0.01, valLoss);
+
+      train.push(trainLoss);
+      val.push(valLoss);
+    }
+    return { train, val };
+  }
+
+  function draw() {
+    const complexity = +document.getElementById('lc-complex').value;
+    const dataSize = +document.getElementById('lc-data').value;
+    document.getElementById('lc-complex-val').textContent = complexity;
+    document.getElementById('lc-data-val').textContent = dataSize;
+
+    const { train, val } = generateCurves(complexity, dataSize);
+
+    ctx.clearRect(0, 0, w, h);
+    const xRange = [0, 100], yRange = [0, 1.2];
+    drawAxes(ctx, w, h, pad, 'Epoch', 'Loss', xRange, yRange);
+
+    // Train loss
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < train.length; i++) {
+      const sx = mapX(i, xRange, pad, w), sy = mapY(train[i], yRange, pad, h);
+      i === 0 ? ctx.moveTo(sx, sy) : ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+
+    // Val loss
+    ctx.strokeStyle = '#f87171';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < val.length; i++) {
+      const sx = mapX(i, xRange, pad, w), sy = mapY(val[i], yRange, pad, h);
+      i === 0 ? ctx.moveTo(sx, sy) : ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+
+    // Overfitting region highlight
+    if (scenario === 'overfit') {
+      let startIdx = -1;
+      for (let i = 5; i < val.length; i++) {
+        if (val[i] > val[i - 5] && train[i] < train[i - 5]) { startIdx = i - 5; break; }
+      }
+      if (startIdx >= 0) {
+        const sx = mapX(startIdx, xRange, pad, w);
+        ctx.fillStyle = 'rgba(248, 113, 113, 0.06)';
+        ctx.fillRect(sx, pad.t, w - pad.r - sx, h - pad.t - pad.b);
+        ctx.fillStyle = '#f87171';
+        ctx.font = '11px Inter, system-ui, sans-serif';
+        ctx.fillText('Overfitting region', sx + 5, pad.t + 15);
+      }
+    }
+
+    // Legend
+    ctx.font = '11px Inter, system-ui, sans-serif';
+    ctx.fillStyle = '#60a5fa'; ctx.fillText('Training Loss', pad.l + 10, 20);
+    ctx.fillStyle = '#f87171'; ctx.fillText('Validation Loss', pad.l + 110, 20);
+
+    const finalTrain = train[train.length - 1];
+    const finalVal = val[val.length - 1];
+    const gap = finalVal - finalTrain;
+
+    makeMetricCards(document.getElementById('lc-metrics'), [
+      { label: 'Train Loss', value: finalTrain.toFixed(3), color: '#60a5fa' },
+      { label: 'Val Loss', value: finalVal.toFixed(3), color: '#f87171' },
+      { label: 'Gap', value: gap.toFixed(3), active: true, color: gap > 0.2 ? '#f87171' : '#4ade80' },
+    ]);
+  }
+
+  document.querySelectorAll('#lc-tabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#lc-tabs button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      scenario = btn.dataset.scenario;
+      // Set slider values for scenario
+      if (scenario === 'underfit') { document.getElementById('lc-complex').value = 2; }
+      else if (scenario === 'goodfit') { document.getElementById('lc-complex').value = 5; }
+      else { document.getElementById('lc-complex').value = 9; }
+      draw();
+    });
+  });
+
+  document.getElementById('lc-complex').addEventListener('input', draw);
+  document.getElementById('lc-data').addEventListener('input', draw);
+  draw();
+})();
+
+// ─── 3. L1 vs L2 Regularization ────────────────────────────────
+(function() {
+  const { canvas, ctx, w, h } = setupCanvas('reg-canvas');
+  const { canvas: wc, ctx: wctx, w: ww, h: wh } = setupCanvas('reg-weights-canvas');
+  const pad = { t: 30, r: 20, b: 40, l: 50 };
+  const wpad = { t: 20, r: 20, b: 30, l: 40 };
+  let regType = 'l1';
+
+  // Unconstrained optimum
+  const optW1 = 2.5, optW2 = 1.5;
+  // Original 8 weights
+  const origWeights = [2.5, 1.5, -1.8, 0.9, -0.4, 1.2, -0.7, 0.3];
+
+  function draw() {
+    const lambda = +document.getElementById('reg-lambda').value / 10;
+    document.getElementById('reg-lambda-val').textContent = lambda.toFixed(1);
+
+    ctx.clearRect(0, 0, w, h);
+    const range = [-4, 4];
+    drawAxes(ctx, w, h, pad, 'w1', 'w2', range, range);
+
+    // Draw contour lines of the loss (centered at optimum)
+    const pw = w - pad.l - pad.r, ph = h - pad.t - pad.b;
+    for (let level = 0.5; level <= 4; level += 0.5) {
+      ctx.strokeStyle = `rgba(108, 138, 255, ${0.15 - level * 0.02})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let a = 0; a <= 360; a += 2) {
+        const rad = a * Math.PI / 180;
+        const x = optW1 + level * Math.cos(rad) * 0.8;
+        const y = optW2 + level * Math.sin(rad) * 1.2;
+        const sx = mapX(x, range, pad, w), sy = mapY(y, range, pad, h);
+        a === 0 ? ctx.moveTo(sx, sy) : ctx.lineTo(sx, sy);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    }
+
+    // Draw constraint region
+    const radius = lambda;
+    if (regType === 'l1' || regType === 'elastic') {
+      // L1 diamond
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 2;
+      ctx.fillStyle = 'rgba(251, 191, 36, 0.08)';
+      const diamondR = regType === 'elastic' ? radius * 0.7 : radius;
+      const pts = [
+        [mapX(diamondR, range, pad, w), mapY(0, range, pad, h)],
+        [mapX(0, range, pad, w), mapY(diamondR, range, pad, h)],
+        [mapX(-diamondR, range, pad, w), mapY(0, range, pad, h)],
+        [mapX(0, range, pad, w), mapY(-diamondR, range, pad, h)],
+      ];
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < 4; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+    }
+
+    if (regType === 'l2' || regType === 'elastic') {
+      // L2 circle
+      ctx.strokeStyle = '#4ade80';
+      ctx.lineWidth = 2;
+      ctx.fillStyle = 'rgba(74, 222, 128, 0.08)';
+      const circR = regType === 'elastic' ? radius * 0.85 : radius;
+      const cx = mapX(0, range, pad, w), cy = mapY(0, range, pad, h);
+      const rx = circR / (range[1] - range[0]) * pw;
+      const ry = circR / (range[1] - range[0]) * ph;
+      ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
+    }
+
+    // Optimum point
+    const ox = mapX(optW1, range, pad, w), oy = mapY(optW2, range, pad, h);
+    ctx.beginPath(); ctx.arc(ox, oy, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = '#6c8aff'; ctx.fill();
+    ctx.fillStyle = '#8888a0'; ctx.font = '11px Inter, system-ui, sans-serif';
+    ctx.fillText('Unconstrained optimum', ox + 8, oy - 6);
+
+    // Constrained solution point
+    let solW1, solW2;
+    if (regType === 'l1') {
+      // L1 tends to hit axes
+      if (lambda < Math.abs(optW1) + Math.abs(optW2)) {
+        solW1 = clamp(optW1, -lambda, lambda);
+        solW2 = Math.sign(optW2) * Math.max(0, lambda - Math.abs(solW1));
+      } else { solW1 = optW1; solW2 = optW2; }
+    } else if (regType === 'l2') {
+      const norm = Math.sqrt(optW1 * optW1 + optW2 * optW2);
+      if (norm > lambda) {
+        solW1 = optW1 * lambda / norm;
+        solW2 = optW2 * lambda / norm;
+      } else { solW1 = optW1; solW2 = optW2; }
+    } else {
+      const norm = Math.sqrt(optW1 * optW1 + optW2 * optW2);
+      const effR = lambda * 0.85;
+      if (norm > effR) {
+        solW1 = optW1 * effR / norm;
+        solW2 = optW2 * effR / norm;
+      } else { solW1 = optW1; solW2 = optW2; }
+      // Push toward sparsity
+      if (Math.abs(solW1) < 0.3 * lambda) solW1 = 0;
+      if (Math.abs(solW2) < 0.3 * lambda) solW2 = 0;
+    }
+
+    const sx2 = mapX(solW1, range, pad, w), sy2 = mapY(solW2, range, pad, h);
+    ctx.beginPath(); ctx.arc(sx2, sy2, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = '#f87171'; ctx.fill();
+    ctx.fillStyle = '#e0e0e6';
+    ctx.fillText('Regularized solution', sx2 + 8, sy2 + 14);
+
+    // Origin
+    const origX = mapX(0, range, pad, w), origY = mapY(0, range, pad, h);
+    ctx.beginPath(); ctx.arc(origX, origY, 3, 0, 2 * Math.PI);
+    ctx.fillStyle = '#8888a0'; ctx.fill();
+
+    // Weight bar chart
+    wctx.clearRect(0, 0, ww, wh);
+    const barW = (ww - wpad.l - wpad.r) / 8 - 4;
+    const maxAbs = 3;
+    const midY = wpad.t + (wh - wpad.t - wpad.b) / 2;
+
+    wctx.strokeStyle = '#2a2d3a';
+    wctx.lineWidth = 1;
+    wctx.beginPath(); wctx.moveTo(wpad.l, midY); wctx.lineTo(ww - wpad.r, midY); wctx.stroke();
+
+    wctx.font = '10px Inter, system-ui, sans-serif';
+    wctx.fillStyle = '#8888a0';
+    wctx.textAlign = 'center';
+
+    for (let i = 0; i < 8; i++) {
+      let wt = origWeights[i];
+      if (regType === 'l1') {
+        const shrink = lambda * 0.3;
+        wt = Math.sign(wt) * Math.max(0, Math.abs(wt) - shrink);
+      } else if (regType === 'l2') {
+        wt *= Math.max(0.05, 1 - lambda * 0.12);
+      } else {
+        const shrink = lambda * 0.15;
+        wt = Math.sign(wt) * Math.max(0, Math.abs(wt) - shrink);
+        wt *= Math.max(0.1, 1 - lambda * 0.06);
+      }
+
+      const barH = (Math.abs(wt) / maxAbs) * (wh - wpad.t - wpad.b) / 2;
+      const x = wpad.l + i * (barW + 4) + 2;
+      const color = Math.abs(wt) < 0.01 ? '#3a3d4a' : (wt > 0 ? '#4ade80' : '#f87171');
+
+      wctx.fillStyle = color;
+      if (wt >= 0) {
+        wctx.fillRect(x, midY - barH, barW, barH);
+      } else {
+        wctx.fillRect(x, midY, barW, barH);
+      }
+
+      wctx.fillStyle = '#8888a0';
+      wctx.fillText('w' + (i + 1), x + barW / 2, wh - 5);
+      wctx.fillText(wt.toFixed(1), x + barW / 2, wt >= 0 ? midY - barH - 4 : midY + barH + 12);
+    }
+
+    wctx.fillStyle = '#8888a0';
+    wctx.textAlign = 'left';
+    wctx.fillText('Feature Weights', wpad.l, 14);
+  }
+
+  document.querySelectorAll('#reg-tabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#reg-tabs button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      regType = btn.dataset.type;
+      draw();
+    });
+  });
+  document.getElementById('reg-lambda').addEventListener('input', draw);
+  draw();
+})();
+
+// ─── 4. Gradient Descent ────────────────────────────────────────
+(function() {
+  const { canvas, ctx, w, h } = setupCanvas('gd-canvas');
+  const pad = { t: 30, r: 20, b: 40, l: 50 };
+
+  // Loss function: a bumpy polynomial
+  function lossFunc(x) {
+    return 0.5 * Math.pow(x - 2, 2) + 0.3 * Math.sin(3 * x) + 0.15 * Math.cos(5 * x) + 1;
+  }
+  function lossGrad(x) {
+    return (x - 2) + 0.9 * Math.cos(3 * x) - 0.75 * Math.sin(5 * x);
+  }
+
+  let ballX = -1.5, animating = false, animId = null, trail = [], iteration = 0;
+  const startX = -1.5;
+
+  function resetBall() {
+    ballX = startX;
+    trail = [{ x: ballX, y: lossFunc(ballX) }];
+    iteration = 0;
+    animating = false;
+    if (animId) cancelAnimationFrame(animId);
+    animId = null;
+    draw();
+  }
+
+  function draw() {
+    const lr = +document.getElementById('gd-lr').value / 1000;
+    document.getElementById('gd-lr-val').textContent = lr.toFixed(3);
+
+    ctx.clearRect(0, 0, w, h);
+    const xRange = [-3, 5], yRange = [0, 10];
+    drawAxes(ctx, w, h, pad, 'Parameter', 'Loss', xRange, yRange);
+
+    // Loss curve
+    ctx.strokeStyle = 'rgba(108, 138, 255, 0.6)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let px = 0; px <= 300; px++) {
+      const x = xRange[0] + (xRange[1] - xRange[0]) * px / 300;
+      const y = lossFunc(x);
+      const sx = mapX(x, xRange, pad, w), sy = mapY(clamp(y, yRange[0], yRange[1]), yRange, pad, h);
+      px === 0 ? ctx.moveTo(sx, sy) : ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+
+    // Fill under curve
+    ctx.lineTo(mapX(xRange[1], xRange, pad, w), mapY(0, yRange, pad, h));
+    ctx.lineTo(mapX(xRange[0], xRange, pad, w), mapY(0, yRange, pad, h));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(108, 138, 255, 0.05)';
+    ctx.fill();
+
+    // Trail
+    if (trail.length > 1) {
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      for (let i = 0; i < trail.length; i++) {
+        const sx = mapX(clamp(trail[i].x, xRange[0], xRange[1]), xRange, pad, w);
+        const sy = mapY(clamp(trail[i].y, yRange[0], yRange[1]), yRange, pad, h);
+        i === 0 ? ctx.moveTo(sx, sy) : ctx.lineTo(sx, sy);
+      }
+      ctx.stroke();
+
+      // Trail dots
+      for (let i = 0; i < trail.length - 1; i++) {
+        const sx = mapX(clamp(trail[i].x, xRange[0], xRange[1]), xRange, pad, w);
+        const sy = mapY(clamp(trail[i].y, yRange[0], yRange[1]), yRange, pad, h);
+        ctx.beginPath(); ctx.arc(sx, sy, 3, 0, 2 * Math.PI);
+        ctx.fillStyle = 'rgba(251, 191, 36, 0.5)'; ctx.fill();
+      }
+    }
+
+    // Ball
+    const bx = mapX(clamp(ballX, xRange[0], xRange[1]), xRange, pad, w);
+    const by = mapY(clamp(lossFunc(ballX), yRange[0], yRange[1]), yRange, pad, h);
+    ctx.beginPath(); ctx.arc(bx, by, 8, 0, 2 * Math.PI);
+    ctx.fillStyle = '#fbbf24'; ctx.fill();
+    ctx.strokeStyle = '#0f1117'; ctx.lineWidth = 2; ctx.stroke();
+
+    const currentLoss = lossFunc(ballX);
+    makeMetricCards(document.getElementById('gd-metrics'), [
+      { label: 'Loss', value: currentLoss.toFixed(4), active: true },
+      { label: 'Iteration', value: iteration },
+      { label: 'Learning Rate', value: lr.toFixed(3) },
+    ]);
+  }
+
+  function step() {
+    const lr = +document.getElementById('gd-lr').value / 1000;
+    const grad = lossGrad(ballX);
+    ballX = ballX - lr * grad;
+    ballX = clamp(ballX, -3.5, 5.5);
+    trail.push({ x: ballX, y: lossFunc(ballX) });
+    iteration++;
+  }
+
+  function animate() {
+    if (!animating) return;
+    step();
+    draw();
+    if (iteration < 200) {
+      animId = requestAnimationFrame(animate);
+    } else {
+      animating = false;
+    }
+  }
+
+  document.getElementById('gd-play').addEventListener('click', () => {
+    if (animating) {
+      animating = false;
+      document.getElementById('gd-play').textContent = 'Play';
+    } else {
+      animating = true;
+      document.getElementById('gd-play').textContent = 'Pause';
+      animate();
+    }
+  });
+
+  document.getElementById('gd-reset').addEventListener('click', resetBall);
+
+  document.querySelectorAll('#gd-tabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#gd-tabs button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const preset = btn.dataset.preset;
+      if (preset === 'good') document.getElementById('gd-lr').value = 50;
+      else if (preset === 'high') document.getElementById('gd-lr').value = 95;
+      else document.getElementById('gd-lr').value = 5;
+      resetBall();
+    });
+  });
+
+  document.getElementById('gd-lr').addEventListener('input', draw);
+  draw();
+})();
+
+// ─── 5. Bagging vs Boosting ────────────────────────────────────
+(function() {
+  const { canvas: bagCanvas, ctx: bagCtx, w: bw, h: bh } = setupCanvas('bag-canvas');
+  const { canvas: boostCanvas, ctx: boostCtx, w: bsw, h: bsh } = setupCanvas('boost-canvas');
+
+  // Generate data
+  const seed = 123;
+  let rng = seed;
+  function sr() { rng = (rng * 16807) % 2147483647; return (rng - 1) / 2147483646; }
+  function sg() { return Math.sqrt(-2 * Math.log(sr())) * Math.cos(2 * Math.PI * sr()); }
+
+  const points = [];
+  rng = seed;
+  for (let i = 0; i < 40; i++) {
+    const cls = i < 20 ? 0 : 1;
+    const cx = cls === 0 ? 2 : 5;
+    const cy = cls === 0 ? 5 : 2.5;
+    points.push({ x: cx + sg() * 1.2, y: cy + sg() * 1.2, cls, misclassified: false, weight: 1 });
+  }
+
+  let bagStep = 0, boostStep = 0;
+  const bagModels = [];
+  const boostModels = [];
+
+  // Simple decision boundary (vertical or horizontal line)
+  rng = 456;
+  function makeBagModels() {
+    bagModels.length = 0;
+    rng = 456;
+    for (let m = 0; m < 5; m++) {
+      // Random subset
+      const subset = [];
+      for (let i = 0; i < 25; i++) {
+        subset.push(points[Math.floor(sr() * points.length)]);
+      }
+      // Simple split
+      const splitX = 3 + sr() * 1.5 - 0.5;
+      bagModels.push({ splitX, subset });
+    }
+  }
+  makeBagModels();
+
+  function makeBoostModels() {
+    boostModels.length = 0;
+    const weights = points.map(() => 1 / points.length);
+    let rng2 = 789;
+    for (let m = 0; m < 5; m++) {
+      // Find best split
+      let bestSplit = 3.5, bestErr = 1;
+      for (let s = 2; s <= 5; s += 0.3) {
+        let err = 0;
+        for (let i = 0; i < points.length; i++) {
+          const pred = points[i].x < s ? 0 : 1;
+          if (pred !== points[i].cls) err += weights[i];
+        }
+        if (err < bestErr) { bestErr = err; bestSplit = s; }
+      }
+      const alpha = 0.5 * Math.log((1 - bestErr + 0.001) / (bestErr + 0.001));
+      boostModels.push({ splitX: bestSplit, alpha, weights: [...weights] });
+      // Update weights
+      let total = 0;
+      for (let i = 0; i < points.length; i++) {
+        const pred = points[i].x < bestSplit ? 0 : 1;
+        if (pred !== points[i].cls) weights[i] *= Math.exp(alpha);
+        else weights[i] *= Math.exp(-alpha * 0.3);
+        total += weights[i];
+      }
+      for (let i = 0; i < points.length; i++) weights[i] /= total;
+    }
+  }
+  makeBoostModels();
+
+  const pad = { t: 20, r: 15, b: 30, l: 35 };
+  const range = [-1, 8];
+
+  function drawBagging() {
+    bagCtx.clearRect(0, 0, bw, bh);
+    drawAxes(bagCtx, bw, bh, pad, '', '', range, range);
+
+    const stepLabels = ['Data', 'Model 1', 'Model 2', 'Model 3', 'Model 4', 'Model 5', 'Ensemble'];
+
+    // Title
+    bagCtx.font = '12px Inter, system-ui, sans-serif';
+    bagCtx.fillStyle = '#e0e0e6';
+    bagCtx.textAlign = 'left';
+    bagCtx.fillText('Step: ' + stepLabels[Math.min(bagStep, 6)], pad.l + 5, 14);
+
+    // Draw points
+    for (const p of points) {
+      const sx = mapX(p.x, range, pad, bw), sy = mapY(p.y, range, pad, bh);
+      bagCtx.beginPath(); bagCtx.arc(sx, sy, 4, 0, 2 * Math.PI);
+      bagCtx.fillStyle = p.cls === 0 ? 'rgba(96, 165, 250, 0.7)' : 'rgba(248, 113, 113, 0.7)';
+      bagCtx.fill();
+    }
+
+    // Draw model boundaries
+    if (bagStep >= 1 && bagStep <= 5) {
+      const m = bagModels[bagStep - 1];
+      const sx = mapX(m.splitX, range, pad, bw);
+      bagCtx.strokeStyle = 'rgba(251, 191, 36, 0.6)';
+      bagCtx.lineWidth = 2;
+      bagCtx.setLineDash([5, 3]);
+      bagCtx.beginPath(); bagCtx.moveTo(sx, pad.t); bagCtx.lineTo(sx, bh - pad.b); bagCtx.stroke();
+      bagCtx.setLineDash([]);
+
+      // Highlight subset
+      for (const sp of m.subset) {
+        const sx2 = mapX(sp.x, range, pad, bw), sy2 = mapY(sp.y, range, pad, bh);
+        bagCtx.beginPath(); bagCtx.arc(sx2, sy2, 7, 0, 2 * Math.PI);
+        bagCtx.strokeStyle = '#fbbf24'; bagCtx.lineWidth = 1.5; bagCtx.stroke();
+      }
+    }
+
+    // Ensemble
+    if (bagStep >= 6) {
+      const avgSplit = bagModels.reduce((s, m) => s + m.splitX, 0) / bagModels.length;
+      const sx = mapX(avgSplit, range, pad, bw);
+      bagCtx.strokeStyle = '#4ade80';
+      bagCtx.lineWidth = 3;
+      bagCtx.beginPath(); bagCtx.moveTo(sx, pad.t); bagCtx.lineTo(sx, bh - pad.b); bagCtx.stroke();
+
+      // Show all individual boundaries faintly
+      for (const m of bagModels) {
+        const sx2 = mapX(m.splitX, range, pad, bw);
+        bagCtx.strokeStyle = 'rgba(251, 191, 36, 0.2)';
+        bagCtx.lineWidth = 1;
+        bagCtx.setLineDash([3, 3]);
+        bagCtx.beginPath(); bagCtx.moveTo(sx2, pad.t); bagCtx.lineTo(sx2, bh - pad.b); bagCtx.stroke();
+        bagCtx.setLineDash([]);
+      }
+      bagCtx.fillStyle = '#4ade80';
+      bagCtx.font = '11px Inter, system-ui, sans-serif';
+      bagCtx.fillText('Averaged boundary', sx + 5, pad.t + 30);
+    }
+  }
+
+  function drawBoosting() {
+    boostCtx.clearRect(0, 0, bsw, bsh);
+    drawAxes(boostCtx, bsw, bsh, pad, '', '', range, range);
+
+    const stepLabels = ['Data', 'Round 1', 'Round 2', 'Round 3', 'Round 4', 'Round 5', 'Final'];
+    boostCtx.font = '12px Inter, system-ui, sans-serif';
+    boostCtx.fillStyle = '#e0e0e6';
+    boostCtx.textAlign = 'left';
+    boostCtx.fillText('Step: ' + stepLabels[Math.min(boostStep, 6)], pad.l + 5, 14);
+
+    // Draw points with weights
+    const currentWeights = boostStep >= 1 && boostStep <= 5
+      ? boostModels[Math.min(boostStep - 1, 4)].weights
+      : points.map(() => 1 / points.length);
+
+    const maxW = Math.max(...currentWeights);
+
+    for (let i = 0; i < points.length; i++) {
+      const p = points[i];
+      const sx = mapX(p.x, range, pad, bsw), sy = mapY(p.y, range, pad, bsh);
+      const radius = 3 + (currentWeights[i] / maxW) * 6;
+      boostCtx.beginPath(); boostCtx.arc(sx, sy, radius, 0, 2 * Math.PI);
+      boostCtx.fillStyle = p.cls === 0 ? 'rgba(96, 165, 250, 0.7)' : 'rgba(248, 113, 113, 0.7)';
+      boostCtx.fill();
+
+      // Highlight misclassified
+      if (boostStep >= 1 && boostStep <= 5) {
+        const m = boostModels[Math.min(boostStep - 1, 4)];
+        const pred = p.x < m.splitX ? 0 : 1;
+        if (pred !== p.cls) {
+          boostCtx.strokeStyle = '#fbbf24';
+          boostCtx.lineWidth = 2;
+          boostCtx.stroke();
+        }
+      }
+    }
+
+    // Draw boundary
+    if (boostStep >= 1 && boostStep <= 5) {
+      const m = boostModels[boostStep - 1];
+      const sx = mapX(m.splitX, range, pad, bsw);
+      boostCtx.strokeStyle = '#fbbf24';
+      boostCtx.lineWidth = 2;
+      boostCtx.beginPath(); boostCtx.moveTo(sx, pad.t); boostCtx.lineTo(sx, bsh - pad.b); boostCtx.stroke();
+      boostCtx.fillStyle = '#fbbf24';
+      boostCtx.font = '10px Inter, system-ui, sans-serif';
+      boostCtx.fillText('alpha=' + m.alpha.toFixed(2), sx + 5, pad.t + 30);
+    }
+
+    // Final combined
+    if (boostStep >= 6) {
+      let weightedSplit = 0, totalAlpha = 0;
+      for (const m of boostModels) { weightedSplit += m.splitX * m.alpha; totalAlpha += m.alpha; }
+      weightedSplit /= totalAlpha;
+      const sx = mapX(weightedSplit, range, pad, bsw);
+      boostCtx.strokeStyle = '#4ade80';
+      boostCtx.lineWidth = 3;
+      boostCtx.beginPath(); boostCtx.moveTo(sx, pad.t); boostCtx.lineTo(sx, bsh - pad.b); boostCtx.stroke();
+      boostCtx.fillStyle = '#4ade80';
+      boostCtx.font = '11px Inter, system-ui, sans-serif';
+      boostCtx.fillText('Weighted final boundary', sx + 5, pad.t + 30);
+    }
+  }
+
+  document.getElementById('bag-step').addEventListener('click', () => { bagStep = Math.min(bagStep + 1, 6); drawBagging(); });
+  document.getElementById('bag-reset').addEventListener('click', () => { bagStep = 0; drawBagging(); });
+  document.getElementById('boost-step').addEventListener('click', () => { boostStep = Math.min(boostStep + 1, 6); drawBoosting(); });
+  document.getElementById('boost-reset').addEventListener('click', () => { boostStep = 0; drawBoosting(); });
+  drawBagging();
+  drawBoosting();
+})();
+
+// ─── 6. Cross-Validation ────────────────────────────────────────
+(function() {
+  const { canvas, ctx, w, h } = setupCanvas('cv-canvas');
+  const { canvas: bc, ctx: bctx, w: bcw, h: bch } = setupCanvas('cv-bar-canvas');
+  const pad = { t: 30, r: 20, b: 20, l: 20 };
+  const bpad = { t: 15, r: 15, b: 25, l: 40 };
+
+  let currentFold = -1, animTimer = null;
+  const scores = [];
+
+  function generateScores(k) {
+    scores.length = 0;
+    let rng = 42;
+    for (let i = 0; i < k; i++) {
+      rng = (rng * 16807) % 2147483647;
+      const base = 0.82 + ((rng % 100) / 100) * 0.12;
+      scores.push(base);
+    }
+  }
+
+  function draw() {
+    const k = +document.getElementById('cv-k').value;
+    const stratified = document.getElementById('cv-stratified').checked;
+    document.getElementById('cv-k-val').textContent = k;
+
+    if (scores.length !== k) generateScores(k);
+
+    ctx.clearRect(0, 0, w, h);
+
+    const blockH = 30;
+    const gap = 8;
+    const totalH = k * (blockH + gap);
+    const startY = pad.t + (h - pad.t - pad.b - totalH) / 2;
+    const blockW = (w - pad.l - pad.r) / k;
+
+    ctx.font = '11px Inter, system-ui, sans-serif';
+
+    for (let fold = 0; fold < k; fold++) {
+      const y = startY + fold * (blockH + gap);
+
+      // Fold label
+      ctx.fillStyle = '#8888a0';
+      ctx.textAlign = 'right';
+      // Not needed with left padding
+
+      for (let block = 0; block < k; block++) {
+        const x = pad.l + block * blockW;
+        const isTest = block === fold;
+
+        if (isTest && (currentFold === -1 || currentFold === fold)) {
+          ctx.fillStyle = 'rgba(108, 138, 255, 0.5)';
+          if (currentFold === fold) ctx.fillStyle = 'rgba(108, 138, 255, 0.8)';
+        } else if (isTest) {
+          ctx.fillStyle = 'rgba(108, 138, 255, 0.25)';
+        } else {
+          ctx.fillStyle = 'rgba(74, 222, 128, 0.15)';
+          if (currentFold === fold) ctx.fillStyle = 'rgba(74, 222, 128, 0.35)';
+        }
+
+        ctx.beginPath();
+        ctx.roundRect(x + 1, y, blockW - 2, blockH, 4);
+        ctx.fill();
+
+        if (isTest) {
+          ctx.strokeStyle = 'rgba(108, 138, 255, 0.6)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+
+        // Stratified class balance
+        if (stratified && !isTest) {
+          const halfH = blockH / 2;
+          ctx.fillStyle = 'rgba(96, 165, 250, 0.3)';
+          ctx.fillRect(x + 2, y + 1, blockW - 4, halfH - 1);
+          ctx.fillStyle = 'rgba(248, 113, 113, 0.3)';
+          ctx.fillRect(x + 2, y + halfH, blockW - 4, halfH - 1);
+        }
+      }
+
+      // Fold label
+      ctx.fillStyle = currentFold === fold ? '#e0e0e6' : '#8888a0';
+      ctx.textAlign = 'left';
+      ctx.fillText('Fold ' + (fold + 1), w - pad.r + 5 - 60, y + blockH / 2 + 4);
+
+      // Score
+      if (currentFold >= fold || currentFold === -1) {
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillText(scores[fold].toFixed(3), w - pad.r, y + blockH / 2 + 4);
+      }
+    }
+
+    // Legend
+    ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.4)';
+    ctx.fillRect(pad.l, startY - 22, 12, 12);
+    ctx.fillStyle = '#8888a0';
+    ctx.fillText('Training', pad.l + 16, startY - 12);
+
+    ctx.fillStyle = 'rgba(108, 138, 255, 0.5)';
+    ctx.fillRect(pad.l + 80, startY - 22, 12, 12);
+    ctx.fillStyle = '#8888a0';
+    ctx.fillText('Test', pad.l + 96, startY - 12);
+
+    // Bar chart
+    drawBarChart(k);
+
+    // Metrics
+    const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
+    const std = Math.sqrt(scores.reduce((a, b) => a + (b - mean) ** 2, 0) / scores.length);
+    makeMetricCards(document.getElementById('cv-metrics'), [
+      { label: 'Mean Score', value: mean.toFixed(4), active: true },
+      { label: 'Std Dev', value: std.toFixed(4) },
+      { label: 'K Folds', value: k },
+    ]);
+  }
+
+  function drawBarChart(k) {
+    bctx.clearRect(0, 0, bcw, bch);
+    const barW = (bcw - bpad.l - bpad.r) / k - 6;
+    const maxH = bch - bpad.t - bpad.b;
+
+    bctx.strokeStyle = '#2a2d3a'; bctx.lineWidth = 1;
+    bctx.beginPath(); bctx.moveTo(bpad.l, bch - bpad.b); bctx.lineTo(bcw - bpad.r, bch - bpad.b); bctx.stroke();
+
+    const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
+
+    // Mean line
+    const meanY = bpad.t + (1 - (mean - 0.7) / 0.3) * maxH;
+    bctx.strokeStyle = 'rgba(251, 191, 36, 0.5)';
+    bctx.setLineDash([4, 3]);
+    bctx.beginPath(); bctx.moveTo(bpad.l, meanY); bctx.lineTo(bcw - bpad.r, meanY); bctx.stroke();
+    bctx.setLineDash([]);
+
+    bctx.font = '10px Inter, system-ui, sans-serif';
+    for (let i = 0; i < k; i++) {
+      const x = bpad.l + i * (barW + 6) + 3;
+      const barH = ((scores[i] - 0.7) / 0.3) * maxH;
+      const highlighted = currentFold === i;
+
+      bctx.fillStyle = highlighted ? 'rgba(108, 138, 255, 0.8)' : 'rgba(108, 138, 255, 0.4)';
+      bctx.beginPath();
+      bctx.roundRect(x, bch - bpad.b - barH, barW, barH, [4, 4, 0, 0]);
+      bctx.fill();
+
+      bctx.fillStyle = '#8888a0';
+      bctx.textAlign = 'center';
+      bctx.fillText((i + 1), x + barW / 2, bch - bpad.b + 14);
+      bctx.fillText(scores[i].toFixed(2), x + barW / 2, bch - bpad.b - barH - 4);
+    }
+  }
+
+  document.getElementById('cv-k').addEventListener('input', () => {
+    currentFold = -1;
+    generateScores(+document.getElementById('cv-k').value);
+    draw();
+  });
+
+  document.getElementById('cv-stratified').addEventListener('change', draw);
+
+  document.getElementById('cv-animate').addEventListener('click', () => {
+    const k = +document.getElementById('cv-k').value;
+    currentFold = 0;
+    if (animTimer) clearInterval(animTimer);
+    draw();
+    animTimer = setInterval(() => {
+      currentFold++;
+      if (currentFold >= k) {
+        currentFold = -1;
+        clearInterval(animTimer);
+        animTimer = null;
+      }
+      draw();
+    }, 800);
+  });
+
+  document.getElementById('cv-reset').addEventListener('click', () => {
+    if (animTimer) clearInterval(animTimer);
+    currentFold = -1;
+    draw();
+  });
+
+  generateScores(5);
+  draw();
+})();
+
+// ─── 7. Decision Boundaries ────────────────────────────────────
+(function() {
+  const { canvas, ctx, w, h } = setupCanvas('db-canvas');
+  const pad = { t: 20, r: 20, b: 40, l: 50 };
+  let clf = 'logistic';
+
+  // Generate two-class data
+  const pts = [];
+  let rng = 77;
+  function sr() { rng = (rng * 16807) % 2147483647; return (rng - 1) / 2147483646; }
+  function sg() { return Math.sqrt(-2 * Math.log(sr())) * Math.cos(2 * Math.PI * sr()); }
+
+  for (let i = 0; i < 60; i++) {
+    const cls = i < 30 ? 0 : 1;
+    const cx = cls === 0 ? 3 : 6;
+    const cy = cls === 0 ? 6 : 3;
+    pts.push({ x: cx + sg() * 1.2, y: cy + sg() * 1.2, cls });
+  }
+
+  const range = [0, 9];
+
+  function classify(x, y, kVal) {
+    if (clf === 'logistic') {
+      // Linear boundary: w1*x + w2*y + b = 0
+      const score = -1.0 * x + 1.0 * y + 0;
+      return score > 0 ? 0 : 1;
+    } else if (clf === 'knn') {
+      // KNN
+      const dists = pts.map((p, i) => ({ d: Math.sqrt((p.x - x) ** 2 + (p.y - y) ** 2), cls: p.cls }));
+      dists.sort((a, b) => a.d - b.d);
+      let c0 = 0, c1 = 0;
+      for (let i = 0; i < kVal; i++) {
+        if (dists[i].cls === 0) c0++; else c1++;
+      }
+      return c0 > c1 ? 0 : 1;
+    } else if (clf === 'tree') {
+      // Axis-aligned splits
+      if (x < 4.5) return y > 3 ? 0 : 1;
+      else return y > 6 ? 0 : 1;
+    } else if (clf === 'svm') {
+      // Linear with margin
+      const score = -1.0 * x + 1.0 * y + 0;
+      return score > 0 ? 0 : 1;
+    }
+    return 0;
+  }
+
+  function draw() {
+    const kVal = +document.getElementById('db-k').value;
+    document.getElementById('db-k-val').textContent = kVal;
+
+    ctx.clearRect(0, 0, w, h);
+    drawAxes(ctx, w, h, pad, 'Feature 1', 'Feature 2', range, range);
+
+    const pw = w - pad.l - pad.r;
+    const ph = h - pad.t - pad.b;
+    const res = 4; // pixel resolution
+
+    // Background regions
+    for (let px = 0; px < pw; px += res) {
+      for (let py = 0; py < ph; py += res) {
+        const x = range[0] + (range[1] - range[0]) * px / pw;
+        const y = range[1] - (range[1] - range[0]) * py / ph;
+        const cls = classify(x, y, kVal);
+        ctx.fillStyle = cls === 0 ? 'rgba(96, 165, 250, 0.12)' : 'rgba(248, 113, 113, 0.12)';
+        ctx.fillRect(pad.l + px, pad.t + py, res, res);
+      }
+    }
+
+    // SVM margin
+    if (clf === 'svm') {
+      for (let offset of [-1.2, 1.2]) {
+        ctx.strokeStyle = 'rgba(108, 138, 255, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        for (let px = 0; px <= 100; px++) {
+          const x = range[0] + (range[1] - range[0]) * px / 100;
+          const y = x + offset; // boundary is y = x, margin at y = x +/- offset
+          if (y < range[0] || y > range[1]) continue;
+          const sx = mapX(x, range, pad, w), sy = mapY(y, range, pad, h);
+          px === 0 || (y - offset === range[0]) ? ctx.moveTo(sx, sy) : ctx.lineTo(sx, sy);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+
+    // Decision boundary line for linear classifiers
+    if (clf === 'logistic' || clf === 'svm') {
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      const sx1 = mapX(range[0], range, pad, w), sy1 = mapY(range[0], range, pad, h);
+      const sx2 = mapX(range[1], range, pad, w), sy2 = mapY(range[1], range, pad, h);
+      ctx.moveTo(sx1, sy1); ctx.lineTo(sx2, sy2);
+      ctx.stroke();
+    }
+
+    // Tree boundaries
+    if (clf === 'tree') {
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 2;
+      // x = 4.5 vertical
+      let sx = mapX(4.5, range, pad, w);
+      ctx.beginPath(); ctx.moveTo(sx, pad.t); ctx.lineTo(sx, h - pad.b); ctx.stroke();
+      // y = 3 for x < 4.5
+      let sy = mapY(3, range, pad, h);
+      ctx.beginPath(); ctx.moveTo(pad.l, sy); ctx.lineTo(sx, sy); ctx.stroke();
+      // y = 6 for x >= 4.5
+      sy = mapY(6, range, pad, h);
+      ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(w - pad.r, sy); ctx.stroke();
+    }
+
+    // Data points
+    for (const p of pts) {
+      const sx = mapX(p.x, range, pad, w), sy = mapY(p.y, range, pad, h);
+      ctx.beginPath(); ctx.arc(sx, sy, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = p.cls === 0 ? '#60a5fa' : '#f87171';
+      ctx.fill();
+      ctx.strokeStyle = '#0f1117'; ctx.lineWidth = 1.5; ctx.stroke();
+    }
+
+    // Accuracy
+    let correct = 0;
+    for (const p of pts) {
+      if (classify(p.x, p.y, kVal) === p.cls) correct++;
+    }
+    const acc = correct / pts.length;
+
+    makeMetricCards(document.getElementById('db-metrics'), [
+      { label: 'Accuracy', value: acc.toFixed(3), active: true },
+      { label: 'Classifier', value: clf.toUpperCase() },
+    ]);
+  }
+
+  const explanations = {
+    logistic: '<strong>Logistic Regression</strong> creates a linear boundary. Simple and interpretable, but cannot capture nonlinear patterns.',
+    knn: '<strong>K-Nearest Neighbors</strong> creates an irregular boundary based on local voting. Small K = complex boundary (high variance), large K = smoother boundary (high bias).',
+    tree: '<strong>Decision Tree</strong> creates axis-aligned rectangular regions. Easy to interpret but can create overly rigid boundaries.',
+    svm: '<strong>Support Vector Machine</strong> finds the boundary that maximizes the margin between classes. The dashed lines show the margin &mdash; support vectors lie on them.',
+  };
+
+  document.querySelectorAll('#db-tabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#db-tabs button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      clf = btn.dataset.clf;
+      document.getElementById('db-slider-wrap').style.display = clf === 'knn' ? 'block' : 'none';
+      document.getElementById('db-explanation').innerHTML = explanations[clf];
+      draw();
+    });
+  });
+
+  document.getElementById('db-k').addEventListener('input', draw);
+  draw();
+})();
+
+// ─── 8. K-Means Clustering ────────────────────────────────────
+(function() {
+  const { canvas, ctx, w, h } = setupCanvas('km-canvas');
+  const pad = { t: 20, r: 20, b: 40, l: 50 };
+  const range = [-2, 12];
+
+  // Generate 3 gaussian clusters
+  let rng = 321;
+  function sr() { rng = (rng * 16807) % 2147483647; return (rng - 1) / 2147483646; }
+  function sg() { return Math.sqrt(-2 * Math.log(sr())) * Math.cos(2 * Math.PI * sr()); }
+
+  const data = [];
+  const centers = [[2, 8], [7, 3], [8, 9]];
+  rng = 321;
+  for (const c of centers) {
+    for (let i = 0; i < 30; i++) {
+      data.push({ x: c[0] + sg() * 1.0, y: c[1] + sg() * 1.0, cluster: -1 });
+    }
+  }
+
+  const clusterColors = ['#60a5fa', '#f87171', '#4ade80', '#fbbf24', '#c084fc', '#f97316'];
+  let centroids = [];
+  let iteration = 0;
+  let phase = 'assign'; // 'assign' or 'update'
+
+  function initCentroids() {
+    const k = +document.getElementById('km-k').value;
+    centroids = [];
+    rng = Math.floor(Math.random() * 10000);
+    for (let i = 0; i < k; i++) {
+      centroids.push({ x: range[0] + 2 + sr() * (range[1] - range[0] - 4), y: range[0] + 2 + sr() * (range[1] - range[0] - 4) });
+    }
+    for (const d of data) d.cluster = -1;
+    iteration = 0;
+    phase = 'assign';
+  }
+
+  function assignClusters() {
+    let changed = false;
+    for (const d of data) {
+      let minDist = Infinity, bestC = 0;
+      for (let c = 0; c < centroids.length; c++) {
+        const dist = (d.x - centroids[c].x) ** 2 + (d.y - centroids[c].y) ** 2;
+        if (dist < minDist) { minDist = dist; bestC = c; }
+      }
+      if (d.cluster !== bestC) changed = true;
+      d.cluster = bestC;
+    }
+    return changed;
+  }
+
+  function updateCentroids() {
+    for (let c = 0; c < centroids.length; c++) {
+      const members = data.filter(d => d.cluster === c);
+      if (members.length > 0) {
+        centroids[c].x = members.reduce((s, d) => s + d.x, 0) / members.length;
+        centroids[c].y = members.reduce((s, d) => s + d.y, 0) / members.length;
+      }
+    }
+  }
+
+  function computeInertia() {
+    let sum = 0;
+    for (const d of data) {
+      if (d.cluster >= 0) {
+        sum += (d.x - centroids[d.cluster].x) ** 2 + (d.y - centroids[d.cluster].y) ** 2;
+      }
+    }
+    return sum;
+  }
+
+  function draw() {
+    document.getElementById('km-k-val').textContent = document.getElementById('km-k').value;
+    ctx.clearRect(0, 0, w, h);
+    drawAxes(ctx, w, h, pad, 'Feature 1', 'Feature 2', range, range);
+
+    // Voronoi-like regions (simplified)
+    if (centroids.length > 0 && data[0].cluster >= 0) {
+      const pw = w - pad.l - pad.r, ph = h - pad.t - pad.b;
+      const res = 6;
+      for (let px = 0; px < pw; px += res) {
+        for (let py = 0; py < ph; py += res) {
+          const x = range[0] + (range[1] - range[0]) * px / pw;
+          const y = range[1] - (range[1] - range[0]) * py / ph;
+          let minDist = Infinity, bestC = 0;
+          for (let c = 0; c < centroids.length; c++) {
+            const dist = (x - centroids[c].x) ** 2 + (y - centroids[c].y) ** 2;
+            if (dist < minDist) { minDist = dist; bestC = c; }
+          }
+          ctx.fillStyle = clusterColors[bestC].replace(')', ', 0.06)').replace('rgb', 'rgba').replace('#', '');
+          // Convert hex to rgba
+          const hex = clusterColors[bestC];
+          const r = parseInt(hex.slice(1, 3), 16);
+          const g = parseInt(hex.slice(3, 5), 16);
+          const b = parseInt(hex.slice(5, 7), 16);
+          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.08)`;
+          ctx.fillRect(pad.l + px, pad.t + py, res, res);
+        }
+      }
+    }
+
+    // Data points
+    for (const d of data) {
+      const sx = mapX(d.x, range, pad, w), sy = mapY(d.y, range, pad, h);
+      ctx.beginPath(); ctx.arc(sx, sy, 4, 0, 2 * Math.PI);
+      ctx.fillStyle = d.cluster >= 0 ? clusterColors[d.cluster] : '#8888a0';
+      ctx.fill();
+    }
+
+    // Centroids
+    for (let c = 0; c < centroids.length; c++) {
+      const sx = mapX(centroids[c].x, range, pad, w), sy = mapY(centroids[c].y, range, pad, h);
+      ctx.beginPath(); ctx.arc(sx, sy, 10, 0, 2 * Math.PI);
+      ctx.fillStyle = clusterColors[c];
+      ctx.fill();
+      ctx.strokeStyle = '#0f1117'; ctx.lineWidth = 3; ctx.stroke();
+      // Cross marker
+      ctx.strokeStyle = '#0f1117'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(sx - 5, sy - 5); ctx.lineTo(sx + 5, sy + 5); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(sx + 5, sy - 5); ctx.lineTo(sx - 5, sy + 5); ctx.stroke();
+    }
+
+    const inertia = computeInertia();
+    makeMetricCards(document.getElementById('km-metrics'), [
+      { label: 'Iteration', value: iteration },
+      { label: 'Inertia', value: inertia.toFixed(1), active: true },
+      { label: 'Clusters', value: centroids.length },
+    ]);
+  }
+
+  document.getElementById('km-step').addEventListener('click', () => {
+    if (centroids.length === 0) initCentroids();
+    if (phase === 'assign') {
+      assignClusters();
+      phase = 'update';
+    } else {
+      updateCentroids();
+      iteration++;
+      phase = 'assign';
+    }
+    draw();
+  });
+
+  document.getElementById('km-reset').addEventListener('click', () => {
+    initCentroids();
+    draw();
+  });
+
+  document.getElementById('km-k').addEventListener('input', () => {
+    initCentroids();
+    draw();
+  });
+
+  initCentroids();
+  draw();
+})();
+
+// ─── 9. Activation Functions ────────────────────────────────────
+(function() {
+  const { canvas, ctx, w, h } = setupCanvas('af-canvas');
+  const { canvas: dc, ctx: dctx, w: dw, h: dh } = setupCanvas('af-deriv-canvas');
+  const pad = { t: 20, r: 20, b: 40, l: 50 };
+  const dpad = { t: 15, r: 20, b: 30, l: 50 };
+  let activeFunc = 'all';
+  let probeX = 0;
+
+  const funcs = {
+    sigmoid: { fn: x => 1 / (1 + Math.exp(-x)), deriv: x => { const s = 1 / (1 + Math.exp(-x)); return s * (1 - s); }, color: '#60a5fa', name: 'Sigmoid', note: 'Output in (0,1). Used for binary classification output. Suffers from vanishing gradient at extremes.' },
+    relu: { fn: x => Math.max(0, x), deriv: x => x > 0 ? 1 : 0, color: '#4ade80', name: 'ReLU', note: 'Most popular for hidden layers. Computationally efficient. Can cause "dying ReLU" problem (neurons stuck at 0).' },
+    tanh: { fn: x => Math.tanh(x), deriv: x => 1 - Math.tanh(x) ** 2, color: '#fbbf24', name: 'Tanh', note: 'Output in (-1,1). Zero-centered (better than sigmoid for hidden layers). Still suffers from vanishing gradient.' },
+    softmax: { fn: x => 1 / (1 + Math.exp(-x)), deriv: x => { const s = 1 / (1 + Math.exp(-x)); return s * (1 - s); }, color: '#c084fc', name: 'Softmax (shown as sigmoid for single input)', note: 'Generalizes sigmoid to multi-class. Outputs sum to 1 (probability distribution). Used for multi-class classification output.' },
+  };
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    const xRange = [-6, 6], yRange = [-1.5, 1.5];
+    drawAxes(ctx, w, h, pad, 'x', 'f(x)', xRange, yRange);
+
+    // Draw zero lines
+    ctx.strokeStyle = 'rgba(136,136,160,0.2)'; ctx.lineWidth = 1;
+    const zeroY = mapY(0, yRange, pad, h);
+    ctx.beginPath(); ctx.moveTo(pad.l, zeroY); ctx.lineTo(w - pad.r, zeroY); ctx.stroke();
+    const zeroX = mapX(0, xRange, pad, w);
+    ctx.beginPath(); ctx.moveTo(zeroX, pad.t); ctx.lineTo(zeroX, h - pad.b); ctx.stroke();
+
+    const drawList = activeFunc === 'all' ? Object.keys(funcs) : [activeFunc];
+
+    for (const key of drawList) {
+      const f = funcs[key];
+      ctx.strokeStyle = f.color;
+      ctx.lineWidth = activeFunc === 'all' ? 2 : 3;
+      ctx.beginPath();
+      for (let px = 0; px <= 300; px++) {
+        const x = xRange[0] + (xRange[1] - xRange[0]) * px / 300;
+        const y = f.fn(x);
+        const sx = mapX(x, xRange, pad, w), sy = mapY(clamp(y, yRange[0], yRange[1]), yRange, pad, h);
+        px === 0 ? ctx.moveTo(sx, sy) : ctx.lineTo(sx, sy);
+      }
+      ctx.stroke();
+    }
+
+    // Probe line
+    const probeSX = mapX(clamp(probeX, xRange[0], xRange[1]), xRange, pad, w);
+    ctx.strokeStyle = 'rgba(224,224,230,0.5)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(probeSX, pad.t); ctx.lineTo(probeSX, h - pad.b); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Values at probe
+    ctx.font = '11px Inter, system-ui, sans-serif';
+    let labelY = pad.t + 14;
+    for (const key of drawList) {
+      const f = funcs[key];
+      const val = f.fn(probeX);
+      const sy = mapY(clamp(val, yRange[0], yRange[1]), yRange, pad, h);
+      ctx.beginPath(); ctx.arc(probeSX, sy, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = f.color; ctx.fill();
+
+      ctx.fillStyle = f.color;
+      ctx.textAlign = 'left';
+      ctx.fillText(f.name + ': ' + val.toFixed(3), probeSX + 10, labelY);
+      labelY += 16;
+    }
+
+    // Derivative plot
+    dctx.clearRect(0, 0, dw, dh);
+    const dyRange = [-0.5, 1.5];
+    drawAxes(dctx, dw, dh, dpad, 'x', "f'(x)", xRange, dyRange);
+
+    const dzeroY = mapY(0, dyRange, dpad, dh);
+    dctx.strokeStyle = 'rgba(136,136,160,0.2)'; dctx.lineWidth = 1;
+    dctx.beginPath(); dctx.moveTo(dpad.l, dzeroY); dctx.lineTo(dw - dpad.r, dzeroY); dctx.stroke();
+
+    for (const key of drawList) {
+      const f = funcs[key];
+      dctx.strokeStyle = f.color;
+      dctx.lineWidth = activeFunc === 'all' ? 1.5 : 2.5;
+      dctx.beginPath();
+      for (let px = 0; px <= 300; px++) {
+        const x = xRange[0] + (xRange[1] - xRange[0]) * px / 300;
+        const y = f.deriv(x);
+        const sx = mapX(x, xRange, dpad, dw), sy = mapY(clamp(y, dyRange[0], dyRange[1]), dyRange, dpad, dh);
+        px === 0 ? dctx.moveTo(sx, sy) : dctx.lineTo(sx, sy);
+      }
+      dctx.stroke();
+    }
+
+    // Probe on derivative
+    const dprobeSX = mapX(clamp(probeX, xRange[0], xRange[1]), xRange, dpad, dw);
+    dctx.strokeStyle = 'rgba(224,224,230,0.5)';
+    dctx.lineWidth = 1;
+    dctx.setLineDash([4, 3]);
+    dctx.beginPath(); dctx.moveTo(dprobeSX, dpad.t); dctx.lineTo(dprobeSX, dh - dpad.b); dctx.stroke();
+    dctx.setLineDash([]);
+
+    // Update explanation
+    if (activeFunc !== 'all') {
+      document.getElementById('af-explanation').innerHTML =
+        '<strong>' + funcs[activeFunc].name + ':</strong> ' + funcs[activeFunc].note +
+        '<br><br>Drag the vertical line on the plot to see output values. The <strong>derivative</strong> is shown below &mdash; important for understanding the <strong>vanishing gradient problem</strong>.';
+    } else {
+      document.getElementById('af-explanation').innerHTML =
+        'Drag the vertical line on the plot to see output values. The <strong>derivative</strong> is shown below &mdash; important for understanding the <strong>vanishing gradient problem</strong> with sigmoid/tanh.';
+    }
+  }
+
+  // Drag probe
+  let dragging = false;
+  canvas.addEventListener('mousedown', (e) => { dragging = true; updateProbe(e); });
+  canvas.addEventListener('mousemove', (e) => { if (dragging) updateProbe(e); });
+  window.addEventListener('mouseup', () => { dragging = false; });
+
+  function updateProbe(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left);
+    const xRange = [-6, 6];
+    probeX = xRange[0] + (xRange[1] - xRange[0]) * (mx - pad.l) / (w - pad.l - pad.r);
+    probeX = clamp(probeX, xRange[0], xRange[1]);
+    draw();
+  }
+
+  document.querySelectorAll('#af-tabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#af-tabs button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFunc = btn.dataset.fn;
+      draw();
+    });
+  });
+
+  draw();
+})();
+
+// ─── 10. Feature Scaling ────────────────────────────────────────
+(function() {
+  const { canvas, ctx, w, h } = setupCanvas('fs-canvas');
+  const pad = { t: 30, r: 20, b: 40, l: 60 };
+  let scaleType = 'raw';
+
+  // Generate data: two features with very different scales
+  let rng = 999;
+  function sr() { rng = (rng * 16807) % 2147483647; return (rng - 1) / 2147483646; }
+  function sg() { return Math.sqrt(-2 * Math.log(sr())) * Math.cos(2 * Math.PI * sr()); }
+
+  const rawData = [];
+  rng = 999;
+  for (let i = 0; i < 50; i++) {
+    rawData.push({
+      f1: 1500 + sg() * 400,  // e.g., square footage
+      f2: 2 + sg() * 0.8,     // e.g., number of bedrooms
+    });
+  }
+
+  function scale(data, type) {
+    if (type === 'raw') return data.map(d => ({ x: d.f1, y: d.f2 }));
+
+    const f1s = data.map(d => d.f1), f2s = data.map(d => d.f2);
+
+    if (type === 'standard') {
+      const m1 = f1s.reduce((a, b) => a + b) / f1s.length;
+      const m2 = f2s.reduce((a, b) => a + b) / f2s.length;
+      const s1 = Math.sqrt(f1s.reduce((a, b) => a + (b - m1) ** 2, 0) / f1s.length);
+      const s2 = Math.sqrt(f2s.reduce((a, b) => a + (b - m2) ** 2, 0) / f2s.length);
+      return data.map(d => ({ x: (d.f1 - m1) / s1, y: (d.f2 - m2) / s2 }));
+    }
+
+    if (type === 'minmax') {
+      const min1 = Math.min(...f1s), max1 = Math.max(...f1s);
+      const min2 = Math.min(...f2s), max2 = Math.max(...f2s);
+      return data.map(d => ({
+        x: (d.f1 - min1) / (max1 - min1),
+        y: (d.f2 - min2) / (max2 - min2),
+      }));
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    const scaled = scale(rawData, scaleType);
+
+    const xs = scaled.map(d => d.x), ys = scaled.map(d => d.y);
+    const xMin = Math.min(...xs), xMax = Math.max(...xs);
+    const yMin = Math.min(...ys), yMax = Math.max(...ys);
+    const xPad = (xMax - xMin) * 0.1 || 1;
+    const yPad = (yMax - yMin) * 0.1 || 1;
+    const xRange = [xMin - xPad, xMax + xPad];
+    const yRange = [yMin - yPad, yMax + yPad];
+
+    const xLabel = scaleType === 'raw' ? 'Sq. Footage (raw)' : 'Feature 1 (scaled)';
+    const yLabel = scaleType === 'raw' ? 'Bedrooms (raw)' : 'Feature 2 (scaled)';
+    drawAxes(ctx, w, h, pad, xLabel, yLabel, xRange, yRange);
+
+    // Points
+    for (const d of scaled) {
+      const sx = mapX(d.x, xRange, pad, w), sy = mapY(d.y, yRange, pad, h);
+      ctx.beginPath(); ctx.arc(sx, sy, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(108, 138, 255, 0.7)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(108, 138, 255, 0.9)'; ctx.lineWidth = 1; ctx.stroke();
+    }
+
+    // Title
+    ctx.font = '12px Inter, system-ui, sans-serif';
+    ctx.fillStyle = '#e0e0e6';
+    ctx.textAlign = 'left';
+    const titles = { raw: 'Raw Features (different scales)', standard: 'StandardScaler (mean=0, std=1)', minmax: 'MinMaxScaler (range 0-1)' };
+    ctx.fillText(titles[scaleType], pad.l + 5, 18);
+
+    // Metrics
+    const xMean = xs.reduce((a, b) => a + b) / xs.length;
+    const yMean = ys.reduce((a, b) => a + b) / ys.length;
+
+    makeMetricCards(document.getElementById('fs-metrics'), [
+      { label: 'X Range', value: `${xMin.toFixed(1)} - ${xMax.toFixed(1)}` },
+      { label: 'Y Range', value: `${yMin.toFixed(1)} - ${yMax.toFixed(1)}` },
+      { label: 'Scale Ratio', value: ((xMax - xMin) / (yMax - yMin)).toFixed(1) + 'x', active: true },
+    ]);
+  }
+
+  document.querySelectorAll('#fs-tabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#fs-tabs button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      scaleType = btn.dataset.scale;
+      draw();
+    });
+  });
+
+  draw();
+})();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,14 @@
+id: llm/pass-k-and-majority-voting
+title: "pass@k and majority voting"
+tier: A
+requires: [cml/probability-basics, cml/bernoulli-binomial-and-poisson]
+aliases: [pass at k, unbiased estimator, sampling without replacement, self-consistency, majority vote, answer voting, sample cost]
+objectives:
+  - "Compute the unbiased pass@k from n samples with c passing, stably, as a product of k factors and in a form that keeps relative accuracy"
+  - "Explain why 1 - (1 - c/n)^k is biased and why the without-replacement estimator is not"
+  - "Implement a majority vote over normalised answers with a stated tie rule, and estimate the sampling cost of n samples"
+minutes: {lesson: 12, practice: 20, min_viable: 12}
+interview_angle: "Say what you sampled, what you counted, and why the estimator draws without replacement; then trade off n against cost and name the tie rule for voting."
+sources:
+  - "library: AI-ML/12-Frontiers/Wei Chain-of-Thought 2022.md"
+status: reviewed

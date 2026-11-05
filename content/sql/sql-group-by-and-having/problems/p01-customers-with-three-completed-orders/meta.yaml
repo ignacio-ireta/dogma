@@ -1,0 +1,15 @@
+id: sql/sql-group-by-and-having/p01-customers-with-three-completed-orders
+version: 2                     # bump when tests, tolerances or the contract change
+title: Customers with three or more completed orders
+language: sql
+runtime: sql-duckdb
+entry: query
+difficulty: medium
+minutes: 20
+core: true
+# Totals are compared after rounding to 6 decimals and with a relative tolerance of 1e-9.
+# Amounts have 2 decimals, so this only absorbs summation-order differences between engines.
+tolerance: {atol: 1.0e-6, rtol: 1.0e-9}
+banned_imports: []             # SQL problems: nothing to ban at the module level
+timeout_s: 30
+status: reviewed

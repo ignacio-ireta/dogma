@@ -1,0 +1,14 @@
+# Problem metadata (CONTENT_SPEC §6.2).
+id: llm/rotary-position-embeddings-rope/p02-linear-position-interpolation
+version: 2                      # bump when tests, tolerances or the contract change
+title: RoPE with linear position interpolation
+language: python                # python | sql
+runtime: py-torch               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: apply_rope_scaled        # the function or class name the learner implements
+difficulty: medium              # easy | medium | hard
+minutes: 15
+core: false                     # p02 is a deeper variant; p01 is the core problem
+tolerance: {atol: 1.0e-10, rtol: 1.0e-10}
+banned_imports: [torch.nn]      # covers torch.nn.functional; named in problem.md Constraints
+timeout_s: 30
+status: reviewed

@@ -1,0 +1,18 @@
+id: algo/sort-then-sweep
+title: Sort, then sweep
+tier: A
+requires: [algo/binary-search]
+aliases: [merge intervals, closed interval, half-open interval, touching intervals, interval scheduling, meeting rooms, sweep line, event sweep, peak overlap, concurrency, coverage, sort by start]
+objectives:
+  - Sort intervals or events first, then answer with one pass, and say why the sort removes the pairwise comparison
+  - Merge closed intervals with the rule "share a point", and state how touching and whole-number neighbours are treated
+  - Find the peak number of overlapping half-open sessions with an event sweep, applying ends before starts at equal times
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "Merge overlapping intervals" and "minimum number of meeting rooms" are common screen questions. The interviewer
+  checks the sort key, the touching rule, the order of starts and ends at equal times, and whether you can argue
+  O(n log n) from one sort and one pass.
+sources:
+  - "book: Skiena, The Algorithm Design Manual (2nd ed.), chapter 4, sorting and searching"
+  - "book: Cormen et al., Introduction to Algorithms (3rd ed.), chapter 8, sorting in linear time (the lower bound for comparison sorts)"
+status: reviewed

@@ -1,0 +1,16 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: llm/incremental-decoding-with-a-kv-cache
+title: "Incremental decoding with a KV cache"
+tier: A
+requires: [dl/multi-head-attention, dl/causal-masking]
+aliases: [KV cache, key-value cache, incremental decoding, cached attention, prefill and decode, position offset]
+objectives:
+  - "Implement one cached multi-head attention step that appends the new keys and values and returns the new cache"
+  - "Apply the bottom-right causal offset so a new query sees every cached key up to its own position"
+  - "Explain the cost of cached versus recomputed decoding per step, and how large the cache gets"
+minutes: {lesson: 12, practice: 25, min_viable: 12}
+interview_angle: "Say what is cached and why (keys and values per layer), why one new query needs no mask, and how the cache size grows per token and per sequence."
+sources:
+  - "paper: Vaswani et al. 2017, Attention Is All You Need (arXiv:1706.03762), section 3.2.3"
+  - "book: Goodfellow, Bengio and Courville, Deep Learning, the chapter on sequence modelling and attention"
+status: reviewed

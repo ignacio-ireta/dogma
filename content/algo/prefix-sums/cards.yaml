@@ -1,0 +1,25 @@
+cards:
+  - id: algo/prefix-sums#1
+    type: qa
+    front: How do prefix sums express the sum of nums[i:j]?
+    back: P[j] minus P[i], where P[0] is zero.
+  - id: algo/prefix-sums#2
+    type: qa
+    front: Why seed the prefix-count dictionary with zero mapped to one?
+    back: It represents the empty prefix, allowing subarrays that start at the first entry.
+  - id: algo/prefix-sums#3
+    type: qa
+    front: For target zero, why look up the current prefix before inserting it?
+    back: Inserting first counts the current prefix paired with itself, an empty subarray.
+  - id: algo/prefix-sums#4
+    type: qa
+    front: Why do prefix counts support negatives while a monotone sliding window does not?
+    back: The prefix-difference identity needs no sign restriction; window shrinking needs monotonicity.
+  - id: algo/prefix-sums#5
+    type: qa
+    front: Why is a summed-area table padded with a zero row and column?
+    back: Rectangle queries can use one inclusion-exclusion formula even at the top or left boundary.
+  - id: algo/prefix-sums#6
+    type: qa
+    front: Can a static prefix table answer correct queries after the underlying grid changes?
+    back: Only after updating or rebuilding its stored sums.

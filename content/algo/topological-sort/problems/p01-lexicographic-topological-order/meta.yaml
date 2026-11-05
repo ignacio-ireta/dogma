@@ -1,0 +1,13 @@
+id: algo/topological-sort/p01-lexicographic-topological-order
+version: 3
+title: Lexicographically smallest topological order
+language: python
+runtime: py-stdlib
+entry: smallest_topological_order
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: lists of names
+banned_imports: [graphlib]
+timeout_s: 30
+status: reviewed

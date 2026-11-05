@@ -1,0 +1,13 @@
+id: llm/pass-k-and-majority-voting/p02-majority-vote
+version: 1
+title: Majority vote over normalised answers
+language: python
+runtime: py-stdlib
+entry: majority_vote
+difficulty: easy
+minutes: 15
+core: false
+tolerance: {atol: 0.0, rtol: 0.0}
+banned_imports: [collections.Counter, statistics.mode, statistics.multimode]
+timeout_s: 30
+status: reviewed

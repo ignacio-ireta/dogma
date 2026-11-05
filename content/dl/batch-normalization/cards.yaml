@@ -1,0 +1,26 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused.
+cards:
+  - id: dl/batch-normalization#1
+    type: qa
+    front: Over which axis are batch-norm training statistics computed for an (N, C) input?
+    back: Over the batch axis, per feature. Each of the C features gets its own mean and variance across the N rows.
+  - id: dl/batch-normalization#2
+    type: qa
+    front: Which variance normalizes the batch in training mode?
+    back: The biased variance, dividing the squared deviations by N.
+  - id: dl/batch-normalization#3
+    type: qa
+    front: Which variance does the running estimate use?
+    back: The unbiased variance, dividing by N - 1, so the running statistic estimates the population variance.
+  - id: dl/batch-normalization#4
+    type: cloze
+    text: "In PyTorch the momentum weights the {{c1::new batch statistic}}: running = (1 - momentum) * running + momentum * batch."
+  - id: dl/batch-normalization#5
+    type: qa
+    front: What does batch norm do in inference mode?
+    back: It normalizes with the stored running mean and variance and does not update them.
+  - id: dl/batch-normalization#6
+    type: qa
+    front: Why does batch norm fail for batch size one in training?
+    back: With one row every batch variance is zero, so the statistics carry no information.

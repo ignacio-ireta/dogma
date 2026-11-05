@@ -1,0 +1,15 @@
+id: cml/rolling-statistics-stationarity-and-autocorrelation/p01-rolling-mean-std
+version: 3
+title: Rolling mean and standard deviation
+language: python
+runtime: py-data
+entry: rolling_mean_std
+difficulty: medium
+minutes: 35
+core: true
+# The large-offset test uses a relative error of 1e-6 on the standard deviation, because pandas itself
+# drifts by about 5e-6 at that offset. Centred running updates measure about 1e-13 on the same data.
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [pandas, scipy]
+timeout_s: 30
+status: reviewed

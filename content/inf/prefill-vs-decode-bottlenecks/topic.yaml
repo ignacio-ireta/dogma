@@ -1,0 +1,15 @@
+id: inf/prefill-vs-decode-bottlenecks
+title: "Prefill vs decode bottlenecks"
+tier: A
+requires: [inf/arithmetic-intensity-and-the-roofline, inf/kv-cache-size-arithmetic]
+aliases: [prefill, decode, time to first token, decode step, batching decode, memory-bound decode, weight streaming, prompt processing]
+objectives:
+  - "Estimate prefill time and one decode step for a dense model from its parameter count, prompt length, batch, dtype and device, with the first-order byte and FLOP formulas stated"
+  - "Explain why prefill is compute-bound for long prompts while decode is memory-bound, and why batching amortises the weight read"
+  - "Find the batch size at which a decode step becomes compute-bound, or show that none exists when the cache traffic dominates"
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: "Name the phase first. Prefill is parallel and compute-bound for long prompts; decode streams the weights and each sequence's cache every step, so batching and cache size decide its throughput."
+sources:
+  - "corpus: library-papers/2001.08361.pdf p.7"
+  - "corpus: library-papers/2604.12374.pdf p.35"
+status: reviewed

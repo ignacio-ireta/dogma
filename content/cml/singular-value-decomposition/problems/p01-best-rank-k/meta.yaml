@@ -1,0 +1,13 @@
+id: cml/singular-value-decomposition/p01-best-rank-k
+version: 2
+title: "Best rank-k approximation"
+language: python
+runtime: py-numpy
+entry: best_rank_k
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [scipy]
+timeout_s: 30
+status: reviewed

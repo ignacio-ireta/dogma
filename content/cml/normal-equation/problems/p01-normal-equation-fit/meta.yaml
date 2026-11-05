@@ -1,0 +1,15 @@
+id: cml/normal-equation/p01-normal-equation-fit
+version: 4
+title: Normal-equation linear regression
+language: python
+runtime: py-numpy
+entry: fit_linear_regression
+difficulty: medium
+minutes: 30
+core: true
+# Oracles: scikit-learn and NumPy's lstsq. The random test designs are well conditioned
+# (kappa about 2), and the worst relative difference measured against scikit-learn is about 1e-15.
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [sklearn, scipy, numpy.linalg.lstsq, numpy.linalg.pinv, numpy.linalg.inv, numpy.linalg.qr]
+timeout_s: 30
+status: reviewed

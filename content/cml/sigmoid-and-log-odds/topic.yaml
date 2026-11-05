@@ -1,0 +1,17 @@
+id: cml/sigmoid-and-log-odds
+title: Sigmoid and log-odds
+tier: A
+requires: [cml/probability-basics, cml/chain-rule]
+aliases: [logistic function, logit, log-odds, odds ratio, expit, stable sigmoid, inverse logit]
+objectives:
+  - Implement the sigmoid so that it stays finite and warning-free for logits of very large magnitude
+  - Implement the logit as the inverse of the sigmoid, accurate near 0, 1/2 and 1
+  - Explain why logistic regression is linear in log-odds, and read a coefficient as an odds ratio
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  Expect the stable sigmoid, why logistic regression is linear in the log-odds rather than the probability,
+  and what e to the coefficient means. The numerics question is about which exponent you are allowed to form.
+sources:
+  - "book: Murphy, Probabilistic Machine Learning: An Introduction, chapter on logistic regression"
+  - "book: Goodfellow, Bengio & Courville, Deep Learning, chapter on numerical computation"
+status: reviewed

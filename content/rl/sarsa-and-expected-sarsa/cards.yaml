@@ -1,0 +1,34 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: rl/sarsa-and-expected-sarsa#1
+    type: qa
+    front: Which next-state value does the Sarsa target use?
+    back: Q(s', a') for the action a' the agent actually takes next in s'. Not the max.
+  - id: rl/sarsa-and-expected-sarsa#2
+    type: qa
+    front: What is the expected Sarsa target when s' is not terminal?
+    back: r + gamma * sum over b of pi(b | s') Q(s', b), with pi the epsilon-greedy policy.
+  - id: rl/sarsa-and-expected-sarsa#3
+    type: qa
+    front: What does expected Sarsa's target reduce to when epsilon = 0?
+    back: The Q-learning max target, because the policy is uniform over the tied greedy actions, and their average is the max.
+  - id: rl/sarsa-and-expected-sarsa#4
+    type: qa
+    front: What does expected Sarsa's target reduce to when epsilon = 1?
+    back: r + gamma times the uniform mean of Q(s', .) over all actions.
+  - id: rl/sarsa-and-expected-sarsa#5
+    type: cloze
+    text: "For the same table, expected Sarsa's target is never above Q-learning's, because a weighted average is at most {{c1::the maximum}}."
+  - id: rl/sarsa-and-expected-sarsa#6
+    type: qa
+    front: Why does expected Sarsa have lower target variance than Sarsa?
+    back: It averages over the sampled next action a'. Given s, a, r and s', that draw is the only remaining randomness in the Sarsa target.
+  - id: rl/sarsa-and-expected-sarsa#7
+    type: qa
+    front: What is the target when s' is terminal?
+    back: r. There is no a' and no bootstrap.
+  - id: rl/sarsa-and-expected-sarsa#8
+    type: qa
+    front: Why is Sarsa called on-policy?
+    back: Its target evaluates the action the behaviour policy takes next, so its values refer to the policy it follows.

@@ -1,0 +1,13 @@
+id: algo/bfs-and-dfs-on-graphs-and-grids/p01-grid-shortest-path
+version: 3                      # bump when tests, tolerances or the contract change
+title: Shortest path in a grid with walls
+language: python
+runtime: py-stdlib
+entry: shortest_path_length
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: integer move counts
+banned_imports: [heapq]
+timeout_s: 30
+status: reviewed

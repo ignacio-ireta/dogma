@@ -1,0 +1,17 @@
+id: cml/precision-recall-and-f1
+title: Precision, recall and F1
+tier: A
+requires: [cml/confusion-matrix-and-count-based-scores]
+aliases: [precision, recall, F1, F-beta, harmonic mean, micro average, macro average, weighted average, operating point, threshold trade-off]
+objectives:
+  - Compute precision, recall and F1 for a binary problem and for a multi-class problem with micro, macro and weighted averaging
+  - Explain why F1 is a harmonic mean, and when F-beta with beta other than 1 is the right score
+  - Choose a precision-recall operating point from the cost of each error, and find the best F1 threshold on labelled scores
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "Would you optimise precision or recall?" A strong answer asks what each error costs, then names the operating
+  point. It also says why macro F1 and micro F1 can disagree on the same predictions.
+sources:
+  - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter 7 (model assessment)"
+  - "book: van Rijsbergen 1979, Information Retrieval (2nd ed., Butterworths), evaluation (the F-measure)"
+status: reviewed

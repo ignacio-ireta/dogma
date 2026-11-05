@@ -1,0 +1,22 @@
+id: cml/singular-value-decomposition
+title: Singular value decomposition
+tier: A
+requires: [cml/principal-component-analysis, cml/eigenvalues-and-eigenvectors, cml/matrix-inverse-and-rank]
+aliases: [SVD, singular values, singular vectors, truncated SVD, rank-k approximation, Eckart-Young, Moore-Penrose pseudo-inverse, condition number, numerical rank]
+objectives:
+  - Implement the truncated SVD and state its Frobenius error from the discarded singular values
+  - Implement the pseudo-inverse with a relative cutoff, and check the Moore-Penrose identities
+  - Explain why a rank-r update has r(d_in + d_out) parameters, and what the singular values say about rank
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  Explain the SVD as rotate, stretch, rotate, then say why keeping the top k terms is the best rank-k approximation,
+  and name the cutoff a pseudo-inverse needs.
+sources:
+  - "book: Strang, Introduction to Linear Algebra (5th ed.), chapter on the singular value decomposition"
+  - "book: Deisenroth, Faisal & Ong, Mathematics for Machine Learning, §4.5 (singular value decomposition)"
+  - "library: Mathematics/07-Multivariate-Statistics/Eckart-Young - Best Low-Rank Approximation 1936.md"
+  - "library: Mathematics/10-Numerical-Linear-Algebra/Golub-Kahan - Numerical SVD and Pseudoinverse 1965.md"
+  - "paper: Hu et al. 2021, LoRA: Low-Rank Adaptation of Large Language Models (arXiv:2106.09685)"
+  - "source: library-refresh/01-Mathematics/05-Linear-Algebra/1955-1970 -- Penrose, Golub and Reinsch -- Least Squares, Pseudoinverses and Numerical Stability -- Concept Note.md"
+  - "source: library-refresh/01-Mathematics/05-Linear-Algebra/2011 -- Halko, Martinsson and Tropp -- Randomized SVD as a Computational Bridge -- Study Note.md"
+status: reviewed

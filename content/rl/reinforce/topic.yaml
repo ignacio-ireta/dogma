@@ -1,0 +1,15 @@
+id: rl/reinforce
+title: "REINFORCE"
+tier: A
+requires: ['rl/mdps-and-discounted-returns', 'cml/softmax', 'dl/gradients-with-framework-autograd']
+aliases: ['policy gradient', 'score function estimator', 'Monte Carlo policy gradient', 'REINFORCE loss', 'reward-to-go', 'mean baseline', 'advantage normalisation']
+objectives:
+  - Implement the REINFORCE loss from policy logits, actions and rewards, computing reward-to-go returns with gamma and an optional mean baseline
+  - Verify the loss against an independent cross-entropy reference and its logit gradient against the closed-form score function, in float64
+  - Explain why a baseline that does not depend on the action leaves the policy gradient unbiased, and what return normalisation changes
+minutes: {lesson: 14, practice: 30, min_viable: 15}
+interview_angle: Derive the score-function estimator in one line, explain the reward-to-go and the baseline, and say what the normalisation trick does and does not guarantee.
+sources:
+  - "book: Sutton and Barto, Reinforcement Learning: An Introduction (2nd ed.), ch. 13 (policy gradient methods: the policy gradient theorem and REINFORCE)"
+  - "paper: Schulman et al., Proximal Policy Optimization (arXiv 1707.06347), sec. 2.1 (policy gradient estimator); corpus library-papers/1707.06347.pdf.md"
+status: reviewed

@@ -1,0 +1,28 @@
+cards:
+  - id: algo/sort-then-sweep#1
+    type: qa
+    front: What is the sort key for merging closed intervals?
+    back: The start of each interval, in ascending order.
+  - id: algo/sort-then-sweep#2
+    type: qa
+    front: Do the closed intervals [1, 3] and [3, 5] merge?
+    back: Yes. They share the point 3, so they merge into [1, 5].
+  - id: algo/sort-then-sweep#3
+    type: qa
+    front: Do the closed intervals [1, 3] and [4, 5] merge?
+    back: No. They share no point, so they stay separate, although they are one whole number apart.
+  - id: algo/sort-then-sweep#4
+    type: cloze
+    text: "When merging, the merged end is {{c1::max(last end, end)}}, so that a nested interval cannot shrink the range."
+  - id: algo/sort-then-sweep#5
+    type: qa
+    front: At the same time, why are ends applied before starts in a sweep over half-open sessions?
+    back: A session that ends at t is not active at t, so it must leave the count before a session that starts at t enters it.
+  - id: algo/sort-then-sweep#6
+    type: qa
+    front: What does a sort turn an all-pairs overlap question into?
+    back: A check of each item against only the open group that is still unfinished, so one pass is enough.
+  - id: algo/sort-then-sweep#7
+    type: qa
+    front: Why is sort-then-pass O(n log n) overall?
+    back: The sort costs O(n log n) comparisons, and the single pass that follows costs O(n).

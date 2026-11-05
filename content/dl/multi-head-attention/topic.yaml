@@ -1,0 +1,16 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: dl/multi-head-attention
+title: "Multi-head attention"
+tier: A
+requires: [dl/dense-layer-forward-pass, cml/softmax, dl/counting-network-parameters, dl/scaled-dot-product-attention]
+aliases: [MHA, head split, self-attention, output projection, attention heads]
+objectives:
+  - "Implement self-attention with explicit Q, K, V and output projections, split into heads with reshape then transpose"
+  - "State every intermediate shape and count the parameters of a multi-head layer"
+  - "Explain why several smaller heads can attend to different patterns at the same cost as one wide head"
+minutes: {lesson: 12, practice: 20, min_viable: 12}
+interview_angle: "Lead with the shapes: project, split into heads, attend per head, merge, project. Then say what the heads buy and what they cost."
+sources:
+  - "paper: Vaswani, Shazeer, Parmar et al. 2017, Attention Is All You Need (arXiv:1706.03762), section 3.2.2"
+  - "library: AI-ML/12-Frontiers/Vaswani Attention Is All You Need 2017.md"
+status: reviewed

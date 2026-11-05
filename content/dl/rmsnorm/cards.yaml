@@ -1,0 +1,22 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused.
+cards:
+  - id: dl/rmsnorm#1
+    type: qa
+    front: What statistic does RMSNorm use instead of mean and variance?
+    back: The root mean square over the last dimension, sqrt(mean(x^2)). It does not subtract the mean.
+  - id: dl/rmsnorm#2
+    type: qa
+    front: Where does eps go in RMSNorm?
+    back: "Inside the square root, next to the mean square: y = gain * x / sqrt(mean(x^2) + eps)."
+  - id: dl/rmsnorm#3
+    type: qa
+    front: What invariance does RMSNorm lose compared with layer norm?
+    back: Invariance to adding a constant to every feature of an example. RMSNorm keeps the scale invariance.
+  - id: dl/rmsnorm#4
+    type: cloze
+    text: "RMSNorm drops the {{c1::mean subtraction}} of layer norm, which saves one reduction per row and removes the centering step."
+  - id: dl/rmsnorm#5
+    type: qa
+    front: Does RMSNorm have a bias term in the standard form?
+    back: No. The standard form has only a gain, so the output has no additive shift.

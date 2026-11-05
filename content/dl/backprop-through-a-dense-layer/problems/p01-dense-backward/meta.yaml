@@ -1,0 +1,13 @@
+id: dl/backprop-through-a-dense-layer/p01-dense-backward
+version: 3
+title: Dense layer vector-Jacobian product
+language: python
+runtime: py-numpy
+entry: dense_backward
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 1.0e-8, rtol: 1.0e-6}
+banned_imports: [torch, jax, tensorflow, sklearn]
+timeout_s: 30
+status: reviewed

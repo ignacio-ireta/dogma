@@ -1,0 +1,26 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: llm/incremental-decoding-with-a-kv-cache#1
+    type: qa
+    front: What does a layer cache during decoding?
+    back: "The keys and values of every earlier token, per layer. They do not change once computed."
+  - id: llm/incremental-decoding-with-a-kv-cache#2
+    type: cloze
+    text: "A new query at absolute position S + i may attend keys j {{c1::<= S + i}}, a bottom-right aligned causal rule."
+  - id: llm/incremental-decoding-with-a-kv-cache#3
+    type: qa
+    front: Why does a single new token need no causal mask?
+    back: "Its one query is the last position, so every cached key and the new key are allowed."
+  - id: llm/incremental-decoding-with-a-kv-cache#4
+    type: qa
+    front: How does attention cost per step change with a cache?
+    back: "One query against T keys, O(T d), instead of T queries against T keys, O(T^2 d)."
+  - id: llm/incremental-decoding-with-a-kv-cache#5
+    type: qa
+    front: How much cache does one token need in a 32-layer model with width 4096 in fp16?
+    back: "About 0.5 MiB: 2 (K and V) x 32 layers x 4096 values x 2 bytes = 524,288 bytes."
+  - id: llm/incremental-decoding-with-a-kv-cache#6
+    type: qa
+    front: Why is is_causal the wrong mask for a cached step?
+    back: "It aligns the causal mask top-left for non-square shapes, which ignores the cache offset S."

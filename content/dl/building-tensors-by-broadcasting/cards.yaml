@@ -1,0 +1,28 @@
+cards:
+  - id: dl/building-tensors-by-broadcasting#1
+    type: qa
+    front: What are the broadcasting rules for two aligned sizes?
+    back: They must be equal, or one of them must be 1. The size-1 axis is stretched to match.
+  - id: dl/building-tensors-by-broadcasting#2
+    type: qa
+    front: Which end of the shapes is aligned first in broadcasting?
+    back: The trailing (rightmost) axes. Missing leading axes count as size 1.
+  - id: dl/building-tensors-by-broadcasting#3
+    type: qa
+    front: For X of shape (n, d) and Y of shape (m, d), what shape is X[:, None, :] - Y[None, :, :]?
+    back: (n, m, d). Every pair of points, with every coordinate.
+  - id: dl/building-tensors-by-broadcasting#4
+    type: cloze
+    text: "‖x − y‖² = ‖x‖² − {{c1::2 x·y}} + ‖y‖²"
+  - id: dl/building-tensors-by-broadcasting#5
+    type: qa
+    front: What shape does (n,) plus (n, 1) give, and why is it a bug?
+    back: (n, n). It is valid, so nothing raises, but it adds the wrong pairs.
+  - id: dl/building-tensors-by-broadcasting#6
+    type: qa
+    front: Why clip the expanded squared distances at zero?
+    back: Rounding can make a true zero slightly negative, and the square root of a negative number is NaN.
+  - id: dl/building-tensors-by-broadcasting#7
+    type: qa
+    front: Why centre both point sets before the expansion trick?
+    back: Distances are unchanged by a shared shift. Centring keeps the norm terms small, so the subtraction loses fewer digits.

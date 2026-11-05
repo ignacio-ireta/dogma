@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>dogma — six visual directions</title>
+  <link rel="stylesheet" href="board.css">
+</head>
+<body>
+  <header class="board-header"><a href="index.html" class="board-logo">dogma<span> / design studies</span></a><span>04 NOV 2026 <b>·</b> CONCEPT REVIEW</span></header>
+  <div class="board-layout">
+    <aside class="chooser">
+      <p class="eyebrow">FIVE DIRECTIONS + ONE BONUS</p>
+      <h1>A little more<br>character.</h1>
+      <p class="intro">Six ways to make technical learning feel inviting, curious, and worth exploring.</p>
+      <nav id="concepts" aria-label="Design directions"></nav>
+      <button id="overview-toggle" class="overview-toggle" aria-pressed="false">Compare all six ↗</button>
+      <div class="design-note"><strong>A shared foundation</strong><p>OpenDyslexic Bold for the interface. Inter for reading. KaTeX for math. JetBrains Mono for code.</p><p>Free to explore. Progress at your own pace. The same learning workflow, with more visual character.</p></div>
+    </aside>
+    <main>
+      <section id="detail" aria-live="polite">
+        <div class="concept-heading"><div><p id="concept-kicker" class="eyebrow"></p><h2 id="concept-title"></h2><p id="concept-tagline"></p></div><div id="palette" class="palette" aria-label="Color palette"></div></div>
+        <div id="reasoning" class="reasoning"></div>
+        <div class="preview-toolbar">
+          <div class="segmented" aria-label="Preview screen"><button data-screen="today" aria-pressed="true">Today</button><button data-screen="workspace" aria-pressed="false">Lesson + code</button></div>
+          <div class="segmented" aria-label="Preview size"><button data-size="desktop" aria-pressed="true">Desktop</button><button data-size="mobile" aria-pressed="false">Phone</button></div>
+        </div>
+        <div class="preview-stage"><div class="preview-window" id="preview-window"><div class="window-bar"><span>● ● ●</span><span id="preview-address">dogma / today</span><span>VISUAL MOCKUP</span></div><iframe id="preview" title="Interactive design preview"></iframe></div></div>
+        <p class="preview-note">Sample content and progress. Try “Continue lesson,” then Statement, Lesson, Answer, and Hints. Run and Submit simulate feedback; no code runs or learning data is saved. Other navigation items show their proposed appearance.</p>
+        <div class="recommendation"><span>RECOMMENDATION</span><p><strong>Memphis Study Club, with Practice Studio’s workspace discipline.</strong> Bring illustration and playful shapes to Today and curriculum surfaces. Give lessons and code the quietest surfaces, with progress that celebrates exploration at your own pace.</p></div>
+      </section>
+      <section id="overview" hidden><p class="eyebrow">SAME PRODUCT, SIX PERSONALITIES</p><h2>Find your kind of focus.</h2><p>Choose a concept to open its full desktop and phone previews.</p><div id="overview-grid" class="overview-grid"></div></section>
+      <details class="research"><summary>Reference notes &amp; what these proposals borrow</summary><p>Reviewed 4 November 2026. These are original proposals, not replicas. Deep-ML was inspected in a live browser. HackerRank, LeetCode, Codeforces, and DataCamp blocked automated browser viewing; their public page content and available official documentation informed the structural analysis. LeetCode’s Explore screenshots are historical, not evidence of its current appearance.</p><div id="source-list"></div><p>All six previews are static design studies, with example data. The geometry diagram is a proposed teaching visual; an interactive version would be a separate feature. No study data or application behavior is changed.</p></details>
+    </main>
+  </div>
+  <script src="concepts.js"></script>
+  <script src="board.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+id: llm/llm-as-judge-and-agreement-with-humans
+title: "LLM-as-judge and agreement with humans"
+tier: A
+requires: [cml/confusion-matrix-and-count-based-scores]
+aliases: [LLM judge, model-based evaluation, pairwise comparison, position bias, verbosity bias, Cohen kappa, win rate, judge calibration]
+objectives:
+  - "Compute Cohen's kappa between two raters over a fixed label set, and state the degenerate case where expected agreement is 1"
+  - "Debias a pairwise judge by judging both orders, and score inconsistent pairs by an exact rule"
+  - "Explain pointwise versus pairwise judging, the main judge biases, and how to measure agreement and calibration against humans"
+minutes: {lesson: 12, practice: 20, min_viable: 12}
+interview_angle: "Say that raw agreement hides chance, use kappa with a label set, and debias a pairwise judge by swapping the order before you trust any win rate."
+sources:
+  - "library: AI-ML/12-Frontiers/Stiennon et al. — Learning to Summarize from Human Feedback 2020.md"
+  - "library: AI-ML/13-Scaling-and-Alignment/Bai et al. — Constitutional AI 2022.md"
+status: reviewed

@@ -1,0 +1,27 @@
+cards:
+  - id: cml/nearest-neighbour-search-and-knn#1
+    type: qa
+    front: What does a KNN model do at training time?
+    back: Nothing beyond storing the training pairs. This is why it is called lazy learning.
+  - id: cml/nearest-neighbour-search-and-knn#2
+    type: qa
+    front: Why must features be scaled before KNN?
+    back: The metric is the model. A feature with a large numeric range dominates every Euclidean distance.
+  - id: cml/nearest-neighbour-search-and-knn#3
+    type: cloze
+    text: "A small k gives {{c1::low bias and high variance}}; a large k gives high bias and low variance."
+  - id: cml/nearest-neighbour-search-and-knn#4
+    type: qa
+    front: How does the ratio of farthest to nearest distance change as dimension grows, for uniform data?
+    back: It shrinks towards 1. Nearest and farthest points become similar, which is distance concentration.
+  - id: cml/nearest-neighbour-search-and-knn#5
+    type: qa
+    front: What is the cost of brute-force KNN for one query?
+    back: O(n·d) for distances; a full sort adds O(n log n). Partial selection can avoid sorting every distance.
+  - id: cml/nearest-neighbour-search-and-knn#6
+    type: qa
+    front: Why is a k-d tree exact but weak in high dimensions?
+    back: It prunes cells with axis-aligned bounds, and in high dimension few cells can be ruled out, so the search visits most of the data.
+  - id: cml/nearest-neighbour-search-and-knn#7
+    type: cloze
+    text: "Approximate nearest-neighbour indexes such as HNSW trade {{c1::recall}} for speed, and recall is measured against brute force."

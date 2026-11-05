@@ -1,0 +1,13 @@
+id: algo/dynamic-programming/p02-longest-common-subsequence
+version: 2
+title: Longest common subsequence with a witness
+language: python
+runtime: py-stdlib
+entry: longest_common_subsequence
+difficulty: medium
+minutes: 20
+core: false
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: integer lengths and string witnesses
+banned_imports: [difflib, functools]
+timeout_s: 60
+status: reviewed

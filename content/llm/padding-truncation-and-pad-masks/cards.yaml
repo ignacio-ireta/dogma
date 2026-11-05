@@ -1,0 +1,20 @@
+cards:
+  - id: llm/padding-truncation-and-pad-masks#1
+    type: qa
+    front: How should the attention mask be computed for a padded batch?
+    back: From lengths. Position j of row n is 1 when j is a kept token, else 0. Never from ids != pad_id.
+  - id: llm/padding-truncation-and-pad-masks#2
+    type: qa
+    front: Why does decoder-only generation pad on the left?
+    back: The next token is appended at the last column and read from it. Left padding makes the last column each row's last real token.
+  - id: llm/padding-truncation-and-pad-masks#3
+    type: qa
+    front: What does truncation_side="left" keep?
+    back: The last max_length tokens of the sequence.
+  - id: llm/padding-truncation-and-pad-masks#4
+    type: qa
+    front: What is the default ignore_index for cross-entropy targets in PyTorch?
+    back: -100. Targets equal to it are skipped, and the mean divides by the number of non-ignored targets.
+  - id: llm/padding-truncation-and-pad-masks#5
+    type: cloze
+    text: "A real token whose id equals pad_id must keep attention mask {{c1::1}}."

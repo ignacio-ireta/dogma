@@ -1,0 +1,13 @@
+id: llm/llm-as-judge-and-agreement-with-humans/p01-cohens-kappa
+version: 2
+title: Cohen's kappa between two raters
+language: python
+runtime: py-numpy
+entry: cohens_kappa
+difficulty: medium
+minutes: 20
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [sklearn, statsmodels]
+timeout_s: 30
+status: reviewed

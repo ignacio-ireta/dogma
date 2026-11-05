@@ -1,0 +1,14 @@
+id: inf/cost-per-token-and-break-even
+title: "Cost per token and break-even"
+tier: A
+requires: [inf/ttft-itl-and-throughput]
+aliases: [cost per token, cost per million tokens, break-even, self-hosting, utilization, GPU hour, API pricing, input and output pricing, unit economics]
+objectives:
+  - "Compute the self-hosted cost per million output tokens from GPU-hour price, GPU count, sustained tokens per second and utilization, with the rounding rule stated"
+  - "Find the daily token volume at which self-hosting costs what an API charges, and say whether the replica can reach it"
+  - "Explain why cost per token rises as utilization falls, and why input and output tokens are priced from different rates"
+minutes: {lesson: 12, practice: 25, min_viable: 12}
+interview_angle: "Start with the fixed daily bill over the tokens it covers. Utilization sets the denominator, the break-even volume is the bill over the API price, and the throughput must be sustained, not peak."
+sources:
+  - "book: Hennessy & Patterson, Computer Architecture: A Quantitative Approach, ch. 1 (cost, performance and utilization)"
+status: reviewed

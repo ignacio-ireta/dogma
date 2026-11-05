@@ -1,0 +1,232 @@
+# Core path: every tier-A topic, in study order. The planner introduces topics in this order,
+# subject to `requires:` in each topic.yaml. Budget: 3 x 45-min sessions/day, ~6 days/week,
+# default day = Learn + Learn + Consolidate (small topics are paired in one Learn session).
+# Content authoring follows this order too, staying >= 1 week ahead of the learner.
+id: core
+title: "Core path: tier A, balanced DS + AI engineering"
+start: 2026-10-26
+end: 2027-01-31
+sessions_per_day: 3
+session_minutes: 45
+days_per_week: 6
+weeks:
+  - week: 1
+    starts: 2026-10-26
+    theme: "Linear algebra & numpy fluency"
+    topics:
+      - cml/vector-operations
+      - cml/matrix-shapes-and-transpose
+      - cml/matrix-multiplication
+      - dl/building-tensors-by-broadcasting
+      - cml/vector-and-matrix-norms
+      - cml/cosine-similarity
+      - cml/matrix-inverse-and-rank
+      - math/determinants-and-trace
+      - cml/eigenvalues-and-eigenvectors
+      - sql/sql-select-filter-and-sort
+      - sql/sql-group-by-and-having
+      - algo/hash-maps-and-sets
+  - week: 2
+    starts: 2026-11-02
+    theme: "Calculus, optimization, probability I"
+    topics:
+      - cml/derivatives
+      - cml/partial-derivatives-and-gradients
+      - cml/chain-rule
+      - cml/gradient-descent
+      - cml/stochastic-and-mini-batch-gradient-descent
+      - cml/normal-equation
+      - cml/descriptive-statistics
+      - cml/probability-basics
+      - cml/bayes-theorem
+      - cml/bernoulli-binomial-and-poisson
+      - sql/sql-joins-and-unions
+      - sql/pandas-merge-and-reshape
+      - algo/two-pointers-and-sliding-windows
+  - week: 3
+    starts: 2026-11-09
+    theme: "Probability & statistics II, experimentation"
+    topics:
+      - cml/expectation-and-variance
+      - cml/covariance-and-correlation
+      - cml/normal-and-multivariate-gaussian
+      - cml/maximum-likelihood-and-map
+      - math/monte-carlo-simulation
+      - math/inverse-transform-sampling
+      - math/reservoir-sampling
+      - cml/sampling-distributions-standard-errors-and-cis
+      - cml/bootstrap-and-permutation-resampling
+      - cml/t-tests-and-anova
+      - cml/a-b-test-design-and-analysis
+      - sql/sql-subqueries-and-ctes
+      - algo/binary-search
+  - week: 4
+    starts: 2026-11-16
+    theme: "Regression & classification"
+    topics:
+      - cml/regression-metrics-and-robust-losses
+      - cml/ridge-regression-and-weight-decay
+      - cml/lasso-and-elastic-net
+      - cml/sigmoid-and-log-odds
+      - cml/logistic-regression
+      - cml/softmax
+      - cml/cross-entropy
+      - cml/confusion-matrix-and-count-based-scores
+      - cml/precision-recall-and-f1
+      - cml/roc-pr-curves-and-auc
+      - cml/handling-class-imbalance
+      - sql/sql-conditional-aggregation
+      - sql/pandas-groupby-aggregate-and-transform
+  - week: 5
+    starts: 2026-11-23
+    theme: "ML workflow, validation, time series"
+    topics:
+      - cml/shuffling-splitting-and-batching-data
+      - cml/feature-scaling
+      - cml/preprocessing-pipelines
+      - cml/missing-values-and-outliers
+      - cml/k-fold-cross-validation
+      - cml/leakage-and-walk-forward-validation
+      - cml/over-and-underfitting-early-stopping
+      - cml/bias-variance-decomposition
+      - cml/rolling-statistics-stationarity-and-autocorrelation
+      - inf/data-quality-and-drift-detection
+      - sql/sql-date-handling
+      - algo/stacks-and-queues
+      - algo/sort-then-sweep
+  - week: 6
+    starts: 2026-11-30
+    theme: "Trees, ensembles, unsupervised, retrieval"
+    topics:
+      - cml/entropy-and-mutual-information
+      - cml/choosing-a-tree-split
+      - cml/random-forests-and-feature-importance
+      - cml/adaboost-and-gradient-boosting
+      - cml/xgboost-second-order-objective
+      - cml/nearest-neighbour-search-and-knn
+      - cml/k-means
+      - cml/principal-component-analysis
+      - cml/singular-value-decomposition
+      - cml/ranking-metrics
+      - cml/tf-idf-and-bm25
+      - sql/sql-ranking-window-functions
+      - algo/heaps-and-priority-queues
+  - week: 7
+    starts: 2026-12-07
+    theme: "Neural networks from scratch"
+    topics:
+      - dl/dense-layer-forward-pass
+      - dl/relu-family-activations
+      - dl/smooth-activations-tanh-gelu-swish
+      - dl/counting-network-parameters
+      - dl/xavier-and-he-initialization
+      - dl/backprop-through-a-chain-of-scalars
+      - dl/backprop-through-a-dense-layer
+      - dl/reverse-mode-autograd-engine
+      - dl/training-an-mlp-from-scratch
+      - dl/dropout
+      - sql/sql-top-n-and-latest-row-per-group
+      - algo/prefix-sums
+  - week: 8
+    starts: 2026-12-14
+    theme: "PyTorch & optimization for deep learning"
+    topics:
+      - dl/tensors-in-pytorch-and-tinygrad
+      - dl/gradients-with-framework-autograd
+      - dl/one-training-step
+      - dl/a-complete-training-loop
+      - dl/sgd-with-momentum
+      - dl/adam
+      - dl/adamw-decoupled-weight-decay
+      - dl/learning-rate-decay-schedules
+      - dl/learning-rate-warmup
+      - dl/batch-normalization
+      - dl/layer-normalization
+      - dl/rmsnorm
+      - sql/sql-lag-and-lead
+  - week: 9
+    starts: 2026-12-21
+    theme: "Attention & transformers (holiday week, lighter)"
+    topics:
+      - dl/residual-connections
+      - dl/scaled-dot-product-attention
+      - dl/causal-masking
+      - dl/positional-encodings
+      - dl/multi-head-attention
+      - dl/position-wise-feed-forward-block
+      - dl/transformer-block
+      - dl/kl-divergence
+      - dl/convolution-forward-pass
+      - sql/sql-running-totals-and-frames
+      - algo/lru-cache
+      - algo/dynamic-programming
+  - week: 10
+    starts: 2026-12-28
+    theme: "LLM fundamentals I (holiday week, lighter)"
+    topics:
+      - llm/word-and-character-tokenizers
+      - llm/bpe-merge-training
+      - llm/bpe-encode-and-decode
+      - llm/padding-truncation-and-pad-masks
+      - llm/next-token-targets-and-batches
+      - llm/negative-log-likelihood-and-perplexity
+      - dl/infonce-contrastive-loss
+      - sql/sql-cohort-retention
+      - algo/binary-tree-recursion-and-traversal
+      - algo/topological-sort
+  - week: 11
+    starts: 2027-01-04
+    theme: "LLM fundamentals II & inference basics"
+    topics:
+      - llm/gpt-forward-pass
+      - llm/rotary-position-embeddings-rope
+      - llm/model-parameter-and-memory-footprint
+      - llm/autoregressive-generation-loop
+      - llm/temperature-top-k-and-top-p-sampling
+      - llm/incremental-decoding-with-a-kv-cache
+      - llm/gqa-mqa-and-cross-layer-kv-sharing
+      - dl/mixed-precision
+      - inf/floating-point-formats
+      - inf/ttft-itl-and-throughput
+      - inf/kv-cache-size-arithmetic
+      - sql/sql-first-and-last-activity-per-user
+      - algo/bfs-and-dfs-on-graphs-and-grids
+  - week: 12
+    starts: 2027-01-11
+    theme: "Serving at scale & fine-tuning"
+    topics:
+      - inf/arithmetic-intensity-and-the-roofline
+      - inf/prefill-vs-decode-bottlenecks
+      - inf/gpu-memory-and-capacity-sizing
+      - inf/cost-per-token-and-break-even
+      - inf/absmax-and-zero-point-int8-quantization
+      - inf/paged-kv-cache
+      - inf/continuous-batching
+      - llm/moe-top-k-routing
+      - llm/scaling-laws-and-compute-budgets
+      - llm/chat-templates-and-tool-call-formats
+      - llm/instruction-tuning-batches-and-loss-masks
+      - llm/lora-adapters
+      - llm/lora-parameter-and-memory-arithmetic
+      - sql/sql-streaks-gaps-and-islands
+  - week: 13
+    starts: 2027-01-18
+    theme: "RL basics, alignment, RAG & evaluation"
+    topics:
+      - rl/action-value-estimates
+      - rl/epsilon-greedy-exploration
+      - rl/mdps-and-discounted-returns
+      - rl/q-learning
+      - rl/reinforce
+      - llm/bradley-terry-reward-models
+      - llm/direct-preference-optimization-dpo
+      - llm/grpo-and-its-variants
+      - llm/retrieval-augmented-generation-pipeline
+      - llm/pass-k-and-majority-voting
+      - llm/llm-as-judge-and-agreement-with-humans
+      - inf/speculative-decoding-speedup-math
+      - safe/split-conformal-prediction
+  - week: 14
+    starts: 2027-01-25
+    theme: "Interview week: no new topics, only mocks, timed re-solves and narratives"
+    topics: []

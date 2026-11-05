@@ -1,0 +1,14 @@
+# Problem metadata (CONTENT_SPEC §6.2).
+id: dl/transformer-block/p01-pre-norm-causal-block
+version: 3                      # bump when tests, tolerances or the contract change
+title: Pre-norm causal decoder block
+language: python                # python | sql
+runtime: py-torch               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: pre_norm_block           # the function or class name the learner implements
+difficulty: medium              # easy | medium | hard
+minutes: 25
+core: true                      # p01 is the core problem: exactly one per topic
+tolerance: {atol: 1.0e-10, rtol: 1.0e-10}
+banned_imports: [torch.nn]      # each must be named in problem.md Constraints
+timeout_s: 30
+status: reviewed

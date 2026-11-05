@@ -1,0 +1,28 @@
+cards:
+  - id: cml/matrix-multiplication#1
+    type: qa
+    front: If A is (m, n) and B is (n, p), what is the shape of AB?
+    back: (m, p). The inner dimension n must match on both sides.
+  - id: cml/matrix-multiplication#2
+    type: cloze
+    text: "(AB)_ij = Σ_t {{c1::A_it B_tj}}: row i of A dotted with column j of B."
+  - id: cml/matrix-multiplication#3
+    type: qa
+    front: How many multiply-add operations does an (m, n) by (n, p) product take?
+    back: m · n · p. Each of the m · p entries takes n multiply-adds.
+  - id: cml/matrix-multiplication#4
+    type: qa
+    front: Is AB equal to BA in general?
+    back: No. The shapes may not even match, and when they do the values usually differ.
+  - id: cml/matrix-multiplication#5
+    type: qa
+    front: What is the difference between A * B and A @ B in NumPy?
+    back: "* is the entrywise product (broadcasting applies). @ is the matrix product."
+  - id: cml/matrix-multiplication#6
+    type: qa
+    front: Why is (AB)C equal to A(BC)?
+    back: Matrix products are compositions of linear maps, and composition is associative. Only the cost depends on the bracketing.
+  - id: cml/matrix-multiplication#7
+    type: qa
+    front: Without a softmax between them, which cheaper bracketing gives (QKᵀ)V?
+    back: Q(KᵀV). It avoids building the T × T score matrix when T is large.

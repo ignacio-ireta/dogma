@@ -1,0 +1,16 @@
+id: sys/rass-case-framework
+title: RASS case framework
+tier: B
+kind: case
+requires: []
+aliases: [RASS, case framework, reframe ask structure synthesize, case interview structure]
+objectives:
+  - Reframe an open product question into a measurable ML question in under two minutes
+  - Ask the business and technical questions that change the design, and say why each one matters
+  - Structure a model choice with its alternatives and then close on business impact
+minutes: {lesson: 12, practice: 30, min_viable: 12}
+interview_angle: How do you run an open-ended ML case without losing the thread, and how do you land it on value?
+sources:
+  - "source: interview-prep/frameworks/RASS.md"
+  - "source: interview-prep/lessons/ref-rass.md"
+status: verified

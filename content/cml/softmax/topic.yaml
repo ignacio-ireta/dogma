@@ -1,0 +1,17 @@
+id: cml/softmax
+title: Softmax
+tier: A
+requires: [cml/sigmoid-and-log-odds]
+aliases: [normalised exponentials, log-sum-exp, logsumexp, temperature scaling, multinomial logistic, categorical distribution, log-softmax]
+objectives:
+  - Implement softmax and log-softmax along any axis, subtracting the maximum so that extreme logits stay finite
+  - Explain softmax invariance to a shift per slice, and its two-class case as the sigmoid
+  - Explain temperature scaling and why log-softmax is the right quantity for losses
+minutes: {lesson: 12, practice: 30, min_viable: 15}
+interview_angle: >-
+  Expect the max-subtraction trick and why it is exact, the two-class reduction to the sigmoid, what temperature
+  does at its limits, and why losses use log-softmax rather than the log of a softmax.
+sources:
+  - "book: Goodfellow, Bengio & Courville, Deep Learning, chapter on numerical computation"
+  - "book: Bishop, Pattern Recognition and Machine Learning, chapter on linear models for classification"
+status: reviewed

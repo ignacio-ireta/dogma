@@ -1,0 +1,23 @@
+cards:
+  - id: cml/softmax#1
+    type: qa
+    front: Define softmax(z)_j for a vector of logits z.
+    back: exp(z_j) / Σ_k exp(z_k). The result is positive and sums to 1.
+  - id: cml/softmax#2
+    type: qa
+    front: Why is it safe to subtract the maximum logit before applying softmax?
+    back: Softmax is invariant to adding the same constant to every logit, so the answer is unchanged, and every exponent becomes at most 0.
+  - id: cml/softmax#3
+    type: cloze
+    text: "With two classes, softmax([z, 0]) gives the first probability {{c1::σ(z)}}, the logistic function of z."
+  - id: cml/softmax#4
+    type: qa
+    front: What happens to softmax(z / T) as the temperature T goes to zero, and as it goes to infinity?
+    back: For positive T → 0 it splits mass uniformly over tied maxima (one-hot for a unique maximum). For T → ∞ it tends to uniform.
+  - id: cml/softmax#5
+    type: cloze
+    text: "Log-softmax is computed as z_j − {{c1::logsumexp(z)}}, which never forms a probability that might underflow."
+  - id: cml/softmax#6
+    type: qa
+    front: Why must the maximum be taken along the normalised axis, and kept as an axis?
+    back: A global maximum mixes slices, and a missing keepdims broadcasts along the wrong dimension. Both give silent wrong answers or NaN.

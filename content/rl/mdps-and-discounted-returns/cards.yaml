@@ -1,0 +1,24 @@
+cards:
+- id: rl/mdps-and-discounted-returns#1
+  type: qa
+  front: Write the discounted return G_t in terms of rewards and gamma.
+  back: "G_t = sum over k >= 0 of gamma^k r_{t+k+1}, where r_{t+1} is the reward after the action at step t."
+- id: rl/mdps-and-discounted-returns#2
+  type: qa
+  front: What is the one-line recurrence that computes all returns of an episode in reverse?
+  back: "G_t = r_{t+1} + gamma * G_{t+1}, with G_T = 0 after the last step."
+- id: rl/mdps-and-discounted-returns#3
+  type: qa
+  front: Write the Bellman expectation equation for V^pi(s).
+  back: "V^pi(s) = sum over a of pi(a|s) [R(s,a) + gamma sum over s' of P(s'|s,a) V^pi(s')]."
+- id: rl/mdps-and-discounted-returns#4
+  type: qa
+  front: How is policy evaluation written as a linear system?
+  back: "V = R_pi + gamma P_pi V, so V = (I - gamma P_pi)^(-1) R_pi when gamma < 1."
+- id: rl/mdps-and-discounted-returns#5
+  type: qa
+  front: Why does an episodic task allow gamma = 1 but a continuing task usually does not?
+  back: An episodic return is a finite sum over the steps before termination. A continuing return can be an infinite sum that diverges at gamma = 1.
+- id: rl/mdps-and-discounted-returns#6
+  type: cloze
+  text: "With constant reward r and gamma < 1, the infinite return equals {{c1::r / (1 - gamma)}}."

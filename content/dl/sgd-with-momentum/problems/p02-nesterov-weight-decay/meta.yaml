@@ -1,0 +1,13 @@
+id: dl/sgd-with-momentum/p02-nesterov-weight-decay
+version: 2
+title: "Nesterov momentum with weight decay"
+language: python
+runtime: py-torch
+entry: sgd_nesterov_step
+difficulty: hard
+minutes: 25
+core: false
+tolerance: {atol: 1.0e-10, rtol: 1.0e-10}
+banned_imports: [torch.optim]
+timeout_s: 30
+status: reviewed

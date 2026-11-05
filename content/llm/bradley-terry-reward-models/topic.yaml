@@ -1,0 +1,16 @@
+id: llm/bradley-terry-reward-models
+title: "Bradley-Terry reward models"
+tier: A
+requires: ['cml/sigmoid-and-log-odds', 'cml/logistic-regression']
+aliases: [Bradley-Terry, pairwise preference, reward model, preference model, reward head, logistic pair loss, chosen vs rejected, Bradley-Terry loss, reward hacking, reward margin]
+objectives:
+  - Implement the Bradley-Terry pair loss and pair accuracy from chosen and rejected reward tensors, computing -log sigmoid(margin) without overflow or underflow
+  - Explain why only reward differences matter, so adding one constant to every reward leaves the loss unchanged
+  - Name reward hacking and margin growth on separable data as the two failure modes to watch for when a reward model drives a policy
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: Start with P(chosen beats rejected) = sigmoid(r_c - r_r), then say why the loss is the logistic loss of the margin, why the offset is arbitrary but the scale is not, and how the policy exploits a reward model.
+sources:
+  - "library: AI-ML/12-Frontiers/Christiano et al. — Deep RL from Human Preferences 2017.md"
+  - "library: AI-ML/12-Frontiers/Ouyang InstructGPT RLHF 2022.md"
+  - "paper: Bradley and Terry 1952, Rank analysis of incomplete block designs: the method of paired comparisons (Biometrika); cited from memory, not in the corpus"
+status: reviewed

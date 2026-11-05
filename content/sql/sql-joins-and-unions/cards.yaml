@@ -1,0 +1,28 @@
+cards:
+  - id: sql/sql-joins-and-unions#1
+    type: qa
+    front: Which join keeps every row of the left table, even when nothing on the right matches?
+    back: LEFT JOIN. Unmatched rows keep their left columns and get NULL in the right-hand columns.
+  - id: sql/sql-joins-and-unions#2
+    type: qa
+    front: After a LEFT JOIN, a customer with no orders gives what COUNT(*) and COUNT(o.order_id)?
+    back: COUNT(*) is 1, because the one NULL-extended row exists. COUNT(o.order_id) is 0, because it counts only matched orders.
+  - id: sql/sql-joins-and-unions#3
+    type: qa
+    front: A LEFT JOIN is followed by WHERE o.amount > 10 on the right-hand table. What happens to customers with no orders?
+    back: They are dropped, because their NULL amount fails the test. The LEFT JOIN has become an inner join. Move the condition into ON.
+  - id: sql/sql-joins-and-unions#4
+    type: qa
+    front: One customer has 2 current versions and 3 orders. Joined with no version filter, how many rows does the customer produce?
+    back: 6 (2 times 3). Each order repeats once for each customer row it matches. This is fan-out.
+  - id: sql/sql-joins-and-unions#5
+    type: cloze
+    text: "UNION removes duplicates across both queries. UNION {{c1::ALL}} keeps every row."
+  - id: sql/sql-joins-and-unions#6
+    type: qa
+    front: Why can NOT IN (SELECT cid FROM orders) return no rows at all?
+    back: If the subquery returns a NULL, every "x NOT IN" test is unknown, so no row passes. NOT EXISTS does not have this problem.
+  - id: sql/sql-joins-and-unions#7
+    type: qa
+    front: How does UNION match the columns of its two branches?
+    back: By position, not by name. The result takes its column names from the first branch.

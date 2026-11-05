@@ -1,0 +1,20 @@
+cards:
+  - id: sql/sql-streaks-gaps-and-islands#1
+    type: qa
+    front: "Why must duplicate user-day rows be removed before the row-number trick?"
+    back: "A duplicate advances the row number but not the date, so the key changes inside a run and the island splits."
+  - id: sql/sql-streaks-gaps-and-islands#2
+    type: qa
+    front: "What is the island key in the date-minus-row_number trick?"
+    back: "The date minus the row number of that date within the user. It is constant across a run of consecutive days."
+  - id: sql/sql-streaks-gaps-and-islands#3
+    type: qa
+    front: "In the LAG method, what does the flag mark, and what value does the first row of a user get?"
+    back: "The flag marks an island start: 1 when the gap to the previous day is not exactly one. The first row has NULL from LAG and gets 1."
+  - id: sql/sql-streaks-gaps-and-islands#4
+    type: qa
+    front: "What tie rule picks the longest streak when two streaks have equal length?"
+    back: "The earliest start, using ORDER BY streak_days DESC, streak_start ASC in the rank."
+  - id: sql/sql-streaks-gaps-and-islands#5
+    type: cloze
+    text: "Within one island, the date and the row number both rise by {{c1::one}} per step, so their difference stays constant."

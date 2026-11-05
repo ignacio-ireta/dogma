@@ -1,0 +1,13 @@
+id: cml/probability-basics/p01-marginals-and-conditional
+version: 3
+title: Marginals and conditional from a joint table
+language: python
+runtime: py-numpy
+entry: marginals_and_conditional
+difficulty: easy
+minutes: 20
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [pandas, scipy]
+timeout_s: 30
+status: reviewed

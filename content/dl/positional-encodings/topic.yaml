@@ -1,0 +1,17 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: dl/positional-encodings
+title: "Positional encodings"
+tier: A
+requires: [cml/vector-operations]
+aliases: [sinusoidal encoding, rotary embedding, RoPE, position embedding, absolute position]
+objectives:
+  - "Implement the sinusoidal positional encoding table with its even/odd interleave and 10000 base"
+  - "Apply rotary embeddings to query and key pairs so that their dot product depends on relative offset"
+  - "Explain why attention without positions cannot tell a sequence from its permutations"
+minutes: {lesson: 12, practice: 24, min_viable: 12}
+interview_angle: "Say why attention needs positions, then pick sinusoidal, learned or rotary by what the model must extrapolate and how relative offsets enter the score."
+sources:
+  - "paper: Vaswani, Shazeer, Parmar et al. 2017, Attention Is All You Need (arXiv:1706.03762)"
+  - "library: AI-ML/12-Frontiers/Vaswani Attention Is All You Need 2017.md"
+  - "paper: Su, Lu, Pan, Murtadha, Wen and Liu 2021, RoFormer: Enhanced Transformer with Rotary Position Embedding (arXiv:2104.09864)"
+status: reviewed

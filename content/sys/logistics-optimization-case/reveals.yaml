@@ -1,0 +1,18 @@
+- when_asked: What are the daily demand by zone and the depot truck slots?
+  answer: Demand in pallets is Zone 1 180, Zone 2 210, Zone 3 150, Zone 4 240, Zone 5 170 and Zone 6 150, a total of 1,100. Truck slots per day are A 10, B 8, C 9 and D 6. Each slot is one truck of 40 pallets, so the four depots can move 1,320 pallets.
+- when_asked: What does a pallet cost to ship on each lane?
+  answer: The variable cost in dollars per pallet for each depot and zone pair. This matrix is the only per-pallet cost. The per-truck charge is separate, as the next reveal says. The matrix is in the exhibit.
+  exhibit: exhibits/lane-costs.csv
+- when_asked: What does one truck cost to dispatch, and how much can it carry?
+  answer: A truck carries up to 40 pallets and costs 220 dollars to dispatch, whatever it carries. A truck serves one lane, from one depot to one zone.
+- when_asked: Can demand go unmet, and what does a missed pallet cost?
+  answer: Yes. A missed pallet costs 60 dollars in contract penalties and expedited delivery. The penalty is the same for every zone.
+- when_asked: What is the planning timetable, and how much can a re-plan change?
+  answer: Orders close at 18:00 for next-day dispatch, and the plan must be ready by 21:00. On the day, one re-plan is allowed, and it must be ready within 15 minutes. Dispatchers accept a changed plan only if it alters less than 10 percent of the trucks already loaded.
+- when_asked: Does the plan decide which stops each truck makes?
+  answer: No. Drivers sequence the stops within a zone. The plan decides only which depot serves which zone and how many trucks go on each lane.
+- when_asked: Has an evolutionary or other search method been tried on this plan, and how long does the exact solve take?
+  answer: A pilot ran an evolutionary search, once from random starts and once from the dispatcher plan. Each run had a budget of 20,000 objective evaluations, with 30 seeds per start. The exhibit compares it with the dispatcher rule, the exact solver and a lower bound. The exact solve of one day's instance takes under a tenth of a second.
+  exhibit: exhibits/method-comparison.csv
+- when_asked: How much does the dispatcher plan cost compared with the best plan?
+  answer: On this day's demand, the dispatcher plan costs 22,060 dollars against 20,930 for the best full-truck plan, about 5 percent more. Over 300 operating days that is about 340,000 dollars a year.

@@ -1,0 +1,15 @@
+id: sys/churn-prediction-case
+title: Churn prediction system
+tier: B
+kind: case
+requires: []
+aliases: [churn, retention, subscriber churn, churn model, telecom churn]
+objectives:
+  - Frame churn as a targeted-retention decision, not a prediction for its own sake
+  - Segment before modelling, and name the features that carry the signal
+  - Defend a threshold and a tiering rule by lifetime value and risk
+minutes: {lesson: 10, practice: 40, min_viable: 15}
+interview_angle: Why did a blanket discount fail, and how would you target retention instead?
+sources:
+  - "source: interview-prep/drills/case-scenarios/01-telecom-churn.md"
+status: verified

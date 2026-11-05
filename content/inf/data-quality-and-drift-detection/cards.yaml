@@ -1,0 +1,32 @@
+cards:
+  - id: inf/data-quality-and-drift-detection#1
+    type: qa
+    front: What is covariate drift?
+    back: A change in the input distribution P(x) while P(y given x) stays the same. The inputs move, but the rule from inputs to labels does not.
+  - id: inf/data-quality-and-drift-detection#2
+    type: qa
+    front: What is concept drift?
+    back: A change in P(y given x), so the same inputs now map to different labels. Detecting it normally needs labels.
+  - id: inf/data-quality-and-drift-detection#3
+    type: qa
+    front: Which distribution can be compared for drift before labels arrive?
+    back: The input distribution P(x), by comparing it with a reference.
+  - id: inf/data-quality-and-drift-detection#4
+    type: qa
+    front: Which sample defines the PSI bin edges in this topic's definition?
+    back: The expected (reference) sample, through its quantiles. The current sample cannot move its own bins.
+  - id: inf/data-quality-and-drift-detection#5
+    type: cloze
+    text: "A PSI of 0.25 is a {{c1::convention}} threshold for a major shift, not a statistical test."
+  - id: inf/data-quality-and-drift-detection#6
+    type: qa
+    front: Why does a KS test flag tiny differences on very large samples?
+    back: Its power grows with the sample size, so an effect too small to matter becomes statistically significant.
+  - id: inf/data-quality-and-drift-detection#7
+    type: qa
+    front: What does the two-sample KS statistic measure?
+    back: The largest vertical gap between the two empirical CDFs.
+  - id: inf/data-quality-and-drift-detection#8
+    type: qa
+    front: What should be checked before any statistical drift test?
+    back: Pipeline data quality, meaning schema, nulls, value ranges, uniqueness and freshness.

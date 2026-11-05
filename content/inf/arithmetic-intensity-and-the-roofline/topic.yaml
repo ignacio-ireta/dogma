@@ -1,0 +1,16 @@
+id: inf/arithmetic-intensity-and-the-roofline
+title: "Arithmetic intensity and the roofline"
+tier: A
+requires: [cml/matrix-multiplication, inf/floating-point-formats]
+aliases: [roofline model, arithmetic intensity, operational intensity, ridge point, compute-bound, memory-bound, FLOPs per byte, GEMV, decode arithmetic]
+objectives:
+  - "Count the FLOPs (2mnk) and the bytes moved for a matrix product from its shapes and element width"
+  - "Compute arithmetic intensity and locate it against the ridge point peak FLOP/s divided by bandwidth, with the tie rule stated"
+  - "Explain why a batch-1 decode matrix-vector product is memory-bound, and how batching raises its intensity"
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: "Ask for the device's ridge point, then compute the intensity of the operation in FLOP per byte. Decode is memory-bound at batch 1 in fp16, bf16 and fp8 alike, and interviewers check that the answer names both roofs."
+sources:
+  - "paper: Williams, Waterman & Patterson 2009, Roofline: An Insightful Visual Performance Model for Multicore Architectures (Communications of the ACM 52(4))"
+  - "corpus: library-papers/2202.08906.pdf p.14"
+  - "corpus: library-papers/2205.14135.pdf p.3"
+status: reviewed

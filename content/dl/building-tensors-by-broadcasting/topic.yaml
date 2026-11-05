@@ -1,0 +1,18 @@
+id: dl/building-tensors-by-broadcasting
+title: Building tensors by broadcasting
+tier: A
+requires: [cml/vector-operations, cml/matrix-shapes-and-transpose]
+aliases: [broadcasting, pairwise distance, expand dims, all pairs, squared euclidean, tensor shapes]
+objectives:
+  - Predict the shape of a broadcast result from the rules before running the code
+  - Build the all-pairs squared-distance matrix with broadcasting and no Python loop over pairs
+  - Choose between the difference tensor and the expansion ‖x‖² − 2x·y + ‖y‖², naming the memory and precision trade-off
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "All pairwise distances without a loop, and what it costs in memory" is a standard k-NN and
+  attention-style question. Naming the precision trap is what separates a careful answer.
+sources:
+  - "book: Goodfellow, Bengio & Courville, Deep Learning, §2.1 (scalars, vectors, matrices and tensors)"
+  - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, §13.3 (k-nearest-neighbour classifiers)"
+  - "book: Deisenroth, Faisal & Ong, Mathematics for Machine Learning, §3.3 (lengths and distances)"
+status: reviewed

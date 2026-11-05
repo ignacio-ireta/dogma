@@ -1,0 +1,125 @@
+/* The Answer panel and the Mock page. Colours and spacing come from tokens.css only. */
+
+.answer-panel,
+.mock-panel,
+.answer-result,
+.mock-debrief {
+  display: grid;
+  gap: 0.75rem;
+  margin-block: 1rem;
+  padding: 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-lg);
+}
+
+.answer-panel__field,
+.mock-question__field {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.answer-panel textarea,
+.answer-panel select,
+.mock-question__field input {
+  font: inherit;
+  padding: 0.5rem;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-control-border);
+  border-radius: var(--radius);
+  min-width: 0;
+  width: 100%;
+}
+
+.answer-panel fieldset,
+.score-fields,
+.score-field,
+.score-part,
+.score-item {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+}
+
+.score-field legend,
+.score-part legend,
+.score-item legend {
+  font-weight: 600;
+}
+
+.score-field__question {
+  display: block;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.score-option label,
+.score-item__levels label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.score-item__levels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.score-item__levels label {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.score-scale {
+  display: grid;
+  gap: 0.25rem;
+  padding-left: 1.25rem;
+}
+
+.mock-timings {
+  display: grid;
+  gap: 0.25rem;
+  padding-left: 1.25rem;
+}
+
+.mock-question__reply {
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--color-latent);
+}
+
+.interview-ready {
+  display: grid;
+  gap: 0.5rem;
+  margin-block: 1rem;
+}
+
+.debrief__total {
+  font-size: var(--text-lg);
+}
+
+.debrief__notes {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 1rem;
+}
+
+.debrief__notes dt {
+  font-weight: 600;
+}
+
+.debrief__notes dd {
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .debrief__notes {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,17 @@
+id: cml/shuffling-splitting-and-batching-data
+title: Shuffling, splitting and batching data
+tier: A
+requires: [cml/stochastic-and-mini-batch-gradient-descent]
+aliases: [train test split, stratified split, shuffle, batching, epoch, i.i.d., group split, leakage]
+objectives:
+  - Implement a seeded train/test split, with stratification, whose counts follow a stated rounding rule
+  - Produce mini-batch index schedules that are reproducible and reshuffled once per epoch
+  - Explain when the i.i.d. assumption fails (time order, groups) and which split to use instead
+minutes: {lesson: 12, practice: 30, min_viable: 15}
+interview_angle: >-
+  "How would you split this dataset for evaluation?" A strong answer first asks how rows relate
+  (time, entity, class) and only then chooses a random, stratified, grouped or chronological split.
+sources:
+  - "book: Kuhn & Johnson, Applied Predictive Modeling, chapter on over-fitting and model tuning (data splitting)"
+  - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter 7 (model assessment and selection)"
+status: reviewed

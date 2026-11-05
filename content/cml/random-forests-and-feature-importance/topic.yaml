@@ -1,0 +1,17 @@
+id: cml/random-forests-and-feature-importance
+title: Random forests and feature importance
+tier: A
+requires: [cml/choosing-a-tree-split, cml/bootstrap-and-permutation-resampling]
+aliases: [random forest, bagging, bootstrap aggregation, out-of-bag error, OOB, feature subsampling, mean decrease in impurity, permutation importance, MDI]
+objectives:
+  - Implement bootstrap sampling with replacement, with in-bag counts and out-of-bag masks, following an exact seeded protocol
+  - Implement permutation importance on held-out data, with the exact draw order and the population standard deviation
+  - Explain why bagging plus feature subsampling decorrelates trees, and how that reduces the variance of the average
+  - Explain why impurity (MDI) importance favours continuous and high-cardinality features, and why correlated features split importance
+minutes: {lesson: 12, practice: 40, min_viable: 20}
+interview_angle: >-
+  Expect bagging and feature subsampling as variance reduction, the out-of-bag estimate of error, and the caveat that impurity importance is biased while held-out permutation importance is not.
+sources:
+  - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter 15 (random forests)"
+  - "paper: Breiman 2001, Random Forests, Machine Learning 45(1)"
+status: reviewed

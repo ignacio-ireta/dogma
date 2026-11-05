@@ -1,0 +1,19 @@
+id: cml/matrix-inverse-and-rank
+title: Matrix inverse and rank
+tier: A
+requires: [cml/matrix-multiplication]
+aliases: [Gauss-Jordan elimination, invertible matrix, row reduction, full rank, linear independence, condition number, pseudo-inverse]
+objectives:
+  - Invert a square matrix by Gauss-Jordan elimination with partial pivoting, rejecting singular input with a clear error
+  - Compute the rank of a matrix by row reduction, and relate it to invertibility and to independent columns
+  - Explain why solving a system is preferred to forming an inverse, and what conditioning does to the answer
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "How do you solve Ax = b?" and "what does a rank-deficient design matrix do to a regression?"
+  A strong answer avoids explicit inverses and names collinearity as a loss of rank.
+sources:
+  - "book: Strang, Introduction to Linear Algebra (5th ed.), chapters on inverse matrices and on rank and independence"
+  - "book: Trefethen & Bau, Numerical Linear Algebra, lectures on Gaussian elimination with partial pivoting and on conditioning"
+  - "book: Deisenroth, Faisal & Ong, Mathematics for Machine Learning, ch. 2 (linear algebra: inverse, linear independence and rank)"
+  - "source: library-refresh/01-Mathematics/05-Linear-Algebra/1991 -- Goldberg -- Finite Precision, Rounding Error and Stable Computation -- Study Note.md"
+status: reviewed

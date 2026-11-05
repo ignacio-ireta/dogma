@@ -1,0 +1,16 @@
+id: dl/layer-normalization
+title: "Layer normalization"
+tier: A
+requires: ['dl/batch-normalization']
+aliases: ['layer norm', 'LayerNorm', 'per-example normalization', 'pre-norm', 'post-norm']
+objectives:
+  - Implement layer normalization over the last dimension of arbitrary leading shapes, with elementwise gain and bias and a numerically stable centred variance
+  - Explain why layer normalization keeps no running statistics and therefore suits variable batch sizes and sequence models
+  - Describe pre-norm and post-norm placement at the level of one block, without the residual details that come next week
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: Start from what the normalizer reduces over, then explain why that choice removes the batch dependence and the train-eval mismatch.
+sources:
+  - "paper: Ba, Kiros and Hinton 2016, Layer Normalization (arXiv:1607.06450)"
+  - "library: AI-ML/10-Backpropagation/Ba Kiros Hinton Layer Normalization 2016.md"
+  - "paper: Vaswani et al. 2017, Attention Is All You Need (arXiv:1706.03762)"
+status: reviewed

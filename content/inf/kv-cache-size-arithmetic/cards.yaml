@@ -1,0 +1,26 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: inf/kv-cache-size-arithmetic#1
+    type: qa
+    front: What does the leading factor 2 in the KV-cache formula count?
+    back: One key vector and one value vector per token, layer and KV head.
+  - id: inf/kv-cache-size-arithmetic#2
+    type: qa
+    front: Which head count enters the KV-cache formula, query heads or KV heads?
+    back: KV heads. Grouped-query and multi-query attention shrink the cache through that count.
+  - id: inf/kv-cache-size-arithmetic#3
+    type: cloze
+    text: "With a sliding window W, stored tokens per layer are {{c1::min(context, W)}}, not the full context."
+  - id: inf/kv-cache-size-arithmetic#4
+    type: qa
+    front: How many bytes per element does an fp16 or bf16 KV cache use?
+    back: Two bytes. fp8 uses one byte and fp32 uses four.
+  - id: inf/kv-cache-size-arithmetic#5
+    type: qa
+    front: How many bytes is one 4096-token sequence of the 7B-class multi-head fp16 config?
+    back: 2 GiB, which is 2,147,483,648 bytes.
+  - id: inf/kv-cache-size-arithmetic#6
+    type: qa
+    front: What does one GiB equal in bytes?
+    back: 2 to the 30th power, which is 1,073,741,824 bytes. A decimal GB is 10 to the 9th.

@@ -1,0 +1,21 @@
+id: dl/dense-layer-forward-pass
+title: Dense layer forward pass
+tier: A
+requires:
+- dl/building-tensors-by-broadcasting
+aliases:
+- affine layer
+- fully connected
+- batch matrix product
+objectives:
+- Implement a batched affine layer with explicit input-output weight layout
+- Diagnose weight orientation and bias broadcasting errors
+minutes:
+  lesson: 12
+  practice: 20
+  min_viable: 15
+interview_angle: Explain a dense layer by its contraction axis and shared bias before
+  writing code.
+sources:
+- 'book: Goodfellow, Bengio and Courville, Deep Learning, chapter 6'
+status: reviewed

@@ -1,0 +1,14 @@
+id: tst/casey
+title: Casey case
+tier: B
+kind: case
+requires: []
+aliases: [casey, case]
+objectives:
+  - Frame a toy prediction problem and name its success metric
+  - Defend one model choice in a two-minute answer
+minutes: {lesson: 10, practice: 30, min_viable: 10}
+interview_angle: A short design case that releases facts only when asked.
+sources:
+  - "book: Example Author, Example Book, ch. 1"
+status: draft

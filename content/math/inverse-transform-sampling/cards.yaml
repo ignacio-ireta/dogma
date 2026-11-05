@@ -1,0 +1,28 @@
+cards:
+  - id: math/inverse-transform-sampling#1
+    type: qa
+    front: What is the inverse-transform rule for sampling X with CDF F?
+    back: "X = F^-1(U) with U ~ Uniform(0, 1). Then P(X <= x) = F(x)."
+  - id: math/inverse-transform-sampling#2
+    type: qa
+    front: What is the inverse CDF of the exponential distribution with rate lambda?
+    back: "F^-1(u) = -ln(1 - u) / lambda."
+  - id: math/inverse-transform-sampling#3
+    type: cloze
+    text: "For a continuous strictly increasing CDF, P(F^-1(U) <= x) = P({{c1::U <= F(x)}}) = F(x)."
+  - id: math/inverse-transform-sampling#4
+    type: qa
+    front: Why compute the exponential map with log1p(-u) instead of log(1 - u)?
+    back: For u off the rng grid, 1 - u can round to 1 and log(1 - u) returns 0. log1p keeps the small value.
+  - id: math/inverse-transform-sampling#5
+    type: qa
+    front: Which NumPy call maps a uniform u to a category, given the cumulative sums?
+    back: "np.searchsorted(cdf, u, side='right')."
+  - id: math/inverse-transform-sampling#6
+    type: qa
+    front: With cdf [0.5, 1.0], which category does u = 0.5 select?
+    back: Category 1. The stretch [c_{i-1}, c_i) is closed on the left, so 0.5 belongs to the right-hand category.
+  - id: math/inverse-transform-sampling#7
+    type: qa
+    front: When is rejection sampling the better tool than the inverse CDF?
+    back: When F^-1 has no closed form and no table is practical, as for the gamma or beta distributions.

@@ -1,0 +1,33 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: inf/speculative-decoding-speedup-math#1
+    type: qa
+    front: "Expected tokens per round with i.i.d. acceptance rate alpha and draft length gamma?"
+    back: "(1 - alpha^(gamma+1)) / (1 - alpha), which is gamma+1 when alpha = 1."
+  - id: inf/speculative-decoding-speedup-math#2
+    type: qa
+    front: "What does one speculative round cost, in target-pass units?"
+    back: "gamma*c + 1: gamma draft steps at relative cost c, plus one verification pass."
+  - id: inf/speculative-decoding-speedup-math#3
+    type: cloze
+    text: "Speculative speedup is expected tokens per round divided by {{c1::the round cost}} relative to plain decoding."
+  - id: inf/speculative-decoding-speedup-math#4
+    type: qa
+    front: "Acceptance probability for a drafted token x with target p and draft q?"
+    back: "min(1, p(x) / q(x))."
+  - id: inf/speculative-decoding-speedup-math#5
+    type: qa
+    front: "Where does the token come from after a rejection?"
+    back: "The residual distribution norm(max(0, p - q)), which keeps the output equal to p."
+  - id: inf/speculative-decoding-speedup-math#6
+    type: qa
+    front: "Per-position acceptance rate for target p and draft q, in terms of total variation?"
+    back: "sum of min(p, q), which equals 1 - TV(p, q)."
+  - id: inf/speculative-decoding-speedup-math#7
+    type: qa
+    front: "Speedup with alpha = 0 and gamma > 0 and c > 0?"
+    back: "1 / (gamma*c + 1), below 1: the draft is pure overhead."
+  - id: inf/speculative-decoding-speedup-math#8
+    type: cloze
+    text: "As gamma grows with alpha < 1, expected tokens per round approaches {{c1::1/(1 - alpha)}}."

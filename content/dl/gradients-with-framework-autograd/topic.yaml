@@ -1,0 +1,22 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: dl/gradients-with-framework-autograd
+title: "Gradients with framework autograd"
+tier: A
+requires: [dl/reverse-mode-autograd-engine]
+aliases: [requires_grad, backward, grad accumulation, detach, no_grad, autograd.grad, straight-through estimator]
+objectives:
+  - Explain which tensors are tracked and where the grad_fn graph comes from
+  - Choose backward() on a scalar, backward(gradient=...) or torch.autograd.grad, and say what each mutates
+  - Implement a gradient that leaves the caller's .grad and requires_grad untouched, and a straight-through estimator with detach
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "Why are my gradients wrong on the second step?" and "how do you get a derivative without changing
+  any state?" are standard. Naming accumulation, the leaf rule and autograd.grad answers both.
+sources:
+  - "book: Goodfellow, Bengio and Courville, Deep Learning, ch. 6 (deep feedforward networks: back-propagation)"
+  - "library: AI-ML/10-Backpropagation/Rumelhart Hinton Williams Backpropagation 1986.md"
+  - "library: AI-ML/12-Frontiers/van den Oord VQ-VAE 2017.md"
+  - "source: library-refresh/01-Mathematics/03-Calculus/2018 -- Baydin et al -- Automatic Differentiation as Executable Chain Rules -- Study Note.md"
+  - "source: library-refresh/01-Mathematics/03-Calculus/2026 -- Library -- From Derivatives to Jacobians and Hessians -- Concept Note.md"
+  - "source: library-refresh/01-Mathematics/08-Optimization/2022 -- Blondel et al -- Implicit Differentiation and Optimization Layers -- Study Note.md"
+status: reviewed

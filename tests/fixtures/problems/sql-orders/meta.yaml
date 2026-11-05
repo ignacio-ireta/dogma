@@ -1,0 +1,11 @@
+id: fixtures/sql-orders/p01-totals
+version: 1
+language: sql
+runtime: sql-duckdb
+entry: query
+difficulty: easy
+minutes: 5
+core: true
+banned_imports: []
+timeout_s: 30
+status: draft

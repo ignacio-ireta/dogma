@@ -1,0 +1,32 @@
+cards:
+  - id: cml/lasso-and-elastic-net#1
+    type: qa
+    front: What lasso objective does this exercise use, and is there an intercept?
+    back: "(1/(2n)) ||y - X beta||^2 + alpha ||beta||_1. No intercept; centre the data first."
+  - id: cml/lasso-and-elastic-net#2
+    type: qa
+    front: What does the soft-threshold S(x, lambda) compute, and which problem does it solve?
+    back: "sign(x) max(|x| - lambda, 0). It is the proximal operator of lambda |.|: the unique minimiser of lambda |b| + (b - x)^2 / 2 over b."
+  - id: cml/lasso-and-elastic-net#3
+    type: qa
+    front: What is the coordinate update for the lasso?
+    back: "beta_j <- S(rho_j, alpha) / z_j, where rho_j is column j's correlation with the partial residual and z_j = ||X_j||^2 / n."
+  - id: cml/lasso-and-elastic-net#4
+    type: qa
+    front: What is alpha_max for the lasso, and what happens at and above it?
+    back: "max_j |X_j^T y| / n. At and above alpha_max every coefficient is exactly zero."
+  - id: cml/lasso-and-elastic-net#5
+    type: qa
+    front: What is the KKT condition for a nonzero lasso coefficient?
+    back: "(1/n) X_j^T (y - X beta) = alpha * sign(beta_j). For a zero coefficient the left side must be at most alpha in size."
+  - id: cml/lasso-and-elastic-net#6
+    type: qa
+    front: What does the lasso do with two nearly identical columns?
+    back: "It may select one and suppress the other; a tiny change in data can swap the selected feature. It can also keep both, so selection is not guaranteed."
+  - id: cml/lasso-and-elastic-net#7
+    type: qa
+    front: What is the elastic net coordinate update?
+    back: "beta_j <- S(rho_j, alpha * l1_ratio) / (z_j + alpha (1 - l1_ratio)). The L2 share adds curvature."
+  - id: cml/lasso-and-elastic-net#8
+    type: cloze
+    text: "With identical columns and a positive L2 share, the elastic net minimiser is {{c1::unique}} and gives the columns equal weight."

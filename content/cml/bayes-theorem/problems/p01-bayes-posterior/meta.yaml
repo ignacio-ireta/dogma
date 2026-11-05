@@ -1,0 +1,14 @@
+id: cml/bayes-theorem/p01-bayes-posterior
+version: 5
+title: Posterior from observations
+language: python
+runtime: py-numpy
+entry: posterior
+difficulty: medium
+minutes: 25
+core: true
+# atol is 1e-300 on purpose: a posterior far below float range is compared relatively only.
+tolerance: {atol: 1.0e-300, rtol: 1.0e-9}
+banned_imports: [scipy]
+timeout_s: 30
+status: reviewed

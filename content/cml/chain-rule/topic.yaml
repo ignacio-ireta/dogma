@@ -1,0 +1,20 @@
+id: cml/chain-rule
+title: Chain rule
+tier: A
+requires: [cml/derivatives, cml/partial-derivatives-and-gradients]
+aliases: [backpropagation, backprop, composition of derivatives, computational graph, vanishing gradient, sigmoid derivative, reverse-mode]
+objectives:
+  - Differentiate a composition by multiplying local derivatives along each path, with the shape of every factor stated
+  - Derive the gradient of a sigmoid unit with squared error and implement it with a numerically stable sigmoid
+  - Explain why the sigmoid's derivative vanishes when it saturates, and why cross-entropy avoids that factor
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  This is backprop in miniature. Expect the three-factor gradient, the saturation failure mode, and why
+  cross-entropy is preferred with sigmoid outputs.
+sources:
+  - "book: Deisenroth, Faisal & Ong, Mathematics for Machine Learning, chapter 5 (vector calculus), backpropagation and automatic differentiation"
+  - "book: Goodfellow, Bengio & Courville, Deep Learning, chapter on back-propagation"
+  - "source: library-refresh/01-Mathematics/03-Calculus/2026 -- Library -- From Derivatives to Jacobians and Hessians -- Concept Note.md"
+  - "source: library-refresh/01-Mathematics/03-Calculus/2018 -- Baydin et al -- Automatic Differentiation as Executable Chain Rules -- Study Note.md"
+  - "source: library-refresh/01-Mathematics/05-Linear-Algebra/2012 -- Petersen and Pedersen -- Matrix Differentials for Machine Learning -- Study Note.md"
+status: reviewed

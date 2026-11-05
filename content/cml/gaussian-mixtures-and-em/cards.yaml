@@ -1,0 +1,32 @@
+cards:
+  - id: cml/gaussian-mixtures-and-em#1
+    type: qa
+    front: What is the responsibility r_ij in EM?
+    back: The posterior probability P(z_i = j | x_i) that component j generated sample i. The E-step computes it.
+  - id: cml/gaussian-mixtures-and-em#2
+    type: qa
+    front: What does the M-step compute for each component?
+    back: The maximum-likelihood estimate with each sample weighted by its responsibility, so the weighted mean and weighted scatter.
+  - id: cml/gaussian-mixtures-and-em#3
+    type: cloze
+    text: "EM never decreases the log-likelihood because the E-step makes the Jensen lower bound tight and the M-step {{c1::maximises}} that bound."
+  - id: cml/gaussian-mixtures-and-em#4
+    type: qa
+    front: Why is a covariance floor a constrained M-step, rather than adding εI to each covariance?
+    back: Clipping each eigenvalue to at least ε is the exact maximiser over that set, so the bound still rises. Adding εI is not the constrained maximiser and can lower the log-likelihood.
+  - id: cml/gaussian-mixtures-and-em#5
+    type: qa
+    front: How do you compute responsibilities for samples far from every component?
+    back: Work with log densities and normalise with log-sum-exp, subtracting the row maximum before exponentiating.
+  - id: cml/gaussian-mixtures-and-em#6
+    type: qa
+    front: What makes a component's covariance collapse to zero?
+    back: Its responsibility concentrates on one point or on duplicate points, so the weighted scatter has no spread.
+  - id: cml/gaussian-mixtures-and-em#7
+    type: qa
+    front: Why does EM depend on its starting point?
+    back: The likelihood has several local maxima, and EM climbs to the one whose basin contains the start.
+  - id: cml/gaussian-mixtures-and-em#8
+    type: qa
+    front: What is k-means in terms of a Gaussian mixture?
+    back: The hard-assignment limit, with responsibilities in {0, 1} and one shared spherical covariance.

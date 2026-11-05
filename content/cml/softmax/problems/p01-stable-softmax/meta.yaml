@@ -1,0 +1,13 @@
+id: cml/softmax/p01-stable-softmax
+version: 2
+title: Stable softmax
+language: python
+runtime: py-numpy
+entry: softmax
+difficulty: medium
+minutes: 20
+core: true
+tolerance: {atol: 1.0e-12, rtol: 1.0e-10}
+banned_imports: [scipy]
+timeout_s: 30
+status: reviewed

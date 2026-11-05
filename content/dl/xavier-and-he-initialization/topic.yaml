@@ -1,0 +1,25 @@
+id: dl/xavier-and-he-initialization
+title: Xavier and He initialization
+tier: A
+requires:
+- dl/dense-layer-forward-pass
+- dl/relu-family-activations
+aliases:
+- Glorot
+- Kaiming
+- fan-in
+- variance scaling
+objectives:
+- Implement seeded Xavier-uniform and He-normal sampling with explicit fan conventions
+- Explain variance-scaling assumptions and distinguish population targets from sample
+  moments
+minutes:
+  lesson: 12
+  practice: 20
+  min_viable: 15
+interview_angle: Choose initialization scale jointly with activation and preserve
+  reproducible local randomness.
+sources:
+- 'library: AI-ML/10-Backpropagation/Glorot Bengio Initialization 2010.md'
+- 'library: AI-ML/10-Backpropagation/He Rectifier Initialization 2015.md'
+status: reviewed

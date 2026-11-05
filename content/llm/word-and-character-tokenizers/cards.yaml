@@ -1,0 +1,24 @@
+cards:
+  - id: llm/word-and-character-tokenizers#1
+    type: qa
+    front: What does a larger vocabulary do to the number of tokens a text needs?
+    back: It shortens the sequence, because each token covers more characters.
+  - id: llm/word-and-character-tokenizers#2
+    type: qa
+    front: Why must the id order be deterministic?
+    back: An id is a row index into the embedding table, so a different order silently reads the wrong row.
+  - id: llm/word-and-character-tokenizers#3
+    type: qa
+    front: With min_count 2, is a word that occurs exactly twice kept?
+    back: Yes. The cutoff keeps words with count greater than or equal to min_count.
+  - id: llm/word-and-character-tokenizers#4
+    type: qa
+    front: Why are ties in count broken by the word itself?
+    back: So the vocabulary does not depend on corpus order or dictionary iteration order.
+  - id: llm/word-and-character-tokenizers#5
+    type: qa
+    front: What is the size of a byte-level base vocabulary, and why does it need no unknown token?
+    back: 256 byte values, which cover every string.
+  - id: llm/word-and-character-tokenizers#6
+    type: cloze
+    text: "A reserved special token such as {{c1::<unk>}} is kept out of the corpus count so that it cannot take a learned id."

@@ -1,0 +1,32 @@
+cards:
+  - id: cml/rolling-statistics-stationarity-and-autocorrelation#1
+    type: qa
+    front: Which values does a trailing rolling statistic at position i use?
+    back: Only the window of values that ends at i, never a later value.
+  - id: cml/rolling-statistics-stationarity-and-autocorrelation#2
+    type: cloze
+    text: "An ACF that decays very slowly, with a lag-1 value near 1, suggests a {{c1::non-stationary}} series; check the unit-root and stationarity assumptions before differencing."
+  - id: cml/rolling-statistics-stationarity-and-autocorrelation#3
+    type: qa
+    front: Which ACF and PACF pattern points to an AR(p) process?
+    back: The ACF tails off, and the PACF cuts off after lag p.
+  - id: cml/rolling-statistics-stationarity-and-autocorrelation#4
+    type: qa
+    front: Which ACF and PACF pattern points to an MA(q) process?
+    back: The ACF cuts off after lag q, and the PACF tails off.
+  - id: cml/rolling-statistics-stationarity-and-autocorrelation#5
+    type: qa
+    front: What is the lag-1 autocorrelation of the first difference of white noise?
+    back: "Negative one half, -1/2."
+  - id: cml/rolling-statistics-stationarity-and-autocorrelation#6
+    type: qa
+    front: What is the null hypothesis of the Augmented Dickey-Fuller test?
+    back: A unit root under the chosen deterministic (constant or trend) specification.
+  - id: cml/rolling-statistics-stationarity-and-autocorrelation#7
+    type: qa
+    front: Why is MAPE unsuitable when an actual value can be zero?
+    back: MAPE divides each error by the actual value, so it is undefined at zero.
+  - id: cml/rolling-statistics-stationarity-and-autocorrelation#8
+    type: qa
+    front: Why must forecast validation use walk-forward origins instead of random folds?
+    back: Random folds train on future values to predict past ones, which makes the error estimate optimistic.

@@ -1,0 +1,18 @@
+id: cml/gradient-descent
+title: Gradient descent
+tier: A
+requires: [cml/partial-derivatives-and-gradients, cml/eigenvalues-and-eigenvectors]
+aliases: [steepest descent, learning rate, step size, stopping criterion, stability bound, condition number, zig-zag]
+objectives:
+  - Implement the gradient descent update with a gradient-norm stopping rule, and report the number of steps exactly
+  - Predict from the largest eigenvalue of the curvature whether a fixed learning rate converges, using the 2/lambda_max bound on quadratics
+  - Explain why an ill-conditioned problem zig-zags and needs a number of steps that grows with the condition number
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "Walk me through gradient descent, and what goes wrong when the learning rate is too large."
+  A strong answer names the stability bound, the condition number, and how the stopping rule is chosen.
+sources:
+  - "book: Boyd & Vandenberghe, Convex Optimization, chapter on unconstrained minimization (gradient descent and the quadratic example)"
+  - "book: Goodfellow, Bengio & Courville, Deep Learning, chapter on numerical computation (gradient-based optimization)"
+  - "source: library-refresh/01-Mathematics/08-Optimization/2026 -- Library -- Proximal Steps and Accelerated Convex Optimization -- Concept Note.md"
+status: reviewed

@@ -1,0 +1,17 @@
+id: sql/sql-subqueries-and-ctes
+title: SQL subqueries and CTEs
+tier: A
+requires: [sql/sql-group-by-and-having, sql/sql-joins-and-unions]
+aliases: [subquery, scalar subquery, correlated subquery, derived table, CTE, WITH clause, IN, EXISTS, NOT IN, NULL trap]
+objectives:
+  - Choose a scalar, IN or EXISTS, derived-table or correlated subquery by the shape of the answer it must return
+  - Name an intermediate result with a CTE so that each stage can be checked on its own
+  - Explain why NOT IN returns no rows when its subquery contains a NULL, and what NOT EXISTS does instead
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "Customers above the average" and "orders above their own customer's average" are standard screens.
+  The interviewer checks that the problem is staged, that the average is taken over the right
+  population, and that a NULL does not silently empty a NOT IN.
+sources:
+  - "book: Beaulieu, Learning SQL (3rd ed.), chapter on subqueries"
+status: reviewed

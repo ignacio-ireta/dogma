@@ -1,0 +1,24 @@
+cards:
+  - id: sys/predictive-maintenance-case#1
+    type: qa
+    front: Why must a failure label leave out the last snapshots before the data cutoff?
+    back: Their 24-day outcome window runs past the cutoff, so the label is unknown; marking them negative biases the model.
+  - id: sys/predictive-maintenance-case#2
+    type: cloze
+    text: "An alert is actionable only if it arrives at least {{c1::ten days}} before the failure, the parts lead time."
+  - id: sys/predictive-maintenance-case#3
+    type: qa
+    front: Why can a predictive maintenance alert pay at a low precision?
+    back: Each caught failure nets 39,000 dollars against 1,200 per inspection, so break-even precision is about 3 percent.
+  - id: sys/predictive-maintenance-case#4
+    type: qa
+    front: Why is a random row split misleading for daily failure windows?
+    back: Overlapping windows from the same unit land on both sides of the split, so the test set leaks information from training.
+  - id: sys/predictive-maintenance-case#5
+    type: qa
+    front: What does a discrete-time hazard model handle that a binary classifier does not?
+    back: Censoring, because a unit still running at the cutoff contributes partial information rather than a negative label.
+  - id: sys/predictive-maintenance-case#6
+    type: qa
+    front: Why is ROC AUC not the decision metric for a maintenance list?
+    back: AUC ranks every unit but does not set how many inspections run; the crew budget and the value of each alert do.

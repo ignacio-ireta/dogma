@@ -1,0 +1,18 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: llm/moe-top-k-routing
+title: "MoE top-k routing"
+tier: A
+requires: [cml/softmax, dl/position-wise-feed-forward-block]
+aliases: [mixture of experts, MoE, router, top-k gating, expert capacity, dropped tokens, total vs active parameters, load balancing loss]
+objectives:
+  - "Implement a top-k router: softmax, top-k selection with a stated tie rule, renormalised gates and per-expert counts"
+  - "Implement the Switch-style load-balancing loss N * sum_i f_i * P_i from router logits, with its exact definitions"
+  - "Count total and active parameters of an MoE layer and state the capacity rule and what happens to dropped tokens"
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: "Lead with the routing rule and the k gates, then capacity and dropped tokens, then the auxiliary loss. Say that total parameters grow with E while per-token compute grows with k."
+sources:
+  - "paper: Shazeer, Mirhoseini, Maziarz et al. 2017, Outrageously Large Neural Networks: The Sparsely-Gated Mixture-of-Experts Layer (arXiv:1701.06538); separate importance and load losses from p.5"
+  - "paper: Fedus, Zoph, Shazeer 2021, Switch Transformers: Scaling to Trillion Parameter Models with Simple and Efficient Sparsity (arXiv:2101.03961); gate at p.6, load-balancing loss (Eq. 4) at p.7"
+  - "paper: Zoph, Bello, Kumar et al. 2022, ST-MoE: Designing Stable and Transferable Sparse Expert Models (arXiv:2202.08906), section 2 and appendix A"
+  - "library: AI-ML/12-Frontiers/Fedus Switch Transformer 2021.md"
+status: reviewed

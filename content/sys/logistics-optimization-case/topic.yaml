@@ -1,0 +1,20 @@
+id: sys/logistics-optimization-case
+title: Logistics optimization system
+tier: B
+kind: case
+requires: []
+aliases: [logistics, dispatch planning, transportation problem, linear programming, shadow prices, vehicle allocation]
+objectives:
+  - Model the allocation as a linear or mixed-integer program, and check feasibility and degeneracy
+  - Read dual prices as shadow prices and as optimality certificates
+  - Choose among an exact solver, a gradient method and evolutionary search, on equal evaluation budgets
+minutes: {lesson: 12, practice: 40, min_viable: 15}
+interview_angle: When does a plan need integers, and how do you re-solve when a depot closes mid-morning?
+sources:
+  - "source: interview-prep/drills/case-scenarios/05-logistics-optimization.md"
+  - "book: Bertsimas and Tsitsiklis, Introduction to Linear Optimization, duality and sensitivity analysis"
+  - "book: Boyd and Vandenberghe, Convex Optimization, chapter 5 (duality)"
+  - "book: Eiben and Smith, Introduction to Evolutionary Computing, 2nd ed., introductory chapters"
+  - "library: Mathematics/11-Optimization-Theory/Lagrange - Analytical Mechanics and Multipliers 1788.md"
+  - "library: Mathematics/11-Optimization-Theory/Cauchy - Steepest Descent 1847.md"
+status: reviewed

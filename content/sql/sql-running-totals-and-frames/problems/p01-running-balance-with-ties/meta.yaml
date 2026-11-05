@@ -1,0 +1,13 @@
+id: sql/sql-running-totals-and-frames/p01-running-balance-with-ties
+version: 2
+title: Running balance per account, with tied posting times
+language: sql
+runtime: sql-duckdb
+entry: query
+difficulty: medium
+minutes: 20
+core: true
+tolerance: {atol: 0.0, rtol: 0.0}
+banned_imports: []
+timeout_s: 30
+status: reviewed

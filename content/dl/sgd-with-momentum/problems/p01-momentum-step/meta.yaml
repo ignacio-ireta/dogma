@@ -1,0 +1,15 @@
+id: dl/sgd-with-momentum/p01-momentum-step
+version: 2
+title: "One SGD step with momentum"
+language: python
+runtime: py-torch
+entry: sgd_momentum_step
+difficulty: medium
+minutes: 25
+core: true
+# Oracle is torch.optim.SGD in float64: the same arithmetic in the same order, so the
+# only error is rounding. Tighter than the 1e-6 standard, so no justification is needed.
+tolerance: {atol: 1.0e-10, rtol: 1.0e-10}
+banned_imports: [torch.optim]
+timeout_s: 30
+status: reviewed

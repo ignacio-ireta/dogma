@@ -1,0 +1,6 @@
+method,evaluations,runs,median_gap_pct,worst_gap_pct,runs_within_0_5_pct
+dispatcher_rule,0,1,5.40,5.40,0
+fixed_charge_lp_bound,0,1,-2.77,-2.77,
+milp_exact,n/a,1,0.00,0.00,1
+evolutionary_random_start,20000,30,5.36,11.17,0
+evolutionary_dispatcher_start,20000,30,0.05,2.39,28

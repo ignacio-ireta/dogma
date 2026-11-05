@@ -1,0 +1,14 @@
+id: cml/shuffling-splitting-and-batching-data/p02-minibatch-index-schedule
+version: 3
+title: Mini-batch index schedule
+language: python
+runtime: py-numpy
+entry: minibatch_indices
+difficulty: easy
+minutes: 20
+core: false
+# Index outputs are exact integers, so the tolerance is not used; it is declared for the schema.
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [random, sklearn, scipy]
+timeout_s: 30
+status: reviewed

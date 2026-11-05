@@ -1,0 +1,15 @@
+id: dl/gradients-with-framework-autograd/p02-straight-through-round
+version: 1                      # bump when tests, tolerances or the contract change
+title: Straight-through quantizer
+language: python                # python | sql
+runtime: py-torch               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: ste_quantize             # the function or class name the learner implements
+difficulty: medium
+minutes: 20
+core: false                     # p01 is the core problem: this is a variant
+# The forward values are round(x / step) * step, which numpy reproduces with the same operations.
+# atol and rtol 1e-9 is a float64 check, far below the quantization step in every test.
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [torch.autograd.Function, torch.autograd.functional, torch.func]
+timeout_s: 30
+status: reviewed

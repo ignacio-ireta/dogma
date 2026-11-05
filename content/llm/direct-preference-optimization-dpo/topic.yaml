@@ -1,0 +1,16 @@
+id: llm/direct-preference-optimization-dpo
+title: "Direct preference optimization (DPO)"
+tier: A
+requires: ['llm/bradley-terry-reward-models', 'llm/negative-log-likelihood-and-perplexity', 'llm/instruction-tuning-batches-and-loss-masks']
+aliases: [DPO, implicit reward, preference loss, reference policy, beta, chosen and rejected log-probs, sequence log-probability, response mask, Rafailov]
+objectives:
+  - Compute sequence log-probabilities from (B, T, V) logits by summing per-token log-probs over the response positions only, with the one-token shift
+  - Implement the DPO loss and the implicit rewards beta * (log pi - log pi_ref) from policy and reference sequence log-probs, and check the gradient
+  - Explain the role of beta and why DPO needs neither a separate reward model nor sampling from the policy during training
+minutes: {lesson: 12, practice: 30, min_viable: 15}
+interview_angle: Start with the implicit reward, then say why the loss is Bradley-Terry on that reward, what beta controls, and why the reference model's log-probs must use the same response mask as the policy.
+sources:
+  - "library: AI-ML/13-Scaling-and-Alignment/Rafailov et al. — Direct Preference Optimization 2023.md"
+  - "library: AI-ML/12-Frontiers/Ouyang InstructGPT RLHF 2022.md"
+  - "paper: Rafailov et al. 2023, Direct Preference Optimization: Your Language Model is Secretly a Reward Model (arXiv:2305.18290); objective, optimum, reward and loss are Eqs. 3-5 and 7, checked against the PDF"
+status: reviewed

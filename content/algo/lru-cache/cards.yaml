@@ -1,0 +1,24 @@
+cards:
+  - id: algo/lru-cache#1
+    type: qa
+    front: Which two structures does an O(1) LRU cache combine, and what does each provide?
+    back: A hash map gives O(1) lookup of a node by key; a doubly linked list keeps nodes in recency order and unlinks a known node in O(1).
+  - id: algo/lru-cache#2
+    type: qa
+    front: Why does a get hit move the node to the front?
+    back: A get is a use, so the entry becomes the most recently used and is evicted last.
+  - id: algo/lru-cache#3
+    type: qa
+    front: What happens on put of an existing key?
+    back: The value is overwritten and the node moves to the front; nothing is evicted.
+  - id: algo/lru-cache#4
+    type: qa
+    front: Which entry does eviction remove?
+    back: "The back node, adjacent to the tail sentinel, is the least recently used entry."
+  - id: algo/lru-cache#5
+    type: qa
+    front: Why do the head and tail sentinel nodes exist?
+    back: They give every real node a neighbour on both sides, so insert and unlink need no empty-list or boundary cases.
+  - id: algo/lru-cache#6
+    type: cloze
+    text: "On eviction, remove the victim from the list and also from the {{c1::hash map}}, or the map keeps a stale entry."

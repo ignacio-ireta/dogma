@@ -1,0 +1,16 @@
+# Case metadata (CONTENT_SPEC §2 and §9). id, title, tier and kind come from the syllabus.
+# kind: case means no problems/, and the case files (brief, reveals, twist, debrief) are required.
+id: {{TOPIC_ID}}
+title: {{TITLE_YAML}}
+tier: {{TIER}}
+kind: case
+requires: []                    # topic ids that must come first; each must exist in the syllabus
+aliases: [TODO]                 # extra search terms, e.g. [churn, retention]
+objectives:                     # 2-4 observable outcomes: "Frame...", "Defend..."
+  - "TODO: first outcome"
+  - "TODO: second outcome"
+minutes: {lesson: 10, practice: 40, min_viable: 15}
+interview_angle: TODO one line on how this case shows up in senior loops
+sources:                        # at least one: book:, paper:, library: or corpus:
+  - "book: TODO author, title, chapter"
+status: draft                   # draft until dogma content verify passes; then verified

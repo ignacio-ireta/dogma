@@ -1,0 +1,29 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: llm/document-packing-and-cross-document-masks#1
+    type: qa
+    front: Why does a plain causal mask leak attention across packed documents?
+    back: Query i may attend every earlier key in the row, including tokens of earlier, unrelated documents.
+  - id: llm/document-packing-and-cross-document-masks#2
+    type: qa
+    front: What is the packed-row mask rule for query i and key j?
+    back: Allowed if doc_ids[i] == doc_ids[j] and j <= i. This is the block-diagonal causal mask.
+  - id: llm/document-packing-and-cross-document-masks#3
+    type: cloze
+    text: "Packed documents of lengths 3, 2 and 3 give {{c1::15}} True entries in the 8 x 8 mask, against 36 for a plain causal mask."
+  - id: llm/document-packing-and-cross-document-masks#4
+    type: qa
+    front: What position id does the first token of each packed document get?
+    back: Zero. Position ids restart at each document boundary.
+  - id: llm/document-packing-and-cross-document-masks#5
+    type: qa
+    front: Why is the loss label at a document boundary set to -100?
+    back: The target at position t is token t+1. If token t+1 starts another document, the previous document cannot predict it, so the label is ignored.
+  - id: llm/document-packing-and-cross-document-masks#6
+    type: qa
+    front: How many keys may query i attend in a packed row, if its document starts at index s?
+    back: i - s + 1. The keys are the tokens from the document start up to and including i.
+  - id: llm/document-packing-and-cross-document-masks#7
+    type: cloze
+    text: "A packed row's document ids must form {{c1::contiguous runs}}; an id that comes back after another document is rejected."

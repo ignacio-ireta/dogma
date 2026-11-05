@@ -1,0 +1,14 @@
+id: dl/convolution-forward-pass
+title: "Convolution forward pass"
+tier: A
+requires: ['cml/matrix-multiplication', 'dl/dense-layer-forward-pass']
+aliases: ['conv2d', 'cross-correlation', 'im2col', 'convolutional layer', 'feature map']
+objectives:
+  - Implement a 2-D convolution forward pass with stride, zero padding and channel mixing
+  - Compute output sizes with floor rounding and compare convolution parameters with a dense layer
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: State the output-size formula, the parameter count, and the reason the kernel is not flipped in deep learning.
+sources:
+  - "paper: LeCun, Bottou, Bengio and Haffner 1998, Gradient-Based Learning Applied to Document Recognition"
+  - "book: Goodfellow, Bengio and Courville, Deep Learning, chapter 9"
+status: reviewed

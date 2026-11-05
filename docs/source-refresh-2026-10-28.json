@@ -1,0 +1,991 @@
+{
+  "version": 1,
+  "date": "2026-10-28",
+  "source_root": "library",
+  "catalog_sha256": "3b0b24963fa311e0f5a08ca12c9be8e6618d61b5fec31a70dc3d0309ed2fd088",
+  "items": [
+    {
+      "path": "01-Mathematics/00-Seed-Sources/2020 -- Deisenroth, Faisal and Ong -- A Map from Mathematical Foundations to Machine Learning -- Study Note.md",
+      "title": "A Map from Mathematical Foundations to Machine Learning",
+      "kind": "study-note",
+      "sha256": "684cc6b2aaedc8a611174cb78fabb675a4f4214d88ca62610e353a9c1a70db80",
+      "local_sources": [
+        "01-Mathematics/00-Seed-Sources/2020 -- Deisenroth, Faisal and Ong -- Mathematics for Machine Learning -- Cambridge UP -- Author draft 2024-01-15.pdf"
+      ],
+      "source_url": "https://mml-book.github.io/"
+    },
+    {
+      "path": "01-Mathematics/00-Seed-Sources/2020 -- Deisenroth, Faisal and Ong -- Mathematics for Machine Learning -- Cambridge UP -- Author draft 2024-01-15.pdf",
+      "title": "Mathematics for Machine Learning",
+      "kind": "book",
+      "sha256": "3f87b70c64a35d30ec4e565b4d5cfd18fe913002d3b3bed44691c7d0838911bc",
+      "local_sources": [],
+      "source_url": "https://mml-book.github.io/"
+    },
+    {
+      "path": "01-Mathematics/03-Calculus/2016 -- Herman and Strang -- Calculus Volume 1 -- OpenStax -- Revised 2020.pdf",
+      "title": "Calculus Volume 1",
+      "kind": "book",
+      "sha256": "79ad73e89f67a31131a8e9d9a96bb6b9d8ef7d7a62bf3b82faf9799f924e1653",
+      "local_sources": [],
+      "source_url": "https://openstax.org/details/books/calculus-volume-1"
+    },
+    {
+      "path": "01-Mathematics/03-Calculus/2016 -- Herman and Strang -- Calculus Volume 3 -- OpenStax -- Revised 2018.pdf",
+      "title": "Calculus Volume 3",
+      "kind": "book",
+      "sha256": "63d36af23d6f9a163b5e627aaa714b63e4196d8159b9d5fa3ea93bdbdd284ca9",
+      "local_sources": [],
+      "source_url": "https://openstax.org/details/books/calculus-volume-3"
+    },
+    {
+      "path": "01-Mathematics/03-Calculus/2018 -- Baydin et al -- Automatic Differentiation as Executable Chain Rules -- Study Note.md",
+      "title": "Automatic Differentiation as Executable Chain Rules",
+      "kind": "study-note",
+      "sha256": "1c78dc08321ae07e4a293e3482eb6019963d10f1eedb9a3e49b823249832adc4",
+      "local_sources": [
+        "01-Mathematics/03-Calculus/2018 -- Baydin et al -- Automatic Differentiation in Machine Learning - A Survey -- JMLR.pdf",
+        "01-Mathematics/03-Calculus/2026-05-15 -- Lebl -- Basic Analysis II -- Version 6.3.pdf"
+      ],
+      "source_url": "https://jmlr.org/papers/v18/17-468.html"
+    },
+    {
+      "path": "01-Mathematics/03-Calculus/2018 -- Baydin et al -- Automatic Differentiation in Machine Learning - A Survey -- JMLR.pdf",
+      "title": "Automatic Differentiation in Machine Learning - A Survey",
+      "kind": "source-document",
+      "sha256": "93eb2f7025ea098c18a65b428ac991dfacec2de56618c4e25c6a22b9cf443c59",
+      "local_sources": [],
+      "source_url": "https://jmlr.org/papers/v18/17-468.html"
+    },
+    {
+      "path": "01-Mathematics/03-Calculus/2018 -- Chen et al -- Neural ODEs and Continuous Adjoint Sensitivity -- Study Note.md",
+      "title": "Neural ODEs and Continuous Adjoint Sensitivity",
+      "kind": "study-note",
+      "sha256": "f9b41d954e7d59a853fe8d1fb539a5d2aa6efed102e8dd2e81dc23a9ff0e8e80",
+      "local_sources": [
+        "01-Mathematics/03-Calculus/2018 -- Chen et al -- Neural Ordinary Differential Equations -- NeurIPS.pdf",
+        "01-Mathematics/04-Analysis-and-Measure/2026-05-15 -- Lebl -- Basic Analysis I -- Version 6.3.pdf",
+        "01-Mathematics/03-Calculus/2018 -- Baydin et al -- Automatic Differentiation in Machine Learning - A Survey -- JMLR.pdf"
+      ],
+      "source_url": "https://proceedings.neurips.cc/paper/2018/hash/69386f6bb1dfed68692a24c8686939b9-Abstract.html"
+    },
+    {
+      "path": "01-Mathematics/03-Calculus/2018 -- Chen et al -- Neural Ordinary Differential Equations -- NeurIPS.pdf",
+      "title": "Neural Ordinary Differential Equations",
+      "kind": "source-document",
+      "sha256": "fe6fae5c828a11d0347c04bc9fa765091df9551a85e6fa891980bfcae8d9ffce",
+      "local_sources": [],
+      "source_url": "https://proceedings.neurips.cc/paper/2018/hash/69386f6bb1dfed68692a24c8686939b9-Abstract.html"
+    },
+    {
+      "path": "01-Mathematics/03-Calculus/2026 -- Library -- From Derivatives to Jacobians and Hessians -- Concept Note.md",
+      "title": "From Derivatives to Jacobians and Hessians",
+      "kind": "concept-note",
+      "sha256": "633bee850a0c24010b064992ec818119ac9675a48c5da24891ce6a999ac739ac",
+      "local_sources": [
+        "01-Mathematics/03-Calculus/2016 -- Herman and Strang -- Calculus Volume 1 -- OpenStax -- Revised 2020.pdf",
+        "01-Mathematics/03-Calculus/2016 -- Herman and Strang -- Calculus Volume 3 -- OpenStax -- Revised 2018.pdf",
+        "01-Mathematics/04-Analysis-and-Measure/2026-05-15 -- Lebl -- Basic Analysis I -- Version 6.3.pdf",
+        "01-Mathematics/03-Calculus/2026-05-15 -- Lebl -- Basic Analysis II -- Version 6.3.pdf",
+        "01-Mathematics/08-Optimization/2004 -- Boyd and Vandenberghe -- Convex Optimization -- Cambridge UP.pdf"
+      ],
+      "source_url": "https://openstax.org/details/books/calculus-volume-1"
+    },
+    {
+      "path": "01-Mathematics/03-Calculus/2026-05-15 -- Lebl -- Basic Analysis II -- Version 6.3.pdf",
+      "title": "Basic Analysis II - Introduction to Real Analysis, Volume II",
+      "kind": "book",
+      "sha256": "a89e544f4010781f16ad39721eb916ecf3d51d9e9d3b91793a66df09b1809da3",
+      "local_sources": [],
+      "source_url": "https://www.jirka.org/ra/"
+    },
+    {
+      "path": "01-Mathematics/04-Analysis-and-Measure/2020 -- Axler -- Measure, Integration and Real Analysis -- Springer -- Revised 2026.pdf",
+      "title": "Measure, Integration & Real Analysis",
+      "kind": "book",
+      "sha256": "7a7ab07fb74f5394c3180da51875ec467a0d89627321c8b2624b6b9b9585fb4e",
+      "local_sources": [],
+      "source_url": "https://measure.axler.net/"
+    },
+    {
+      "path": "01-Mathematics/04-Analysis-and-Measure/2026 -- Library -- Dominated Convergence and Gradients of Expectations -- Concept Note.md",
+      "title": "Dominated Convergence and Gradients of Expectations",
+      "kind": "concept-note",
+      "sha256": "d3ea9a85ca429a531aba6eb01cad086ab12f784bcca10fa7e160141367207dea",
+      "local_sources": [
+        "01-Mathematics/04-Analysis-and-Measure/2020 -- Axler -- Measure, Integration and Real Analysis -- Springer -- Revised 2026.pdf",
+        "01-Mathematics/03-Calculus/2026-05-15 -- Lebl -- Basic Analysis II -- Version 6.3.pdf",
+        "01-Mathematics/08-Optimization/2018 -- Bottou, Curtis and Nocedal -- Optimization Methods for Large-Scale Machine Learning -- Author manuscript.pdf"
+      ],
+      "source_url": "https://measure.axler.net/"
+    },
+    {
+      "path": "01-Mathematics/04-Analysis-and-Measure/2026-05-15 -- Lebl -- Basic Analysis I -- Version 6.3.pdf",
+      "title": "Basic Analysis I - Introduction to Real Analysis, Volume I",
+      "kind": "book",
+      "sha256": "9c204ae1f1ee1641fa604a6456c0d13db4390db44633ee2df9c9d97b5486b7a6",
+      "local_sources": [],
+      "source_url": "https://www.jirka.org/ra/"
+    },
+    {
+      "path": "01-Mathematics/05-Linear-Algebra/1955 -- Penrose -- A Generalized Inverse for Matrices -- Proceedings of the Cambridge Philosophical Society.pdf",
+      "title": "A generalized inverse for matrices",
+      "kind": "source-document",
+      "sha256": "02a6d62705451d44bd3f99ffd6ff9e8429023e834c493cce43e0963c70edd5ae",
+      "local_sources": [],
+      "source_url": "https://www.cambridge.org/core/journals/mathematical-proceedings-of-the-cambridge-philosophical-society/article/generalized-inverse-for-matrices/5F4516D6B9989BB6563A4B267CC7D615"
+    },
+    {
+      "path": "01-Mathematics/05-Linear-Algebra/1955-1970 -- Penrose, Golub and Reinsch -- Least Squares, Pseudoinverses and Numerical Stability -- Concept Note.md",
+      "title": "Least Squares, Pseudoinverses and Numerical Stability",
+      "kind": "concept-note",
+      "sha256": "80a52b1d7deef7f500488cfcd39832a2a5767166f8b6c7de756696370213532f",
+      "local_sources": [
+        "01-Mathematics/05-Linear-Algebra/1955 -- Penrose -- A Generalized Inverse for Matrices -- Proceedings of the Cambridge Philosophical Society.pdf",
+        "01-Mathematics/05-Linear-Algebra/1970 -- Golub and Reinsch -- Singular Value Decomposition and Least Squares Solutions -- Numerische Mathematik.pdf",
+        "01-Mathematics/05-Linear-Algebra/2018 -- Boyd and Vandenberghe -- Introduction to Applied Linear Algebra - Vectors, Matrices, and Least Squares -- Cambridge UP.pdf",
+        "01-Mathematics/05-Linear-Algebra/2024 -- Axler -- Linear Algebra Done Right -- Springer -- 4th edition.pdf"
+      ],
+      "source_url": "https://doi.org/10.1017/S0305004100030401"
+    },
+    {
+      "path": "01-Mathematics/05-Linear-Algebra/1970 -- Golub and Reinsch -- Singular Value Decomposition and Least Squares Solutions -- Numerische Mathematik.pdf",
+      "title": "Singular value decomposition and least squares solutions",
+      "kind": "source-document",
+      "sha256": "14b11572a9dc44b2673eb1bd5f27eb0a623f4e02aa38c4379b2d6bf7947b3ac4",
+      "local_sources": [],
+      "source_url": "https://link.springer.com/article/10.1007/BF02163027"
+    },
+    {
+      "path": "01-Mathematics/05-Linear-Algebra/1990 -- Deerwester et al -- Indexing by Latent Semantic Analysis -- JASIS.pdf",
+      "title": "Indexing by latent semantic analysis",
+      "kind": "source-document",
+      "sha256": "f3a12c9221b4e7e3a5e2551b92351093768581bd6b337960b5f2872e09260f0f",
+      "local_sources": [],
+      "source_url": "https://doi.org/10.1002/%28SICI%291097-4571%28199009%2941%3A6%3C391%3A%3AAID-ASI1%3E3.0.CO%3B2-9"
+    },
+    {
+      "path": "01-Mathematics/05-Linear-Algebra/1990-2021 -- Library -- From Latent Semantic Analysis to Embeddings and Low-Rank Adaptation -- Concept Note.md",
+      "title": "From Latent Semantic Analysis to Embeddings and Low-Rank Adaptation",
+      "kind": "concept-note",
+      "sha256": "c65d81cae52ff9d1151ff01ca849e55d6453e4752dc71d50f0e24f6ea2d789ca",
+      "local_sources": [
+        "01-Mathematics/05-Linear-Algebra/1990 -- Deerwester et al -- Indexing by Latent Semantic Analysis -- JASIS.pdf",
+        "01-Mathematics/05-Linear-Algebra/2014 -- Levy and Goldberg -- Neural Word Embedding as Implicit Matrix Factorization -- NeurIPS.pdf",
+        "01-Mathematics/05-Linear-Algebra/2021 -- Hu et al -- LoRA - Low-Rank Adaptation of Large Language Models -- arXiv -- v2.pdf"
+      ],
+      "source_url": "https://papers.neurips.cc/paper_files/paper/2014/hash/b78666971ceae55a8e87efb7cbfd9ad4-Abstract.html"
+    },
+    {
+      "path": "01-Mathematics/05-Linear-Algebra/1991 -- Goldberg -- Finite Precision, Rounding Error and Stable Computation -- Study Note.md",
+      "title": "Finite Precision, Rounding Error and Stable Computation",
+      "kind": "study-note",
+      "sha256": "51f66f8ae7e991ce8165a91330f71832d7a5918c13cbea6110a27bc38692aa10",
+      "local_sources": [
+        "01-Mathematics/05-Linear-Algebra/1991 -- Goldberg -- What Every Computer Scientist Should Know About Floating-Point Arithmetic -- ACM Computing Surveys.pdf"
+      ],
+      "source_url": "https://doi.org/10.1145/103162.103163"
+    },
+    {
+      "path": "01-Mathematics/05-Linear-Algebra/1991 -- Goldberg -- What Every Computer Scientist Should Know About Floating-Point Arithmetic -- ACM Computing Surveys.pdf",
+      "title": "What Every Computer Scientist Should Know About Floating-Point Arithmetic",
+      "kind": "source-document",
+      "sha256": "e561e73c87d41d6208a5aa29e52cc5721377cb06e9d7a9a8437ee23a515a35fc",
+      "local_sources": [],
+      "source_url": "https://doi.org/10.1145/103162.103163"
+    },
+    {
+      "path": "01-Mathematics/05-Linear-Algebra/2003 -- Dasgupta and Gupta -- An Elementary Proof of a Theorem of Johnson and Lindenstrauss -- Random Structures and Algorithms.pdf",
+      "title": "An elementary proof of a theorem of Johnson and Lindenstrauss",
+      "kind": "source-document",
+      "sha256": "a6706e37c21a69694f85415c162324ed031eb33e675367aa04ee6abdf37ada97",
+      "local_sources": [],
+      "source_url": "https://cseweb.ucsd.edu/~dasgupta/research-papers.html"
+    },
+    {
+      "path": "01-Mathematics/05-Linear-Algebra/2003 -- Dasgupta and Gupta -- Random Projection and the Johnson-Lindenstrauss Guarantee -- Study Note.md",
+      "title": "Random Projection and the Johnson-Lindenstrauss Guarantee",
+      "kind": "study-note",
+      "sha256": "bc16ec7a22c4d961b7b8c4c950001d8dcc88f4914012dcd6dfac9043191e81bb",
+      "local_sources": [
+        "01-Mathematics/05-Linear-Algebra/2003 -- Dasgupta and Gupta -- An Elementary Proof of a Theorem of Johnson and Lindenstrauss -- Random Structures and Algorithms.pdf"
+      ],
+      "source_url": "https://cseweb.ucsd.edu/~dasgupta/research-papers.html"
+    },
+    {
+      "path": "01-Mathematics/05-Linear-Algebra/2005 -- Candès, Romberg and Tao -- Stable Signal Recovery from Incomplete and Inaccurate Measurements -- arXiv -- v2.pdf",
+      "title": "Stable Signal Recovery from Incomplete and Inaccurate Measurements",
+      "kind": "source-document",
+      "sha256": "8d58bc40026054dfc5ec3137e338bfab2904f434a1e07cfc822d8bc2a1bcadcf",
+      "local_sources": [],
+      "source_url": "https://arxiv.org/abs/math/0503066"
+    },
+    {
+      "path": "01-Mathematics/05-Linear-Algebra/2005-2006 -- Candès, Romberg and Tao -- Sparse Recovery from Incomplete and Noisy Measurements -- Study Note.md",
+      "title": "Sparse Recovery from Incomplete and Noisy Measurements",
+      "kind": "study-note",
+      "sha256": "c11c42995c44798e35d5d8928660d522933820a8b317ad634febe3fc7ea73438",
+      "local_sources": [
+        "01-Mathematics/05-Linear-Algebra/2005 -- Candès, Romberg and Tao -- Stable Signal Recovery from Incomplete and Inaccurate Measurements -- arXiv -- v2.pdf"
+      ],
+      "source_url": "https://arxiv.org/abs/math/0503066"
+    },
+    {
+      "path": "01-Mathematics/05-Linear-Algebra/2011 -- Halko, Martinsson and Tropp -- Finding Structure with Randomness -- SIAM Review.pdf",
+      "title": "Finding Structure with Randomness: Probabilistic Algorithms for Constructing Approximate Matrix Decompositions",
+      "kind": "source-document",
+      "sha256": "78f82cd5669868864e19cdc3a4c9f0f57bbb8aa994cee047ef893c8c57871c6e",
+      "local_sources": [],
+      "source_url": "https://authors.library.caltech.edu/records/hy0mc-xmn26"
+    },
+    {
+      "path": "01-Mathematics/05-Linear-Algebra/2011 -- Halko, Martinsson and Tropp -- Randomized SVD as a Computational Bridge -- Study Note.md",
+      "title": "Randomized SVD as a Computational Bridge",
+      "kind": "study-note",
+      "sha256": "33fed1f29427df4d10a4c7205265322bbb13442347f61f69c47743943005402a",
+      "local_sources": [
+        "01-Mathematics/05-Linear-Algebra/2011 -- Halko, Martinsson and Tropp -- Finding Structure with Randomness -- SIAM Review.pdf"
+      ],
+      "source_url": "https://authors.library.caltech.edu/records/hy0mc-xmn26"
+    },
+    {
+      "path": "01-Mathematics/05-Linear-Algebra/2012 -- Petersen and Pedersen -- Matrix Differentials for Machine Learning -- Study Note.md",
+      "title": "Matrix Differentials for Machine Learning",
+      "kind": "study-note",
+      "sha256": "9c4fd578a6bc006009b291e4c452b705aa2616c4cbdeb20ea50e75526e431193",
+      "local_sources": [
+        "01-Mathematics/05-Linear-Algebra/2012 -- Petersen and Pedersen -- The Matrix Cookbook -- Technical University of Denmark -- November 15 version.pdf",
+        "01-Mathematics/05-Linear-Algebra/2018 -- Boyd and Vandenberghe -- Introduction to Applied Linear Algebra - Vectors, Matrices, and Least Squares -- Cambridge UP.pdf"
+      ],
+      "source_url": "https://www2.imm.dtu.dk/pubdb/edoc/imm3274.pdf"
+    },
+    {
+      "path": "01-Mathematics/05-Linear-Algebra/2012 -- Petersen and Pedersen -- The Matrix Cookbook -- Technical University of Denmark -- November 15 version.pdf",
+      "title": "The Matrix Cookbook",
+      "kind": "source-document",
+      "sha256": "93da5e376fbc106ec92fbb9c59174298b6c3be8f6ad0295d805e94b8d5e76667",
+      "local_sources": [],
+      "source_url": "https://www2.imm.dtu.dk/pubdb/edoc/imm3274.pdf"
+    },
+    {
+      "path": "01-Mathematics/05-Linear-Algebra/2014 -- Levy and Goldberg -- Neural Word Embedding as Implicit Matrix Factorization -- NeurIPS.pdf",
+      "title": "Neural Word Embedding as Implicit Matrix Factorization",
+      "kind": "source-document",
+      "sha256": "71876d3258544322cb3a8beb9b922a2095890c9953fe8b7bf7d062c4b2f82fd0",
+      "local_sources": [],
+      "source_url": "https://papers.neurips.cc/paper_files/paper/2014/hash/b78666971ceae55a8e87efb7cbfd9ad4-Abstract.html"
+    },
+    {
+      "path": "01-Mathematics/05-Linear-Algebra/2018 -- Boyd and Vandenberghe -- Introduction to Applied Linear Algebra - Vectors, Matrices, and Least Squares -- Cambridge UP.pdf",
+      "title": "Introduction to Applied Linear Algebra: Vectors, Matrices, and Least Squares",
+      "kind": "book",
+      "sha256": "254738c8763f6c6fc29c0a837884bc58deca7c3e762e5ec79068208ac7214362",
+      "local_sources": [],
+      "source_url": "https://stanford.edu/~boyd/vmls/"
+    },
+    {
+      "path": "01-Mathematics/05-Linear-Algebra/2021 -- Hu et al -- LoRA - Low-Rank Adaptation of Large Language Models -- arXiv -- v2.pdf",
+      "title": "LoRA: Low-Rank Adaptation of Large Language Models",
+      "kind": "source-document",
+      "sha256": "e9a0d3128767db616085dc0f4e6e455e672e89af823e8ed1282793682787395a",
+      "local_sources": [],
+      "source_url": "https://arxiv.org/abs/2106.09685"
+    },
+    {
+      "path": "01-Mathematics/05-Linear-Algebra/2024 -- Axler -- Linear Algebra Done Right -- Springer -- 4th edition.pdf",
+      "title": "Linear Algebra Done Right",
+      "kind": "book",
+      "sha256": "1207d90a1310e79dea2ec3068f853e20b8306928eda122ae13fdfab50f41ea08",
+      "local_sources": [],
+      "source_url": "https://linear.axler.net/"
+    },
+    {
+      "path": "01-Mathematics/05-Linear-Algebra/2024 -- Axler -- Vector Spaces, Inner Products and Representation Geometry -- Study Note.md",
+      "title": "Vector Spaces, Inner Products and Representation Geometry",
+      "kind": "study-note",
+      "sha256": "e533403bec14b516c89cdcde41b57c60402e65edfc633a816299821c5911a186",
+      "local_sources": [
+        "01-Mathematics/05-Linear-Algebra/2024 -- Axler -- Linear Algebra Done Right -- Springer -- 4th edition.pdf",
+        "01-Mathematics/05-Linear-Algebra/2018 -- Boyd and Vandenberghe -- Introduction to Applied Linear Algebra - Vectors, Matrices, and Least Squares -- Cambridge UP.pdf"
+      ],
+      "source_url": "https://linear.axler.net/"
+    },
+    {
+      "path": "01-Mathematics/06-Probability-and-Statistics/1763 -- Bayes -- An Essay towards Solving a Problem in the Doctrine of Chances -- Modern transcription.pdf",
+      "title": "An Essay towards Solving a Problem in the Doctrine of Chances",
+      "kind": "source-document",
+      "sha256": "dcab244fe399a130cc24432ebf449135476e947c869e78f976027a6b3264f62d",
+      "local_sources": [],
+      "source_url": "https://doi.org/10.1098/rstl.1763.0053"
+    },
+    {
+      "path": "01-Mathematics/06-Probability-and-Statistics/1933 -- Kolmogorov -- Foundations of the Theory of Probability -- Chelsea -- Second English edition 1956.pdf",
+      "title": "Foundations of the Theory of Probability",
+      "kind": "book",
+      "sha256": "ca29e736981a9531c5c612fd389ddb63844fafca423554428ca65b687fc306ac",
+      "local_sources": [],
+      "source_url": "https://cml.rhul.ac.uk/resources/fop/index.htm"
+    },
+    {
+      "path": "01-Mathematics/06-Probability-and-Statistics/1933 -- Kolmogorov -- Probability Spaces, Conditioning and Limit Laws -- Study Note.md",
+      "title": "Probability Spaces, Conditioning and Limit Laws",
+      "kind": "study-note",
+      "sha256": "521cd5ddb6a9714eafedf06a33f5f54e8ace241619b54312d9a84c7c6b3b8a84",
+      "local_sources": [
+        "01-Mathematics/06-Probability-and-Statistics/1763 -- Bayes -- An Essay towards Solving a Problem in the Doctrine of Chances -- Modern transcription.pdf",
+        "01-Mathematics/06-Probability-and-Statistics/1933 -- Kolmogorov -- Foundations of the Theory of Probability -- Chelsea -- Second English edition 1956.pdf",
+        "01-Mathematics/06-Probability-and-Statistics/2019 -- Durrett -- Probability - Theory and Examples -- Author manuscript 2019-01-11.pdf"
+      ],
+      "source_url": "https://doi.org/10.1098/rstl.1763.0053"
+    },
+    {
+      "path": "01-Mathematics/06-Probability-and-Statistics/1933 -- Neyman and Pearson -- Hypothesis Tests as Controlled Decisions -- Study Note.md",
+      "title": "Hypothesis Tests as Controlled Decisions",
+      "kind": "study-note",
+      "sha256": "7e36d327508d46492e19392e2df314fff1f667649ee95e95566104433b618da3",
+      "local_sources": [
+        "01-Mathematics/06-Probability-and-Statistics/1933 -- Neyman and Pearson -- On the Problem of the Most Efficient Tests of Statistical Hypotheses -- Phil Trans R Soc A.pdf"
+      ],
+      "source_url": "https://doi.org/10.1098/rsta.1933.0009"
+    },
+    {
+      "path": "01-Mathematics/06-Probability-and-Statistics/1933 -- Neyman and Pearson -- On the Problem of the Most Efficient Tests of Statistical Hypotheses -- Phil Trans R Soc A.pdf",
+      "title": "On the Problem of the Most Efficient Tests of Statistical Hypotheses",
+      "kind": "source-document",
+      "sha256": "2c2536f19c34ea5ec66145d12df4a70213ced39eec02f9f3042fa6d2a99ee3bf",
+      "local_sources": [],
+      "source_url": "https://doi.org/10.1098/rsta.1933.0009"
+    },
+    {
+      "path": "01-Mathematics/06-Probability-and-Statistics/1977 -- Dempster, Laird and Rubin -- EM and Latent Variable Likelihood -- Study Note.md",
+      "title": "EM and Latent Variable Likelihood",
+      "kind": "study-note",
+      "sha256": "24ba37f4b639960beb6e6c78330609a97a90a0a18b5404433ea90c3f54755a7e",
+      "local_sources": [
+        "01-Mathematics/06-Probability-and-Statistics/1977 -- Dempster, Laird and Rubin -- Maximum Likelihood from Incomplete Data via the EM Algorithm -- JRSS B -- With discussion.pdf",
+        "01-Mathematics/06-Probability-and-Statistics/2008 -- Wainwright and Jordan -- Graphical Models, Exponential Families and Variational Inference -- Author manuscript.pdf"
+      ],
+      "source_url": "https://doi.org/10.1111/j.2517-6161.1977.tb01600.x"
+    },
+    {
+      "path": "01-Mathematics/06-Probability-and-Statistics/1977 -- Dempster, Laird and Rubin -- Maximum Likelihood from Incomplete Data via the EM Algorithm -- JRSS B -- With discussion.pdf",
+      "title": "Maximum Likelihood from Incomplete Data via the EM Algorithm",
+      "kind": "source-document",
+      "sha256": "b0988a82c1c10274298c83b31d88a22422e61f5fb3371749fdaeb22587166db1",
+      "local_sources": [],
+      "source_url": "https://doi.org/10.1111/j.2517-6161.1977.tb01600.x"
+    },
+    {
+      "path": "01-Mathematics/06-Probability-and-Statistics/1979 -- Efron -- Bootstrap Methods - Another Look at the Jackknife -- Annals of Statistics.pdf",
+      "title": "Bootstrap Methods: Another Look at the Jackknife",
+      "kind": "source-document",
+      "sha256": "5fb9b4563e472ad4ae97be05463ffff22b82577d7a236a5c0c9076568921d60a",
+      "local_sources": [],
+      "source_url": "https://doi.org/10.1214/aos/1176344552"
+    },
+    {
+      "path": "01-Mathematics/06-Probability-and-Statistics/1979 -- Efron -- Bootstrap and Sampling Uncertainty -- Study Note.md",
+      "title": "Bootstrap and Sampling Uncertainty",
+      "kind": "study-note",
+      "sha256": "5e16a3214ee7f408f903bfbfb72418c5b27b3530f5512a28d6d59ecc58a1f250",
+      "local_sources": [
+        "01-Mathematics/06-Probability-and-Statistics/2019 -- Durrett -- Probability - Theory and Examples -- Author manuscript 2019-01-11.pdf",
+        "01-Mathematics/06-Probability-and-Statistics/1979 -- Efron -- Bootstrap Methods - Another Look at the Jackknife -- Annals of Statistics.pdf"
+      ],
+      "source_url": "https://sites.math.duke.edu/~rtd/PTE/pte.html"
+    },
+    {
+      "path": "01-Mathematics/06-Probability-and-Statistics/2008 -- Wainwright and Jordan -- Graphical Models and Variational Inference -- Study Note.md",
+      "title": "Graphical Models and Variational Inference",
+      "kind": "study-note",
+      "sha256": "1caaff873d8de6a0645a0a6c2eb965aa7d316c5e9b7c7ffc3cddb190d8e8c183",
+      "local_sources": [
+        "01-Mathematics/06-Probability-and-Statistics/2008 -- Wainwright and Jordan -- Graphical Models, Exponential Families and Variational Inference -- Author manuscript.pdf"
+      ],
+      "source_url": "https://people.eecs.berkeley.edu/~jordan/publications.html"
+    },
+    {
+      "path": "01-Mathematics/06-Probability-and-Statistics/2008 -- Wainwright and Jordan -- Graphical Models, Exponential Families and Variational Inference -- Author manuscript.pdf",
+      "title": "Graphical Models, Exponential Families, and Variational Inference",
+      "kind": "source-document",
+      "sha256": "cee58701d9cb4f27c62db42f2c579f5ec039cc613eb95c7799587568911588f8",
+      "local_sources": [],
+      "source_url": "https://people.eecs.berkeley.edu/~jordan/publications.html"
+    },
+    {
+      "path": "01-Mathematics/06-Probability-and-Statistics/2019 -- Durrett -- Probability - Theory and Examples -- Author manuscript 2019-01-11.pdf",
+      "title": "Probability: Theory and Examples",
+      "kind": "book",
+      "sha256": "aeac36cbf5e44c53d69fa60a2d29a393e2d0e8c955ee103bd845d925fd910886",
+      "local_sources": [],
+      "source_url": "https://sites.math.duke.edu/~rtd/PTE/pte.html"
+    },
+    {
+      "path": "01-Mathematics/06-Probability-and-Statistics/2020 -- Hernán and Robins -- Causal Inference - What If -- Online revision 2026-08-19.pdf",
+      "title": "Causal Inference: What If",
+      "kind": "book",
+      "sha256": "a1067af923e9156bb95fbe4b0d18699bd0723e9c902bdc74465cf7782820b1b5",
+      "local_sources": [],
+      "source_url": "https://miguelhernan.org/whatifbook"
+    },
+    {
+      "path": "01-Mathematics/06-Probability-and-Statistics/2020 -- Hernán and Robins -- Identification Before Estimation -- Study Note.md",
+      "title": "Identification Before Estimation",
+      "kind": "study-note",
+      "sha256": "de70eaae98d444c81a8369b666464997a230b296ae1530463dfc50b47d90be4d",
+      "local_sources": [
+        "01-Mathematics/06-Probability-and-Statistics/2020 -- Hernán and Robins -- Causal Inference - What If -- Online revision 2026-08-19.pdf"
+      ],
+      "source_url": "https://miguelhernan.org/whatifbook"
+    },
+    {
+      "path": "01-Mathematics/06-Probability-and-Statistics/2021 -- Barber et al -- The Limits of Distribution-Free Conditional Predictive Inference -- Information and Inference.pdf",
+      "title": "The Limits of Distribution-Free Conditional Predictive Inference",
+      "kind": "source-document",
+      "sha256": "26348c72500fbe4b2b78842034f493132221f443c2bc49a66eed824aea4fc936",
+      "local_sources": [],
+      "source_url": "https://doi.org/10.1093/imaiai/iaaa017"
+    },
+    {
+      "path": "01-Mathematics/06-Probability-and-Statistics/2022 -- Angelopoulos and Bates -- A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification -- arXiv -- v6.pdf",
+      "title": "A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification",
+      "kind": "source-document",
+      "sha256": "c69aa191d8363c25b36685db4adb7e6980e55ee39892fd3626206c16e1e0efa1",
+      "local_sources": [],
+      "source_url": "https://arxiv.org/abs/2107.07511"
+    },
+    {
+      "path": "01-Mathematics/06-Probability-and-Statistics/2022-2026 -- Angelopoulos et al -- Conformal Prediction and the Limits of Coverage -- Study Note.md",
+      "title": "Conformal Prediction and the Limits of Coverage",
+      "kind": "study-note",
+      "sha256": "1edd5f96410963e3f77d96ae6c0ec3234bd530ef39089376fc92df345c73f29d",
+      "local_sources": [
+        "01-Mathematics/06-Probability-and-Statistics/2022 -- Angelopoulos and Bates -- A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification -- arXiv -- v6.pdf",
+        "01-Mathematics/06-Probability-and-Statistics/2021 -- Barber et al -- The Limits of Distribution-Free Conditional Predictive Inference -- Information and Inference.pdf",
+        "01-Mathematics/06-Probability-and-Statistics/2026 -- Angelopoulos, Barber and Bates -- Theoretical Foundations of Conformal Prediction -- arXiv -- v5.pdf"
+      ],
+      "source_url": "https://arxiv.org/abs/2107.07511"
+    },
+    {
+      "path": "01-Mathematics/06-Probability-and-Statistics/2026 -- Angelopoulos, Barber and Bates -- Theoretical Foundations of Conformal Prediction -- arXiv -- v5.pdf",
+      "title": "Theoretical Foundations of Conformal Prediction",
+      "kind": "book",
+      "sha256": "c74ea6301c771b03d3a28ad6dcad6db56d7e4056295a564837b16cd3251f1469",
+      "local_sources": [],
+      "source_url": "https://arxiv.org/abs/2411.11824"
+    },
+    {
+      "path": "01-Mathematics/07-Information-Theory/2003 -- MacKay -- Coding, Bayesian Inference and Learning as Compression -- Study Note.md",
+      "title": "Coding, Bayesian Inference and Learning as Compression",
+      "kind": "study-note",
+      "sha256": "955d86be24baf79cafd8f8927b9f4579821a90a902cc94af8705038f538aa4f7",
+      "local_sources": [
+        "01-Mathematics/07-Information-Theory/2003 -- MacKay -- Information Theory, Inference, and Learning Algorithms -- Cambridge UP -- 4th printing 2005.pdf"
+      ],
+      "source_url": "https://www.inference.org.uk/mackay/itila/"
+    },
+    {
+      "path": "01-Mathematics/07-Information-Theory/2003 -- MacKay -- Information Theory, Inference, and Learning Algorithms -- Cambridge UP -- 4th printing 2005.pdf",
+      "title": "Information Theory, Inference, and Learning Algorithms",
+      "kind": "book",
+      "sha256": "868adc5f0ef6630366b122d88d691acfbe8339978b4ec3f38fca5e231f135791",
+      "local_sources": [],
+      "source_url": "https://www.inference.org.uk/mackay/itila/"
+    },
+    {
+      "path": "01-Mathematics/08-Optimization/1951 -- Dantzig -- Linear Programming - Models, Polyhedra and Simplex -- Study Note.md",
+      "title": "Linear Programming: Models, Polyhedra and Simplex",
+      "kind": "study-note",
+      "sha256": "c11338aaaeb4a6f037dbdd535746ff66e05260a05bcae1592565521ac19dcda0",
+      "local_sources": [
+        "01-Mathematics/08-Optimization/1951 -- Koopmans -- Activity Analysis of Production and Allocation -- Wiley -- Cowles Monograph 13.pdf",
+        "01-Mathematics/08-Optimization/1994 -- Goemans -- Linear Programming -- MIT -- Lecture Notes.pdf",
+        "01-Mathematics/08-Optimization/undated -- Ferguson -- Linear Programming - A Concise Introduction -- UCLA -- Electronic Text.pdf",
+        "01-Mathematics/08-Optimization/2004 -- Boyd and Vandenberghe -- Convex Optimization -- Cambridge UP.pdf",
+        "01-Mathematics/05-Linear-Algebra/2018 -- Boyd and Vandenberghe -- Introduction to Applied Linear Algebra - Vectors, Matrices, and Least Squares -- Cambridge UP.pdf"
+      ],
+      "source_url": "https://cowles.yale.edu/research/cfm-13-activity-analysis-production-and-allocation"
+    },
+    {
+      "path": "01-Mathematics/08-Optimization/1951 -- Koopmans -- Activity Analysis of Production and Allocation -- Wiley -- Cowles Monograph 13.pdf",
+      "title": "Activity Analysis of Production and Allocation: Proceedings of a Conference",
+      "kind": "book",
+      "sha256": "4bdbb1ed2e35542c7344c9739c8e81aca97c86bf0ba1f70b416b650344217dce",
+      "local_sources": [],
+      "source_url": "https://cowles.yale.edu/research/cfm-13-activity-analysis-production-and-allocation"
+    },
+    {
+      "path": "01-Mathematics/08-Optimization/1984 -- Karmarkar -- A New Polynomial-Time Algorithm for Linear Programming -- Combinatorica.pdf",
+      "title": "A New Polynomial-Time Algorithm for Linear Programming",
+      "kind": "source-document",
+      "sha256": "23fe46887b005cb3da4e4f9d279ab38d5cd60707c7c643f8eb02039fde5a1ea3",
+      "local_sources": [],
+      "source_url": "https://www.stat.uchicago.edu/~lekheng/courses/302/classics/karmarkar.pdf"
+    },
+    {
+      "path": "01-Mathematics/08-Optimization/1984 -- Karmarkar -- Interior-Point Methods, Complexity and Practical Limits -- Study Note.md",
+      "title": "Interior-Point Methods, Complexity and Practical Limits",
+      "kind": "study-note",
+      "sha256": "4bbbe072ba8f122c60cd34ac94f5f31fe52688d54fc5065e362d2538808c8dd5",
+      "local_sources": [
+        "01-Mathematics/08-Optimization/1984 -- Karmarkar -- A New Polynomial-Time Algorithm for Linear Programming -- Combinatorica.pdf",
+        "01-Mathematics/08-Optimization/1994 -- Goemans -- Linear Programming -- MIT -- Lecture Notes.pdf",
+        "01-Mathematics/08-Optimization/2004 -- Boyd and Vandenberghe -- Convex Optimization -- Cambridge UP.pdf"
+      ],
+      "source_url": "https://www.stat.uchicago.edu/~lekheng/courses/302/classics/karmarkar.pdf"
+    },
+    {
+      "path": "01-Mathematics/08-Optimization/1994 -- Goemans -- Linear Programming - Duality and Alternative Certificates -- Study Note.md",
+      "title": "Linear Programming: Duality and Alternative Certificates",
+      "kind": "study-note",
+      "sha256": "73a9cefb86d64cd8f49ee31fc18dcd80d994f748f52f7dda4900bdb4e19c6738",
+      "local_sources": [
+        "01-Mathematics/08-Optimization/1994 -- Goemans -- Linear Programming -- MIT -- Lecture Notes.pdf",
+        "01-Mathematics/08-Optimization/undated -- Ferguson -- Linear Programming - A Concise Introduction -- UCLA -- Electronic Text.pdf",
+        "01-Mathematics/08-Optimization/2004 -- Boyd and Vandenberghe -- Convex Optimization -- Cambridge UP.pdf"
+      ],
+      "source_url": "https://math.mit.edu/~goemans/teaching.html"
+    },
+    {
+      "path": "01-Mathematics/08-Optimization/1994 -- Goemans -- Linear Programming -- MIT -- Lecture Notes.pdf",
+      "title": "Linear Programming",
+      "kind": "source-document",
+      "sha256": "8f530d7b6d6274990f233c633235106dc30ed0a2dab9433c0d229ee14489156e",
+      "local_sources": [],
+      "source_url": "https://math.mit.edu/~goemans/teaching.html"
+    },
+    {
+      "path": "01-Mathematics/08-Optimization/2004 -- Boyd and Vandenberghe -- Convex Optimization -- Cambridge UP.pdf",
+      "title": "Convex Optimization",
+      "kind": "book",
+      "sha256": "40d976c83c18cce1900eff8c41bd5ad408c102b813af39d05ff85678ccf8d76e",
+      "local_sources": [],
+      "source_url": "https://web.stanford.edu/~boyd/cvxbook/"
+    },
+    {
+      "path": "01-Mathematics/08-Optimization/2004 -- Boyd and Vandenberghe -- Convexity, Duality and KKT Certificates -- Study Note.md",
+      "title": "Convexity, Duality and KKT Certificates",
+      "kind": "study-note",
+      "sha256": "04ebe6d882e971b0bf0d5933c4c19d4640d25443c1257ec402d7950382d98bee",
+      "local_sources": [
+        "01-Mathematics/08-Optimization/2004 -- Boyd and Vandenberghe -- Convex Optimization -- Cambridge UP.pdf",
+        "01-Mathematics/08-Optimization/2017 -- Amos and Kolter -- OptNet - Differentiable Optimization as a Layer in Neural Networks -- ICML.pdf"
+      ],
+      "source_url": "https://web.stanford.edu/~boyd/cvxbook/"
+    },
+    {
+      "path": "01-Mathematics/08-Optimization/2013 -- Parikh and Boyd -- Proximal Algorithms -- Author manuscript.pdf",
+      "title": "Proximal Algorithms",
+      "kind": "source-document",
+      "sha256": "c261d62dab183f5afe765907f94da12e528542dd9e2dba4751ac2bc1a9e5cc7b",
+      "local_sources": [],
+      "source_url": "https://web.stanford.edu/~boyd/papers/prox_algs.html"
+    },
+    {
+      "path": "01-Mathematics/08-Optimization/2015 -- Bubeck -- Convex Optimization - Algorithms and Complexity -- Foundations and Trends in Machine Learning.pdf",
+      "title": "Convex Optimization - Algorithms and Complexity",
+      "kind": "source-document",
+      "sha256": "4d5cd5428a8e627fa2b7ee80791259c2f17e6ae5bf68cf7c78aee1fcefdc05f2",
+      "local_sources": [],
+      "source_url": "https://arxiv.org/abs/1405.4980v2"
+    },
+    {
+      "path": "01-Mathematics/08-Optimization/2017 -- Amos and Kolter -- OptNet - Differentiable Optimization as a Layer in Neural Networks -- ICML.pdf",
+      "title": "OptNet - Differentiable Optimization as a Layer in Neural Networks",
+      "kind": "source-document",
+      "sha256": "0382fa97eb20c760b894320925645631ff817f94955c047d8c14b227f1791a9c",
+      "local_sources": [],
+      "source_url": "https://proceedings.mlr.press/v70/amos17a.html"
+    },
+    {
+      "path": "01-Mathematics/08-Optimization/2018 -- Bottou, Curtis and Nocedal -- Optimization Methods for Large-Scale Machine Learning -- Author manuscript.pdf",
+      "title": "Optimization Methods for Large-Scale Machine Learning",
+      "kind": "source-document",
+      "sha256": "dbf143e97cca51eab7845cc9776e1be7b64feabc1ce84aa8d6699503f0d727c3",
+      "local_sources": [],
+      "source_url": "https://coral.ise.lehigh.edu/frankecurtis/publications/"
+    },
+    {
+      "path": "01-Mathematics/08-Optimization/2018 -- Bottou, Curtis and Nocedal -- Stochastic Gradients, Noise and Computation -- Study Note.md",
+      "title": "Stochastic Gradients, Noise and Computation",
+      "kind": "study-note",
+      "sha256": "a0f1aef7928823c2f7e0c546e913d78d3919f8b9dbc69c76aed54ddb8c26433a",
+      "local_sources": [
+        "01-Mathematics/08-Optimization/2018 -- Bottou, Curtis and Nocedal -- Optimization Methods for Large-Scale Machine Learning -- Author manuscript.pdf",
+        "01-Mathematics/08-Optimization/2015 -- Bubeck -- Convex Optimization - Algorithms and Complexity -- Foundations and Trends in Machine Learning.pdf",
+        "01-Mathematics/04-Analysis-and-Measure/2020 -- Axler -- Measure, Integration and Real Analysis -- Springer -- Revised 2026.pdf"
+      ],
+      "source_url": "https://coral.ise.lehigh.edu/frankecurtis/publications/"
+    },
+    {
+      "path": "01-Mathematics/08-Optimization/2022 -- Blondel et al -- Efficient and Modular Implicit Differentiation -- NeurIPS.pdf",
+      "title": "Efficient and Modular Implicit Differentiation",
+      "kind": "source-document",
+      "sha256": "816cdfc1d1e493498b77f235998d488fefd29c32eced1f63dfa827e3c701be99",
+      "local_sources": [],
+      "source_url": "https://proceedings.neurips.cc/paper_files/paper/2022/hash/228b9279ecf9bbafe582406850c57115-Abstract-Conference.html"
+    },
+    {
+      "path": "01-Mathematics/08-Optimization/2022 -- Blondel et al -- Implicit Differentiation and Optimization Layers -- Study Note.md",
+      "title": "Implicit Differentiation and Optimization Layers",
+      "kind": "study-note",
+      "sha256": "f7bf12bb1a9565af55af66bda9c8b11636a5eab4723c88f4387331aaf5c66718",
+      "local_sources": [
+        "01-Mathematics/08-Optimization/2022 -- Blondel et al -- Efficient and Modular Implicit Differentiation -- NeurIPS.pdf",
+        "01-Mathematics/08-Optimization/2017 -- Amos and Kolter -- OptNet - Differentiable Optimization as a Layer in Neural Networks -- ICML.pdf",
+        "01-Mathematics/03-Calculus/2026-05-15 -- Lebl -- Basic Analysis II -- Version 6.3.pdf",
+        "01-Mathematics/08-Optimization/2004 -- Boyd and Vandenberghe -- Convex Optimization -- Cambridge UP.pdf"
+      ],
+      "source_url": "https://proceedings.neurips.cc/paper_files/paper/2022/hash/228b9279ecf9bbafe582406850c57115-Abstract-Conference.html"
+    },
+    {
+      "path": "01-Mathematics/08-Optimization/2026 -- Library -- Choosing Between Linear Programming, Gradients and Evolution -- Concept Note.md",
+      "title": "Choosing Between Linear Programming, Gradients and Evolution",
+      "kind": "concept-note",
+      "sha256": "ba5dd1999aca716003f556fd59f13df09172339bc8cb7be977e700bc3244250f",
+      "local_sources": [
+        "01-Mathematics/08-Optimization/2004 -- Boyd and Vandenberghe -- Convex Optimization -- Cambridge UP.pdf",
+        "01-Mathematics/08-Optimization/1994 -- Goemans -- Linear Programming -- MIT -- Lecture Notes.pdf",
+        "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2013 -- Luke -- Essentials of Metaheuristics -- Lulu -- 2nd edition - Online 2.4 January 2026.pdf"
+      ],
+      "source_url": "https://web.stanford.edu/~boyd/cvxbook/"
+    },
+    {
+      "path": "01-Mathematics/08-Optimization/2026 -- Library -- Proximal Steps and Accelerated Convex Optimization -- Concept Note.md",
+      "title": "Proximal Steps and Accelerated Convex Optimization",
+      "kind": "concept-note",
+      "sha256": "1f80588a5453d00820d670418f9b0b0b8336c7ae35b76bd9e43ab6c5813b94e1",
+      "local_sources": [
+        "01-Mathematics/08-Optimization/2013 -- Parikh and Boyd -- Proximal Algorithms -- Author manuscript.pdf",
+        "01-Mathematics/08-Optimization/2015 -- Bubeck -- Convex Optimization - Algorithms and Complexity -- Foundations and Trends in Machine Learning.pdf",
+        "01-Mathematics/08-Optimization/2004 -- Boyd and Vandenberghe -- Convex Optimization -- Cambridge UP.pdf"
+      ],
+      "source_url": "https://web.stanford.edu/~boyd/papers/prox_algs.html"
+    },
+    {
+      "path": "01-Mathematics/08-Optimization/undated -- Ferguson -- Linear Programming - A Concise Introduction -- UCLA -- Electronic Text.pdf",
+      "title": "Linear Programming: A Concise Introduction",
+      "kind": "book",
+      "sha256": "465c0f3feb470ae0e54599f848faf6c00c0027d3086f083e28c8a9fe48c2cc39",
+      "local_sources": [],
+      "source_url": "https://www.math.ucla.edu/~tom/"
+    },
+    {
+      "path": "01-Mathematics/09-Learning-Theory/1963 -- Hoeffding -- Probability Inequalities for Sums of Bounded Random Variables -- JASA.pdf",
+      "title": "Probability Inequalities for Sums of Bounded Random Variables",
+      "kind": "source-document",
+      "sha256": "3021bcc097ef23a99a84d0eef8dcce2fd835c71df79a105727d3e03f8f0b8930",
+      "local_sources": [],
+      "source_url": "https://doi.org/10.1080/01621459.1963.10500830"
+    },
+    {
+      "path": "01-Mathematics/09-Learning-Theory/1963-2014 -- Hoeffding et al -- Concentration, Uniform Convergence and PAC Learning -- Study Note.md",
+      "title": "Concentration, Uniform Convergence and PAC Learning",
+      "kind": "study-note",
+      "sha256": "5cd756e1af61da28851eb5a2ab145f18e1c720e14246d32ead858e19f6afabb1",
+      "local_sources": [
+        "01-Mathematics/09-Learning-Theory/1963 -- Hoeffding -- Probability Inequalities for Sums of Bounded Random Variables -- JASA.pdf",
+        "01-Mathematics/09-Learning-Theory/1971 -- Vapnik and Chervonenkis -- Uniform Convergence of Relative Frequencies -- Theory of Probability and Its Applications -- English translation.pdf"
+      ],
+      "source_url": "https://doi.org/10.1080/01621459.1963.10500830"
+    },
+    {
+      "path": "01-Mathematics/09-Learning-Theory/1971 -- Vapnik and Chervonenkis -- Uniform Convergence of Relative Frequencies -- Theory of Probability and Its Applications -- English translation.pdf",
+      "title": "On the Uniform Convergence of Relative Frequencies of Events to Their Probabilities",
+      "kind": "source-document",
+      "sha256": "c86ae06d178f410b7bedd292814ae354f90b15ce561f7e0408065db49893e439",
+      "local_sources": [],
+      "source_url": "https://doi.org/10.1137/1116025"
+    },
+    {
+      "path": "02-AI-ML/00-Overviews-and-Books/2006 -- Bishop -- Pattern Recognition and Machine Learning -- Springer.pdf",
+      "title": "Pattern Recognition and Machine Learning",
+      "kind": "book",
+      "sha256": "4ee767e0a6b04fa05ba7e599e9dbb4637a94a4407ccedf0b4d316b1fd7c8ec64",
+      "local_sources": [],
+      "source_url": "https://www.microsoft.com/en-us/research/people/cmbishop/prml-book/"
+    },
+    {
+      "path": "02-AI-ML/00-Overviews-and-Books/2006 -- Bishop -- Probabilistic Models, Latent Variables and Approximate Inference -- Study Note.md",
+      "title": "Probabilistic Models, Latent Variables and Approximate Inference",
+      "kind": "study-note",
+      "sha256": "cce956821cd4c4e7086b9441a3ae9afc016238f587d54076e85a858fe0d75497",
+      "local_sources": [
+        "02-AI-ML/00-Overviews-and-Books/2006 -- Bishop -- Pattern Recognition and Machine Learning -- Springer.pdf"
+      ],
+      "source_url": "https://www.microsoft.com/en-us/research/people/cmbishop/prml-book/"
+    },
+    {
+      "path": "02-AI-ML/02-Statistical-Learning/1936 -- Fisher -- The Use of Multiple Measurements in Taxonomic Problems -- Annals of Eugenics.pdf",
+      "title": "The Use of Multiple Measurements in Taxonomic Problems",
+      "kind": "source-document",
+      "sha256": "4c57cd984d04f90311d326ea15a3d1d60ed73bd4f81471c365c6a0b48ce49de9",
+      "local_sources": [],
+      "source_url": "https://digital.library.adelaide.edu.au/items/d26c5e1c-2751-472f-9738-9db69dc216f7"
+    },
+    {
+      "path": "02-AI-ML/02-Statistical-Learning/1992 -- Boser, Guyon and Vapnik -- A Training Algorithm for Optimal Margin Classifiers -- COLT.pdf",
+      "title": "A Training Algorithm for Optimal Margin Classifiers",
+      "kind": "source-document",
+      "sha256": "d5c917a49c32895fdd8dd12963e5a3e3f87f5a6376fc3b5b830ee7b3b70814e6",
+      "local_sources": [],
+      "source_url": "https://web.engr.oregonstate.edu/~huanlian/teaching/ML/2020spring/extra/boser-1992.pdf"
+    },
+    {
+      "path": "02-AI-ML/02-Statistical-Learning/2001 -- Friedman -- Greedy Function Approximation - A Gradient Boosting Machine -- Annals of Statistics.pdf",
+      "title": "Greedy Function Approximation - A Gradient Boosting Machine",
+      "kind": "source-document",
+      "sha256": "580690c56c437051209e5ac3cc74c86f121dffa084e836611809cf7fa6dc89e4",
+      "local_sources": [],
+      "source_url": "https://www.cmi.ac.in/~madhavan/courses/dmml2026/literature/Friedman-Gradient-Boosting-Machine-2001.pdf"
+    },
+    {
+      "path": "02-AI-ML/02-Statistical-Learning/2016 -- Chen and Guestrin -- XGBoost - A Scalable Tree Boosting System -- arXiv.pdf",
+      "title": "XGBoost - A Scalable Tree Boosting System",
+      "kind": "source-document",
+      "sha256": "52bc282c922a239134ee4d6f4367c58bf920a9bdd53acbb3b2aa3342e2bb7214",
+      "local_sources": [],
+      "source_url": "https://arxiv.org/abs/1603.02754"
+    },
+    {
+      "path": "02-AI-ML/05-Computer-Vision/2012 -- Krizhevsky, Sutskever and Hinton -- ImageNet Classification with Deep Convolutional Neural Networks -- NeurIPS.pdf",
+      "title": "ImageNet Classification with Deep Convolutional Neural Networks",
+      "kind": "source-document",
+      "sha256": "90137160c57217953d5f61857e64ca58e85f06e1b13b4f475c918b1b582b9771",
+      "local_sources": [],
+      "source_url": "https://papers.nips.cc/paper_files/paper/2012/file/c399862d3b9d6b76c8436e924a68c45b-Paper.pdf"
+    },
+    {
+      "path": "02-AI-ML/07-Attention-and-Transformers/2020 -- Lewis et al -- Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks -- arXiv.pdf",
+      "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+      "kind": "source-document",
+      "sha256": "23e3249e9a1e75418d82efecab0ea8c4d033b89c93742f63208d47ce01f21233",
+      "local_sources": [],
+      "source_url": "https://arxiv.org/abs/2005.11401"
+    },
+    {
+      "path": "02-AI-ML/08-State-Space-Models/2021 -- Gu, Goel and Ré -- Efficiently Modeling Long Sequences with Structured State Spaces -- arXiv.pdf",
+      "title": "Efficiently Modeling Long Sequences with Structured State Spaces",
+      "kind": "source-document",
+      "sha256": "872b4ef302312d04ef4d55610613c0e59da32c443a2e38552d7cebb7dc3636fa",
+      "local_sources": [],
+      "source_url": "https://arxiv.org/abs/2111.00396"
+    },
+    {
+      "path": "02-AI-ML/08-State-Space-Models/2024 -- Dao and Gu -- Transformers are SSMs - Generalized Models and Efficient Algorithms Through Structured State Space Duality -- arXiv.pdf",
+      "title": "Transformers are SSMs - Generalized Models and Efficient Algorithms Through Structured State Space Duality",
+      "kind": "source-document",
+      "sha256": "6fe16414fa471a5ab150cddcba5840d3a94e347e96992c50c12c1fb8b919479f",
+      "local_sources": [],
+      "source_url": "https://arxiv.org/abs/2405.21060"
+    },
+    {
+      "path": "02-AI-ML/09-Mixture-of-Experts/1991 -- Jacobs et al -- Adaptive Mixtures of Local Experts -- Neural Computation.pdf",
+      "title": "Adaptive Mixtures of Local Experts",
+      "kind": "source-document",
+      "sha256": "4af682881464b93b8fe0371c9f3f451b080a4976156e982b39e1d28cac4be621",
+      "local_sources": [],
+      "source_url": "https://www.cs.toronto.edu/~fritz/absps/jjnh91.pdf"
+    },
+    {
+      "path": "02-AI-ML/09-Mixture-of-Experts/1994 -- Jordan and Jacobs -- Hierarchical Mixtures of Experts and the EM Algorithm -- Neural Computation.pdf",
+      "title": "Hierarchical Mixtures of Experts and the EM Algorithm",
+      "kind": "source-document",
+      "sha256": "31f0365922dfbdfd267f9ef7e402211d56793b9b06fde56e42c7a5001deeff82",
+      "local_sources": [],
+      "source_url": "https://www2.bcs.rochester.edu/sites/robbie/jordanjacobs.nc94.pdf"
+    },
+    {
+      "path": "02-AI-ML/09-Mixture-of-Experts/2020 -- Lepikhin et al -- GShard - Scaling Giant Models with Conditional Computation and Automatic Sharding -- arXiv.pdf",
+      "title": "GShard - Scaling Giant Models with Conditional Computation and Automatic Sharding",
+      "kind": "source-document",
+      "sha256": "4078d81e9ef6db2e3a982e56d3d8816766d8d49f350e02f7410501ca496ad54e",
+      "local_sources": [],
+      "source_url": "https://arxiv.org/abs/2006.16668"
+    },
+    {
+      "path": "02-AI-ML/09-Mixture-of-Experts/2021 -- Du et al -- GLaM - Efficient Scaling of Language Models with Mixture-of-Experts -- arXiv.pdf",
+      "title": "GLaM - Efficient Scaling of Language Models with Mixture-of-Experts",
+      "kind": "source-document",
+      "sha256": "7b52d17e09bb59e2afc00237a35e6ee67189b663bc0c6d23f2f280b080a62e47",
+      "local_sources": [],
+      "source_url": "https://arxiv.org/abs/2112.06905"
+    },
+    {
+      "path": "02-AI-ML/09-Mixture-of-Experts/2021 -- Fedus, Zoph and Shazeer -- Switch Transformers - Scaling to Trillion Parameter Models with Simple and Efficient Sparsity -- arXiv.pdf",
+      "title": "Switch Transformers - Scaling to Trillion Parameter Models with Simple and Efficient Sparsity",
+      "kind": "source-document",
+      "sha256": "f340f6ace31abf7d0730ef461404279f40d3c890e9cc2daeb7068b3304afdbd6",
+      "local_sources": [],
+      "source_url": "https://arxiv.org/abs/2101.03961"
+    },
+    {
+      "path": "02-AI-ML/09-Mixture-of-Experts/2024 -- Dai et al -- DeepSeekMoE - Towards Ultimate Expert Specialization in Mixture-of-Experts Language Models -- arXiv.pdf",
+      "title": "DeepSeekMoE - Towards Ultimate Expert Specialization in Mixture-of-Experts Language Models",
+      "kind": "source-document",
+      "sha256": "a64b509e1410d09cf5b70570788d27790985fb9808ce436b9da8de73f2eed651",
+      "local_sources": [],
+      "source_url": "https://arxiv.org/abs/2401.06066"
+    },
+    {
+      "path": "02-AI-ML/13-Alignment-and-Reasoning/2017 -- Christiano et al -- Deep Reinforcement Learning from Human Preferences -- arXiv.pdf",
+      "title": "Deep Reinforcement Learning from Human Preferences",
+      "kind": "source-document",
+      "sha256": "4c2b5a0ff6f9cd6696d3e9c8263efbbe701123d4fa09f22bf28d6ef861b73a2a",
+      "local_sources": [],
+      "source_url": "https://arxiv.org/abs/1706.03741"
+    },
+    {
+      "path": "02-AI-ML/13-Alignment-and-Reasoning/2020 -- Stiennon et al -- Learning to Summarize from Human Feedback -- arXiv.pdf",
+      "title": "Learning to Summarize from Human Feedback",
+      "kind": "source-document",
+      "sha256": "6bb15be37338385cae1d910bcb46bb2cc99e599918a0625c9c1d0a57f90e5224",
+      "local_sources": [],
+      "source_url": "https://arxiv.org/abs/2009.01325"
+    },
+    {
+      "path": "02-AI-ML/13-Alignment-and-Reasoning/2022 -- Bai et al -- Constitutional AI - Harmlessness from AI Feedback -- arXiv.pdf",
+      "title": "Constitutional AI - Harmlessness from AI Feedback",
+      "kind": "source-document",
+      "sha256": "9a456a07ad346e3372f9867d346f69f5b0f68b4c65f060aca0b8a13fa9d98e83",
+      "local_sources": [],
+      "source_url": "https://arxiv.org/abs/2212.08073"
+    },
+    {
+      "path": "02-AI-ML/13-Alignment-and-Reasoning/2022 -- Ouyang et al -- Training Language Models to Follow Instructions with Human Feedback -- arXiv.pdf",
+      "title": "Training Language Models to Follow Instructions with Human Feedback",
+      "kind": "source-document",
+      "sha256": "c1984bb50a5b90fddb895fdc3a0f72e5bc977148c9f63ef6040cbe7a3e1f0d98",
+      "local_sources": [],
+      "source_url": "https://arxiv.org/abs/2203.02155"
+    },
+    {
+      "path": "02-AI-ML/13-Alignment-and-Reasoning/2023 -- Rafailov et al -- Direct Preference Optimization - Your Language Model is Secretly a Reward Model -- arXiv.pdf",
+      "title": "Direct Preference Optimization - Your Language Model is Secretly a Reward Model",
+      "kind": "source-document",
+      "sha256": "92cb3a2b71362acda98a789b03d88688fd33cf5fcf13f81d2b1de30ee7d3b67a",
+      "local_sources": [],
+      "source_url": "https://arxiv.org/abs/2305.18290"
+    },
+    {
+      "path": "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/1994 -- Whitley -- A Genetic Algorithm Tutorial -- Author manuscript.pdf",
+      "title": "A Genetic Algorithm Tutorial",
+      "kind": "source-document",
+      "sha256": "617275fa1aeafbf396a7b6b6ddc60bf1816e46c5f104bed07ad78ef4cf0ee357",
+      "local_sources": [],
+      "source_url": "https://www.cs.colostate.edu/~whitley/research/publications.php"
+    },
+    {
+      "path": "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/1997 -- Storn and Price -- Differential Evolution -- Journal of Global Optimization.pdf",
+      "title": "Differential Evolution – A Simple and Efficient Heuristic for Global Optimization over Continuous Spaces",
+      "kind": "source-document",
+      "sha256": "d8bd6c0f8030790d9d172076b57119bc94fd861bbca79c94ae6b680363239f12",
+      "local_sources": [],
+      "source_url": "https://doi.org/10.1023/A:1008202821328"
+    },
+    {
+      "path": "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/1997 -- Storn and Price -- Differential Evolution for Real-Valued Search -- Study Note.md",
+      "title": "Differential Evolution for Real-Valued Search",
+      "kind": "study-note",
+      "sha256": "074f484160d8f9ac59315bb6764a36872ca88cd996eb7378f2d5d9c46dcbb800",
+      "local_sources": [
+        "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/1997 -- Storn and Price -- Differential Evolution -- Journal of Global Optimization.pdf",
+        "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2013 -- Luke -- Essentials of Metaheuristics -- Lulu -- 2nd edition - Online 2.4 January 2026.pdf"
+      ],
+      "source_url": "https://doi.org/10.1023/A:1008202821328"
+    },
+    {
+      "path": "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/1997 -- Wolpert and Macready -- No Free Lunch Theorems for Optimization -- IEEE TEC.pdf",
+      "title": "No Free Lunch Theorems for Optimization",
+      "kind": "source-document",
+      "sha256": "7bf3552a29bcbdfa60e70156a7ab6072174586fb596ae29fb4b1509cff0b6266",
+      "local_sources": [],
+      "source_url": "https://doi.org/10.1109/4235.585893"
+    },
+    {
+      "path": "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2002 -- Deb et al -- Pareto Search, NSGA-II and Honest Benchmarking -- Study Note.md",
+      "title": "Pareto Search, NSGA-II and Honest Benchmarking",
+      "kind": "study-note",
+      "sha256": "50f33aacbe148e43a9cce723a423a3c75abb55ffec3a3595fea0896277f1fef8",
+      "local_sources": [
+        "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/1997 -- Wolpert and Macready -- No Free Lunch Theorems for Optimization -- IEEE TEC.pdf",
+        "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/undated -- Deb et al -- A Fast and Elitist Multiobjective Genetic Algorithm - NSGA-II -- KanGAL Report 200001.pdf",
+        "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2013 -- Luke -- Essentials of Metaheuristics -- Lulu -- 2nd edition - Online 2.4 January 2026.pdf"
+      ],
+      "source_url": "https://homes.cs.washington.edu/~sagarwal/papers.html"
+    },
+    {
+      "path": "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2002 -- Stanley and Miikkulainen -- Evolving Neural Networks through Augmenting Topologies -- Evolutionary Computation.pdf",
+      "title": "Evolving Neural Networks through Augmenting Topologies",
+      "kind": "source-document",
+      "sha256": "9653947f63d9dc2fc06760b7cac8a82fbf37cbbcda01dc1f6adf12fc6954b4c3",
+      "local_sources": [],
+      "source_url": "https://nn.cs.utexas.edu/downloads/papers/stanley.ec02.pdf"
+    },
+    {
+      "path": "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2002 -- Stanley and Miikkulainen -- NEAT - Evolving Network Structure and Weights -- Study Note.md",
+      "title": "NEAT - Evolving Network Structure and Weights",
+      "kind": "study-note",
+      "sha256": "5e7e7a31b78100e1da3cf69bc20e220cd6e0d333f9511d6db2fed710de1543e3",
+      "local_sources": [
+        "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2002 -- Stanley and Miikkulainen -- Evolving Neural Networks through Augmenting Topologies -- Evolutionary Computation.pdf"
+      ],
+      "source_url": "https://nn.cs.utexas.edu/downloads/papers/stanley.ec02.pdf"
+    },
+    {
+      "path": "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2013 -- Luke -- Essentials of Metaheuristics -- Lulu -- 2nd edition - Online 2.4 January 2026.pdf",
+      "title": "Essentials of Metaheuristics",
+      "kind": "book",
+      "sha256": "2385e5737016bba7e131affb12d6413d664bcd60169414b6ce63cfc474cc0ed8",
+      "local_sources": [],
+      "source_url": "https://people.cs.gmu.edu/~sean/book/metaheuristics/"
+    },
+    {
+      "path": "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2013 -- Luke -- Genetic Algorithms - Representation, Variation and Selection -- Study Note.md",
+      "title": "Genetic Algorithms - Representation, Variation and Selection",
+      "kind": "study-note",
+      "sha256": "ae9e0d5632677826995498322dc54ecfd7e455287f8e1d462e8e5aa88b56f8aa",
+      "local_sources": [
+        "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/1994 -- Whitley -- A Genetic Algorithm Tutorial -- Author manuscript.pdf",
+        "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2013 -- Luke -- Essentials of Metaheuristics -- Lulu -- 2nd edition - Online 2.4 January 2026.pdf"
+      ],
+      "source_url": "https://people.cs.gmu.edu/~sean/book/metaheuristics/"
+    },
+    {
+      "path": "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2016 -- Hansen -- Evolution Strategies and CMA-ES Covariance Adaptation -- Study Note.md",
+      "title": "Evolution Strategies and CMA-ES Covariance Adaptation",
+      "kind": "study-note",
+      "sha256": "471f3df6d3a24e141e05f07f4c3b0d6c4153288c7477bb229014d726d58ab174",
+      "local_sources": [
+        "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2016 -- Hansen -- The CMA Evolution Strategy - A Tutorial -- arXiv -- v2 2023.pdf",
+        "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2017 -- Salimans et al -- Evolution Strategies as a Scalable Alternative to Reinforcement Learning -- arXiv -- v2.pdf"
+      ],
+      "source_url": "https://arxiv.org/abs/1604.00772v2"
+    },
+    {
+      "path": "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2016 -- Hansen -- The CMA Evolution Strategy - A Tutorial -- arXiv -- v2 2023.pdf",
+      "title": "The CMA Evolution Strategy: A Tutorial",
+      "kind": "source-document",
+      "sha256": "96645df3058f229084eb70fd9531c601665c1c118a49929aa3b6ceadbf36a223",
+      "local_sources": [],
+      "source_url": "https://arxiv.org/abs/1604.00772v2"
+    },
+    {
+      "path": "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2017 -- Salimans et al -- Evolution Strategies as a Scalable Alternative to Reinforcement Learning -- arXiv -- v2.pdf",
+      "title": "Evolution Strategies as a Scalable Alternative to Reinforcement Learning",
+      "kind": "source-document",
+      "sha256": "16ed1ee42f14c9d79be64f23c95a87ac6056962570833d75209ce455c813c77f",
+      "local_sources": [],
+      "source_url": "https://arxiv.org/abs/1703.03864v2"
+    },
+    {
+      "path": "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/undated -- Deb et al -- A Fast and Elitist Multiobjective Genetic Algorithm - NSGA-II -- KanGAL Report 200001.pdf",
+      "title": "A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II",
+      "kind": "source-document",
+      "sha256": "7885dee39bd6647922d7156c46015f5c2de0da58d80f7f387617e302b118b1a7",
+      "local_sources": [],
+      "source_url": "https://homes.cs.washington.edu/~sagarwal/papers.html"
+    }
+  ],
+  "selection_note": "The two expansion batches (71 PDFs, 35 notes), plus the earlier Goldberg 1991 primary PDF and companion note required for precision revisions."
+}

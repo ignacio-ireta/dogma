@@ -1,0 +1,13 @@
+id: algo/stacks-and-queues/p01-days-until-higher
+version: 2                      # bump when tests, tolerances or the contract change
+title: Days until a higher reading
+language: python
+runtime: py-stdlib
+entry: days_until_higher
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: integer distances
+banned_imports: []
+timeout_s: 30
+status: verified

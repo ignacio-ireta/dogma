@@ -1,0 +1,20 @@
+id: cml/gaussian-mixtures-and-em
+title: Gaussian mixtures and EM
+tier: B
+requires: [cml/k-means, cml/normal-and-multivariate-gaussian, cml/maximum-likelihood-and-map]
+aliases: [mixture of Gaussians, GMM, expectation maximisation, EM algorithm, soft clustering, responsibilities, latent variables, covariance floor, regularisation]
+objectives:
+  - Compute responsibilities in log space and apply the weighted M-step updates of a full-covariance Gaussian mixture in NumPy
+  - Explain why EM never decreases the log-likelihood, using the Jensen bound and the E- and M-steps
+  - Diagnose covariance collapse and initialisation sensitivity, and apply a covariance floor and restarts
+minutes: {lesson: 12, practice: 45, min_viable: 20}
+interview_angle: >-
+  "Walk me through EM for a Gaussian mixture, and what goes wrong." A strong answer names the responsibilities, the monotone bound, covariance collapse with a floor, and local optima with restarts.
+sources:
+  - "paper: Dempster, Laird & Rubin 1977, Maximum likelihood from incomplete data via the EM algorithm (JRSS B)"
+  - "book: Bishop, Pattern Recognition and Machine Learning, ch. 9 (mixture models and EM)"
+  - "book: Deisenroth, Faisal & Ong, Mathematics for Machine Learning, ch. 11 (density estimation with Gaussian mixture models)"
+  - "source: library-refresh/01-Mathematics/06-Probability-and-Statistics/1977 -- Dempster, Laird and Rubin -- EM and Latent Variable Likelihood -- Study Note.md"
+  - "source: library-refresh/02-AI-ML/00-Overviews-and-Books/2006 -- Bishop -- Probabilistic Models, Latent Variables and Approximate Inference -- Study Note.md"
+  - "source: library-refresh/01-Mathematics/00-Seed-Sources/2020 -- Deisenroth, Faisal and Ong -- A Map from Mathematical Foundations to Machine Learning -- Study Note.md"
+status: reviewed

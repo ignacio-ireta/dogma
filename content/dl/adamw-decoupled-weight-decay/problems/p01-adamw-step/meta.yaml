@@ -1,0 +1,13 @@
+id: dl/adamw-decoupled-weight-decay/p01-adamw-step
+version: 2
+title: "One AdamW step with decoupled weight decay"
+language: python
+runtime: py-torch
+entry: adamw_step
+difficulty: medium
+minutes: 30
+core: true
+tolerance: {atol: 1.0e-10, rtol: 1.0e-10}
+banned_imports: [torch.optim]
+timeout_s: 30
+status: reviewed

@@ -1,0 +1,24 @@
+cards:
+  - id: sql/sql-select-filter-and-sort#1
+    type: qa
+    front: In what order does a SELECT without grouping evaluate FROM, WHERE, SELECT, ORDER BY and LIMIT?
+    back: FROM, then WHERE (keeps rows), then SELECT (computes columns), then ORDER BY, then LIMIT.
+  - id: sql/sql-select-filter-and-sort#2
+    type: qa
+    front: What does the WHERE condition amount > 100 return for a row where amount is NULL?
+    back: UNKNOWN, not FALSE. WHERE keeps only TRUE, so the row is dropped.
+  - id: sql/sql-select-filter-and-sort#3
+    type: qa
+    front: How do you test for a missing value in SQL?
+    back: "amount IS NULL or amount IS NOT NULL. amount = NULL is never TRUE."
+  - id: sql/sql-select-filter-and-sort#4
+    type: cloze
+    text: "A calendar-year filter uses a half-open range: order_date >= DATE '2024-01-01' AND order_date {{c1::< DATE '2025-01-01'}}."
+  - id: sql/sql-select-filter-and-sort#5
+    type: qa
+    front: Why does ORDER BY amount DESC LIMIT 5 need a second sort key?
+    back: Rows with equal amounts have no defined order, so the cut at position 5 is arbitrary. Add a unique key such as order_id ASC.
+  - id: sql/sql-select-filter-and-sort#6
+    type: qa
+    front: Why is WHERE status <> 'pending' a weak way to say "completed"?
+    back: It keeps every other status, including ones you have not seen yet, and it also drops rows whose status is NULL.

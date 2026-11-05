@@ -1,0 +1,13 @@
+id: llm/chat-templates-and-tool-call-formats/p02-parse-tool-call
+version: 3                      # bump when tests, tolerances or the contract change
+title: Parse and validate a tool call from assistant text
+language: python                # python | sql
+runtime: py-stdlib              # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: parse_tool_call          # the function or class name the learner implements
+difficulty: medium
+minutes: 25
+core: false                     # p01 is the core problem; this one goes deeper
+tolerance: {atol: 0.0, rtol: 0.0}   # exact parsed values, no floating point
+banned_imports: [jsonschema, pydantic]   # schema validation is the work of this problem
+timeout_s: 30
+status: reviewed

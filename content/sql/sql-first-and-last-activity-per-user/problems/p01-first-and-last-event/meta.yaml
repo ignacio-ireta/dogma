@@ -1,0 +1,13 @@
+id: sql/sql-first-and-last-activity-per-user/p01-first-and-last-event
+version: 2
+title: First and last event per user
+language: sql
+runtime: sql-duckdb
+entry: query
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 0.0, rtol: 0.0}
+banned_imports: []
+timeout_s: 30
+status: reviewed

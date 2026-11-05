@@ -1,0 +1,24 @@
+cards:
+  - id: llm/instruction-tuning-batches-and-loss-masks#1
+    type: qa
+    front: "Which positions of an SFT labels tensor are not -100?"
+    back: "The response token positions only. Prompt positions and padding are -100."
+  - id: llm/instruction-tuning-batches-and-loss-masks#2
+    type: qa
+    front: "Are SFT labels shifted or aligned with the inputs?"
+    back: "Aligned. Column t describes input token t. The loss shifts: logits at t-1 are scored against labels at t."
+  - id: llm/instruction-tuning-batches-and-loss-masks#3
+    type: qa
+    front: "Why must an SFT prompt have at least one token?"
+    back: "The first response token is predicted from the last prompt position. With no prompt there is no position to predict it from."
+  - id: llm/instruction-tuning-batches-and-loss-masks#4
+    type: qa
+    front: "How should the attention mask of a padded SFT batch be built?"
+    back: "From lengths. Column t is 1 when t < n_i, where n_i is the prompt plus response length of row i."
+  - id: llm/instruction-tuning-batches-and-loss-masks#5
+    type: cloze
+    text: "A response token whose id equals pad_id keeps its label because masks come from {{c1::lengths, not token values}}."
+  - id: llm/instruction-tuning-batches-and-loss-masks#6
+    type: qa
+    front: "Why train SFT on the response only?"
+    back: "The objective is the likelihood of the response given the prompt. Loss on prompt tokens spends capacity on text the model should not generate."

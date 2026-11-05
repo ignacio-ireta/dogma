@@ -1,0 +1,17 @@
+id: llm/word-and-character-tokenizers
+title: Word and character tokenizers
+tier: A
+requires: [algo/hash-maps-and-sets]
+aliases: [tokenizer, vocabulary, token id, special tokens, pad token, unk token, out-of-vocabulary, OOV, byte fallback, character tokenizer, word tokenizer]
+objectives:
+  - Build a word-level vocabulary from a corpus with a min-frequency cutoff and a deterministic id order
+  - Encode and decode text with an UNK id, and state exactly what whitespace and case rules apply
+  - Explain why a larger vocabulary shortens sequences, and why a character vocabulary never needs UNK
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "How would you tokenize this?" is a senior screen. The interviewer wants the trade-off between sequence length and vocabulary size, the
+  unknown-word problem, and where byte-level fallback removes UNK altogether.
+sources:
+  - "paper: Sennrich, Haddow & Birch 2016, Neural Machine Translation of Rare Words with Subword Units (arXiv:1508.07909)"
+  - "paper: Radford et al. 2019, Language Models are Unsupervised Multitask Learners (GPT-2)"
+status: reviewed

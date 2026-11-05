@@ -1,0 +1,13 @@
+id: math/determinants-and-trace/p01-determinant
+version: 2
+title: Determinant
+language: python
+runtime: py-numpy
+entry: determinant
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [numpy.linalg, scipy]
+timeout_s: 30
+status: reviewed

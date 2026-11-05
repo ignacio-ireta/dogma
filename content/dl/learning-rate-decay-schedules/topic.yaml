@@ -1,0 +1,18 @@
+id: dl/learning-rate-decay-schedules
+title: "Learning-rate decay schedules"
+tier: A
+requires: [cml/gradient-descent]
+aliases: [learning rate schedule, step decay, exponential decay, polynomial decay, cosine annealing, eta_min, T_max, scheduler step]
+objectives:
+  - Write step, exponential, polynomial and cosine schedules as closed-form functions of the update count
+  - Reproduce a scheduler's values update by update, including its counting convention
+  - Explain per-step versus per-epoch stepping, and what eta_min and T_max measure
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: "Which schedule would you use for a fixed training budget, and where does the rate sit at the last update?"
+sources:
+  - "paper: Loshchilov and Hutter 2017, SGDR: Stochastic Gradient Descent with Warm Restarts (arXiv:1608.03983), section 3"
+  - "library: AI-ML/03-Optimization/Loshchilov Hutter SGDR 2017.md"
+  - "corpus: library-papers/1608.03983.pdf.md p.4"
+  - "corpus: library-papers/1711.05101.pdf.md p.6"
+  - "corpus: library-papers/1711.05101.pdf.md p.3"
+status: reviewed

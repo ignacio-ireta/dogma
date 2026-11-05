@@ -1,0 +1,14 @@
+id: cml/confusion-matrix-and-count-based-scores/p01-confusion-matrix-from-labels
+version: 3
+title: Confusion matrix from labels
+language: python
+runtime: py-numpy
+entry: confusion_matrix
+difficulty: easy
+minutes: 20
+core: true
+# Integer counts are exact; the tolerances are required by the schema only.
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [sklearn]
+timeout_s: 30
+status: reviewed

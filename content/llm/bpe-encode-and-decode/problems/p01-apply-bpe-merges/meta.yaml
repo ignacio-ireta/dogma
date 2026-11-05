@@ -1,0 +1,13 @@
+id: llm/bpe-encode-and-decode/p01-apply-bpe-merges
+version: 3                      # bump when tests, tolerances or the contract change
+title: Apply BPE merges by rank
+language: python
+runtime: py-stdlib
+entry: BPETokenizer
+difficulty: medium
+minutes: 20
+core: true
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: lists of strings and round trips
+banned_imports: []                  # no tokenizer library is installed; the contract forbids them in words
+timeout_s: 30
+status: reviewed

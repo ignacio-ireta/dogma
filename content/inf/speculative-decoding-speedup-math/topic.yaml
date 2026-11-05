@@ -1,0 +1,18 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: inf/speculative-decoding-speedup-math
+title: "Speculative decoding speedup math"
+tier: A
+requires: [inf/prefill-vs-decode-bottlenecks, llm/temperature-top-k-and-top-p-sampling]
+aliases: [speculative sampling, draft and verify, acceptance rate, expected tokens per pass, rejection sampling, draft model, verification pass]
+objectives:
+  - "Compute expected tokens per round from the per-token acceptance rate and the draft length, including the alpha = 0 and alpha = 1 edge cases"
+  - "Compute the walltime speedup over plain decoding from the draft's relative cost, and say when speculation is slower"
+  - "Implement the accept-or-resample step for one position and show that its output distribution equals the target distribution"
+minutes: {lesson: 12, practice: 25, min_viable: 12}
+interview_angle: "State the expected tokens per round and the round cost, then name what limits the gain: acceptance rate, draft cost and verification cost. The rejection rule is why the output distribution does not change."
+sources:
+  - "corpus: library-papers/2604.12374.pdf p.6"
+  - "library: AI-ML/13-Scaling-and-Alignment/NVIDIA Nemotron 3 Super 2026.md"
+  - "paper: Leviathan, Kalman and Matias 2023, Fast Inference from Transformers via Speculative Decoding (arXiv:2211.17192); general topic source, not in the corpus"
+  - "paper: Chen et al. 2023, Accelerating Large Language Model Decoding with Speculative Sampling (arXiv:2302.01318); general topic source, not in the corpus"
+status: reviewed

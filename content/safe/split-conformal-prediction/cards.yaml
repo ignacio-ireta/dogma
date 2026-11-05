@@ -1,0 +1,34 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: safe/split-conformal-prediction#1
+    type: qa
+    front: "Calibration score for regression?"
+    back: "The absolute residual |y - f(x)| on held-out calibration data."
+  - id: safe/split-conformal-prediction#2
+    type: qa
+    front: "Calibration score for classification?"
+    back: "1 minus the predicted probability of the true class, 1 - p(true class)."
+  - id: safe/split-conformal-prediction#3
+    type: qa
+    front: "Rank of the threshold at level alpha with n calibration points?"
+    back: "k = ceil((n+1)(1-alpha)); the threshold is the k-th smallest calibration score."
+  - id: safe/split-conformal-prediction#4
+    type: qa
+    front: "What threshold results when k exceeds n?"
+    back: "Plus infinity: the interval is unbounded and the set contains every class."
+  - id: safe/split-conformal-prediction#5
+    type: cloze
+    text: "Split conformal coverage is marginal, not {{c1::conditional on the input x}}."
+  - id: safe/split-conformal-prediction#6
+    type: qa
+    front: "Which assumption gives the coverage guarantee?"
+    back: "Exchangeability of the calibration and test pairs. It is weaker than i.i.d., which implies it."
+  - id: safe/split-conformal-prediction#7
+    type: qa
+    front: "Why must the calibration points be held out from training?"
+    back: "Training residuals are too small, so the threshold undercovers on new data."
+  - id: safe/split-conformal-prediction#8
+    type: qa
+    front: "Upper bound on coverage excess over 1 - alpha for continuous scores?"
+    back: "1/(n+1): coverage lies in [1 - alpha, 1 - alpha + 1/(n+1)]."

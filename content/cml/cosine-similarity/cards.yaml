@@ -1,0 +1,28 @@
+cards:
+  - id: cml/cosine-similarity#1
+    type: qa
+    front: What is cosine similarity, in one formula?
+    back: "cos θ = a·b / (‖a‖ ‖b‖). It is the dot product of the two unit vectors, so it lies in [−1, 1]."
+  - id: cml/cosine-similarity#2
+    type: cloze
+    text: "Normalising each row to unit length, then taking the dot product, gives {{c1::cosine similarity}}."
+  - id: cml/cosine-similarity#3
+    type: qa
+    front: For unit vectors a and b, how are squared Euclidean distance and cosine related?
+    back: "‖a − b‖² = 2 − 2 cos θ. The two measures therefore give the same ranking."
+  - id: cml/cosine-similarity#4
+    type: qa
+    front: What does the matrix S = Â B̂ᵀ contain, where Â and B̂ hold the row-normalised inputs?
+    back: S[i, j] is the cosine similarity between row i of A and row j of B. One matrix multiply computes every pair.
+  - id: cml/cosine-similarity#5
+    type: qa
+    front: Pearson correlation equals the cosine similarity of what?
+    back: The mean-centred vectors.
+  - id: cml/cosine-similarity#6
+    type: qa
+    front: Why should a cosine implementation clip its result to [−1, 1]?
+    back: Rounding can push the dot product of unit vectors a hair past 1 (for example 1.0000000000000002). Clipping keeps the documented range exact.
+  - id: cml/cosine-similarity#7
+    type: qa
+    front: What does this repo return for a pair that includes a zero-norm row?
+    back: 0.0, the scikit-learn convention. Cosine is undefined there, so the choice has to be stated.

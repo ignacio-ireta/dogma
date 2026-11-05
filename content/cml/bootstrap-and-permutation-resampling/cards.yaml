@@ -1,0 +1,32 @@
+cards:
+  - id: cml/bootstrap-and-permutation-resampling#1
+    type: qa
+    front: What does the plug-in principle put in place of the unknown distribution F in the bootstrap?
+    back: The empirical distribution F̂ of the sample.
+  - id: cml/bootstrap-and-permutation-resampling#2
+    type: qa
+    front: How is one bootstrap resample of size n drawn?
+    back: n draws from the n observations, with replacement.
+  - id: cml/bootstrap-and-permutation-resampling#3
+    type: qa
+    front: What is exchangeable under the null hypothesis of a two-sample permutation test?
+    back: The group labels, under the null that both groups come from one distribution.
+  - id: cml/bootstrap-and-permutation-resampling#4
+    type: qa
+    front: Why is a permutation p-value (count + 1) / (B + 1) and not count / B?
+    back: The observed labelling is one of the outcomes. The +1 makes the p-value never zero and valid for any finite B.
+  - id: cml/bootstrap-and-permutation-resampling#5
+    type: cloze
+    text: "A bootstrap resample contains the sample maximum at least once with probability 1 − (1 − 1/n)ⁿ, which tends to {{c1::1 − 1/e ≈ 0.632}}."
+  - id: cml/bootstrap-and-permutation-resampling#6
+    type: qa
+    front: Why does the bootstrap percentile interval for the sample maximum fail?
+    back: No replicate can exceed the sample maximum, so the interval cannot cover values above it.
+  - id: cml/bootstrap-and-permutation-resampling#7
+    type: qa
+    front: Why can an exact-tie comparison in a permutation test give the wrong p-value?
+    back: Float rounding can put a tied relabelling just below the observed value, so it is not counted. Compare with a relative tolerance.
+  - id: cml/bootstrap-and-permutation-resampling#8
+    type: qa
+    front: What null hypothesis does a two-sample permutation test on a mean difference assume?
+    back: That both samples come from one distribution, so the labels are exchangeable.

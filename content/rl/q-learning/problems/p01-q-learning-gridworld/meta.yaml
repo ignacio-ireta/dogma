@@ -1,0 +1,16 @@
+id: rl/q-learning/p01-q-learning-gridworld
+version: 3
+title: "Q-learning: one update and a gridworld run"
+language: python
+runtime: py-numpy
+entry: train_q_learning
+difficulty: medium
+minutes: 30
+core: true
+# Analytic check: Q*(s,a) = gamma**d(s') in this deterministic gridworld. With 20000 episodes and
+# epsilon = 0.5 every pair converges to machine precision for the test seed, so the 1e-8 bound
+# covers rounding with a wide margin.
+tolerance: {atol: 1.0e-8, rtol: 1.0e-8}
+banned_imports: [random, scipy.stats]
+timeout_s: 30
+status: reviewed

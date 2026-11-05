@@ -1,0 +1,19 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: llm/scaling-laws-and-compute-budgets
+title: "Scaling laws and compute budgets"
+tier: A
+requires: [cml/gradient-descent, llm/model-parameter-and-memory-footprint]
+aliases: [scaling laws, Chinchilla, compute-optimal, FLOP budget, power law, tokens per parameter, Kaplan, 6ND]
+objectives:
+  - "Estimate training FLOPs as C of about 6 N D and split a fixed budget into a compute-optimal N and D with D = r N"
+  - "Explain the parametric loss L(N, D) = E + A/N^alpha + B/D^beta and what each term means"
+  - "Fit a power law y = a x^b by least squares on log-log data and check the fit before trusting it"
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: "Start with C of about 6 N D. For a budget, choose N and D together, so both grow roughly with the square root of C. Then say the fit is only as good as the range it was fitted on."
+sources:
+  - "paper: Kaplan, McCandlish, Henighan et al. 2020, Scaling Laws for Neural Language Models (arXiv:2001.08361)"
+  - "paper: Hoffmann, Borgeaud, Mensch et al. 2022, Training Compute-Optimal Large Language Models (arXiv:2203.15556), sections 3.1 and 3.3 and appendix D.2"
+  - "corpus: library-papers/2203.15556.pdf.md p.8 (Table 3)"
+  - "library: AI-ML/12-Frontiers/Hoffmann Chinchilla 2022.md"
+  - "library: AI-ML/12-Frontiers/Kaplan Scaling Laws 2020.md"
+status: reviewed

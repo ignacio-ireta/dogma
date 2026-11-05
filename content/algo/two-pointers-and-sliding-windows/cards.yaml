@@ -1,0 +1,29 @@
+cards:
+  - id: algo/two-pointers-and-sliding-windows#1
+    type: qa
+    front: Why must the costs be non-negative for the shrink step to be safe?
+    back: Growing a window never lowers its sum, and shrinking never raises it. So the smallest valid left end only moves forward.
+  - id: algo/two-pointers-and-sliding-windows#2
+    type: qa
+    front: What is the running time of the sliding-window solution, and why?
+    back: O(n). Each index enters the window once and leaves it at most once, so the pointers move at most 2n times.
+  - id: algo/two-pointers-and-sliding-windows#3
+    type: qa
+    front: Why is the shrink step a while loop and not an if?
+    back: One large entry can make the sum exceed the budget by more than one removal can fix. The window must shrink until it is valid again.
+  - id: algo/two-pointers-and-sliding-windows#4
+    type: qa
+    front: Which length do you record for the current right end?
+    back: right - left + 1, measured after the shrink step, so the window is valid.
+  - id: algo/two-pointers-and-sliding-windows#7
+    type: qa
+    front: Why update the best window only when the new length is strictly greater?
+    back: Right ends are visited in increasing order, so the first window of each maximum length has the smallest start.
+  - id: algo/two-pointers-and-sliding-windows#5
+    type: qa
+    front: For a fixed window size k, what replaces the while loop?
+    back: An if. Once the size exceeds k, exactly one item leaves, so one removal is enough.
+  - id: algo/two-pointers-and-sliding-windows#6
+    type: qa
+    front: For costs [5, -4] and budget 3, what does the sliding window report, and what is correct?
+    back: It reports length 1 at start 1. The correct answer is length 2 at start 0, because the sum 1 is within budget. The negative value breaks the shrink step.

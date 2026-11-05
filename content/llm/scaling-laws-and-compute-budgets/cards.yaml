@@ -1,0 +1,26 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: llm/scaling-laws-and-compute-budgets#1
+    type: qa
+    front: What is the rule of thumb for training FLOPs?
+    back: "C of about 6 N D, where N is the parameter count and D the training tokens."
+  - id: llm/scaling-laws-and-compute-budgets#2
+    type: cloze
+    text: "With D = r N and C = 6 N D, the compute-optimal N is {{c1::sqrt(C / (6r))}}."
+  - id: llm/scaling-laws-and-compute-budgets#3
+    type: qa
+    front: What are the three terms of the parametric loss L(N, D)?
+    back: "E (irreducible loss), A / N^alpha (model too small), B / D^beta (too little data)."
+  - id: llm/scaling-laws-and-compute-budgets#4
+    type: qa
+    front: How do the compute-optimal N and D scale with the budget C in Chinchilla's Approach 1?
+    back: "Both grow in nearly equal proportion, with exponents a = 0.50 and b = 0.50."
+  - id: llm/scaling-laws-and-compute-budgets#5
+    type: qa
+    front: How do you fit y = a x^b by least squares?
+    back: "Regress log y on log x: b is the slope and a = exp(intercept)."
+  - id: llm/scaling-laws-and-compute-budgets#6
+    type: qa
+    front: Why should a power-law fit be done in log space?
+    back: "Log space weights relative errors equally and turns the power law into a line; a linear fit on y is different."

@@ -1,0 +1,25 @@
+cards:
+  - id: dl/adamw-decoupled-weight-decay#1
+    type: qa
+    front: What does Adam with L2 weight decay add to the gradient?
+    back: lambda * theta, before the adaptive step.
+  - id: dl/adamw-decoupled-weight-decay#2
+    type: qa
+    front: What does AdamW multiply the parameters by before the Adam update?
+    back: 1 - lr * weight_decay, using the value before this update.
+  - id: dl/adamw-decoupled-weight-decay#3
+    type: qa
+    front: Why does L2 in the gradient regularise weights unevenly under Adam?
+    back: The L2 term is divided by sqrt(v_hat), so weights with large gradients are decayed less.
+  - id: dl/adamw-decoupled-weight-decay#4
+    type: qa
+    front: With zero loss gradient, what does Adam with L2 do to a small weight of 0.01 at lr 0.1?
+    back: Moves it by about lr toward zero, to about -0.09, overshooting past zero.
+  - id: dl/adamw-decoupled-weight-decay#5
+    type: qa
+    front: Which parameters are usually excluded from weight decay in transformers?
+    back: Biases and one-dimensional norm gains. This is a convention, not a theorem.
+  - id: dl/adamw-decoupled-weight-decay#6
+    type: qa
+    front: Are L2 regularisation and weight decay equivalent for plain SGD?
+    back: Yes, once the coefficient is rescaled by the learning rate.

@@ -1,0 +1,18 @@
+id: sql/pandas-groupby-aggregate-and-transform
+title: pandas groupby, aggregate and transform
+tier: A
+requires: [sql/pandas-merge-and-reshape]
+aliases: [groupby, split-apply-combine, transform, agg, apply, named aggregation, cumcount, cumsum, shift, per-group features, window functions in pandas]
+objectives:
+  - "Choose agg, transform or apply from the shape the result needs: one row per group, one value per row, or something else"
+  - "Build per-customer features with groupby transform, shift and cumsum, sorting first so that row order means time order"
+  - "Name aggregates with named aggregation, and state the groupby defaults that change results: dropna and sort"
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "For each order, add the customer's order number, their share of total spend, and the days since
+  their previous order" is a common take-home. The interviewer checks that the sort comes before any
+  per-customer step, that a transform keeps the row count, and that the first order's gap is missing
+  rather than zero.
+sources:
+  - "book: McKinney, Python for Data Analysis (3rd ed.), chapter on data aggregation and group operations"
+status: reviewed

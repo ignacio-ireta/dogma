@@ -1,0 +1,14 @@
+id: algo/heaps-and-priority-queues/p01-merge-sorted-streams
+version: 2                      # bump when tests, tolerances or the contract change
+title: Lazy k-way merge of sorted streams
+language: python
+runtime: py-stdlib
+entry: merge_sorted_streams
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: the output is a sequence of the input pairs
+# Ban the library merge: the point is the heap. heappush, heappop and heapify stay allowed.
+banned_imports: [heapq.merge]
+timeout_s: 30
+status: reviewed

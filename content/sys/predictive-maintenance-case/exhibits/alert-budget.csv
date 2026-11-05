@@ -1,0 +1,6 @@
+alerts_per_week,alerts_in_test_period,precision,failures_caught_with_10_day_lead,failures_in_test_period
+5,130,0.085,11,30
+10,260,0.065,17,30
+15,390,0.051,20,30
+20,520,0.042,22,30
+40,1040,0.025,26,30

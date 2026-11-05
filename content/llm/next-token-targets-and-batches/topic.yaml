@@ -1,0 +1,16 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: llm/next-token-targets-and-batches
+title: "Next-token targets and batches"
+tier: A
+requires: ['llm/padding-truncation-and-pad-masks']
+aliases: [next-token prediction, shift by one, packing, document packing, EOS separator, block size, chunking, causal LM targets]
+objectives:
+  - Turn a list of token-id documents into (inputs, targets) blocks of length T, with targets equal to inputs shifted by one
+  - Concatenate documents with an EOS separator and state the rule for the remainder that does not fill a block
+  - Explain why packed blocks let attention cross document boundaries, and which loss-mask rule applies to padding
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: Explain the one-token shift, why packing adds an EOS between documents, what the leftover tokens do, and why packing without masks leaks context across documents.
+sources:
+  - "paper: Bengio et al. 2003, A Neural Probabilistic Language Model (the sequence probability as a product of conditionals)"
+  - "corpus: library-papers/bengio-neural-probabilistic-language-model-2003.pdf.md p.2"
+status: reviewed

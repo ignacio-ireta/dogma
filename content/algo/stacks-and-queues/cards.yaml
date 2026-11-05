@@ -1,0 +1,24 @@
+cards:
+  - id: algo/stacks-and-queues#1
+    type: qa
+    front: Which item does a stack return on pop?
+    back: The most recently pushed item (last in, first out).
+  - id: algo/stacks-and-queues#2
+    type: qa
+    front: Which item does a queue return on dequeue?
+    back: The oldest item still in the queue (first in, first out).
+  - id: algo/stacks-and-queues#3
+    type: qa
+    front: Why is a monotonic stack O(n) amortised, not O(n squared)?
+    back: Each index is pushed once and popped at most once, so the total number of pops is at most n.
+  - id: algo/stacks-and-queues#4
+    type: cloze
+    text: "In a next-greater search the pop test is values[top] {{c1::<}} value, which is strict, so an equal reading does not end a wait."
+  - id: algo/stacks-and-queues#5
+    type: qa
+    front: Why must a sliding-window deque check its front index on every step?
+    back: The front index may have left the window, and the window must not report a value outside it.
+  - id: algo/stacks-and-queues#6
+    type: qa
+    front: Why is list.pop(0) slow as a queue, and what replaces it?
+    back: Removing the first element shifts every other element, so each pop is O(n). Use collections.deque.popleft, which is O(1).

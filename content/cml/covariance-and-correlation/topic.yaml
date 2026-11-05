@@ -1,0 +1,17 @@
+id: cml/covariance-and-correlation
+title: Covariance and correlation
+tier: A
+requires: [cml/expectation-and-variance, cml/matrix-multiplication]
+aliases: [sample covariance, Pearson correlation, Spearman correlation, correlation matrix, positive semi-definite, Anscombe's quartet]
+objectives:
+  - Compute the sample covariance and correlation matrices of a data matrix, with observations in rows
+  - Explain why a covariance matrix is positive semi-definite and why correlation is covariance with scale removed
+  - Distinguish Pearson from Spearman correlation, and name the traps that break the Pearson value
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "What is the difference between covariance and correlation?" and "Pearson or Spearman?" A strong answer
+  normalises for scale, states what correlation does not measure, and says to plot the data first.
+sources:
+  - "book: Deisenroth, Faisal & Ong, Mathematics for Machine Learning, chapter on probability and distributions"
+  - "book: Wasserman, All of Statistics, chapter on expectation"
+status: reviewed

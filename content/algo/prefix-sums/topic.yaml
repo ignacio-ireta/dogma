@@ -1,0 +1,17 @@
+id: algo/prefix-sums
+title: "Prefix sums"
+tier: A
+requires: [algo/hash-maps-and-sets, algo/two-pointers-and-sliding-windows]
+aliases: [prefix sums, cumulative sum, running total, subarray sum, range sum, integral image, summed-area table, inclusion-exclusion]
+objectives:
+  - Count the subarrays that sum to k in one O(n) pass with a dictionary of earlier prefix sums, with the empty prefix seeded
+  - Answer inclusive rectangle sums in O(1) per query from a summed-area table that is built once, with zero padding
+  - Explain why the prefix-sum count still works for negative values where the sliding window does not
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "Count subarrays that sum to k, negatives allowed" and "sum over a rectangle, many times" are common screens. The
+  interviewer checks the empty-prefix seed, whether you look up before you insert, and why two pointers fail with negatives.
+sources:
+  - "book: Cormen, Leiserson, Rivest & Stein, Introduction to Algorithms (3rd ed.), chapter on hash tables"
+  - "paper: Viola & Jones 2001, Rapid object detection using a boosted cascade of simple features (CVPR)"
+status: reviewed

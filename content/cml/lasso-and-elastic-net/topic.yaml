@@ -1,0 +1,18 @@
+id: cml/lasso-and-elastic-net
+title: Lasso and elastic net
+tier: A
+requires: [cml/ridge-regression-and-weight-decay, cml/gradient-descent, cml/partial-derivatives-and-gradients]
+aliases: [L1 penalty, soft thresholding, coordinate descent, sparse regression, elastic net, mixing ratio, lasso path]
+objectives:
+  - Implement lasso regression by cyclic coordinate descent with the soft-threshold, without an intercept
+  - Verify a lasso solution with the KKT conditions, and find the alpha at which every coefficient is zero
+  - Explain why correlated features make the lasso unstable, and how the elastic net's L2 share fixes it
+minutes: {lesson: 12, practice: 30, min_viable: 15}
+interview_angle: "Why does the lasso give exact zeros while ridge does not? What breaks with correlated features, and what is the fix?"
+sources:
+  - "paper: Tibshirani 1996, Regression shrinkage and selection via the lasso (J. R. Stat. Soc. B)"
+  - "paper: Zou & Hastie 2005, Regularization and variable selection via the elastic net (J. R. Stat. Soc. B)"
+  - "paper: Friedman, Hastie, Hoefling & Tibshirani 2007, Pathwise coordinate optimization (Ann. Appl. Stat.)"
+  - "source: library-refresh/01-Mathematics/08-Optimization/2026 -- Library -- Proximal Steps and Accelerated Convex Optimization -- Concept Note.md"
+  - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter 3, Linear Methods for Regression (shrinkage methods: the lasso)"
+status: reviewed

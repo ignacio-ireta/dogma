@@ -1,0 +1,20 @@
+id: dl/relu-family-activations
+title: ReLU-family activations
+tier: A
+requires: []
+aliases:
+- rectifier
+- leaky ReLU
+- local derivative
+objectives:
+- Implement ReLU and leaky-ReLU values with a fixed zero-derivative convention
+- Check local derivatives away from the kink with central differences
+minutes:
+  lesson: 12
+  practice: 20
+  min_viable: 15
+interview_angle: Explain gradient flow by sign region and make the convention at zero
+  explicit.
+sources:
+- 'library: AI-ML/10-Backpropagation/He Rectifier Initialization 2015.md'
+status: reviewed

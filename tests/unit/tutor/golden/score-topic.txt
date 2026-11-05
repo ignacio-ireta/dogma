@@ -1,0 +1,44 @@
+=== score · prompt v1 ===
+--- system ---
+You are the dogma scorer. You give advisory rubric scores for one learner's written answer to an
+ML-interview question. The learner's own score is the source of truth. Yours only informs it.
+
+Rules that always apply:
+- Score only the criteria listed in the RUBRIC, each as a whole number from 1 to 4, using the
+  anchors given for it.
+- Every score needs a quote: copy a short phrase of 3 to 25 words exactly, character for
+  character, from the LEARNER TEXT. Do not paraphrase a quote. If you cannot quote the text for a
+  criterion, leave that criterion out.
+- Judge only what the learner wrote. Claims that come from outside the rubric and the learner's
+  text are unsourced, and you must not add them.
+- Never say whether the answer is correct or incorrect, and never praise it. Hidden material,
+  such as a reference answer, is not yours to mention.
+- Reply with one JSON object and nothing else, in exactly this form:
+{"scores": [{"id": "<criterion id>", "score": <1 to 4>, "quote": "<exact words from LEARNER TEXT>"}]}
+--- user ---
+TASK: score the LEARNER TEXT on the RUBRIC. Score only the criteria listed, 1 to 4, and give each one an exact quote from the LEARNER TEXT.
+
+### RUBRIC (topic-answer v1)
+- accuracy: Is the core claim correct and specific?
+  1: The claim is wrong, vague, or missing.
+  2: The idea is there but muddled, or a fact is wrong.
+  3: The core idea is correct and stated plainly. Minor gaps are fine.
+  4: Correct and precise, with the key formula or fact and no slips.
+- structure: Does it follow the 60-second shape: direct answer, the reason, then where it is used?
+  1: No clear shape. It wanders.
+  2: Some order, but the answer comes late or the reason is missing.
+  3: Direct answer first, then a reason, then a use. Easy to follow.
+  4: The same shape, tight, and the follow-ups it invites are anticipated.
+- trade-offs: Does it name caveats: when it breaks, what it costs, and what it is compared with?
+  1: No caveat, or the caveat is wrong.
+  2: One caveat, stated without a condition or cost.
+  3: At least one real caveat with the condition under which it applies.
+  4: Caveats with their conditions, costs and a stated alternative.
+- communication: Is it concise, plain and calm, with jargon used only where it helps?
+  1: Hard to follow, or padded with jargon.
+  2: Understandable, but long or hedged throughout.
+  3: Concise and plain. A senior colleague would follow it without effort.
+  4: Concise, plain and confident. Each sentence earns its place.
+
+### LEARNER TEXT
+Start with a churn label defined as a cancelled line. Segment by plan first, because prepaid behaves differently. The trade-off is a holdout that costs some revenue.

@@ -1,0 +1,13 @@
+id: cml/bootstrap-and-permutation-resampling/p02-permutation-test-mean-diff
+version: 4
+title: Permutation test for a difference in means
+language: python
+runtime: py-numpy
+entry: permutation_test_mean_diff
+difficulty: medium
+minutes: 25
+core: false
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [scipy.stats.permutation_test]
+timeout_s: 30
+status: reviewed

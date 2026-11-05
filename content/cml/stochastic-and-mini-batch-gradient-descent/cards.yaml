@@ -1,0 +1,32 @@
+cards:
+  - id: cml/stochastic-and-mini-batch-gradient-descent#1
+    type: qa
+    front: How many parameter updates does one epoch make with n rows and batch size B?
+    back: "⌈n/B⌉. Every row is used once per epoch, and the last batch may be smaller."
+  - id: cml/stochastic-and-mini-batch-gradient-descent#2
+    type: cloze
+    text: "When rows are drawn uniformly, the mini-batch gradient is an {{c1::unbiased}} estimate of the full-data gradient."
+  - id: cml/stochastic-and-mini-batch-gradient-descent#3
+    type: qa
+    front: What is the variance of a mini-batch mean when rows are sampled without replacement?
+    back: "(σ²/B)·(n − B)/(n − 1), where σ² is the per-row variance. The factor is 0 when B = n, which is the full batch."
+  - id: cml/stochastic-and-mini-batch-gradient-descent#4
+    type: qa
+    front: Why reshuffle the rows at the start of every epoch?
+    back: Batches from sorted or grouped data are correlated, so the iterate drifts toward the last group. Reshuffling gives each epoch different batches and removes the order bias.
+  - id: cml/stochastic-and-mini-batch-gradient-descent#5
+    type: qa
+    front: Why divide the batch gradient by the batch's own size, not by batch_size?
+    back: The last slice of an epoch can be smaller. Dividing by its actual length keeps the gradient an average over the rows used.
+  - id: cml/stochastic-and-mini-batch-gradient-descent#6
+    type: qa
+    front: Why does constant-learning-rate minibatch SGD not converge exactly to the minimiser when the data is noisy?
+    back: The noise keeps moving the iterate, so it hovers in a neighbourhood of the minimiser. A smaller learning rate shrinks that neighbourhood but needs more updates.
+  - id: cml/stochastic-and-mini-batch-gradient-descent#7
+    type: qa
+    front: Holding compute per epoch fixed, what does halving the batch size change?
+    back: It doubles the number of updates per epoch, and each update uses half as many rows, so each gradient is noisier.
+  - id: cml/stochastic-and-mini-batch-gradient-descent#8
+    type: qa
+    front: Which two step-size conditions give SGD convergence without a noise floor (Robbins–Monro)?
+    back: "Σ α_k = ∞ and Σ α_k² < ∞. A constant step violates the second condition, which is why it keeps a floor."

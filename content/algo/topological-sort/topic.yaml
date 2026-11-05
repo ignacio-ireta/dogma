@@ -1,0 +1,17 @@
+id: algo/topological-sort
+title: "Topological sort"
+tier: A
+requires: [algo/heaps-and-priority-queues, algo/hash-maps-and-sets]
+aliases: [topological order, Kahn's algorithm, in-degree, dependency order, DAG, cycle detection, build order, prerequisites, DFS post-order]
+objectives:
+  - Order the nodes of a DAG with Kahn's algorithm (in-degree counts and a ready set), and say why the output respects every edge
+  - Detect a cycle when some nodes are never placed, and name one cycle from the unplaced nodes
+  - Make the order deterministic and lexicographically smallest by keeping the ready set in a min-heap
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "Give a valid build order for these tasks, and say what happens when there is a cycle" is a common screen. The
+  interviewer checks the in-degree bookkeeping, that a cycle is detected by a count and not by a visited flag alone,
+  and whether you can make the order deterministic.
+sources:
+  - "book: Cormen et al., Introduction to Algorithms (3rd ed.), section 22.4, topological sort"
+status: reviewed

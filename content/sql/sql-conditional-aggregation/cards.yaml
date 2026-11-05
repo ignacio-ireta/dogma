@@ -1,0 +1,24 @@
+cards:
+  - id: sql/sql-conditional-aggregation#1
+    type: qa
+    front: How do you count only the converted rows of each channel in one GROUP BY pass?
+    back: "COUNT(*) FILTER (WHERE converted), or SUM(CASE WHEN converted THEN 1 ELSE 0 END). Both put the condition inside the aggregate."
+  - id: sql/sql-conditional-aggregation#2
+    type: qa
+    front: "A group has rows with converted = TRUE and FALSE. What does COUNT(converted) return?"
+    back: "The number of rows, both TRUE and FALSE, because COUNT skips only NULL and FALSE is not NULL."
+  - id: sql/sql-conditional-aggregation#3
+    type: qa
+    front: "SUM(CASE WHEN device = 'mobile' THEN revenue END) for a group with no mobile rows returns?"
+    back: "NULL, not 0. Wrap it in COALESCE(..., 0.0) when zero is the right answer."
+  - id: sql/sql-conditional-aggregation#4
+    type: qa
+    front: In DuckDB, what does 1 / 2 return when both operands are INTEGER?
+    back: "0.5, a DOUBLE. The integer-quotient operator is //, which returns 0."
+  - id: sql/sql-conditional-aggregation#5
+    type: qa
+    front: Why does x / NULLIF(n, 0) matter for a rate?
+    back: "A zero denominator gives NULL instead of an error or inf. In DuckDB, 1.0 / 0.0 is inf, and 0.0 / 0.0 is NaN."
+  - id: sql/sql-conditional-aggregation#6
+    type: cloze
+    text: "A filter placed in WHERE before GROUP BY removes rows from every aggregate, so a channel with no matching rows {{c1::disappears from the result}} entirely."

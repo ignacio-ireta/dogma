@@ -1,0 +1,14 @@
+id: sql/sql-date-handling/p02-days-from-first-to-second-event
+version: 3                      # bump when tests, tolerances or the contract change
+title: Days from a user's first event to their second
+language: sql
+runtime: sql-duckdb
+entry: query
+difficulty: medium
+minutes: 15
+core: false
+# Day counts are exact integers. Declared for consistency with the other SQL problems.
+tolerance: {atol: 1.0e-6, rtol: 1.0e-9}
+banned_imports: []              # SQL problems: nothing to ban at the module level
+timeout_s: 30
+status: reviewed

@@ -1,0 +1,13 @@
+id: sql/sql-streaks-gaps-and-islands/p02-all-islands-per-user
+version: 2                       # bump when tests, tolerances or the contract change
+title: All streaks of consecutive active days per user
+language: sql                    # python | sql
+runtime: sql-duckdb              # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: query                     # sql: "query"
+difficulty: medium
+minutes: 20
+core: false                      # p01 is the core problem: exactly one per topic
+tolerance: {atol: 0.0, rtol: 0.0}  # results are compared exactly; no tolerance applies
+banned_imports: []               # SQL is graded on results only
+timeout_s: 30
+status: reviewed

@@ -1,0 +1,49 @@
+# --- Privacy & licensing boundaries (docs/IMPORT_PLAN.md §2). Never remove these. ---
+# Personal material: privacy denylist, import origin paths, personal narratives.
+/private/
+# Third-party works (PDFs in corpus/raw, conversions in corpus/md) and indexes: in the repo dir,
+# never in git. Rebuild with scripts/import_sources.py + the corpus increment.
+/corpus/*
+!/corpus/README.md
+# Runtime state: progress DB, run dirs, LLM call logs, backups.
+/var/
+# Your own solutions while practicing.
+/workspace/
+
+# --- Secrets ---
+.env
+.env.*
+!.env.example
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.hypothesis/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
+*.egg-info/
+.ipynb_checkpoints/
+
+# --- Web ---
+node_modules/
+web/dist/
+web/.vite/
+playwright-report/
+test-results/
+
+# --- OS / editors ---
+.DS_Store
+.idea/
+*.swp
+
+# Agent git worktrees (Claude Code isolation)
+.claude/worktrees/
+# Local agent scratch notes, screenshots and traces may contain machine-specific paths.
+.superpowers/

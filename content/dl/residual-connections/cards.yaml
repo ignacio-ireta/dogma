@@ -1,0 +1,25 @@
+cards:
+  - id: dl/residual-connections#1
+    type: qa
+    front: What is the output of a residual block with identity shortcut?
+    back: y = x + F(x), with F the residual branch; both terms have shape (..., d_out).
+  - id: dl/residual-connections#2
+    type: qa
+    front: What is the input Jacobian of a residual block with identity shortcut?
+    back: dy/dx = I + dF/dx. The identity term is the unit-gain path that bypasses the branch.
+  - id: dl/residual-connections#3
+    type: qa
+    front: What does He et al. (2016) call the degradation problem?
+    back: A deeper plain network has higher training error than a shallower one, which is an optimisation failure, not overfitting.
+  - id: dl/residual-connections#4
+    type: qa
+    front: When must a residual shortcut be a projection rather than the identity?
+    back: When the output width differs from the input width. Use a learned linear map of shape (d_in, d_out).
+  - id: dl/residual-connections#5
+    type: qa
+    front: Pre-norm versus post-norm in a transformer, in one line each?
+    back: Post-norm normalises after the addition, x + F(x). Pre-norm normalises only the branch input, x + F(N(x)), leaving the identity path unnormalised.
+  - id: dl/residual-connections#6
+    type: qa
+    front: Why is x.detach() in the shortcut a silent bug?
+    back: The forward output is unchanged, but the identity term disappears from the input gradient, so training slows without any error.

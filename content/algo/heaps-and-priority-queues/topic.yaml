@@ -1,0 +1,17 @@
+id: algo/heaps-and-priority-queues
+title: Heaps and priority queues
+tier: A
+requires: [algo/sort-then-sweep]
+aliases: [heap, priority queue, heapq, binary heap, min-heap, max-heap, heapify, top-k, k-way merge, merge sorted lists, running median, two heaps, scheduler, lazy merge]
+objectives:
+  - Explain the heap invariant, why push and pop cost O(log n), and why heapify builds a heap in O(n)
+  - Keep the top k items with a heap of size k, and merge k sorted streams lazily in O(n log k)
+  - Maintain a running median with two heaps whose sizes differ by at most one
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "Merge k sorted lists" and "median of a stream of numbers" are standard screens. The interviewer checks that you hold one
+  head per list, that the heaps stay balanced, and that you can explain why sorting after every value is too slow.
+sources:
+  - "book: Cormen et al., Introduction to Algorithms (3rd ed.), chapter 6, heapsort and priority queues"
+  - "book: Knuth, The Art of Computer Programming vol. 3 (2nd ed.), section 5.4.1, multiway merging"
+status: reviewed

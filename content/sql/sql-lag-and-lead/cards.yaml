@@ -1,0 +1,24 @@
+cards:
+  - id: sql/sql-lag-and-lead#1
+    type: qa
+    front: What does LAG return for the first row of a partition?
+    back: The default value, which is NULL unless a default is given.
+  - id: sql/sql-lag-and-lead#2
+    type: qa
+    front: What does PARTITION BY do for LAG?
+    back: It keeps the lookback inside one entity, so the predecessor never comes from another entity.
+  - id: sql/sql-lag-and-lead#3
+    type: qa
+    front: Why add a unique column to the LAG ordering when timestamps can tie?
+    back: Tied rows have no fixed predecessor, so the result depends on the order the engine happens to produce.
+  - id: sql/sql-lag-and-lead#4
+    type: qa
+    front: Is LAG applied before or after WHERE?
+    back: After. Filtering rows first changes which row is the predecessor.
+  - id: sql/sql-lag-and-lead#5
+    type: qa
+    front: How are sessions numbered from a gap threshold?
+    back: Flag each row that starts a session, then take a running SUM of the flags in the same order.
+  - id: sql/sql-lag-and-lead#6
+    type: cloze
+    text: "A new session starts when the gap is {{c1::strictly greater than}} the threshold, so a gap equal to the threshold stays in the session."

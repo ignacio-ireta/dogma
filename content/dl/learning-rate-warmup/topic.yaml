@@ -1,0 +1,18 @@
+id: dl/learning-rate-warmup
+title: "Learning-rate warmup"
+tier: A
+requires: [dl/learning-rate-decay-schedules, dl/adam]
+aliases: [warmup, linear warmup, warm-up, inverse square root schedule, Noam schedule, transformer learning rate, cosine with warmup]
+objectives:
+  - Implement a piecewise warmup-then-cosine schedule with exact values at its boundaries
+  - Implement the inverse-square-root schedule of Vaswani et al. with its 1-based step count
+  - Explain why adaptive optimizers need a small early learning rate
+minutes: {lesson: 12, practice: 30, min_viable: 15}
+interview_angle: "Why do large models warm up the learning rate, and what does the schedule look like at the start, the peak and the end?"
+sources:
+  - "paper: Vaswani et al. 2017, Attention Is All You Need (arXiv:1706.03762), section 5.3, eq. 3"
+  - "library: AI-ML/12-Frontiers/Vaswani Attention Is All You Need 2017.md"
+  - "corpus: library-papers/1706.03762.pdf.md p.7"
+  - "library: AI-ML/03-Optimization/Kingma Ba Adam 2015.md"
+  - "corpus: library-papers/2302.13971.pdf.md p.3"
+status: reviewed

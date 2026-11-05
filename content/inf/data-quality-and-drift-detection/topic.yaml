@@ -1,0 +1,19 @@
+id: inf/data-quality-and-drift-detection
+title: Data quality and drift detection
+tier: A
+requires: [cml/descriptive-statistics, cml/bootstrap-and-permutation-resampling]
+aliases: [data quality, schema validation, null rate, data drift, covariate shift, label shift, concept drift, population stability index, PSI, Kolmogorov-Smirnov, KS test, monitoring]
+objectives:
+  - Implement a population stability index with bin edges fixed by the reference sample, and an eps floor for empty bins
+  - Implement the two-sample Kolmogorov-Smirnov statistic with tied values counted together, and its asymptotic p-value at the effective sample size
+  - Separate pipeline data-quality failures from covariate, label and concept drift, and name the first check for each
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "Accuracy dropped in production. What do you check first?" The strong answer checks the pipeline (schema, nulls, freshness) before the model, then tests the inputs for drift, and only then labels or the input-output relationship, before deciding to retrain.
+sources:
+  - "paper: Polyzotis, Zinkevich, Roy, Breck & Whang 2019, Data Validation for Machine Learning (MLSys)"
+  - "book: Quinonero-Candela, Sugiyama, Schwaighofer & Lawrence (eds.) 2009, Dataset Shift in Machine Learning (MIT Press)"
+  - "paper: Gama, Zliobaite, Bifet, Pechenizkiy & Bouchachia 2014, A survey on concept drift adaptation (ACM Computing Surveys)"
+  - "paper: Massey 1951, The Kolmogorov-Smirnov test for goodness of fit (Journal of the American Statistical Association)"
+  - "book: Siddiqi 2006, Credit Risk Scorecards (Wiley), on the population stability index"
+status: reviewed

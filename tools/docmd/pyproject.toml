@@ -1,0 +1,119 @@
+[project]
+name = "docmd"
+version = "0.3.0"
+description = "Local-first CLI that extracts DOCX, PPTX, XLSX, and PDF content into normalized Markdown for LLM ingestion."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+keywords = ["markdown", "docx", "pptx", "xlsx", "pdf", "extraction", "llm"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Text Processing :: Markup :: Markdown",
+]
+dependencies = [
+    "openpyxl>=3.1.5",
+    "pydantic>=2.13.4",
+    "pydantic-settings>=2.14.1",
+    "pymupdf>=1.27.2.3",
+    "python-docx>=1.2.0",
+    "python-pptx>=1.0.2",
+    "rich>=15.0.0",
+    "typer>=0.26.7",
+]
+
+[project.scripts]
+docmd = "docmd.cli:app"
+
+[project.optional-dependencies]
+ocr = ["ocrmac>=1.0.1 ; sys_platform == 'darwin'"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/docmd"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # bugbear
+    "C4",  # comprehensions
+    "SIM", # simplify
+    "RUF", # ruff-specific
+    "PTH", # pathlib
+]
+ignore = [
+    "SIM108", # ternary not always clearer
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["B011"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+mypy_path = "src"
+packages = ["docmd"]
+warn_unreachable = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = ["docx.*", "pptx.*", "openpyxl.*", "pymupdf.*", "ocrmac.*", "PIL.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers -m 'not slow'"
+markers = [
+    "slow: long-running tests (huge sheets, subprocess interruption); excluded by default",
+    "golden: golden-file comparison tests",
+    "integration: multi-component tests over real fixtures",
+    "e2e: full CLI runs via subprocess or CliRunner",
+    "ocr: tests needing the Apple Vision OCR backend (macOS + ocr extra); skip elsewhere",
+]
+filterwarnings = [
+    # pymupdf's bundled SWIG bindings trip CPython's __module__ deprecation check
+    "ignore:builtin type [Ss]wig:DeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["docmd"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@abstractmethod",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=2.1.0",
+    "pre-commit>=4.6.0",
+    "pytest>=9.0.3",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.15.16",
+    "xlsxwriter>=3.2.9",
+]
+
+[[tool.mypy.overrides]]
+module = ["docmd.extractors.pdf_extractor"]
+disallow_untyped_calls = false

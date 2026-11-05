@@ -1,0 +1,15 @@
+cards:
+  - id: tst/casey#1
+    type: qa
+    front: What comes first in a case answer?
+    back: The decision the model will inform.
+  - id: tst/casey#2
+    type: cloze
+    text: "A rare positive class makes accuracy {{c1::misleading}}."
+  - id: tst/casey#3
+    type: qa
+    front: Which metric ranks customers for a limited call budget?
+    back: Precision at k, or recall at the budgeted k.
+  - id: tst/casey#4
+    type: cloze
+    text: "A threshold trades false positives against {{c1::false negatives}}."

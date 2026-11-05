@@ -1,0 +1,13 @@
+id: inf/kv-cache-size-arithmetic/p02-max-batch-after-weights
+version: 2                      # bump when tests, tolerances or the contract change
+title: Largest batch that fits after the weights
+language: python
+runtime: py-stdlib
+entry: max_batch_size
+difficulty: medium
+minutes: 20
+core: false
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: integer counts and byte budgets
+banned_imports: []
+timeout_s: 30
+status: reviewed

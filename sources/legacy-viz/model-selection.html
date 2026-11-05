@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Selection &amp; Advanced Concepts</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --border: #2a2d3a;
+  --text: #e0e0e6;
+  --muted: #8888a0;
+  --accent: #6c8aff;
+  --red: #ff6b8a;
+  --teal: #4ecdc4;
+  --yellow: #ffe66d;
+  --purple: #a78bfa;
+  --orange: #f97316;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+nav { display:flex; gap:.5rem; padding:1rem 2rem; background:var(--surface); border-bottom:1px solid var(--border); flex-wrap:wrap; }
+nav a { color:var(--muted); text-decoration:none; padding:.4rem .8rem; border-radius:8px; font-size:.85rem; transition:color .2s,background .2s; }
+nav a:hover { color:var(--text); background:rgba(108,138,255,.1); }
+nav a.active { color:var(--accent); background:rgba(108,138,255,.15); }
+
+header {
+  text-align: center;
+  padding: 3rem 1rem 2rem;
+  border-bottom: 1px solid var(--border);
+}
+header h1 { font-size:2.4rem; font-weight:700; letter-spacing:-0.03em; margin-bottom:.5rem; }
+header p { color:var(--muted); font-size:1.05rem; max-width:600px; margin:0 auto; }
+
+.container { max-width:1100px; margin:0 auto; padding:2rem 1.5rem 4rem; }
+
+section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+section h2 { font-size:1.5rem; font-weight:600; margin-bottom:.3rem; }
+section .subtitle { color:var(--muted); font-size:.92rem; margin-bottom:1.5rem; }
+
+canvas { border-radius:8px; display:block; }
+
+.controls { display:flex; gap:1rem; flex-wrap:wrap; align-items:center; margin:1rem 0; }
+.controls label { color:var(--muted); font-size:.85rem; }
+.controls input[type=range] { width:140px; accent-color:var(--accent); }
+
+button {
+  background: rgba(108,138,255,.15);
+  color: var(--accent);
+  border: 1px solid rgba(108,138,255,.3);
+  padding: .5rem 1.2rem;
+  border-radius: 8px;
+  font-size: .85rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .2s;
+}
+button:hover { background: rgba(108,138,255,.25); }
+button.active-btn { background: rgba(108,138,255,.3); border-color: var(--accent); }
+
+.tabs { display:flex; gap:.5rem; margin-bottom:1rem; flex-wrap:wrap; }
+.tab-btn {
+  background: rgba(108,138,255,.08);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: .4rem 1rem;
+  border-radius: 8px;
+  font-size: .82rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .2s;
+}
+.tab-btn:hover { color:var(--text); background:rgba(108,138,255,.12); }
+.tab-btn.active { color:var(--accent); background:rgba(108,138,255,.18); border-color:rgba(108,138,255,.4); }
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+.card {
+  background: rgba(15,17,23,.6);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.2rem;
+  cursor: pointer;
+  transition: border-color .2s, transform .15s;
+  position: relative;
+  overflow: hidden;
+}
+.card:hover { border-color: var(--accent); transform:translateY(-2px); }
+.card h3 { font-size:.95rem; font-weight:600; margin-bottom:.3rem; color:var(--accent); }
+.card p { font-size:.8rem; color:var(--muted); line-height:1.5; }
+.card .failure-detail { display:none; margin-top:.8rem; }
+.card.expanded .failure-detail { display:block; }
+.card .failure-detail canvas { margin-top:.5rem; }
+
+.info-box {
+  background: rgba(108,138,255,.08);
+  border: 1px solid rgba(108,138,255,.2);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  font-size: .85rem;
+  line-height: 1.6;
+  margin-top: 1rem;
+}
+.info-box strong { color:var(--accent); }
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: .85rem;
+}
+.comparison-table th, .comparison-table td {
+  padding: .6rem .8rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.comparison-table th { color:var(--accent); font-weight:600; font-size:.8rem; text-transform:uppercase; letter-spacing:.03em; }
+.comparison-table td { color:var(--text); }
+.comparison-table tr:last-child td { border-bottom:none; }
+
+/* Decision tree wizard */
+.wizard { text-align:center; }
+.wizard-question { font-size:1.1rem; font-weight:600; margin:1.5rem 0 1rem; }
+.wizard-options { display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap; }
+.wizard-option {
+  background: rgba(108,138,255,.08);
+  border: 1px solid var(--border);
+  padding: .6rem 1.2rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: .85rem;
+  color: var(--text);
+  transition: all .2s;
+  font-family: inherit;
+}
+.wizard-option:hover { border-color:var(--accent); background:rgba(108,138,255,.15); }
+
+.wizard-path {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  margin: 1rem 0;
+  flex-wrap: wrap;
+}
+.wizard-node {
+  background: rgba(108,138,255,.15);
+  color: var(--accent);
+  padding: .3rem .8rem;
+  border-radius: 8px;
+  font-size: .78rem;
+}
+.wizard-arrow { color:var(--muted); font-size:.8rem; }
+
+.wizard-result {
+  background: rgba(78,205,196,.1);
+  border: 1px solid rgba(78,205,196,.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+.wizard-result h3 { color:var(--teal); font-size:1.1rem; margin-bottom:.5rem; }
+.wizard-result p { color:var(--text); font-size:.88rem; }
+
+.side-by-side { display:flex; gap:1rem; flex-wrap:wrap; }
+.side-by-side > div { flex:1; min-width:280px; }
+
+.legend { display:flex; gap:1rem; flex-wrap:wrap; margin-top:.8rem; font-size:.8rem; }
+.legend-item { display:flex; align-items:center; gap:.3rem; color:var(--muted); }
+.legend-dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+
+.toggle-group { display:flex; gap:0; border-radius:8px; overflow:hidden; border:1px solid var(--border); margin:0 .5rem; }
+.toggle-btn {
+  background:transparent;
+  border:none;
+  color:var(--muted);
+  padding:.4rem .8rem;
+  font-size:.8rem;
+  cursor:pointer;
+  font-family:inherit;
+  transition:all .2s;
+}
+.toggle-btn.active { background:rgba(108,138,255,.2); color:var(--accent); }
+
+.tooltip-box {
+  position:absolute;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:.5rem .8rem;
+  font-size:.78rem;
+  pointer-events:none;
+  z-index:10;
+  white-space:nowrap;
+  box-shadow:0 4px 12px rgba(0,0,0,.4);
+}
+
+/* Bar chart styles for class imbalance */
+.bar-container { display:flex; align-items:flex-end; gap:.5rem; height:150px; margin:1rem 0; }
+.bar-wrapper { display:flex; flex-direction:column; align-items:center; flex:1; height:100%; justify-content:flex-end; }
+.bar { border-radius:4px 4px 0 0; transition:height .5s; width:60%; min-width:40px; }
+.bar-label { font-size:.75rem; color:var(--muted); margin-top:.3rem; }
+.bar-value { font-size:.8rem; color:var(--text); margin-bottom:.2rem; }
+
+.metric-row { display:flex; gap:1.5rem; margin:.8rem 0; flex-wrap:wrap; }
+.metric-item { text-align:center; }
+.metric-val { font-size:1.4rem; font-weight:700; }
+.metric-label { font-size:.75rem; color:var(--muted); }
+
+@media (max-width:700px) {
+  header h1 { font-size:1.6rem; }
+  section { padding:1.2rem; }
+  .card-grid { grid-template-columns:1fr; }
+  .side-by-side > div { min-width:100%; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="ml-metrics.html">ML Metrics</a>
+  <a href="ml-concepts.html">ML Concepts</a>
+  <a href="probability-stats.html">Probability &amp; Stats</a>
+  <a href="model-selection.html" class="active">Model Selection</a>
+  <a href="sql-concepts.html">SQL Concepts</a>
+  <a href="data-wrangling.html">Pandas &amp; sklearn</a>
+  <a href="case-frameworks.html">Case Frameworks</a>
+</nav>
+
+<header>
+  <h1>Model Selection &amp; Advanced Concepts</h1>
+  <p>Interactive guide to choosing the right model and understanding advanced techniques.</p>
+</header>
+
+<div class="container">
+
+<!-- ==================== SECTION 1: Decision Tree ==================== -->
+<section id="sec-wizard">
+  <h2>1. Model Selection Decision Tree</h2>
+  <p class="subtitle">Click through questions to find the right model for your problem.</p>
+  <div class="wizard" id="wizard">
+    <div class="wizard-path" id="wizard-path"></div>
+    <div id="wizard-content"></div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 2: Model Failure Modes ==================== -->
+<section id="sec-failures">
+  <h2>2. Model Failure Modes</h2>
+  <p class="subtitle">Click a model card to reveal its primary failure mode and what to say in an interview.</p>
+  <div class="card-grid" id="failure-grid"></div>
+</section>
+
+<!-- ==================== SECTION 3: DBSCAN ==================== -->
+<section id="sec-dbscan">
+  <h2>3. DBSCAN Clustering</h2>
+  <p class="subtitle">Compare DBSCAN (handles arbitrary shapes) vs K-Means (assumes spherical clusters).</p>
+  <div class="controls">
+    <label>Epsilon: <span id="eps-val">30</span></label>
+    <input type="range" id="eps-slider" min="10" max="80" value="30">
+    <label>Min Samples: <span id="minsamp-val">4</span></label>
+    <input type="range" id="minsamp-slider" min="2" max="10" value="4">
+    <button id="run-dbscan">Run DBSCAN</button>
+    <button id="reset-dbscan">Reset</button>
+  </div>
+  <div class="side-by-side">
+    <div>
+      <div style="text-align:center;font-size:.85rem;color:var(--muted);margin-bottom:.4rem;">DBSCAN Result</div>
+      <canvas id="dbscan-canvas" width="440" height="360"></canvas>
+    </div>
+    <div>
+      <div style="text-align:center;font-size:.85rem;color:var(--muted);margin-bottom:.4rem;">K-Means (K=3) for comparison</div>
+      <canvas id="kmeans-canvas" width="440" height="360"></canvas>
+    </div>
+  </div>
+  <div class="legend" id="dbscan-legend"></div>
+  <div class="info-box" id="dbscan-info">Hover over a point to see its epsilon-neighborhood radius. Click <strong>Run DBSCAN</strong> to animate the algorithm.</div>
+</section>
+
+<!-- ==================== SECTION 4: GMM ==================== -->
+<section id="sec-gmm">
+  <h2>4. Gaussian Mixture Models (Soft Clustering)</h2>
+  <p class="subtitle">GMM assigns membership probabilities rather than hard cluster labels.</p>
+  <div class="controls">
+    <label>Components (K): <span id="gmm-k-val">3</span></label>
+    <input type="range" id="gmm-k-slider" min="2" max="5" value="3">
+    <div class="toggle-group">
+      <button class="toggle-btn active" id="gmm-soft-btn" onclick="setGMMMode('soft')">Soft (GMM)</button>
+      <button class="toggle-btn" id="gmm-hard-btn" onclick="setGMMMode('hard')">Hard (K-Means)</button>
+    </div>
+  </div>
+  <div class="side-by-side">
+    <div>
+      <canvas id="gmm-canvas" width="520" height="380"></canvas>
+    </div>
+    <div>
+      <div style="text-align:center;font-size:.85rem;color:var(--muted);margin-bottom:.4rem;">BIC Curve (lower is better)</div>
+      <canvas id="bic-canvas" width="300" height="200"></canvas>
+      <div class="info-box" style="margin-top:.8rem;" id="gmm-info">
+        <strong>Soft clustering:</strong> Point opacity = membership probability. Transparent points have split loyalties between clusters.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 5: Dim Reduction ==================== -->
+<section id="sec-dimred">
+  <h2>5. Dimensionality Reduction</h2>
+  <p class="subtitle">PCA, t-SNE, and UMAP project high-dimensional data to 2D differently.</p>
+  <div class="controls">
+    <label>t-SNE Perplexity: <span id="perp-val">30</span></label>
+    <input type="range" id="perp-slider" min="5" max="50" value="30">
+    <label>UMAP n_neighbors: <span id="umap-nn-val">15</span></label>
+    <input type="range" id="umap-nn-slider" min="5" max="50" value="15">
+  </div>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+    <div style="flex:1;min-width:220px;text-align:center;">
+      <div style="font-size:.85rem;color:var(--muted);margin-bottom:.3rem;">PCA</div>
+      <canvas id="pca-canvas" width="300" height="280"></canvas>
+    </div>
+    <div style="flex:1;min-width:220px;text-align:center;">
+      <div style="font-size:.85rem;color:var(--muted);margin-bottom:.3rem;">t-SNE</div>
+      <canvas id="tsne-canvas" width="300" height="280"></canvas>
+    </div>
+    <div style="flex:1;min-width:220px;text-align:center;">
+      <div style="font-size:.85rem;color:var(--muted);margin-bottom:.3rem;">UMAP</div>
+      <canvas id="umap-canvas" width="300" height="280"></canvas>
+    </div>
+  </div>
+  <table class="comparison-table">
+    <thead><tr><th>Property</th><th>PCA</th><th>t-SNE</th><th>UMAP</th></tr></thead>
+    <tbody>
+      <tr><td>Preserves global structure?</td><td style="color:var(--teal)">Yes</td><td style="color:var(--red)">No (distances distorted)</td><td style="color:var(--yellow)">Mostly</td></tr>
+      <tr><td>Use for downstream features?</td><td style="color:var(--teal)">Yes (linear, invertible)</td><td style="color:var(--red)">No (non-parametric)</td><td style="color:var(--yellow)">Sometimes</td></tr>
+      <tr><td>Speed on large data</td><td style="color:var(--teal)">Fast (O(nd&sup2;))</td><td style="color:var(--red)">Slow (O(n&sup2;))</td><td style="color:var(--teal)">Fast</td></tr>
+      <tr><td>Key hyperparameter</td><td>n_components</td><td>perplexity (5-50)</td><td>n_neighbors (5-50)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ==================== SECTION 6: Anomaly Detection ==================== -->
+<section id="sec-anomaly">
+  <h2>6. Anomaly Detection</h2>
+  <p class="subtitle">Three different approaches to finding outliers.</p>
+  <div class="tabs" id="anomaly-tabs">
+    <button class="tab-btn active" onclick="setAnomalyTab(0)">Statistical (Z-score)</button>
+    <button class="tab-btn" onclick="setAnomalyTab(1)">Isolation Forest</button>
+    <button class="tab-btn" onclick="setAnomalyTab(2)">Autoencoder</button>
+  </div>
+  <canvas id="anomaly-canvas" width="860" height="400"></canvas>
+  <div class="info-box" id="anomaly-info"></div>
+</section>
+
+<!-- ==================== SECTION 7: Survival Analysis ==================== -->
+<section id="sec-survival">
+  <h2>7. Survival Analysis (Kaplan-Meier)</h2>
+  <p class="subtitle">Step-function survival curves for customer churn — Treatment A vs Treatment B.</p>
+  <div class="controls">
+    <button id="toggle-ci" onclick="toggleCI()">Show Confidence Bands</button>
+    <span style="font-size:.85rem;color:var(--muted);" id="survival-hover-info">Hover over the curve for details.</span>
+  </div>
+  <canvas id="survival-canvas" width="860" height="400"></canvas>
+  <div class="info-box">
+    <strong>Hazard Ratio:</strong> Group B has <strong style="color:var(--red)">1.8x</strong> the hazard of Group A. Customers in Group B churn significantly faster. Censored observations (tick marks) represent customers still active at end of study.
+  </div>
+</section>
+
+<!-- ==================== SECTION 8: Class Imbalance ==================== -->
+<section id="sec-imbalance">
+  <h2>8. Class Imbalance</h2>
+  <p class="subtitle">Visualizing the problem and solutions for highly imbalanced datasets (e.g., 2% fraud).</p>
+  <div style="display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;margin-bottom:1.2rem;">
+    <canvas id="imbalance-pie" width="140" height="140"></canvas>
+    <div>
+      <div style="font-size:1rem;font-weight:600;margin-bottom:.3rem;">Class Distribution</div>
+      <div style="font-size:.85rem;color:var(--muted);">98% Legitimate &middot; 2% Fraud</div>
+      <div style="font-size:.82rem;color:var(--muted);margin-top:.3rem;">1,000 transactions: 980 legit, 20 fraud</div>
+    </div>
+  </div>
+  <div class="tabs" id="imbalance-tabs">
+    <button class="tab-btn active" onclick="setImbalanceTab(0)">No Handling</button>
+    <button class="tab-btn" onclick="setImbalanceTab(1)">Class Weights</button>
+    <button class="tab-btn" onclick="setImbalanceTab(2)">SMOTE</button>
+    <button class="tab-btn" onclick="setImbalanceTab(3)">Threshold Tuning</button>
+  </div>
+  <canvas id="imbalance-canvas" width="860" height="360"></canvas>
+  <div class="info-box" id="imbalance-info"></div>
+</section>
+
+</div><!-- .container -->
+
+<script>
+// =============== UTILITY FUNCTIONS ===============
+const C = {
+  accent:'#6c8aff', red:'#ff6b8a', teal:'#4ecdc4', yellow:'#ffe66d',
+  purple:'#a78bfa', orange:'#f97316', bg:'#0f1117', surface:'#1a1d27',
+  border:'#2a2d3a', text:'#e0e0e6', muted:'#8888a0',
+  clusters:['#6c8aff','#ff6b8a','#4ecdc4','#ffe66d','#a78bfa','#f97316']
+};
+
+function hexToRgba(hex, a) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+function lerp(a,b,t) { return a+(b-a)*t; }
+function dist(a,b) { return Math.sqrt((a.x-b.x)**2+(a.y-b.y)**2); }
+function randGauss(m,s) { let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random(); return m+s*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+function clearCanvas(ctx,w,h) { ctx.fillStyle=C.bg; ctx.fillRect(0,0,w,h); }
+function drawCircle(ctx,x,y,r,fill,stroke,lw) {
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+  if(fill){ctx.fillStyle=fill;ctx.fill();}
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw||1;ctx.stroke();}
+}
+
+// Seed random for reproducibility
+let _seed = 42;
+function srand(s){_seed=s;}
+function rand(){_seed=(_seed*16807)%2147483647;return(_seed-1)/2147483646;}
+function randG(m,s){let u=0,v=0;while(!u)u=rand();while(!v)v=rand();return m+s*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+
+// =============== SECTION 1: Decision Tree Wizard ===============
+(function(){
+  const tree = {
+    q:"What is the target variable?",
+    opts:[
+      {label:"Continuous (regression)", next:{
+        q:"Must the client explain individual predictions?",
+        opts:[
+          {label:"Yes, fully transparent", next:{
+            q:"How much labeled data?",
+            opts:[
+              {label:"< 1K rows", result:{model:"Linear Regression / Ridge", why:"Small data + interpretability = linear models. Ridge handles multicollinearity. You can show exact coefficients to the client."}},
+              {label:"1K - 10K rows", result:{model:"LASSO or Elastic Net", why:"Feature selection built-in via L1 penalty. Coefficients directly interpretable. Works well with moderate data."}},
+              {label:"10K+ rows", result:{model:"GAM (Generalized Additive Model)", why:"Non-linear but still interpretable — shows smooth effect of each feature. Handles complex relationships while remaining explainable."}}
+            ]
+          }},
+          {label:"Somewhat (feature importance OK)", next:{
+            q:"How much labeled data?",
+            opts:[
+              {label:"< 10K rows", result:{model:"Random Forest", why:"Robust out-of-box, feature importances available, handles non-linearity. SHAP values can explain individual predictions."}},
+              {label:"10K+ rows", result:{model:"Gradient Boosting (XGBoost/LightGBM)", why:"State-of-the-art tabular performance. SHAP values provide solid interpretability. Fast training with LightGBM."}}
+            ]
+          }},
+          {label:"No, just optimize performance", next:{
+            q:"What kind of data?",
+            opts:[
+              {label:"Tabular", result:{model:"XGBoost / LightGBM ensemble", why:"Gradient boosting dominates tabular benchmarks. Stack with a neural net for extra performance. Use Optuna for hyperparameter tuning."}},
+              {label:"Images", result:{model:"CNN (ResNet / EfficientNet)", why:"Convolutional architectures are designed for spatial data. Use transfer learning from pretrained ImageNet models."}},
+              {label:"Text", result:{model:"Transformer (BERT / fine-tuned LLM)", why:"Pre-trained language models capture deep semantic understanding. Fine-tune on your regression task."}},
+              {label:"Sequences / Time series", result:{model:"LSTM / Temporal Fusion Transformer", why:"Recurrent or attention-based architectures capture temporal dependencies for forecasting continuous targets."}}
+            ]
+          }}
+        ]
+      }},
+      {label:"Binary classification", next:{
+        q:"Must the client explain predictions?",
+        opts:[
+          {label:"Yes", next:{
+            q:"How much labeled data?",
+            opts:[
+              {label:"< 1K rows", result:{model:"Logistic Regression", why:"Gold standard for interpretable binary classification. Log-odds coefficients directly meaningful. Works with small data."}},
+              {label:"1K+ rows", result:{model:"Decision Tree or Scorecard", why:"Decision trees are visual and rule-based — clients love them. Scorecards (binned logistic) are standard in credit risk."}}
+            ]
+          }},
+          {label:"Somewhat", result:{model:"Random Forest + SHAP", why:"Strong baseline with built-in feature importance. SHAP waterfall plots explain individual predictions to stakeholders."}},
+          {label:"No", next:{
+            q:"How much labeled data?",
+            opts:[
+              {label:"< 10K", result:{model:"XGBoost with class weights", why:"Handles imbalanced data well with scale_pos_weight. Strong performance even with moderate data."}},
+              {label:"10K+", result:{model:"XGBoost / Neural Net ensemble", why:"Maximum performance. Calibrate probabilities with Platt scaling. Use stratified k-fold CV."}}
+            ]
+          }}
+        ]
+      }},
+      {label:"Count data", result:{model:"Poisson Regression or Negative Binomial", why:"Count data needs models that respect non-negativity and discrete nature. Use Negative Binomial if variance >> mean (overdispersion)."}},
+      {label:"Time-to-event", result:{model:"Cox Proportional Hazards / Survival Forest", why:"Survival analysis handles censored data (customers who haven't churned yet). Cox PH gives hazard ratios; survival forests handle non-linearity."}},
+      {label:"No target (unsupervised)", next:{
+        q:"What's the goal?",
+        opts:[
+          {label:"Find groups/segments", next:{
+            q:"Do you know how many clusters?",
+            opts:[
+              {label:"Yes, roughly", result:{model:"K-Means or GMM", why:"K-Means for hard, spherical clusters. GMM for soft membership with probability estimates. Use silhouette score to validate."}},
+              {label:"No, unknown shape", result:{model:"DBSCAN or HDBSCAN", why:"Density-based clustering finds arbitrary-shaped clusters and automatically identifies noise. No need to specify K."}}
+            ]
+          }},
+          {label:"Reduce dimensions", result:{model:"PCA (features) or UMAP (viz)", why:"PCA for creating features downstream (linear, invertible). UMAP/t-SNE for visualization only — they distort distances."}},
+          {label:"Detect anomalies", result:{model:"Isolation Forest or Autoencoder", why:"Isolation Forest works well on tabular data, no assumptions needed. Autoencoders learn normal patterns and flag high reconstruction error."}}
+        ]
+      }},
+      {label:"Time series forecast", next:{
+        q:"How many series to forecast?",
+        opts:[
+          {label:"One series", next:{
+            q:"How much history?",
+            opts:[
+              {label:"< 100 points", result:{model:"ARIMA / ETS", why:"Classical statistical models work best with limited history. ARIMA handles trends and seasonality. Use auto_arima for order selection."}},
+              {label:"100+ points", result:{model:"Prophet or ARIMA + exogenous", why:"Prophet handles multiple seasonalities and holidays. ARIMA with exogenous variables (SARIMAX) if you have covariates."}}
+            ]
+          }},
+          {label:"Many series (hierarchy)", result:{model:"LightGBM with lag features / N-BEATS", why:"Global models (one model for all series) outperform individual models. Create lag features, rolling stats. N-BEATS is a strong neural baseline."}}
+        ]
+      }}
+    ]
+  };
+
+  let path = [];
+  const pathEl = document.getElementById('wizard-path');
+  const contentEl = document.getElementById('wizard-content');
+
+  function renderPath() {
+    pathEl.innerHTML = path.map((p,i) =>
+      `<span class="wizard-node">${p}</span>${i<path.length-1?'<span class="wizard-arrow">→</span>':''}`
+    ).join('');
+  }
+
+  function renderNode(node) {
+    if(node.result) {
+      contentEl.innerHTML = `<div class="wizard-result"><h3>Recommended: ${node.result.model}</h3><p>${node.result.why}</p></div>
+        <button style="margin-top:1rem;" onclick="resetWizard()">↻ Start Over</button>`;
+      return;
+    }
+    let html = `<div class="wizard-question">${node.q}</div><div class="wizard-options">`;
+    node.opts.forEach((o,i) => {
+      html += `<button class="wizard-option" data-idx="${i}">${o.label}</button>`;
+    });
+    html += `</div>`;
+    if(path.length > 0) html += `<button style="margin-top:1rem;font-size:.78rem;" onclick="wizardBack()">← Back</button>`;
+    contentEl.innerHTML = html;
+    contentEl.querySelectorAll('.wizard-option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.idx);
+        const chosen = node.opts[idx];
+        path.push(chosen.label);
+        renderPath();
+        if(chosen.result) {
+          renderNode(chosen);
+        } else {
+          renderNode(chosen.next);
+        }
+      });
+    });
+  }
+
+  window._wizardTree = tree;
+  window._wizardPath = path;
+
+  window.resetWizard = function() {
+    path.length = 0;
+    renderPath();
+    renderNode(tree);
+  };
+
+  window.wizardBack = function() {
+    path.pop();
+    renderPath();
+    // Replay path from root
+    let node = tree;
+    for(let i = 0; i < path.length; i++) {
+      const opt = node.opts.find(o => o.label === path[i]);
+      node = opt.next || opt;
+    }
+    renderNode(node);
+  };
+
+  renderNode(tree);
+})();
+
+// =============== SECTION 2: Model Failure Modes ===============
+(function(){
+  const models = [
+    {name:"Linear Regression", failure:"Cannot capture non-linear relationships", interview:"Linear regression assumes a linear relationship between features and target. If the true relationship is quadratic or has interactions, it will systematically under/overfit regions of the data. Always check residual plots.", drawFail:function(ctx,w,h){
+      clearCanvas(ctx,w,h);
+      // Draw curved true function and linear fit
+      ctx.strokeStyle=C.teal; ctx.lineWidth=2; ctx.setLineDash([4,3]);
+      ctx.beginPath();
+      for(let x=20;x<w-20;x++){let t=(x-20)/(w-40);let y=h-30-((Math.sin(t*3)*0.3+t*0.5)*((h-60)));ctx.lineTo(x,y);}
+      ctx.stroke(); ctx.setLineDash([]);
+      ctx.strokeStyle=C.red; ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(20,h-40);ctx.lineTo(w-20,40);ctx.stroke();
+      ctx.fillStyle=C.muted;ctx.font='10px Inter';ctx.fillText('True (curved)',20,20);
+      ctx.fillStyle=C.red;ctx.fillText('Linear fit',20,34);
+    }},
+    {name:"Logistic Regression", failure:"Fails with non-linear decision boundaries", interview:"Logistic regression creates a linear decision boundary in feature space. XOR-like patterns or circular boundaries require feature engineering (polynomial features) or a non-linear model.", drawFail:function(ctx,w,h){
+      clearCanvas(ctx,w,h);
+      srand(10);
+      // XOR pattern
+      for(let i=0;i<30;i++){let x=rand()*60+15,y=rand()*50+15;drawCircle(ctx,x,y,3,C.accent);} // top-left blue
+      for(let i=0;i<30;i++){let x=rand()*60+w-80,y=rand()*50+h-70;drawCircle(ctx,x,y,3,C.accent);} // bottom-right blue
+      for(let i=0;i<30;i++){let x=rand()*60+w-80,y=rand()*50+15;drawCircle(ctx,x,y,3,C.red);} // top-right red
+      for(let i=0;i<30;i++){let x=rand()*60+15,y=rand()*50+h-70;drawCircle(ctx,x,y,3,C.red);} // bottom-left red
+      ctx.strokeStyle=C.yellow;ctx.lineWidth=2;ctx.setLineDash([5,3]);
+      ctx.beginPath();ctx.moveTo(0,h/2);ctx.lineTo(w,h/2);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle=C.muted;ctx.font='10px Inter';ctx.fillText('Linear boundary fails on XOR',10,h-8);
+    }},
+    {name:"LASSO", failure:"Arbitrarily selects among correlated features", interview:"When features are highly correlated, LASSO picks one and zeros out the rest — which one it picks can be unstable. Elastic Net (L1+L2) is more stable with correlated features.", drawFail:function(ctx,w,h){
+      clearCanvas(ctx,w,h);
+      const feats = ['x1','x2','x3','x4','x5'];
+      const coefs1 = [0.8,0,0,0.3,0.1];
+      const coefs2 = [0,0.75,0,0.35,0.1];
+      const bw = 18, gap=8, startX=20;
+      ctx.fillStyle=C.muted;ctx.font='10px Inter';ctx.fillText('Run 1',startX,15);ctx.fillText('Run 2',startX+130,15);
+      for(let i=0;i<5;i++){
+        let x1=startX+i*(bw+gap), h1=coefs1[i]*(h-50);
+        ctx.fillStyle=C.accent;ctx.fillRect(x1,h-25-h1,bw,h1);
+        let x2=startX+130+i*(bw+gap), h2=coefs2[i]*(h-50);
+        ctx.fillStyle=C.red;ctx.fillRect(x2,h-25-h2,bw,h2);
+        ctx.fillStyle=C.muted;ctx.font='9px Inter';
+        ctx.fillText(feats[i],x1+2,h-12);ctx.fillText(feats[i],x2+2,h-12);
+      }
+      ctx.fillStyle=C.muted;ctx.font='9px Inter';ctx.fillText('x1,x2 correlated → different picks',10,h-2);
+    }},
+    {name:"Decision Trees", failure:"High variance — overfits easily", interview:"A single decision tree memorizes training noise. Small changes in data produce completely different trees. That's why we ensemble them (Random Forest / boosting) — variance reduction via averaging.", drawFail:function(ctx,w,h){
+      clearCanvas(ctx,w,h);
+      ctx.fillStyle=C.muted;ctx.font='10px Inter';ctx.fillText('Tree from Data A',15,15);ctx.fillText('Tree from Data B',w/2+15,15);
+      // Tree A
+      function drawTree(ox,oy,structure,depth){
+        if(depth>3||!structure)return;
+        ctx.fillStyle=depth===0?C.accent:C.teal;
+        drawCircle(ctx,ox,oy,6,depth===0?C.accent:C.teal);
+        if(structure[0]){ctx.strokeStyle=hexToRgba(C.text,.3);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(ox,oy+6);ctx.lineTo(ox-25/(depth+1)*2,oy+25);ctx.stroke();drawTree(ox-25/(depth+1)*2,oy+25,structure[0],depth+1);}
+        if(structure[1]){ctx.strokeStyle=hexToRgba(C.text,.3);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(ox,oy+6);ctx.lineTo(ox+25/(depth+1)*2,oy+25);ctx.stroke();drawTree(ox+25/(depth+1)*2,oy+25,structure[1],depth+1);}
+      }
+      drawTree(w/4,35,[[[ ,],[ ,]],[[ ,],]],0);
+      drawTree(3*w/4,35,[[ ,[ ,[ ,]]],[ ,]],0);
+      ctx.fillStyle=C.muted;ctx.font='9px Inter';ctx.fillText('Tiny data change → totally different tree',10,h-5);
+    }},
+    {name:"Random Forest", failure:"Cannot extrapolate beyond training range", interview:"Random Forests average tree predictions, which are step functions. They literally cannot predict values outside the range seen in training. For trends or extrapolation, use linear models or gradient boosting with linear learners.", drawFail:function(ctx,w,h){
+      clearCanvas(ctx,w,h);
+      // Training range box
+      const txl=40,txr=w*0.6;
+      ctx.fillStyle=hexToRgba(C.accent,.08);ctx.fillRect(txl,10,txr-txl,h-30);
+      ctx.strokeStyle=hexToRgba(C.accent,.3);ctx.setLineDash([3,3]);ctx.strokeRect(txl,10,txr-txl,h-30);ctx.setLineDash([]);
+      // True trend
+      ctx.strokeStyle=C.teal;ctx.lineWidth=2;ctx.setLineDash([4,3]);
+      ctx.beginPath();for(let x=20;x<w-10;x++){let t=(x-20)/(w-30);ctx.lineTo(x,h-25-t*(h-45));}ctx.stroke();ctx.setLineDash([]);
+      // RF prediction
+      ctx.strokeStyle=C.red;ctx.lineWidth=2;
+      ctx.beginPath();
+      for(let x=20;x<w-10;x++){let t=(x-20)/(w-30);let tr=Math.min(Math.max(t,0.05),0.55);ctx.lineTo(x,h-25-tr*(h-45));}
+      ctx.stroke();
+      ctx.fillStyle=C.muted;ctx.font='9px Inter';ctx.fillText('Training range',txl+5,h-8);
+      ctx.fillStyle=C.red;ctx.fillText('RF capped here →',txr+5,h/2);
+    }},
+    {name:"Gradient Boosting", failure:"Prone to overfitting without regularization", interview:"GBMs are sequential learners — each tree corrects the previous errors. Without early stopping, low learning rate, or regularization, they will memorize noise. Always use validation-based early stopping.", drawFail:function(ctx,w,h){
+      clearCanvas(ctx,w,h);
+      const n=60;
+      ctx.strokeStyle=C.teal;ctx.lineWidth=2;
+      ctx.beginPath();
+      for(let i=0;i<n;i++){let x=20+i*(w-40)/n,y=h-25-(1-Math.exp(-i*0.08))*(h-50)*0.6;ctx.lineTo(x,y);}
+      ctx.stroke();
+      ctx.strokeStyle=C.red;ctx.lineWidth=2;
+      ctx.beginPath();
+      for(let i=0;i<n;i++){let x=20+i*(w-40)/n,loss=1-Math.exp(-i*0.08);let overfit=i>35?Math.pow((i-35)/25,2)*0.3:0;let y=h-25-(loss-overfit)*(h-50)*0.7;ctx.lineTo(x,y);}
+      ctx.stroke();
+      ctx.fillStyle=C.muted;ctx.font='9px Inter';
+      ctx.fillText('# boosting rounds →',w/2-40,h-5);
+      ctx.fillStyle=C.teal;ctx.fillText('Train loss',15,15);
+      ctx.fillStyle=C.red;ctx.fillText('Val loss (overfits!)',15,28);
+      // Early stopping line
+      ctx.strokeStyle=C.yellow;ctx.setLineDash([3,3]);ctx.lineWidth=1;
+      let sx=20+35*(w-40)/n;ctx.beginPath();ctx.moveTo(sx,10);ctx.lineTo(sx,h-20);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle=C.yellow;ctx.fillText('← early stop',sx+3,20);
+    }},
+    {name:"K-Means", failure:"Assumes spherical, equal-sized clusters", interview:"K-Means minimizes within-cluster variance, which assumes clusters are spherical and similar in size. It fails on crescent shapes, varying densities, or clusters of very different sizes. Use DBSCAN or GMM instead.", drawFail:function(ctx,w,h){
+      clearCanvas(ctx,w,h);
+      srand(55);
+      // Draw a crescent and a blob — K-means splits wrong
+      for(let i=0;i<40;i++){let a=Math.PI*0.3+rand()*Math.PI*1.4;let r=40+rand()*8;drawCircle(ctx,w/2+Math.cos(a)*r,h/2+Math.sin(a)*r,2.5,C.accent);}
+      for(let i=0;i<25;i++){drawCircle(ctx,w/2+randG(0,8),h/2+randG(0,8),2.5,C.red);}
+      // Wrong K-means boundary
+      ctx.strokeStyle=C.yellow;ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+      ctx.beginPath();ctx.moveTo(w/2,5);ctx.lineTo(w/2,h-5);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle=C.muted;ctx.font='9px Inter';ctx.fillText('K-Means splits vertically (wrong!)',10,h-5);
+    }},
+    {name:"Neural Networks", failure:"Requires lots of data, hard to debug", interview:"Neural nets have millions of parameters and need large datasets to generalize. With small tabular data, gradient boosting almost always wins. NNs are also black boxes — debugging why a prediction is wrong is much harder.", drawFail:function(ctx,w,h){
+      clearCanvas(ctx,w,h);
+      // Learning curves: NN vs XGB vs small data line
+      const n=50;
+      ctx.strokeStyle=C.accent;ctx.lineWidth=2;
+      ctx.beginPath();for(let i=1;i<n;i++){let x=20+i*(w-40)/n,d=i/n;let y=h-25-(0.5+0.45*(1-Math.exp(-d*6)))*(h-45);ctx.lineTo(x,y);}ctx.stroke();
+      ctx.strokeStyle=C.red;ctx.lineWidth=2;
+      ctx.beginPath();for(let i=1;i<n;i++){let x=20+i*(w-40)/n,d=i/n;let y=h-25-(0.3+0.6*Math.pow(d,0.3))*(h-45);ctx.lineTo(x,y);}ctx.stroke();
+      ctx.fillStyle=C.accent;ctx.font='9px Inter';ctx.fillText('XGBoost',w-65,30);
+      ctx.fillStyle=C.red;ctx.fillText('Neural Net',w-65,43);
+      ctx.fillStyle=C.muted;ctx.fillText('Dataset size →',w/2-30,h-5);ctx.fillText('Performance',5,15);
+      // Crossover annotation
+      ctx.strokeStyle=C.yellow;ctx.setLineDash([3,3]);ctx.lineWidth=1;
+      let cx=20+30*(w-40)/n;ctx.beginPath();ctx.moveTo(cx,15);ctx.lineTo(cx,h-20);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle=C.yellow;ctx.font='8px Inter';ctx.fillText('NN overtakes',cx-25,h-10);
+    }},
+    {name:"ARIMA", failure:"Assumes stationarity, can't handle multiple seasonalities", interview:"ARIMA requires stationary data (constant mean/variance). It handles one seasonal period. For multiple seasonalities (daily + weekly + yearly), use Prophet or TBATS. Always check with ADF test first.", drawFail:function(ctx,w,h){
+      clearCanvas(ctx,w,h);
+      srand(30);
+      const n=80;
+      ctx.strokeStyle=C.teal;ctx.lineWidth=1.5;
+      ctx.beginPath();
+      for(let i=0;i<n;i++){
+        let x=15+i*(w-30)/n;
+        let t=i/n;
+        let y=h/2 - (Math.sin(t*12)*15 + Math.sin(t*50)*8 + t*30) + 20;
+        ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+      ctx.fillStyle=C.muted;ctx.font='9px Inter';
+      ctx.fillText('Two overlapping seasonalities',10,15);
+      ctx.fillStyle=C.red;ctx.font='9px Inter';ctx.fillText('ARIMA can only model one!',10,28);
+    }},
+    {name:"All Time Series Models", failure:"Regime changes / structural breaks", interview:"All time series models assume some form of pattern continuity. COVID, policy changes, or market regime shifts break all models. Build in change-point detection and have a retraining strategy.", drawFail:function(ctx,w,h){
+      clearCanvas(ctx,w,h);
+      const n=80, bk=50;
+      ctx.strokeStyle=C.teal;ctx.lineWidth=1.5;
+      ctx.beginPath();
+      for(let i=0;i<n;i++){
+        let x=15+i*(w-30)/n, t=i/n;
+        let base = i<bk ? 40+Math.sin(i*0.3)*10 : 80+Math.sin(i*0.5)*15+((i-bk)*0.5);
+        ctx.lineTo(x, h-20-base);
+      }ctx.stroke();
+      // Regime change line
+      let rx=15+bk*(w-30)/n;
+      ctx.strokeStyle=C.red;ctx.lineWidth=2;ctx.setLineDash([4,3]);
+      ctx.beginPath();ctx.moveTo(rx,10);ctx.lineTo(rx,h-10);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle=C.red;ctx.font='10px Inter';ctx.fillText('Regime change',rx+5,20);
+      // Forecast
+      ctx.strokeStyle=C.yellow;ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
+      ctx.beginPath();
+      for(let i=bk;i<n;i++){
+        let x=15+i*(w-30)/n;
+        let y=h-20-(40+Math.sin(i*0.3)*10);
+        ctx.lineTo(x,y);
+      }ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle=C.yellow;ctx.font='9px Inter';ctx.fillText('Old model forecast (wrong!)',15,h-5);
+    }}
+  ];
+
+  const grid = document.getElementById('failure-grid');
+  models.forEach((m,idx) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `<h3>${m.name}</h3><p>Click to reveal failure mode</p>
+      <div class="failure-detail">
+        <p style="color:var(--red);font-weight:600;font-size:.82rem;margin-bottom:.3rem;">⚠ ${m.failure}</p>
+        <p style="font-size:.8rem;color:var(--text);margin-bottom:.5rem;">🎤 <em>"${m.interview}"</em></p>
+        <canvas id="fail-canvas-${idx}" width="260" height="120"></canvas>
+      </div>`;
+    card.addEventListener('click', () => {
+      const wasExpanded = card.classList.contains('expanded');
+      card.classList.toggle('expanded');
+      if(!wasExpanded) {
+        const cvs = document.getElementById(`fail-canvas-${idx}`);
+        if(cvs) m.drawFail(cvs.getContext('2d'), cvs.width, cvs.height);
+      }
+    });
+    grid.appendChild(card);
+  });
+})();
+
+// =============== SECTION 3: DBSCAN ===============
+(function(){
+  const cvs = document.getElementById('dbscan-canvas');
+  const ctx = cvs.getContext('2d');
+  const kCvs = document.getElementById('kmeans-canvas');
+  const kCtx = kCvs.getContext('2d');
+  const W = cvs.width, H = cvs.height;
+
+  // Generate data: crescents, blob, elongated, noise
+  srand(77);
+  let points = [];
+
+  // Crescent 1 (top)
+  for(let i=0;i<50;i++){
+    let a = Math.PI*0.1 + rand()*Math.PI*0.8;
+    let r = 80 + randG(0,5);
+    points.push({x:130+Math.cos(a)*r, y:180-Math.sin(a)*r, trueCluster:0});
+  }
+  // Crescent 2 (bottom, inverted)
+  for(let i=0;i<50;i++){
+    let a = Math.PI*1.1 + rand()*Math.PI*0.8;
+    let r = 80 + randG(0,5);
+    points.push({x:170+Math.cos(a)*r, y:180-Math.sin(a)*r, trueCluster:1});
+  }
+  // Dense blob
+  for(let i=0;i<40;i++){
+    points.push({x:350+randG(0,15), y:200+randG(0,15), trueCluster:2});
+  }
+  // Noise
+  for(let i=0;i<15;i++){
+    points.push({x:30+rand()*(W-60), y:30+rand()*(H-60), trueCluster:-1});
+  }
+
+  points.forEach(p => { p.cluster = -2; p.type = 'unvisited'; }); // -2 = unassigned
+
+  let eps = 30, minSamp = 4;
+  let hoveredPoint = null;
+  let dbscanDone = false;
+
+  const epsSlider = document.getElementById('eps-slider');
+  const minsampSlider = document.getElementById('minsamp-slider');
+  epsSlider.oninput = () => { eps=+epsSlider.value; document.getElementById('eps-val').textContent=eps; if(!dbscanDone)drawDBSCAN(); };
+  minsampSlider.oninput = () => { minSamp=+minsampSlider.value; document.getElementById('minsamp-val').textContent=minSamp; };
+
+  function drawDBSCAN() {
+    clearCanvas(ctx,W,H);
+    points.forEach(p => {
+      let color = C.muted;
+      let radius = 3;
+      if(p.cluster >= 0) {
+        color = C.clusters[p.cluster % C.clusters.length];
+        if(p.type === 'core') radius = 4;
+        if(p.type === 'border') { color = hexToRgba(C.clusters[p.cluster % C.clusters.length], 0.5); radius = 3; }
+      } else if(p.type === 'noise') {
+        color = '#555';
+        radius = 2.5;
+      }
+      drawCircle(ctx, p.x, p.y, radius, color);
+    });
+
+    // Hover epsilon circle
+    if(hoveredPoint) {
+      ctx.beginPath();
+      ctx.arc(hoveredPoint.x, hoveredPoint.y, eps, 0, Math.PI*2);
+      ctx.strokeStyle = hexToRgba(C.accent, 0.4);
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3,3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // Count neighbors
+      let nn = points.filter(q => dist(hoveredPoint,q) <= eps && q !== hoveredPoint).length;
+      ctx.fillStyle = C.text;
+      ctx.font = '11px Inter';
+      ctx.fillText(`${nn} neighbors (need ${minSamp})`, hoveredPoint.x+eps+5, hoveredPoint.y-5);
+    }
+  }
+
+  cvs.addEventListener('mousemove', (e) => {
+    const rect = cvs.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (W / rect.width);
+    const my = (e.clientY - rect.top) * (H / rect.height);
+    hoveredPoint = null;
+    let minD = 20;
+    points.forEach(p => { let d = dist({x:mx,y:my},p); if(d < minD){minD=d; hoveredPoint=p;} });
+    drawDBSCAN();
+  });
+
+  cvs.addEventListener('mouseleave', () => { hoveredPoint=null; drawDBSCAN(); });
+
+  function runDBSCAN() {
+    // Reset
+    points.forEach(p => { p.cluster=-2; p.type='unvisited'; });
+    let clusterId = 0;
+
+    function regionQuery(p) {
+      return points.filter(q => dist(p,q) <= eps && q !== p);
+    }
+
+    function expandCluster(p, neighbors, cid) {
+      p.cluster = cid;
+      p.type = 'core';
+      let queue = [...neighbors];
+      while(queue.length) {
+        let q = queue.shift();
+        if(q.type === 'noise') { q.cluster = cid; q.type = 'border'; }
+        if(q.cluster !== -2) continue;
+        q.cluster = cid;
+        let qNeighbors = regionQuery(q);
+        if(qNeighbors.length >= minSamp) {
+          q.type = 'core';
+          queue.push(...qNeighbors);
+        } else {
+          q.type = 'border';
+        }
+      }
+    }
+
+    points.forEach(p => {
+      if(p.cluster !== -2) return;
+      let neighbors = regionQuery(p);
+      if(neighbors.length < minSamp) {
+        p.type = 'noise';
+        p.cluster = -1;
+      } else {
+        expandCluster(p, neighbors, clusterId);
+        clusterId++;
+      }
+    });
+
+    dbscanDone = true;
+    drawDBSCAN();
+
+    // Update info
+    const nClusters = new Set(points.filter(p=>p.cluster>=0).map(p=>p.cluster)).size;
+    const nNoise = points.filter(p=>p.cluster===-1).length;
+    document.getElementById('dbscan-info').innerHTML = `Found <strong>${nClusters} clusters</strong> and <strong>${nNoise} noise points</strong>. Core points (solid) have ≥${minSamp} neighbors within ε=${eps}. Border points (faded) are within ε of a core point.`;
+  }
+
+  function runKMeans() {
+    clearCanvas(kCtx, kCvs.width, kCvs.height);
+    const K = 3;
+    // Random centroids
+    srand(12);
+    let centroids = [];
+    for(let i=0;i<K;i++) centroids.push({x:80+rand()*(W-160), y:80+rand()*(H-160)});
+
+    let assignments = new Array(points.length).fill(0);
+
+    for(let iter=0; iter<30; iter++){
+      // Assign
+      points.forEach((p,i) => {
+        let minD=Infinity, best=0;
+        centroids.forEach((c,j) => { let d=dist(p,c); if(d<minD){minD=d;best=j;} });
+        assignments[i]=best;
+      });
+      // Update centroids
+      for(let j=0;j<K;j++){
+        let cx=0,cy=0,n=0;
+        points.forEach((p,i) => { if(assignments[i]===j){cx+=p.x;cy+=p.y;n++;} });
+        if(n){centroids[j]={x:cx/n,y:cy/n};}
+      }
+    }
+
+    // Draw
+    points.forEach((p,i) => {
+      drawCircle(kCtx, p.x, p.y, 3, C.clusters[assignments[i]]);
+    });
+    centroids.forEach((c,j) => {
+      drawCircle(kCtx, c.x, c.y, 7, null, C.clusters[j], 2);
+      kCtx.fillStyle=C.clusters[j];
+      kCtx.beginPath();
+      const s=5;
+      kCtx.moveTo(c.x,c.y-s);kCtx.lineTo(c.x+s,c.y+s);kCtx.lineTo(c.x-s,c.y+s);kCtx.closePath();kCtx.fill();
+    });
+    kCtx.fillStyle=C.muted;kCtx.font='11px Inter';kCtx.fillText('K-Means splits crescents incorrectly',10,H-10);
+  }
+
+  document.getElementById('run-dbscan').onclick = () => { runDBSCAN(); runKMeans(); };
+  document.getElementById('reset-dbscan').onclick = () => {
+    dbscanDone=false;
+    points.forEach(p=>{p.cluster=-2;p.type='unvisited';});
+    drawDBSCAN();
+    clearCanvas(kCtx,kCvs.width,kCvs.height);
+    kCtx.fillStyle=C.muted;kCtx.font='12px Inter';kCtx.textAlign='center';kCtx.fillText('Run DBSCAN to compare',kCvs.width/2,kCvs.height/2);kCtx.textAlign='left';
+  };
+
+  drawDBSCAN();
+  // Initial K-means canvas message
+  kCtx.fillStyle=C.bg;kCtx.fillRect(0,0,kCvs.width,kCvs.height);
+  kCtx.fillStyle=C.muted;kCtx.font='12px Inter';kCtx.textAlign='center';kCtx.fillText('Run DBSCAN to compare',kCvs.width/2,kCvs.height/2);kCtx.textAlign='left';
+})();
+
+// =============== SECTION 4: GMM ===============
+(function(){
+  const cvs = document.getElementById('gmm-canvas');
+  const ctx = cvs.getContext('2d');
+  const bCvs = document.getElementById('bic-canvas');
+  const bCtx = bCvs.getContext('2d');
+  const W=cvs.width, H=cvs.height;
+
+  // Generate overlapping clusters
+  srand(101);
+  const trueCenters = [
+    {x:150,y:140,sx:45,sy:30,rot:0.3},
+    {x:300,y:200,sx:35,sy:50,rot:-0.4},
+    {x:220,y:300,sx:50,sy:25,rot:0.8}
+  ];
+  let gmmPoints = [];
+  trueCenters.forEach((c,ci) => {
+    for(let i=0;i<50;i++){
+      let rx=randG(0,c.sx), ry=randG(0,c.sy);
+      let cos=Math.cos(c.rot), sin=Math.sin(c.rot);
+      gmmPoints.push({x:c.x+rx*cos-ry*sin, y:c.y+rx*sin+ry*cos, trueCluster:ci});
+    }
+  });
+
+  let K = 3, mode = 'soft';
+
+  // Simulated GMM results for different K
+  function getGMMResult(k) {
+    // For each K, compute distances to k centers and derive soft assignments
+    let centers = [];
+    srand(200+k);
+    if(k===2){
+      centers=[{x:180,y:160,sx:60,sy:50},{x:280,y:260,sx:50,sy:40}];
+    } else if(k===3){
+      centers=[{x:150,y:140,sx:45,sy:30},{x:300,y:200,sx:35,sy:50},{x:220,y:300,sx:50,sy:25}];
+    } else if(k===4){
+      centers=[{x:130,y:130,sx:35,sy:25},{x:180,y:160,sx:30,sy:30},{x:300,y:200,sx:35,sy:50},{x:220,y:300,sx:50,sy:25}];
+    } else {
+      centers=[{x:120,y:120,sx:30,sy:20},{x:170,y:160,sx:25,sy:25},{x:300,y:180,sx:30,sy:35},{x:310,y:230,sx:25,sy:30},{x:220,y:300,sx:50,sy:25}];
+    }
+
+    return gmmPoints.map(p => {
+      let dists = centers.map(c => {
+        let dx=(p.x-c.x)/c.sx, dy=(p.y-c.y)/c.sy;
+        return Math.exp(-(dx*dx+dy*dy)/2);
+      });
+      let sum = dists.reduce((a,b)=>a+b,0) || 1;
+      let probs = dists.map(d=>d/sum);
+      let best = probs.indexOf(Math.max(...probs));
+      return {probs, best};
+    });
+  }
+
+  function drawGMM() {
+    clearCanvas(ctx,W,H);
+    const result = getGMMResult(K);
+
+    // Draw ellipses for cluster centers
+    let centers;
+    if(K===2) centers=[{x:180,y:160,sx:60,sy:50,rot:0.2},{x:280,y:260,sx:50,sy:40,rot:-0.3}];
+    else if(K===3) centers=[{x:150,y:140,sx:45,sy:30,rot:0.3},{x:300,y:200,sx:35,sy:50,rot:-0.4},{x:220,y:300,sx:50,sy:25,rot:0.8}];
+    else if(K===4) centers=[{x:130,y:130,sx:35,sy:25,rot:0.2},{x:180,y:160,sx:30,sy:30,rot:0.1},{x:300,y:200,sx:35,sy:50,rot:-0.4},{x:220,y:300,sx:50,sy:25,rot:0.8}];
+    else centers=[{x:120,y:120,sx:30,sy:20,rot:0.2},{x:170,y:160,sx:25,sy:25,rot:0.1},{x:300,y:180,sx:30,sy:35,rot:-0.3},{x:310,y:230,sx:25,sy:30,rot:-0.5},{x:220,y:300,sx:50,sy:25,rot:0.8}];
+
+    // Draw ellipses
+    centers.forEach((c,i) => {
+      ctx.save();
+      ctx.translate(c.x, c.y);
+      ctx.rotate(c.rot);
+      for(let s=2;s>=1;s--){
+        ctx.beginPath();
+        ctx.ellipse(0,0,c.sx*s,c.sy*s,0,0,Math.PI*2);
+        ctx.strokeStyle=hexToRgba(C.clusters[i],0.15*s);
+        ctx.lineWidth=1;
+        ctx.stroke();
+      }
+      ctx.restore();
+    });
+
+    // Draw points
+    gmmPoints.forEach((p,i) => {
+      const r = result[i];
+      const color = C.clusters[r.best % C.clusters.length];
+      const alpha = mode==='hard' ? 0.9 : Math.max(0.15, r.probs[r.best]);
+      drawCircle(ctx,p.x,p.y,3.5,hexToRgba(color,alpha));
+    });
+  }
+
+  function drawBIC() {
+    clearCanvas(bCtx,bCvs.width,bCvs.height);
+    const bW=bCvs.width, bH=bCvs.height;
+    const bics = [320, 250, 190, 210, 240]; // K=2..5; K=3 is best (index 1 from K=2)
+    const pad={l:40,r:20,t:20,b:30};
+    const plotW=bW-pad.l-pad.r, plotH=bH-pad.t-pad.b;
+    const maxB=350, minB=150;
+
+    // Axes
+    bCtx.strokeStyle=C.border;bCtx.lineWidth=1;
+    bCtx.beginPath();bCtx.moveTo(pad.l,pad.t);bCtx.lineTo(pad.l,bH-pad.b);bCtx.lineTo(bW-pad.r,bH-pad.b);bCtx.stroke();
+
+    bCtx.fillStyle=C.muted;bCtx.font='10px Inter';
+    bCtx.fillText('BIC',5,pad.t+plotH/2);
+    bCtx.fillText('K',pad.l+plotW/2,bH-5);
+
+    // Plot
+    bCtx.strokeStyle=C.accent;bCtx.lineWidth=2;
+    bCtx.beginPath();
+    bics.forEach((b,i) => {
+      let x=pad.l+(i+0.5)*plotW/bics.length;
+      let y=pad.t+(b-minB)/(maxB-minB)*plotH;
+      if(i===0)bCtx.moveTo(x,y); else bCtx.lineTo(x,y);
+    });
+    bCtx.stroke();
+
+    bics.forEach((b,i) => {
+      let x=pad.l+(i+0.5)*plotW/bics.length;
+      let y=pad.t+(b-minB)/(maxB-minB)*plotH;
+      let isOpt = (i+2)===3;
+      drawCircle(bCtx,x,y,isOpt?5:3, isOpt?C.accent:hexToRgba(C.accent,.6));
+      bCtx.fillStyle=isOpt?C.accent:C.muted;bCtx.font=(isOpt?'bold ':'')+('10px Inter');
+      bCtx.fillText('K='+(i+2), x-10, bH-pad.b+14);
+      if(isOpt){bCtx.fillStyle=C.teal;bCtx.fillText('← best',x+8,y-5);}
+    });
+  }
+
+  document.getElementById('gmm-k-slider').oninput = function(){
+    K=+this.value;
+    document.getElementById('gmm-k-val').textContent=K;
+    drawGMM();
+  };
+  window.setGMMMode = function(m){
+    mode=m;
+    document.getElementById('gmm-soft-btn').classList.toggle('active',m==='soft');
+    document.getElementById('gmm-hard-btn').classList.toggle('active',m==='hard');
+    document.getElementById('gmm-info').innerHTML = m==='soft'
+      ? '<strong>Soft clustering:</strong> Point opacity = membership probability. Transparent points have split loyalties between clusters.'
+      : '<strong>Hard clustering:</strong> Every point fully assigned to nearest centroid. No uncertainty information.';
+    drawGMM();
+  };
+
+  drawGMM();
+  drawBIC();
+})();
+
+// =============== SECTION 5: Dimensionality Reduction ===============
+(function(){
+  const canvases = {
+    pca: document.getElementById('pca-canvas'),
+    tsne: document.getElementById('tsne-canvas'),
+    umap: document.getElementById('umap-canvas')
+  };
+
+  // Generate 5 clusters in "high-D" and their characteristic 2D projections
+  srand(42);
+  const nPerCluster = 30;
+  const clusterDefs = [
+    {label:0}, {label:1}, {label:2}, {label:3}, {label:4}
+  ];
+
+  // PCA positions: linear projection, some overlap
+  const pcaCenters = [{x:60,y:200},{x:120,y:80},{x:180,y:160},{x:230,y:60},{x:260,y:220}];
+  const pcaSpread = 22;
+
+  // Generate all point sets
+  srand(42);
+  let allPoints = [];
+  for(let ci=0;ci<5;ci++){
+    for(let i=0;i<nPerCluster;i++){
+      allPoints.push({cluster:ci,
+        pca:{x:pcaCenters[ci].x+randG(0,pcaSpread), y:pcaCenters[ci].y+randG(0,pcaSpread*0.8)},
+        tsne:{x:0,y:0}, umap:{x:0,y:0}
+      });
+    }
+  }
+
+  function generateTSNE(perplexity) {
+    srand(55);
+    // t-SNE: tight local clusters, positions depend on perplexity
+    const tsneCenters = [{x:60,y:60},{x:240,y:50},{x:150,y:150},{x:60,y:240},{x:240,y:240}];
+    const spread = 6 + perplexity * 0.3; // higher perplexity = slightly more spread
+    // With low perplexity, fragments can appear
+    const fragmentation = perplexity < 15 ? 0.4 : 0;
+    allPoints.forEach(p => {
+      const c = tsneCenters[p.cluster];
+      let offset = fragmentation > 0 && rand() < fragmentation ? 30 : 0;
+      p.tsne = {x: c.x + randG(0,spread) + (rand()>0.5?offset:-offset), y: c.y + randG(0,spread) + (rand()>0.5?offset:-offset)};
+    });
+  }
+
+  function generateUMAP(nn) {
+    srand(66);
+    // UMAP: well-separated clusters, preserves some global structure
+    const umapCenters = [{x:50,y:180},{x:130,y:50},{x:200,y:220},{x:260,y:100},{x:160,y:140}];
+    const spread = 8 + nn * 0.2;
+    // With more neighbors, clusters become tighter and more separated
+    const sep = 1 + nn * 0.01;
+    allPoints.forEach(p => {
+      const c = umapCenters[p.cluster];
+      p.umap = {x: 150+(c.x-150)*sep + randG(0,spread), y: 140+(c.y-140)*sep + randG(0,spread)};
+    });
+  }
+
+  function drawDR(canvasId, key) {
+    const cvs = canvases[canvasId];
+    const ctx = cvs.getContext('2d');
+    const W=cvs.width, H=cvs.height;
+    clearCanvas(ctx,W,H);
+
+    // Find bounds
+    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+    allPoints.forEach(p => {
+      const pt = p[key];
+      if(pt.x<minX)minX=pt.x;if(pt.x>maxX)maxX=pt.x;
+      if(pt.y<minY)minY=pt.y;if(pt.y>maxY)maxY=pt.y;
+    });
+    const pad=25, rangeX=maxX-minX||1, rangeY=maxY-minY||1;
+
+    allPoints.forEach(p => {
+      const pt = p[key];
+      const sx = pad + (pt.x-minX)/rangeX*(W-2*pad);
+      const sy = pad + (pt.y-minY)/rangeY*(H-2*pad);
+      drawCircle(ctx,sx,sy,3,hexToRgba(C.clusters[p.cluster],0.8));
+    });
+  }
+
+  function drawAll() {
+    const perp = +document.getElementById('perp-slider').value;
+    const nn = +document.getElementById('umap-nn-slider').value;
+    generateTSNE(perp);
+    generateUMAP(nn);
+    drawDR('pca','pca');
+    drawDR('tsne','tsne');
+    drawDR('umap','umap');
+  }
+
+  document.getElementById('perp-slider').oninput = function(){
+    document.getElementById('perp-val').textContent=this.value;
+    drawAll();
+  };
+  document.getElementById('umap-nn-slider').oninput = function(){
+    document.getElementById('umap-nn-val').textContent=this.value;
+    drawAll();
+  };
+
+  drawAll();
+})();
+
+// =============== SECTION 6: Anomaly Detection ===============
+(function(){
+  const cvs = document.getElementById('anomaly-canvas');
+  const ctx = cvs.getContext('2d');
+  const W=cvs.width, H=cvs.height;
+  let currentTab = 0;
+
+  srand(88);
+  // Normal cluster
+  let normalPts = [];
+  for(let i=0;i<80;i++) normalPts.push({x:randG(W/2,80),y:randG(H/2,60)});
+  // Outliers
+  let outliers = [
+    {x:80,y:50},{x:W-70,y:70},{x:100,y:H-60},{x:W-50,y:H-80},{x:W/2+200,y:80},{x:60,y:H/2}
+  ];
+  let allPts = [...normalPts, ...outliers];
+  let isOutlier = [...new Array(normalPts.length).fill(false), ...new Array(outliers.length).fill(true)];
+
+  // Stats
+  let meanX = normalPts.reduce((s,p)=>s+p.x,0)/normalPts.length;
+  let meanY = normalPts.reduce((s,p)=>s+p.y,0)/normalPts.length;
+  let stdX = Math.sqrt(normalPts.reduce((s,p)=>s+(p.x-meanX)**2,0)/normalPts.length);
+  let stdY = Math.sqrt(normalPts.reduce((s,p)=>s+(p.y-meanY)**2,0)/normalPts.length);
+
+  function drawZScore() {
+    clearCanvas(ctx,W,H);
+
+    // Draw sigma circles
+    for(let s=3;s>=1;s--){
+      ctx.beginPath();
+      ctx.ellipse(meanX, meanY, stdX*s, stdY*s, 0, 0, Math.PI*2);
+      let colors = [hexToRgba(C.teal,.15), hexToRgba(C.teal,.1), hexToRgba(C.teal,.06)];
+      ctx.fillStyle = colors[s-1];
+      ctx.fill();
+      ctx.strokeStyle = hexToRgba(C.teal,.3);
+      ctx.lineWidth=1;
+      ctx.setLineDash([3,3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle=C.muted;ctx.font='11px Inter';
+      ctx.fillText(`${s}σ`, meanX+stdX*s+5, meanY-5);
+    }
+
+    // Mean crosshair
+    ctx.strokeStyle=hexToRgba(C.accent,.4);ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(meanX-10,meanY);ctx.lineTo(meanX+10,meanY);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(meanX,meanY-10);ctx.lineTo(meanX,meanY+10);ctx.stroke();
+
+    // Points
+    allPts.forEach((p,i) => {
+      let zx = Math.abs(p.x-meanX)/stdX, zy = Math.abs(p.y-meanY)/stdY;
+      let z = Math.sqrt(zx*zx+zy*zy);
+      let flagged = z > 3;
+      let color = flagged ? C.red : C.accent;
+      drawCircle(ctx,p.x,p.y,flagged?5:3,hexToRgba(color,.8));
+      if(flagged) {
+        drawCircle(ctx,p.x,p.y,8,null,C.red,1.5);
+        ctx.fillStyle=C.red;ctx.font='10px Inter';
+        ctx.fillText(`z=${z.toFixed(1)}`,p.x+12,p.y-5);
+      }
+    });
+
+    document.getElementById('anomaly-info').innerHTML='<strong>Z-Score Method:</strong> Compute distance from mean in standard deviations. Points with |z| > 3 (outside the 3σ ellipse) are flagged as anomalies. Simple but assumes Gaussian distribution.';
+  }
+
+  function drawIsolationForest() {
+    clearCanvas(ctx,W,H);
+
+    // Simulate: outliers have short path lengths, normal points have long
+    // Draw tree-like splits
+    const splitColors = [C.accent, C.teal, C.purple, C.yellow];
+
+    // Show 4 random splits
+    srand(42);
+    let splits = [
+      {axis:'x', val:W*0.35, depth:0},
+      {axis:'y', val:H*0.65, depth:1},
+      {axis:'x', val:W*0.75, depth:1},
+      {axis:'y', val:H*0.25, depth:2}
+    ];
+
+    splits.forEach((s,i) => {
+      ctx.strokeStyle = hexToRgba(splitColors[i%splitColors.length], 0.3);
+      ctx.lineWidth = 1;
+      ctx.setLineDash([5,3]);
+      if(s.axis==='x'){
+        ctx.beginPath();ctx.moveTo(s.val,0);ctx.lineTo(s.val,H);ctx.stroke();
+      } else {
+        ctx.beginPath();ctx.moveTo(0,s.val);ctx.lineTo(W,s.val);ctx.stroke();
+      }
+    });
+    ctx.setLineDash([]);
+
+    // Points with path length bars
+    allPts.forEach((p,i) => {
+      // Outliers: short path (1-3 splits), normal: long path (6-10)
+      let pathLen = isOutlier[i] ? 1 + Math.floor(rand()*2) : 5 + Math.floor(rand()*5);
+      let anomScore = 1 - pathLen/10;
+      let flagged = isOutlier[i];
+      let color = flagged ? C.red : C.accent;
+      drawCircle(ctx,p.x,p.y,flagged?5:3,hexToRgba(color,.8));
+
+      if(flagged) {
+        drawCircle(ctx,p.x,p.y,8,null,C.red,1.5);
+        // Path length indicator
+        ctx.fillStyle=C.red;ctx.font='10px Inter';
+        ctx.fillText(`depth=${pathLen}`,p.x+12,p.y-5);
+        // Small bar
+        ctx.fillStyle=hexToRgba(C.red,.6);
+        ctx.fillRect(p.x+12,p.y,pathLen*4,4);
+      }
+    });
+
+    // Legend
+    ctx.fillStyle=C.text;ctx.font='12px Inter';
+    ctx.fillText('Isolation Forest',20,25);
+    ctx.fillStyle=C.muted;ctx.font='11px Inter';
+    ctx.fillText('Dashed lines = random splits',20,42);
+    ctx.fillText('Outliers isolated in fewer splits (short path)',20,58);
+
+    document.getElementById('anomaly-info').innerHTML='<strong>Isolation Forest:</strong> Randomly split the feature space. Anomalies are isolated in fewer splits (shorter average path length in the tree). No density estimation needed — works well in high dimensions.';
+  }
+
+  function drawAutoencoder() {
+    clearCanvas(ctx,W,H);
+
+    // Show reconstruction: original → reconstructed, with arrows
+    // Normal points: small arrows. Outliers: big arrows
+    allPts.forEach((p,i) => {
+      // "Reconstructed" position = pushed toward mean
+      let rx = meanX + (p.x - meanX) * 0.7;
+      let ry = meanY + (p.y - meanY) * 0.7;
+
+      let error = Math.sqrt((p.x-rx)**2 + (p.y-ry)**2);
+      let flagged = isOutlier[i];
+
+      // Draw arrow from original to reconstructed
+      ctx.strokeStyle = hexToRgba(flagged?C.red:C.accent, flagged?0.7:0.2);
+      ctx.lineWidth = flagged ? 2 : 1;
+      ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(rx,ry); ctx.stroke();
+
+      // Arrow head
+      if(flagged){
+        let angle = Math.atan2(ry-p.y, rx-p.x);
+        let hx=rx-8*Math.cos(angle), hy=ry-8*Math.sin(angle);
+        ctx.beginPath();
+        ctx.moveTo(rx,ry);
+        ctx.lineTo(hx+5*Math.cos(angle+Math.PI/2), hy+5*Math.sin(angle+Math.PI/2));
+        ctx.lineTo(hx-5*Math.cos(angle+Math.PI/2), hy-5*Math.sin(angle+Math.PI/2));
+        ctx.closePath();
+        ctx.fillStyle=hexToRgba(C.red,.7); ctx.fill();
+      }
+
+      // Original point
+      drawCircle(ctx,p.x,p.y,flagged?5:3,hexToRgba(flagged?C.red:C.accent,.8));
+
+      if(flagged) {
+        drawCircle(ctx,p.x,p.y,8,null,C.red,1.5);
+        ctx.fillStyle=C.red;ctx.font='10px Inter';
+        ctx.fillText(`err=${error.toFixed(0)}`,p.x+12,p.y-8);
+      }
+    });
+
+    // Threshold circle
+    let threshold = 60;
+    ctx.beginPath();
+    ctx.ellipse(meanX,meanY,stdX*2.2,stdY*2.2,0,0,Math.PI*2);
+    ctx.strokeStyle=hexToRgba(C.yellow,.5);
+    ctx.lineWidth=2;
+    ctx.setLineDash([6,4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle=C.yellow;ctx.font='11px Inter';
+    ctx.fillText('Reconstruction error threshold',meanX+stdX*2.2+5,meanY);
+
+    document.getElementById('anomaly-info').innerHTML='<strong>Autoencoder:</strong> Train a neural net to reconstruct normal data (encode→decode). Normal points reconstruct well (short arrows). Anomalies have high reconstruction error (long arrows) because the model never learned their patterns.';
+  }
+
+  const drawFns = [drawZScore, drawIsolationForest, drawAutoencoder];
+
+  window.setAnomalyTab = function(idx) {
+    currentTab = idx;
+    document.querySelectorAll('#anomaly-tabs .tab-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+    drawFns[idx]();
+  };
+
+  drawZScore();
+})();
+
+// =============== SECTION 7: Survival Analysis ===============
+(function(){
+  const cvs = document.getElementById('survival-canvas');
+  const ctx = cvs.getContext('2d');
+  const W=cvs.width, H=cvs.height;
+  const pad = {l:60, r:30, t:30, b:50};
+  const plotW=W-pad.l-pad.r, plotH=H-pad.t-pad.b;
+  let showCI = false;
+
+  // Kaplan-Meier data (time, survival prob, censored indicator)
+  // Group A: better survival
+  const groupA = [
+    {t:0,s:1},{t:1,s:0.98},{t:2,s:0.95},{t:3,s:0.93},{t:5,s:0.90},{t:6,s:0.88,censor:true},
+    {t:7,s:0.85},{t:9,s:0.82},{t:10,s:0.80,censor:true},{t:12,s:0.78},{t:14,s:0.75},
+    {t:15,s:0.73,censor:true},{t:17,s:0.70},{t:18,s:0.68},{t:20,s:0.65},{t:22,s:0.63,censor:true},
+    {t:24,s:0.60}
+  ];
+  // Group B: worse survival
+  const groupB = [
+    {t:0,s:1},{t:1,s:0.95},{t:2,s:0.88},{t:3,s:0.82},{t:4,s:0.76},{t:5,s:0.70,censor:true},
+    {t:6,s:0.64},{t:7,s:0.58},{t:8,s:0.53,censor:true},{t:10,s:0.48},{t:12,s:0.42},
+    {t:14,s:0.38,censor:true},{t:16,s:0.33},{t:18,s:0.28},{t:20,s:0.24},{t:22,s:0.20,censor:true},
+    {t:24,s:0.17}
+  ];
+
+  const maxT = 24;
+
+  function toX(t) { return pad.l + (t/maxT)*plotW; }
+  function toY(s) { return pad.t + (1-s)*plotH; }
+
+  let hoverInfo = null;
+
+  function drawSurvival() {
+    clearCanvas(ctx,W,H);
+
+    // Grid
+    ctx.strokeStyle = hexToRgba(C.border,0.5);
+    ctx.lineWidth = 0.5;
+    for(let s=0;s<=1;s+=0.2){
+      let y=toY(s);
+      ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+      ctx.fillStyle=C.muted;ctx.font='11px Inter';ctx.textAlign='right';
+      ctx.fillText((s*100).toFixed(0)+'%',pad.l-8,y+4);
+    }
+    for(let t=0;t<=maxT;t+=3){
+      let x=toX(t);
+      ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,H-pad.b);ctx.stroke();
+      ctx.fillStyle=C.muted;ctx.font='11px Inter';ctx.textAlign='center';
+      ctx.fillText(t,x,H-pad.b+18);
+    }
+    ctx.textAlign='left';
+
+    // Axis labels
+    ctx.fillStyle=C.muted;ctx.font='12px Inter';
+    ctx.save();ctx.translate(15,pad.t+plotH/2);ctx.rotate(-Math.PI/2);ctx.textAlign='center';ctx.fillText('Survival Probability',0,0);ctx.restore();
+    ctx.textAlign='center';ctx.fillText('Months',pad.l+plotW/2,H-8);ctx.textAlign='left';
+
+    // Confidence bands
+    if(showCI) {
+      [groupA, groupB].forEach((grp,gi) => {
+        const color = gi===0 ? C.accent : C.red;
+        ctx.fillStyle = hexToRgba(color, 0.08);
+        ctx.beginPath();
+        // Upper
+        grp.forEach((pt,i) => {
+          let x=toX(pt.t), y=toY(Math.min(1,pt.s+0.08));
+          if(i===0) ctx.moveTo(x,y);
+          else { ctx.lineTo(toX(pt.t),toY(Math.min(1,grp[i-1].s+0.08))); ctx.lineTo(x,y); }
+        });
+        // Lower (reverse)
+        for(let i=grp.length-1;i>=0;i--){
+          let pt=grp[i];
+          let x=toX(pt.t), y=toY(Math.max(0,pt.s-0.08));
+          if(i<grp.length-1) ctx.lineTo(toX(pt.t),toY(Math.max(0,grp[i+1].s-0.08)));
+          ctx.lineTo(x,y);
+        }
+        ctx.closePath();ctx.fill();
+      });
+    }
+
+    // Draw step functions
+    function drawStep(grp, color) {
+      ctx.strokeStyle=color;ctx.lineWidth=2.5;
+      ctx.beginPath();
+      grp.forEach((pt,i) => {
+        let x=toX(pt.t), y=toY(pt.s);
+        if(i===0) { ctx.moveTo(x,y); }
+        else {
+          // Horizontal then vertical (step)
+          ctx.lineTo(x, toY(grp[i-1].s));
+          ctx.lineTo(x, y);
+        }
+      });
+      ctx.stroke();
+
+      // Censored marks
+      grp.forEach(pt => {
+        if(pt.censor) {
+          let x=toX(pt.t), y=toY(pt.s);
+          ctx.strokeStyle=color;ctx.lineWidth=2;
+          ctx.beginPath();ctx.moveTo(x,y-6);ctx.lineTo(x,y+6);ctx.stroke();
+          ctx.beginPath();ctx.moveTo(x-4,y);ctx.lineTo(x+4,y);ctx.stroke();
+        }
+      });
+    }
+
+    drawStep(groupA, C.accent);
+    drawStep(groupB, C.red);
+
+    // Legend
+    ctx.fillStyle=C.accent;ctx.font='12px Inter';ctx.fillText('■ Group A (Treatment A)',pad.l+10,pad.t+20);
+    ctx.fillStyle=C.red;ctx.fillText('■ Group B (Treatment B)',pad.l+10,pad.t+38);
+    ctx.fillStyle=C.muted;ctx.font='10px Inter';ctx.fillText('+ = censored (still active)',pad.l+10,pad.t+54);
+
+    // Hover info
+    if(hoverInfo) {
+      let {t, sA, sB} = hoverInfo;
+      ctx.strokeStyle=hexToRgba(C.text,.3);ctx.lineWidth=1;ctx.setLineDash([3,3]);
+      ctx.beginPath();ctx.moveTo(toX(t),pad.t);ctx.lineTo(toX(t),H-pad.b);ctx.stroke();ctx.setLineDash([]);
+
+      let boxX=toX(t)+10, boxY=pad.t+80;
+      if(boxX > W-180) boxX = toX(t)-180;
+      ctx.fillStyle=hexToRgba(C.surface,.95);
+      ctx.strokeStyle=C.border;ctx.lineWidth=1;
+      roundRect(ctx,boxX,boxY,170,65,8);ctx.fill();ctx.stroke();
+      ctx.fillStyle=C.text;ctx.font='bold 11px Inter';
+      ctx.fillText(`Month ${t.toFixed(0)}`,boxX+10,boxY+18);
+      ctx.fillStyle=C.accent;ctx.font='11px Inter';
+      ctx.fillText(`Group A: ${(sA*100).toFixed(1)}% survive`,boxX+10,boxY+35);
+      ctx.fillStyle=C.red;
+      ctx.fillText(`Group B: ${(sB*100).toFixed(1)}% survive`,boxX+10,boxY+52);
+    }
+  }
+
+  function roundRect(ctx,x,y,w,h,r){
+    ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
+    ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+  }
+
+  function getSurvivalAt(grp, t) {
+    let s = 1;
+    for(let i=0;i<grp.length;i++){
+      if(grp[i].t <= t) s = grp[i].s;
+      else break;
+    }
+    return s;
+  }
+
+  cvs.addEventListener('mousemove', (e) => {
+    const rect=cvs.getBoundingClientRect();
+    const mx=(e.clientX-rect.left)*(W/rect.width);
+    const my=(e.clientY-rect.top)*(H/rect.height);
+    if(mx>=pad.l && mx<=W-pad.r && my>=pad.t && my<=H-pad.b){
+      let t=(mx-pad.l)/plotW*maxT;
+      hoverInfo={t, sA:getSurvivalAt(groupA,t), sB:getSurvivalAt(groupB,t)};
+      document.getElementById('survival-hover-info').textContent=`Month ${t.toFixed(0)}: A=${(hoverInfo.sA*100).toFixed(1)}%, B=${(hoverInfo.sB*100).toFixed(1)}%`;
+    } else {
+      hoverInfo=null;
+    }
+    drawSurvival();
+  });
+
+  cvs.addEventListener('mouseleave', ()=>{hoverInfo=null;drawSurvival();});
+
+  window.toggleCI = function(){
+    showCI=!showCI;
+    document.getElementById('toggle-ci').textContent=showCI?'Hide Confidence Bands':'Show Confidence Bands';
+    document.getElementById('toggle-ci').classList.toggle('active-btn',showCI);
+    drawSurvival();
+  };
+
+  drawSurvival();
+})();
+
+// =============== SECTION 8: Class Imbalance ===============
+(function(){
+  // Pie chart
+  const pieCvs = document.getElementById('imbalance-pie');
+  const pieCtx = pieCvs.getContext('2d');
+  const pw=pieCvs.width, ph=pieCvs.height;
+  const cx=pw/2, cy=ph/2, r=55;
+
+  pieCtx.beginPath();pieCtx.moveTo(cx,cy);pieCtx.arc(cx,cy,r,0,Math.PI*2*0.98);pieCtx.closePath();
+  pieCtx.fillStyle=C.accent;pieCtx.fill();
+  pieCtx.beginPath();pieCtx.moveTo(cx,cy);pieCtx.arc(cx,cy,r,Math.PI*2*0.98,Math.PI*2);pieCtx.closePath();
+  pieCtx.fillStyle=C.red;pieCtx.fill();
+  // Labels
+  pieCtx.fillStyle=C.text;pieCtx.font='bold 12px Inter';pieCtx.textAlign='center';
+  pieCtx.fillText('98%',cx-10,cy);
+  pieCtx.fillStyle=C.red;pieCtx.font='bold 9px Inter';
+  pieCtx.fillText('2%',cx+r-5,cy-r+15);
+  pieCtx.textAlign='left';
+
+  // Main canvas
+  const cvs = document.getElementById('imbalance-canvas');
+  const ctx2 = cvs.getContext('2d');
+  const W=cvs.width, H=cvs.height;
+  let imbalanceTab = 0;
+
+  function drawNoHandling() {
+    clearCanvas(ctx2,W,H);
+    const pad={l:60,r:30,t:40,b:60};
+
+    ctx2.fillStyle=C.text;ctx2.font='bold 13px Inter';
+    ctx2.fillText('Model predicts ALL negative (majority class)',pad.l,25);
+
+    // Confusion matrix visualization
+    const cmX=pad.l, cmY=50, cmW=200, cmH=150;
+    ctx2.fillStyle=C.muted;ctx2.font='11px Inter';
+    ctx2.fillText('Predicted',cmX+cmW/2-25,cmY-5);
+    ctx2.save();ctx2.translate(cmX-10,cmY+cmH/2);ctx2.rotate(-Math.PI/2);ctx2.textAlign='center';ctx2.fillText('Actual',0,0);ctx2.restore();ctx2.textAlign='left';
+
+    // Labels
+    ctx2.font='10px Inter';ctx2.fillStyle=C.muted;
+    ctx2.fillText('Neg',cmX+cmW*0.25-10,cmY+10);ctx2.fillText('Pos',cmX+cmW*0.75-10,cmY+10);
+    ctx2.fillText('Neg',cmX-35,cmY+cmH*0.35);ctx2.fillText('Pos',cmX-35,cmY+cmH*0.8);
+
+    // Cells
+    // TN=980, FN=20, FP=0, TP=0
+    function drawCell(r,c,val,color,label){
+      let x=cmX+c*cmW/2, y=cmY+15+r*cmH/2, w=cmW/2-4, h=cmH/2-4;
+      ctx2.fillStyle=hexToRgba(color,.2);ctx2.fillRect(x+2,y+2,w,h);
+      ctx2.strokeStyle=hexToRgba(color,.4);ctx2.lineWidth=1;ctx2.strokeRect(x+2,y+2,w,h);
+      ctx2.fillStyle=color;ctx2.font='bold 18px Inter';ctx2.textAlign='center';
+      ctx2.fillText(val,x+w/2+2,y+h/2+2);
+      ctx2.font='9px Inter';ctx2.fillText(label,x+w/2+2,y+h/2+18);
+      ctx2.textAlign='left';
+    }
+    drawCell(0,0,'980',C.teal,'TN');
+    drawCell(0,1,'0',C.muted,'FP');
+    drawCell(1,0,'20',C.red,'FN !!');
+    drawCell(1,1,'0',C.red,'TP = 0');
+
+    // Metrics
+    const mX=cmX+cmW+60, mY=60;
+    ctx2.fillStyle=C.text;ctx2.font='bold 12px Inter';ctx2.fillText('Metrics:',mX,mY);
+
+    const metrics=[
+      {name:'Accuracy',val:'98.0%',color:C.teal,note:'Looks great!'},
+      {name:'Precision',val:'N/A',color:C.muted,note:'No positive preds'},
+      {name:'Recall',val:'0.0%',color:C.red,note:'Misses ALL fraud!'},
+      {name:'F1 Score',val:'0.0%',color:C.red,note:'Useless model'}
+    ];
+    metrics.forEach((m,i) => {
+      ctx2.fillStyle=m.color;ctx2.font='bold 20px Inter';ctx2.fillText(m.val,mX,mY+30+i*50);
+      ctx2.fillStyle=C.muted;ctx2.font='11px Inter';ctx2.fillText(m.name,mX,mY+47+i*50);
+      ctx2.fillStyle=hexToRgba(m.color,.7);ctx2.font='10px Inter';ctx2.fillText(m.note,mX+90,mY+35+i*50);
+    });
+
+    // Accuracy paradox callout
+    ctx2.fillStyle=hexToRgba(C.red,.1);
+    roundRect2(ctx2,pad.l,H-55,W-pad.l-pad.r,45,8);ctx2.fill();
+    ctx2.strokeStyle=hexToRgba(C.red,.3);ctx2.stroke();
+    ctx2.fillStyle=C.red;ctx2.font='bold 11px Inter';ctx2.fillText('ACCURACY PARADOX:',pad.l+15,H-32);
+    ctx2.fillStyle=C.text;ctx2.font='11px Inter';ctx2.fillText('98% accuracy but catches zero fraud. Accuracy is meaningless with imbalanced classes.',pad.l+165,H-32);
+  }
+
+  function drawClassWeights() {
+    clearCanvas(ctx2,W,H);
+    const pad={l:60,r:30,t:20,b:40};
+
+    ctx2.fillStyle=C.text;ctx2.font='bold 13px Inter';
+    ctx2.fillText('Weighted Loss: penalize missing minority class more',pad.l,35);
+
+    // Show two loss bars side by side
+    const barY=60, barH=100;
+
+    // Unweighted
+    ctx2.fillStyle=C.muted;ctx2.font='11px Inter';ctx2.fillText('Unweighted Loss',100,barY);
+    ctx2.fillStyle=hexToRgba(C.accent,.3);ctx2.fillRect(80,barY+10,120,40); // misclassify negative
+    ctx2.fillStyle=hexToRgba(C.red,.3);ctx2.fillRect(80,barY+55,120,40); // misclassify positive
+    ctx2.fillStyle=C.text;ctx2.font='11px Inter';
+    ctx2.fillText('Miss a Neg: loss = 1',90,barY+35);
+    ctx2.fillText('Miss a Pos: loss = 1',90,barY+80);
+    ctx2.fillStyle=C.muted;ctx2.font='10px Inter';ctx2.fillText('Same penalty!',210,barY+55);
+
+    // Weighted
+    ctx2.fillStyle=C.muted;ctx2.font='11px Inter';ctx2.fillText('Weighted Loss (w=49x)',480,barY);
+    ctx2.fillStyle=hexToRgba(C.accent,.3);ctx2.fillRect(460,barY+10,120,20); // misclassify negative (small)
+    ctx2.fillStyle=hexToRgba(C.red,.5);ctx2.fillRect(460,barY+55,300,60); // misclassify positive (big!)
+    ctx2.fillStyle=C.text;ctx2.font='11px Inter';
+    ctx2.fillText('Miss a Neg: loss = 1',470,barY+28);
+    ctx2.fillText('Miss a Pos: loss = 49',470,barY+90);
+    ctx2.fillStyle=C.yellow;ctx2.font='bold 11px Inter';ctx2.fillText('49x penalty!',770,barY+90);
+
+    // Formula
+    ctx2.fillStyle=C.muted;ctx2.font='12px Inter';
+    ctx2.fillText('weight = n_negative / n_positive = 980 / 20 = 49',pad.l,barY+140);
+
+    // Result
+    ctx2.fillStyle=C.text;ctx2.font='12px Inter';
+    ctx2.fillText('Result: Model learns that missing fraud is 49x worse than a false alarm.',pad.l,barY+170);
+    ctx2.fillStyle=C.teal;ctx2.font='bold 12px Inter';
+    ctx2.fillText('In sklearn: class_weight="balanced" or scale_pos_weight in XGBoost',pad.l,barY+195);
+
+    document.getElementById('imbalance-info').innerHTML='<strong>Class Weights:</strong> Multiply the loss for minority-class errors by n_majority/n_minority. The model learns that missing a fraud case is much worse than a false alarm. Easy to implement — just one parameter.';
+  }
+
+  function drawSMOTE() {
+    clearCanvas(ctx2,W,H);
+
+    ctx2.fillStyle=C.text;ctx2.font='bold 13px Inter';
+    ctx2.fillText('SMOTE: Synthetic Minority Over-sampling',60,25);
+
+    // Draw the process
+    srand(99);
+    const baseX=80, baseY=60;
+    // Minority points
+    let minPts = [];
+    for(let i=0;i<8;i++) minPts.push({x:baseX+randG(100,50),y:baseY+randG(120,40)});
+
+    // Majority points (background)
+    for(let i=0;i<40;i++){
+      let px=baseX+randG(350,120), py=baseY+randG(120,60);
+      drawCircle(ctx2,px,py,2.5,hexToRgba(C.accent,.3));
+    }
+
+    // Draw minority
+    minPts.forEach(p => drawCircle(ctx2,p.x,p.y,5,C.red));
+
+    // SMOTE: pick a point, pick its neighbor, interpolate
+    // Animate a few synthetic points
+    let synthetics = [];
+    for(let s=0;s<5;s++){
+      let p1 = minPts[s%minPts.length];
+      let p2 = minPts[(s+1)%minPts.length];
+      let t = 0.3 + rand()*0.4;
+      let synth = {x:lerp(p1.x,p2.x,t), y:lerp(p1.y,p2.y,t), from:p1, to:p2};
+      synthetics.push(synth);
+    }
+
+    // Draw connections and synthetic points
+    synthetics.forEach(s => {
+      // Line from->to
+      ctx2.strokeStyle=hexToRgba(C.yellow,.3);ctx2.lineWidth=1;ctx2.setLineDash([3,3]);
+      ctx2.beginPath();ctx2.moveTo(s.from.x,s.from.y);ctx2.lineTo(s.to.x,s.to.y);ctx2.stroke();
+      ctx2.setLineDash([]);
+
+      // Synthetic point
+      drawCircle(ctx2,s.x,s.y,5,null,C.yellow,2);
+      drawCircle(ctx2,s.x,s.y,3,hexToRgba(C.yellow,.5));
+    });
+
+    // Legend
+    ctx2.fillStyle=C.red;ctx2.font='11px Inter';ctx2.fillText('● Original minority (fraud)',baseX+250,baseY+10);
+    ctx2.fillStyle=C.yellow;ctx2.fillText('○ Synthetic (SMOTE-generated)',baseX+250,baseY+28);
+    ctx2.fillStyle=hexToRgba(C.accent,.5);ctx2.fillText('● Majority (legitimate)',baseX+250,baseY+46);
+
+    // Steps
+    const stepsX = 60, stepsY = H-120;
+    ctx2.fillStyle=C.muted;ctx2.font='bold 11px Inter';ctx2.fillText('How SMOTE works:',stepsX,stepsY);
+    ctx2.font='11px Inter';
+    ctx2.fillText('1. Pick a minority point',stepsX,stepsY+20);
+    ctx2.fillText('2. Find its k nearest minority neighbors',stepsX,stepsY+38);
+    ctx2.fillText('3. Randomly interpolate between them to create a new synthetic point',stepsX,stepsY+56);
+    ctx2.fillText('4. Repeat until classes are balanced',stepsX,stepsY+74);
+
+    document.getElementById('imbalance-info').innerHTML='<strong>SMOTE:</strong> Creates synthetic minority samples by interpolating between existing minority points and their neighbors. More sophisticated than random oversampling (which just duplicates). Caution: can create noisy samples in overlapping regions.';
+  }
+
+  function drawThreshold() {
+    clearCanvas(ctx2,W,H);
+    const pad={l:70,r:30,t:50,b:60};
+    const plotW2=W-pad.l-pad.r, plotH2=H-pad.t-pad.b;
+
+    ctx2.fillStyle=C.text;ctx2.font='bold 13px Inter';
+    ctx2.fillText('Decision Threshold Tuning',pad.l,25);
+    ctx2.fillStyle=C.muted;ctx2.font='11px Inter';
+    ctx2.fillText('Moving threshold from 0.5 to lower values catches more positives',pad.l,42);
+
+    // Simulated probability distributions
+    // Negative class: peak at low probability
+    // Positive class: peak at higher probability, but overlaps
+
+    function drawDist(x, maxX, color, mean, std, label) {
+      ctx2.fillStyle = hexToRgba(color, 0.15);
+      ctx2.strokeStyle = color;
+      ctx2.lineWidth = 2;
+      ctx2.beginPath();
+      let startX = pad.l;
+      for(let px=0; px<=plotW2; px++){
+        let t = px/plotW2; // 0 to 1 = probability
+        let density = Math.exp(-0.5*((t-mean)/std)**2) / (std*2.507);
+        let y = pad.t + plotH2 - density*plotH2*2;
+        if(px===0) ctx2.moveTo(startX+px,y); else ctx2.lineTo(startX+px,y);
+      }
+      ctx2.stroke();
+      // Fill
+      ctx2.lineTo(pad.l+plotW2, pad.t+plotH2);
+      ctx2.lineTo(pad.l, pad.t+plotH2);
+      ctx2.closePath();
+      ctx2.fill();
+
+      ctx2.fillStyle=color;ctx2.font='11px Inter';
+      let labelX = pad.l + mean*plotW2;
+      ctx2.textAlign='center';ctx2.fillText(label,labelX,pad.t+plotH2-Math.exp(0)/(std*2.507)*plotH2*2-10);ctx2.textAlign='left';
+    }
+
+    drawDist(0, 1, C.accent, 0.25, 0.12, 'Negatives (98%)');
+    drawDist(0, 1, C.red, 0.55, 0.15, 'Positives (2%)');
+
+    // Threshold lines
+    const thresholds = [
+      {val:0.5, label:'Default (0.5)', color:C.muted},
+      {val:0.15, label:'Tuned (0.15)', color:C.yellow}
+    ];
+    thresholds.forEach(th => {
+      let x = pad.l + th.val * plotW2;
+      ctx2.strokeStyle=th.color;ctx2.lineWidth=2;ctx2.setLineDash([5,3]);
+      ctx2.beginPath();ctx2.moveTo(x,pad.t);ctx2.lineTo(x,pad.t+plotH2);ctx2.stroke();
+      ctx2.setLineDash([]);
+      ctx2.fillStyle=th.color;ctx2.font='bold 10px Inter';
+      ctx2.save();ctx2.translate(x-5,pad.t+10);ctx2.rotate(-Math.PI/6);ctx2.fillText(th.label,0,0);ctx2.restore();
+    });
+
+    // X axis
+    ctx2.strokeStyle=C.border;ctx2.lineWidth=1;
+    ctx2.beginPath();ctx2.moveTo(pad.l,pad.t+plotH2);ctx2.lineTo(pad.l+plotW2,pad.t+plotH2);ctx2.stroke();
+    for(let t=0;t<=1;t+=0.2){
+      let x=pad.l+t*plotW2;
+      ctx2.fillStyle=C.muted;ctx2.font='10px Inter';ctx2.textAlign='center';
+      ctx2.fillText(t.toFixed(1),x,pad.t+plotH2+15);
+    }
+    ctx2.textAlign='center';ctx2.fillText('Predicted Probability',pad.l+plotW2/2,H-15);ctx2.textAlign='left';
+
+    // Metrics comparison
+    const compX=W-280, compY=pad.t+20;
+    ctx2.fillStyle=hexToRgba(C.surface,.9);
+    roundRect2(ctx2,compX-10,compY-10,260,110,8);ctx2.fill();
+    ctx2.strokeStyle=C.border;ctx2.stroke();
+
+    ctx2.fillStyle=C.muted;ctx2.font='bold 10px Inter';
+    ctx2.fillText('Threshold',compX,compY+5);ctx2.fillText('0.50',compX+80,compY+5);ctx2.fillText('0.15',compX+150,compY+5);
+    const rows=[
+      {m:'Recall',v1:'35%',c1:C.red,v2:'85%',c2:C.teal},
+      {m:'Precision',v1:'70%',c1:C.teal,v2:'25%',c2:C.orange},
+      {m:'F1',v1:'0.47',c1:C.orange,v2:'0.39',c2:C.orange},
+      {m:'Fraud caught',v1:'7/20',c1:C.red,v2:'17/20',c2:C.teal}
+    ];
+    rows.forEach((r,i) => {
+      let y=compY+25+i*20;
+      ctx2.fillStyle=C.muted;ctx2.font='11px Inter';ctx2.fillText(r.m,compX,y);
+      ctx2.fillStyle=r.c1;ctx2.fillText(r.v1,compX+80,y);
+      ctx2.fillStyle=r.c2;ctx2.fillText(r.v2,compX+150,y);
+    });
+
+    document.getElementById('imbalance-info').innerHTML='<strong>Threshold Tuning:</strong> Instead of classifying at p=0.5, lower the threshold to catch more positives. You trade precision for recall — more false alarms, but you catch most of the fraud. Pick the threshold that optimizes your business metric.';
+  }
+
+  function roundRect2(ctx,x,y,w,h,r){
+    ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
+    ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+  }
+
+  const drawFns = [drawNoHandling, drawClassWeights, drawSMOTE, drawThreshold];
+
+  window.setImbalanceTab = function(idx) {
+    imbalanceTab=idx;
+    document.querySelectorAll('#imbalance-tabs .tab-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+    drawFns[idx]();
+  };
+
+  drawNoHandling();
+})();
+
+// Make canvases responsive
+function resizeCanvases() {
+  document.querySelectorAll('canvas').forEach(c => {
+    c.style.width = '100%';
+    c.style.height = 'auto';
+  });
+}
+resizeCanvases();
+</script>
+</body>
+</html>

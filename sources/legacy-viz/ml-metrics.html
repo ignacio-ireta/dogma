@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ML Metrics Visualized</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --border: #2a2d3a;
+    --text: #e0e0e6;
+    --muted: #8888a0;
+    --accent: #6c8aff;
+    --tp: #4ade80;
+    --fp: #f87171;
+    --tn: #60a5fa;
+    --fn: #fbbf24;
+    --positive: #4ade80;
+    --negative: #f87171;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  header {
+    text-align: center;
+    padding: 3rem 1rem 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  header h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.5rem;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 1.05rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  section h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+
+  section .subtitle {
+    color: var(--muted);
+    font-size: 0.92rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .formula {
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    background: rgba(108, 138, 255, 0.08);
+    border: 1px solid rgba(108, 138, 255, 0.15);
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    display: inline-block;
+    margin-bottom: 1.2rem;
+    font-size: 1.05rem;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  @media (max-width: 700px) {
+    .two-col { grid-template-columns: 1fr; }
+  }
+
+  canvas { display: block; }
+
+  /* Confusion matrix */
+  .cm-grid {
+    display: grid;
+    grid-template-columns: auto 1fr 1fr;
+    grid-template-rows: auto 1fr 1fr;
+    gap: 4px;
+    width: 280px;
+    margin: 0 auto;
+  }
+
+  .cm-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    padding: 1rem;
+    font-weight: 600;
+    font-size: 1.6rem;
+    min-height: 90px;
+    transition: all 0.3s;
+  }
+
+  .cm-cell span {
+    font-size: 0.7rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.8;
+    margin-top: 4px;
+  }
+
+  .cm-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+
+  .cm-corner { }
+  .cm-tp { background: rgba(74, 222, 128, 0.15); color: var(--tp); }
+  .cm-fp { background: rgba(248, 113, 113, 0.15); color: var(--fp); }
+  .cm-fn { background: rgba(251, 191, 36, 0.15); color: var(--fn); }
+  .cm-tn { background: rgba(96, 165, 250, 0.15); color: var(--tn); }
+
+  .cm-highlight { transform: scale(1.06); box-shadow: 0 0 20px rgba(255,255,255,0.1); }
+
+  /* Sliders */
+  .slider-group {
+    margin-bottom: 1rem;
+  }
+
+  .slider-group label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+    color: var(--muted);
+  }
+
+  .slider-group label strong {
+    color: var(--text);
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+    outline: none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid var(--bg);
+  }
+
+  /* Metric cards */
+  .metrics-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 1.2rem;
+  }
+
+  .metric-card {
+    flex: 1;
+    min-width: 100px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.8rem;
+    text-align: center;
+    transition: border-color 0.3s, background 0.3s;
+  }
+
+  .metric-card.active {
+    border-color: var(--accent);
+    background: rgba(108, 138, 255, 0.06);
+  }
+
+  .metric-card .label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+
+  .metric-card .value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Dot plot */
+  .dot-plot {
+    position: relative;
+    height: 120px;
+    margin: 1rem 0;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .dot-plot .threshold-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--accent);
+    z-index: 2;
+    cursor: ew-resize;
+  }
+
+  .dot-plot .threshold-line::after {
+    content: 'threshold';
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.65rem;
+    color: var(--accent);
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+  }
+
+  .dot {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.2s;
+  }
+
+  .dot.actual-pos { background: var(--positive); }
+  .dot.actual-neg { background: var(--negative); }
+
+  .dot-legend {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 0.3rem;
+  }
+
+  .dot-legend span::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+
+  .dot-legend .leg-pos::before { background: var(--positive); }
+  .dot-legend .leg-neg::before { background: var(--negative); }
+
+  /* ROC curve */
+  .roc-wrap {
+    position: relative;
+  }
+
+  .roc-wrap canvas {
+    width: 100%;
+    height: auto;
+  }
+
+  /* Regression */
+  .regression-wrap canvas {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+  }
+
+  /* Tabs */
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 1.2rem;
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    padding: 4px;
+  }
+
+  .tab-bar button {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 0.5rem 0.8rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab-bar button.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .explanation {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-top: 1rem;
+  }
+
+  .explanation strong {
+    color: var(--text);
+  }
+
+  .highlight-tp { color: var(--tp); font-weight: 600; }
+  .highlight-fp { color: var(--fp); font-weight: 600; }
+  .highlight-fn { color: var(--fn); font-weight: 600; }
+  .highlight-tn { color: var(--tn); font-weight: 600; }
+
+  nav { display: flex; gap: 0.5rem; justify-content: center; padding: 1rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); }
+  nav a { color: var(--muted); text-decoration: none; font-size: 0.82rem; font-weight: 500; padding: 0.4rem 0.8rem; border-radius: 8px; transition: all 0.2s; }
+  nav a:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+  nav a.active { color: #fff; background: var(--accent); }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="ml-metrics.html" class="active">ML Metrics</a>
+  <a href="ml-concepts.html">ML Concepts</a>
+  <a href="probability-stats.html">Probability &amp; Stats</a>
+  <a href="model-selection.html">Model Selection</a>
+  <a href="sql-concepts.html">SQL Concepts</a>
+  <a href="data-wrangling.html">Pandas &amp; sklearn</a>
+  <a href="case-frameworks.html">Case Frameworks</a>
+</nav>
+
+<header>
+  <h1>ML Metrics Visualized</h1>
+  <p>Interactive explorations of classification and regression metrics. Drag sliders and thresholds to see how metrics respond.</p>
+</header>
+
+<div class="container">
+
+  <!-- ==================== CONFUSION MATRIX ==================== -->
+  <section id="sec-confusion">
+    <h2>Confusion Matrix</h2>
+    <p class="subtitle">The foundation of classification metrics. Adjust TP, FP, FN, TN to see how each metric changes.</p>
+
+    <div class="two-col">
+      <div>
+        <div class="slider-group">
+          <label>True Positives (TP) <strong id="tp-val">45</strong></label>
+          <input type="range" id="tp-slider" min="0" max="100" value="45">
+        </div>
+        <div class="slider-group">
+          <label>False Positives (FP) <strong id="fp-val">10</strong></label>
+          <input type="range" id="fp-slider" min="0" max="100" value="10">
+        </div>
+        <div class="slider-group">
+          <label>False Negatives (FN) <strong id="fn-val">5</strong></label>
+          <input type="range" id="fn-slider" min="0" max="100" value="5">
+        </div>
+        <div class="slider-group">
+          <label>True Negatives (TN) <strong id="tn-val">40</strong></label>
+          <input type="range" id="tn-slider" min="0" max="100" value="40">
+        </div>
+
+        <div class="metrics-row" id="cm-metrics"></div>
+      </div>
+      <div>
+        <div class="cm-grid" id="cm-grid">
+          <div class="cm-corner cm-label"></div>
+          <div class="cm-label">Pred +</div>
+          <div class="cm-label">Pred &minus;</div>
+          <div class="cm-label" style="writing-mode:vertical-lr; transform:rotate(180deg);">Actual +</div>
+          <div class="cm-cell cm-tp" id="cm-tp">45<span>TP</span></div>
+          <div class="cm-cell cm-fn" id="cm-fn">5<span>FN</span></div>
+          <div class="cm-label" style="writing-mode:vertical-lr; transform:rotate(180deg);">Actual &minus;</div>
+          <div class="cm-cell cm-fp" id="cm-fp">10<span>FP</span></div>
+          <div class="cm-cell cm-tn" id="cm-tn">40<span>TN</span></div>
+        </div>
+
+        <div class="explanation" id="cm-explanation">
+          <strong>Accuracy</strong> measures overall correctness. <strong>Precision</strong> answers "of those predicted positive, how many were right?" <strong>Recall</strong> answers "of all actual positives, how many did we find?" <strong>F1</strong> balances precision and recall.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== THRESHOLD / DOT PLOT ==================== -->
+  <section id="sec-threshold">
+    <h2>Classification Threshold</h2>
+    <p class="subtitle">Each dot is a sample. Green = actually positive, red = actually negative. Drag the threshold to see how it affects predictions.</p>
+
+    <div class="dot-plot" id="dot-plot">
+      <div class="threshold-line" id="threshold-line"></div>
+    </div>
+    <div class="dot-legend">
+      <span class="leg-pos">Actually Positive</span>
+      <span class="leg-neg">Actually Negative</span>
+      <span style="margin-left:auto; color: var(--accent);">&#9664; predicted negative &nbsp;|&nbsp; predicted positive &#9654;</span>
+    </div>
+
+    <div class="metrics-row" id="thresh-metrics"></div>
+
+    <div class="explanation">
+      Samples to the <strong>right</strong> of the threshold are predicted positive. Moving the threshold left catches more positives (higher recall) but also more false positives (lower precision). Moving it right does the opposite.
+    </div>
+  </section>
+
+  <!-- ==================== PRECISION / RECALL DEEP DIVE ==================== -->
+  <section id="sec-pr">
+    <h2>Precision vs Recall Trade-off</h2>
+    <p class="subtitle">See which metric matters more depending on the scenario.</p>
+
+    <div class="tab-bar" id="pr-tabs">
+      <button class="active" data-scenario="spam">Spam Filter</button>
+      <button data-scenario="cancer">Cancer Screening</button>
+      <button data-scenario="fraud">Fraud Detection</button>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <canvas id="pr-canvas" width="400" height="400"></canvas>
+      </div>
+      <div>
+        <div id="pr-info" class="explanation" style="margin-top:0;"></div>
+        <div class="slider-group" style="margin-top:1.2rem;">
+          <label>Threshold <strong id="pr-thresh-val">0.50</strong></label>
+          <input type="range" id="pr-thresh-slider" min="0" max="100" value="50">
+        </div>
+        <div class="metrics-row" id="pr-metrics"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== ROC / AUC ==================== -->
+  <section id="sec-roc">
+    <h2>ROC Curve &amp; AUC</h2>
+    <p class="subtitle">The ROC curve plots True Positive Rate vs False Positive Rate at every threshold. AUC summarizes overall performance.</p>
+
+    <div class="two-col">
+      <div class="roc-wrap">
+        <canvas id="roc-canvas" width="400" height="400"></canvas>
+      </div>
+      <div>
+        <div class="slider-group">
+          <label>Model Separability <strong id="sep-val">2.0</strong></label>
+          <input type="range" id="sep-slider" min="0" max="40" value="20">
+        </div>
+        <div class="metric-card active" style="margin-top:1rem;">
+          <div class="label">AUC Score</div>
+          <div class="value" id="auc-val">0.92</div>
+        </div>
+        <div class="explanation">
+          <strong>Separability</strong> controls how well the model distinguishes classes. Higher separability &rarr; the two class distributions are farther apart &rarr; higher AUC.<br><br>
+          <strong>AUC = 0.5</strong> means random guessing (diagonal line). <strong>AUC = 1.0</strong> means perfect classification. The shaded area under the curve is the AUC.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== REGRESSION: MSE, MAE, R² ==================== -->
+  <section id="sec-regression">
+    <h2>Regression Metrics</h2>
+    <p class="subtitle">Drag control points to reshape the model fit. Watch how MSE, MAE, and R&sup2; respond to different error patterns.</p>
+
+    <div class="tab-bar" id="reg-tabs">
+      <button class="active" data-view="mse">MSE</button>
+      <button data-view="mae">MAE</button>
+      <button data-view="r2">R&sup2;</button>
+    </div>
+
+    <div class="two-col">
+      <div class="regression-wrap">
+        <canvas id="reg-canvas" width="500" height="400"></canvas>
+      </div>
+      <div>
+        <div class="slider-group">
+          <label>Noise Level <strong id="noise-val">0.3</strong></label>
+          <input type="range" id="noise-slider" min="0" max="100" value="30">
+        </div>
+        <div class="slider-group">
+          <label>Slope <strong id="slope-val">1.0</strong></label>
+          <input type="range" id="slope-slider" min="-20" max="40" value="20">
+        </div>
+        <div class="slider-group">
+          <label>Intercept <strong id="intercept-val">0.0</strong></label>
+          <input type="range" id="intercept-slider" min="-20" max="20" value="0">
+        </div>
+        <div class="metrics-row" id="reg-metrics"></div>
+        <div class="explanation" id="reg-explanation"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== LOG LOSS ==================== -->
+  <section id="sec-logloss">
+    <h2>Log Loss (Cross-Entropy)</h2>
+    <p class="subtitle">Log loss heavily penalizes confident wrong predictions. See how the penalty grows as confidence increases in the wrong direction.</p>
+
+    <div class="two-col">
+      <div>
+        <canvas id="logloss-canvas" width="400" height="350"></canvas>
+      </div>
+      <div>
+        <div class="slider-group">
+          <label>Predicted Probability <strong id="ll-prob-val">0.80</strong></label>
+          <input type="range" id="ll-prob-slider" min="1" max="99" value="80">
+        </div>
+        <div class="tab-bar" id="ll-tabs">
+          <button class="active" data-actual="1">Actual = Positive</button>
+          <button data-actual="0">Actual = Negative</button>
+        </div>
+        <div class="metric-card active" style="margin-top:1rem;">
+          <div class="label">Log Loss</div>
+          <div class="value" id="ll-val">0.22</div>
+        </div>
+        <div class="explanation">
+          <strong>Log Loss = &minus;[y&middot;log(p) + (1&minus;y)&middot;log(1&minus;p)]</strong><br><br>
+          When the actual label is positive (y=1), log loss penalizes low predicted probabilities. When actual is negative (y=0), it penalizes high predicted probabilities. The penalty grows <strong>exponentially</strong> as confidence in the wrong answer increases.
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+// ─── Utilities ────────────────────────────────────────
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+function gaussianRandom(mean, std) {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return mean + std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+}
+
+function makeMetricCards(container, metrics) {
+  container.innerHTML = metrics.map(m =>
+    `<div class="metric-card${m.active ? ' active' : ''}">
+      <div class="label">${m.label}</div>
+      <div class="value">${m.value}</div>
+    </div>`
+  ).join('');
+}
+
+// ─── 1. Confusion Matrix ────────────────────────────────────────
+const sliders = { tp: 45, fp: 10, fn: 5, tn: 40 };
+
+function updateCM() {
+  for (const k of ['tp', 'fp', 'fn', 'tn']) {
+    sliders[k] = +document.getElementById(k + '-slider').value;
+    document.getElementById(k + '-val').textContent = sliders[k];
+  }
+
+  const { tp, fp, fn, tn } = sliders;
+  document.getElementById('cm-tp').innerHTML = `${tp}<span>TP</span>`;
+  document.getElementById('cm-fp').innerHTML = `${fp}<span>FP</span>`;
+  document.getElementById('cm-fn').innerHTML = `${fn}<span>FN</span>`;
+  document.getElementById('cm-tn').innerHTML = `${tn}<span>TN</span>`;
+
+  const total = tp + fp + fn + tn || 1;
+  const accuracy = (tp + tn) / total;
+  const precision = tp / (tp + fp) || 0;
+  const recall = tp / (tp + fn) || 0;
+  const f1 = precision + recall > 0 ? 2 * precision * recall / (precision + recall) : 0;
+
+  makeMetricCards(document.getElementById('cm-metrics'), [
+    { label: 'Accuracy', value: accuracy.toFixed(3) },
+    { label: 'Precision', value: precision.toFixed(3) },
+    { label: 'Recall', value: recall.toFixed(3) },
+    { label: 'F1 Score', value: f1.toFixed(3), active: true },
+  ]);
+}
+
+['tp', 'fp', 'fn', 'tn'].forEach(k =>
+  document.getElementById(k + '-slider').addEventListener('input', updateCM));
+updateCM();
+
+
+// ─── 2. Threshold Dot Plot ──────────────────────────────────────
+const dotPlot = document.getElementById('dot-plot');
+const threshLine = document.getElementById('threshold-line');
+let threshold = 0.5;
+let dots = [];
+
+function seedDots() {
+  const rng = (m, s) => gaussianRandom(m, s);
+  dots = [];
+  for (let i = 0; i < 60; i++) {
+    dots.push({ score: clamp(rng(0.65, 0.18), 0.01, 0.99), actual: 1 });
+  }
+  for (let i = 0; i < 60; i++) {
+    dots.push({ score: clamp(rng(0.35, 0.18), 0.01, 0.99), actual: 0 });
+  }
+}
+seedDots();
+
+function renderDotPlot() {
+  const rect = dotPlot.getBoundingClientRect();
+  dotPlot.querySelectorAll('.dot').forEach(d => d.remove());
+  threshLine.style.left = (threshold * 100) + '%';
+
+  // bucket dots by vertical position to avoid overlap
+  const buckets = {};
+  dots.forEach(d => {
+    const x = d.score;
+    const key = Math.round(x * 50);
+    if (!buckets[key]) buckets[key] = [];
+    buckets[key].push(d);
+  });
+
+  for (const key in buckets) {
+    const arr = buckets[key];
+    arr.forEach((d, i) => {
+      const el = document.createElement('div');
+      el.className = 'dot ' + (d.actual === 1 ? 'actual-pos' : 'actual-neg');
+      el.style.left = (d.score * 100) + '%';
+      const baseY = 60;
+      const offset = (i - (arr.length - 1) / 2) * 13;
+      el.style.top = clamp(baseY + offset, 8, 112) + 'px';
+
+      // dim if misclassified
+      const predicted = d.score >= threshold ? 1 : 0;
+      if (predicted !== d.actual) el.style.opacity = '0.4';
+
+      dotPlot.appendChild(el);
+    });
+  }
+
+  // Compute metrics
+  let tp = 0, fp = 0, fn = 0, tn = 0;
+  dots.forEach(d => {
+    const pred = d.score >= threshold ? 1 : 0;
+    if (pred === 1 && d.actual === 1) tp++;
+    else if (pred === 1 && d.actual === 0) fp++;
+    else if (pred === 0 && d.actual === 1) fn++;
+    else tn++;
+  });
+
+  const prec = tp / (tp + fp) || 0;
+  const rec = tp / (tp + fn) || 0;
+  const f1 = prec + rec > 0 ? 2 * prec * rec / (prec + rec) : 0;
+  const acc = (tp + tn) / dots.length;
+
+  makeMetricCards(document.getElementById('thresh-metrics'), [
+    { label: 'Accuracy', value: acc.toFixed(3) },
+    { label: 'Precision', value: prec.toFixed(3) },
+    { label: 'Recall', value: rec.toFixed(3) },
+    { label: 'F1 Score', value: f1.toFixed(3), active: true },
+  ]);
+}
+
+// Drag threshold
+let dragging = false;
+threshLine.addEventListener('mousedown', () => dragging = true);
+threshLine.addEventListener('touchstart', () => dragging = true, { passive: true });
+
+function moveThreshold(clientX) {
+  const rect = dotPlot.getBoundingClientRect();
+  threshold = clamp((clientX - rect.left) / rect.width, 0.02, 0.98);
+  renderDotPlot();
+}
+
+document.addEventListener('mousemove', e => { if (dragging) moveThreshold(e.clientX); });
+document.addEventListener('touchmove', e => { if (dragging) moveThreshold(e.touches[0].clientX); }, { passive: true });
+document.addEventListener('mouseup', () => dragging = false);
+document.addEventListener('touchend', () => dragging = false);
+dotPlot.addEventListener('click', e => { moveThreshold(e.clientX); });
+
+renderDotPlot();
+
+
+// ─── 3. Precision-Recall Scenarios ──────────────────────────────
+const prCanvas = document.getElementById('pr-canvas');
+const prCtx = prCanvas.getContext('2d');
+const prThreshSlider = document.getElementById('pr-thresh-slider');
+let prScenario = 'spam';
+
+const scenarios = {
+  spam: {
+    title: 'Spam Filter',
+    desc: '<strong>Precision matters more.</strong> A false positive means a legitimate email goes to spam &mdash; the user misses it. A false negative just means some spam gets through, which is annoying but not harmful. Aim for high precision to avoid blocking good emails.',
+    posMean: 0.7, negMean: 0.3, posStd: 0.2, negStd: 0.15,
+  },
+  cancer: {
+    title: 'Cancer Screening',
+    desc: '<strong>Recall matters more.</strong> A false negative means missing a cancer case &mdash; potentially fatal. A false positive means extra testing, which is stressful but not dangerous. Aim for high recall to catch every case.',
+    posMean: 0.6, negMean: 0.35, posStd: 0.18, negStd: 0.18,
+  },
+  fraud: {
+    title: 'Fraud Detection',
+    desc: '<strong>Both matter, but recall edges out.</strong> Missing fraud (FN) means financial loss. Too many false alarms (FP) overwhelm investigators. F1 score is a good balance here, but lean toward recall since missed fraud is costly.',
+    posMean: 0.65, negMean: 0.3, posStd: 0.22, negStd: 0.17,
+  }
+};
+
+function generatePRData(scenario) {
+  const s = scenarios[scenario];
+  const data = [];
+  for (let i = 0; i < 200; i++) {
+    data.push({ score: clamp(gaussianRandom(s.posMean, s.posStd), 0.001, 0.999), actual: 1 });
+  }
+  for (let i = 0; i < 200; i++) {
+    data.push({ score: clamp(gaussianRandom(s.negMean, s.negStd), 0.001, 0.999), actual: 0 });
+  }
+  return data;
+}
+
+let prData = generatePRData('spam');
+
+function drawPRCurve() {
+  const t = prThreshSlider.value / 100;
+  document.getElementById('pr-thresh-val').textContent = t.toFixed(2);
+
+  const w = prCanvas.width, h = prCanvas.height;
+  const pad = 50;
+  prCtx.clearRect(0, 0, w, h);
+
+  // Compute P-R curve
+  const thresholds = [];
+  for (let i = 0; i <= 100; i++) thresholds.push(i / 100);
+
+  const prPoints = thresholds.map(th => {
+    let tp = 0, fp = 0, fn = 0;
+    prData.forEach(d => {
+      const pred = d.score >= th ? 1 : 0;
+      if (pred === 1 && d.actual === 1) tp++;
+      else if (pred === 1 && d.actual === 0) fp++;
+      else if (pred === 0 && d.actual === 1) fn++;
+    });
+    const prec = tp / (tp + fp) || 0;
+    const rec = tp / (tp + fn) || 0;
+    return { prec, rec, th };
+  });
+
+  // Axes
+  prCtx.strokeStyle = 'rgba(255,255,255,0.1)';
+  prCtx.lineWidth = 1;
+  prCtx.beginPath();
+  prCtx.moveTo(pad, pad);
+  prCtx.lineTo(pad, h - pad);
+  prCtx.lineTo(w - pad, h - pad);
+  prCtx.stroke();
+
+  // Grid
+  for (let i = 0; i <= 4; i++) {
+    const v = i / 4;
+    const x = pad + v * (w - 2 * pad);
+    const y = h - pad - v * (h - 2 * pad);
+    prCtx.fillStyle = 'rgba(255,255,255,0.3)';
+    prCtx.font = '11px Inter, sans-serif';
+    prCtx.textAlign = 'center';
+    prCtx.fillText(v.toFixed(1), x, h - pad + 18);
+    prCtx.textAlign = 'right';
+    prCtx.fillText(v.toFixed(1), pad - 8, y + 4);
+    prCtx.strokeStyle = 'rgba(255,255,255,0.04)';
+    prCtx.beginPath();
+    prCtx.moveTo(pad, y);
+    prCtx.lineTo(w - pad, y);
+    prCtx.moveTo(x, pad);
+    prCtx.lineTo(x, h - pad);
+    prCtx.stroke();
+  }
+
+  // Labels
+  prCtx.fillStyle = 'rgba(255,255,255,0.5)';
+  prCtx.textAlign = 'center';
+  prCtx.fillText('Recall', w / 2, h - 8);
+  prCtx.save();
+  prCtx.translate(14, h / 2);
+  prCtx.rotate(-Math.PI / 2);
+  prCtx.fillText('Precision', 0, 0);
+  prCtx.restore();
+
+  // Curve
+  prCtx.beginPath();
+  prCtx.strokeStyle = var_accent;
+  prCtx.lineWidth = 2.5;
+  let started = false;
+  prPoints.forEach(p => {
+    const x = pad + p.rec * (w - 2 * pad);
+    const y = h - pad - p.prec * (h - 2 * pad);
+    if (!started) { prCtx.moveTo(x, y); started = true; }
+    else prCtx.lineTo(x, y);
+  });
+  prCtx.stroke();
+
+  // Current threshold dot
+  let tp = 0, fp = 0, fn = 0, tn = 0;
+  prData.forEach(d => {
+    const pred = d.score >= t ? 1 : 0;
+    if (pred === 1 && d.actual === 1) tp++;
+    else if (pred === 1 && d.actual === 0) fp++;
+    else if (pred === 0 && d.actual === 1) fn++;
+    else tn++;
+  });
+
+  const prec = tp / (tp + fp) || 0;
+  const rec = tp / (tp + fn) || 0;
+  const f1 = prec + rec > 0 ? 2 * prec * rec / (prec + rec) : 0;
+
+  const cx = pad + rec * (w - 2 * pad);
+  const cy = h - pad - prec * (h - 2 * pad);
+
+  prCtx.beginPath();
+  prCtx.arc(cx, cy, 7, 0, Math.PI * 2);
+  prCtx.fillStyle = '#fff';
+  prCtx.fill();
+  prCtx.beginPath();
+  prCtx.arc(cx, cy, 4, 0, Math.PI * 2);
+  prCtx.fillStyle = var_accent;
+  prCtx.fill();
+
+  makeMetricCards(document.getElementById('pr-metrics'), [
+    { label: 'Precision', value: prec.toFixed(3), active: prScenario === 'spam' },
+    { label: 'Recall', value: rec.toFixed(3), active: prScenario === 'cancer' },
+    { label: 'F1 Score', value: f1.toFixed(3), active: prScenario === 'fraud' },
+  ]);
+
+  document.getElementById('pr-info').innerHTML = scenarios[prScenario].desc;
+}
+
+const var_accent = '#6c8aff';
+
+document.querySelectorAll('#pr-tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#pr-tabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    prScenario = btn.dataset.scenario;
+    prData = generatePRData(prScenario);
+    drawPRCurve();
+  });
+});
+
+prThreshSlider.addEventListener('input', drawPRCurve);
+drawPRCurve();
+
+
+// ─── 4. ROC / AUC ──────────────────────────────────────────────
+const rocCanvas = document.getElementById('roc-canvas');
+const rocCtx = rocCanvas.getContext('2d');
+const sepSlider = document.getElementById('sep-slider');
+
+function normalCDF(x) {
+  const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741;
+  const a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+  const sign = x < 0 ? -1 : 1;
+  x = Math.abs(x) / Math.sqrt(2);
+  const t = 1.0 / (1.0 + p * x);
+  const y = 1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+  return 0.5 * (1.0 + sign * y);
+}
+
+function drawROC() {
+  const sep = sepSlider.value / 10;
+  document.getElementById('sep-val').textContent = sep.toFixed(1);
+
+  const w = rocCanvas.width, h = rocCanvas.height;
+  const pad = 50;
+  rocCtx.clearRect(0, 0, w, h);
+
+  // Compute ROC points
+  const points = [];
+  for (let i = 0; i <= 200; i++) {
+    const thresh = -4 + i * 8 / 200;
+    const fpr = 1 - normalCDF(thresh);
+    const tpr = 1 - normalCDF(thresh - sep);
+    points.push({ fpr, tpr });
+  }
+  points.sort((a, b) => a.fpr - b.fpr);
+
+  // Compute AUC via trapezoidal
+  let auc = 0;
+  for (let i = 1; i < points.length; i++) {
+    const dx = points[i].fpr - points[i - 1].fpr;
+    const avgY = (points[i].tpr + points[i - 1].tpr) / 2;
+    auc += dx * avgY;
+  }
+  document.getElementById('auc-val').textContent = clamp(auc, 0, 1).toFixed(3);
+
+  // Axes
+  rocCtx.strokeStyle = 'rgba(255,255,255,0.1)';
+  rocCtx.lineWidth = 1;
+  rocCtx.beginPath();
+  rocCtx.moveTo(pad, pad);
+  rocCtx.lineTo(pad, h - pad);
+  rocCtx.lineTo(w - pad, h - pad);
+  rocCtx.stroke();
+
+  // Grid
+  for (let i = 0; i <= 4; i++) {
+    const v = i / 4;
+    const x = pad + v * (w - 2 * pad);
+    const y = h - pad - v * (h - 2 * pad);
+    rocCtx.fillStyle = 'rgba(255,255,255,0.3)';
+    rocCtx.font = '11px Inter, sans-serif';
+    rocCtx.textAlign = 'center';
+    rocCtx.fillText(v.toFixed(1), x, h - pad + 18);
+    rocCtx.textAlign = 'right';
+    rocCtx.fillText(v.toFixed(1), pad - 8, y + 4);
+    rocCtx.strokeStyle = 'rgba(255,255,255,0.04)';
+    rocCtx.beginPath();
+    rocCtx.moveTo(pad, y); rocCtx.lineTo(w - pad, y);
+    rocCtx.moveTo(x, pad); rocCtx.lineTo(x, h - pad);
+    rocCtx.stroke();
+  }
+
+  // Labels
+  rocCtx.fillStyle = 'rgba(255,255,255,0.5)';
+  rocCtx.textAlign = 'center';
+  rocCtx.fillText('False Positive Rate', w / 2, h - 8);
+  rocCtx.save();
+  rocCtx.translate(14, h / 2);
+  rocCtx.rotate(-Math.PI / 2);
+  rocCtx.fillText('True Positive Rate', 0, 0);
+  rocCtx.restore();
+
+  // Diagonal
+  rocCtx.setLineDash([5, 5]);
+  rocCtx.strokeStyle = 'rgba(255,255,255,0.15)';
+  rocCtx.lineWidth = 1;
+  rocCtx.beginPath();
+  rocCtx.moveTo(pad, h - pad);
+  rocCtx.lineTo(w - pad, pad);
+  rocCtx.stroke();
+  rocCtx.setLineDash([]);
+
+  // AUC fill
+  rocCtx.beginPath();
+  rocCtx.moveTo(pad, h - pad);
+  points.forEach(p => {
+    rocCtx.lineTo(pad + p.fpr * (w - 2 * pad), h - pad - p.tpr * (h - 2 * pad));
+  });
+  rocCtx.lineTo(w - pad, h - pad);
+  rocCtx.closePath();
+  rocCtx.fillStyle = 'rgba(108, 138, 255, 0.12)';
+  rocCtx.fill();
+
+  // ROC curve
+  rocCtx.beginPath();
+  rocCtx.strokeStyle = var_accent;
+  rocCtx.lineWidth = 2.5;
+  points.forEach((p, i) => {
+    const x = pad + p.fpr * (w - 2 * pad);
+    const y = h - pad - p.tpr * (h - 2 * pad);
+    if (i === 0) rocCtx.moveTo(x, y);
+    else rocCtx.lineTo(x, y);
+  });
+  rocCtx.stroke();
+
+  // Random classifier label
+  rocCtx.fillStyle = 'rgba(255,255,255,0.2)';
+  rocCtx.font = '10px Inter, sans-serif';
+  rocCtx.textAlign = 'center';
+  rocCtx.save();
+  rocCtx.translate(w / 2 + 20, h / 2 + 16);
+  rocCtx.rotate(-Math.atan2(-(h - 2 * pad), w - 2 * pad));
+  rocCtx.fillText('random classifier', 0, 0);
+  rocCtx.restore();
+}
+
+sepSlider.addEventListener('input', drawROC);
+drawROC();
+
+
+// ─── 5. Regression ──────────────────────────────────────────────
+const regCanvas = document.getElementById('reg-canvas');
+const regCtx = regCanvas.getContext('2d');
+const noiseSlider = document.getElementById('noise-slider');
+const slopeSlider = document.getElementById('slope-slider');
+const interceptSlider = document.getElementById('intercept-slider');
+let regView = 'mse';
+
+// Generate fixed x values, recompute y with true line y=x
+const regN = 40;
+const regXs = [];
+for (let i = 0; i < regN; i++) regXs.push(0.5 + Math.random() * 4);
+
+let regSeed = [];
+for (let i = 0; i < regN; i++) regSeed.push(gaussianRandom(0, 1));
+
+function drawRegression() {
+  const noise = noiseSlider.value / 100;
+  const slope = slopeSlider.value / 20;
+  const intercept = interceptSlider.value / 10;
+  document.getElementById('noise-val').textContent = noise.toFixed(2);
+  document.getElementById('slope-val').textContent = slope.toFixed(2);
+  document.getElementById('intercept-val').textContent = intercept.toFixed(2);
+
+  // True data: y = x + noise
+  const trueYs = regXs.map((x, i) => x + regSeed[i] * noise * 2);
+  // Model: y = slope * x + intercept
+  const predYs = regXs.map(x => slope * x + intercept);
+
+  // Metrics
+  const n = regN;
+  let mse = 0, mae = 0;
+  const errors = trueYs.map((y, i) => y - predYs[i]);
+  errors.forEach(e => { mse += e * e; mae += Math.abs(e); });
+  mse /= n;
+  mae /= n;
+  const rmse = Math.sqrt(mse);
+
+  const meanY = trueYs.reduce((a, b) => a + b, 0) / n;
+  let ssTot = 0, ssRes = 0;
+  trueYs.forEach((y, i) => { ssTot += (y - meanY) ** 2; ssRes += (y - predYs[i]) ** 2; });
+  const r2 = 1 - ssRes / (ssTot || 1);
+
+  makeMetricCards(document.getElementById('reg-metrics'), [
+    { label: 'MSE', value: mse.toFixed(3), active: regView === 'mse' },
+    { label: 'MAE', value: mae.toFixed(3), active: regView === 'mae' },
+    { label: 'RMSE', value: rmse.toFixed(3) },
+    { label: 'R\u00B2', value: r2.toFixed(3), active: regView === 'r2' },
+  ]);
+
+  const explanations = {
+    mse: '<strong>MSE (Mean Squared Error)</strong> squares each residual, heavily penalizing large errors. The red squares show the squared error for each point &mdash; larger squares = bigger penalty.',
+    mae: '<strong>MAE (Mean Absolute Error)</strong> takes the absolute value of each residual. Unlike MSE, it treats all errors linearly &mdash; a 2x larger error gets 2x the penalty, not 4x.',
+    r2: '<strong>R&sup2; (Coefficient of Determination)</strong> measures how much variance in the data is explained by the model. R&sup2;=1 means perfect fit, R&sup2;=0 means no better than predicting the mean. Can go negative if the model is worse than the mean.',
+  };
+  document.getElementById('reg-explanation').innerHTML = explanations[regView];
+
+  // Draw
+  const w = regCanvas.width, h = regCanvas.height;
+  const pad = 50;
+  regCtx.clearRect(0, 0, w, h);
+
+  const allYs = [...trueYs, ...predYs];
+  const xMin = 0, xMax = 5.5;
+  const yMin = Math.min(...allYs, 0) - 0.5;
+  const yMax = Math.max(...allYs) + 0.5;
+
+  function tx(x) { return pad + (x - xMin) / (xMax - xMin) * (w - 2 * pad); }
+  function ty(y) { return h - pad - (y - yMin) / (yMax - yMin) * (h - 2 * pad); }
+
+  // Grid
+  regCtx.strokeStyle = 'rgba(255,255,255,0.05)';
+  regCtx.lineWidth = 1;
+  for (let v = Math.ceil(xMin); v <= xMax; v++) {
+    regCtx.beginPath();
+    regCtx.moveTo(tx(v), pad);
+    regCtx.lineTo(tx(v), h - pad);
+    regCtx.stroke();
+  }
+  for (let v = Math.ceil(yMin); v <= yMax; v++) {
+    regCtx.beginPath();
+    regCtx.moveTo(pad, ty(v));
+    regCtx.lineTo(w - pad, ty(v));
+    regCtx.stroke();
+  }
+
+  // Axes
+  regCtx.strokeStyle = 'rgba(255,255,255,0.15)';
+  regCtx.beginPath();
+  regCtx.moveTo(pad, pad);
+  regCtx.lineTo(pad, h - pad);
+  regCtx.lineTo(w - pad, h - pad);
+  regCtx.stroke();
+
+  // Regression line
+  regCtx.strokeStyle = var_accent;
+  regCtx.lineWidth = 2;
+  regCtx.beginPath();
+  regCtx.moveTo(tx(xMin), ty(slope * xMin + intercept));
+  regCtx.lineTo(tx(xMax), ty(slope * xMax + intercept));
+  regCtx.stroke();
+
+  // Mean line for R²
+  if (regView === 'r2') {
+    regCtx.setLineDash([4, 4]);
+    regCtx.strokeStyle = 'rgba(251, 191, 36, 0.5)';
+    regCtx.lineWidth = 1.5;
+    regCtx.beginPath();
+    regCtx.moveTo(tx(xMin), ty(meanY));
+    regCtx.lineTo(tx(xMax), ty(meanY));
+    regCtx.stroke();
+    regCtx.setLineDash([]);
+
+    regCtx.fillStyle = 'rgba(251, 191, 36, 0.6)';
+    regCtx.font = '10px Inter, sans-serif';
+    regCtx.fillText('mean(y)', tx(xMax) - 40, ty(meanY) - 6);
+  }
+
+  // Residuals
+  trueYs.forEach((y, i) => {
+    const px = tx(regXs[i]);
+    const pyTrue = ty(y);
+    const pyPred = ty(predYs[i]);
+    const err = Math.abs(y - predYs[i]);
+
+    if (regView === 'mse') {
+      // Draw squares
+      const sidePixels = Math.abs(pyTrue - pyPred);
+      regCtx.fillStyle = 'rgba(248, 113, 113, 0.15)';
+      regCtx.strokeStyle = 'rgba(248, 113, 113, 0.4)';
+      regCtx.lineWidth = 1;
+      const top = Math.min(pyTrue, pyPred);
+      regCtx.fillRect(px, top, sidePixels, sidePixels);
+      regCtx.strokeRect(px, top, sidePixels, sidePixels);
+    } else if (regView === 'mae') {
+      regCtx.strokeStyle = 'rgba(248, 113, 113, 0.5)';
+      regCtx.lineWidth = 2;
+      regCtx.beginPath();
+      regCtx.moveTo(px, pyTrue);
+      regCtx.lineTo(px, pyPred);
+      regCtx.stroke();
+    } else if (regView === 'r2') {
+      // Show residual vs mean
+      regCtx.strokeStyle = 'rgba(108, 138, 255, 0.3)';
+      regCtx.lineWidth = 1;
+      regCtx.beginPath();
+      regCtx.moveTo(px, pyTrue);
+      regCtx.lineTo(px, pyPred);
+      regCtx.stroke();
+    }
+  });
+
+  // Data points
+  trueYs.forEach((y, i) => {
+    const px = tx(regXs[i]);
+    const py = ty(y);
+    regCtx.beginPath();
+    regCtx.arc(px, py, 4.5, 0, Math.PI * 2);
+    regCtx.fillStyle = 'rgba(74, 222, 128, 0.8)';
+    regCtx.fill();
+    regCtx.strokeStyle = 'rgba(74, 222, 128, 0.4)';
+    regCtx.lineWidth = 1;
+    regCtx.stroke();
+  });
+}
+
+document.querySelectorAll('#reg-tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#reg-tabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    regView = btn.dataset.view;
+    drawRegression();
+  });
+});
+
+[noiseSlider, slopeSlider, interceptSlider].forEach(s => s.addEventListener('input', drawRegression));
+drawRegression();
+
+
+// ─── 6. Log Loss ────────────────────────────────────────────────
+const llCanvas = document.getElementById('logloss-canvas');
+const llCtx = llCanvas.getContext('2d');
+const llProbSlider = document.getElementById('ll-prob-slider');
+let llActual = 1;
+
+function drawLogLoss() {
+  const prob = llProbSlider.value / 100;
+  document.getElementById('ll-prob-val').textContent = prob.toFixed(2);
+
+  const loss = llActual === 1
+    ? -Math.log(prob + 1e-15)
+    : -Math.log(1 - prob + 1e-15);
+  document.getElementById('ll-val').textContent = loss.toFixed(3);
+
+  const w = llCanvas.width, h = llCanvas.height;
+  const pad = 50;
+  llCtx.clearRect(0, 0, w, h);
+
+  // Axes
+  llCtx.strokeStyle = 'rgba(255,255,255,0.15)';
+  llCtx.lineWidth = 1;
+  llCtx.beginPath();
+  llCtx.moveTo(pad, pad);
+  llCtx.lineTo(pad, h - pad);
+  llCtx.lineTo(w - pad, h - pad);
+  llCtx.stroke();
+
+  // Grid + labels
+  const maxLoss = 5;
+  for (let i = 0; i <= 4; i++) {
+    const v = i / 4;
+    const x = pad + v * (w - 2 * pad);
+    llCtx.fillStyle = 'rgba(255,255,255,0.3)';
+    llCtx.font = '11px Inter, sans-serif';
+    llCtx.textAlign = 'center';
+    llCtx.fillText(v.toFixed(1), x, h - pad + 18);
+
+    llCtx.strokeStyle = 'rgba(255,255,255,0.04)';
+    llCtx.beginPath();
+    llCtx.moveTo(x, pad);
+    llCtx.lineTo(x, h - pad);
+    llCtx.stroke();
+  }
+  for (let i = 0; i <= 5; i++) {
+    const v = i;
+    const y = h - pad - (v / maxLoss) * (h - 2 * pad);
+    llCtx.fillStyle = 'rgba(255,255,255,0.3)';
+    llCtx.textAlign = 'right';
+    llCtx.fillText(v.toFixed(0), pad - 8, y + 4);
+    llCtx.strokeStyle = 'rgba(255,255,255,0.04)';
+    llCtx.beginPath();
+    llCtx.moveTo(pad, y);
+    llCtx.lineTo(w - pad, y);
+    llCtx.stroke();
+  }
+
+  llCtx.fillStyle = 'rgba(255,255,255,0.5)';
+  llCtx.textAlign = 'center';
+  llCtx.fillText('Predicted Probability', w / 2, h - 8);
+  llCtx.save();
+  llCtx.translate(14, h / 2);
+  llCtx.rotate(-Math.PI / 2);
+  llCtx.fillText('Loss', 0, 0);
+  llCtx.restore();
+
+  function tx(p) { return pad + p * (w - 2 * pad); }
+  function ty(l) { return h - pad - (l / maxLoss) * (h - 2 * pad); }
+
+  // Loss curve for actual=1 (green)
+  llCtx.beginPath();
+  llCtx.strokeStyle = llActual === 1 ? var_accent : 'rgba(108,138,255,0.2)';
+  llCtx.lineWidth = llActual === 1 ? 2.5 : 1.5;
+  for (let i = 1; i <= 200; i++) {
+    const p = i / 200;
+    const l = -Math.log(p);
+    const x = tx(p), y = ty(Math.min(l, maxLoss));
+    if (i === 1) llCtx.moveTo(x, y);
+    else llCtx.lineTo(x, y);
+  }
+  llCtx.stroke();
+
+  // Loss curve for actual=0 (red)
+  llCtx.beginPath();
+  llCtx.strokeStyle = llActual === 0 ? var_accent : 'rgba(108,138,255,0.2)';
+  llCtx.lineWidth = llActual === 0 ? 2.5 : 1.5;
+  for (let i = 0; i < 200; i++) {
+    const p = i / 200;
+    const l = -Math.log(1 - p + 1e-15);
+    const x = tx(p), y = ty(Math.min(l, maxLoss));
+    if (i === 0) llCtx.moveTo(x, y);
+    else llCtx.lineTo(x, y);
+  }
+  llCtx.stroke();
+
+  // Labels for curves
+  llCtx.font = '10px Inter, sans-serif';
+  llCtx.fillStyle = llActual === 1 ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.2)';
+  llCtx.textAlign = 'left';
+  llCtx.fillText('actual = 1', tx(0.06), ty(2.3));
+  llCtx.fillStyle = llActual === 0 ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.2)';
+  llCtx.textAlign = 'right';
+  llCtx.fillText('actual = 0', tx(0.94), ty(2.3));
+
+  // Current point
+  const cx = tx(prob);
+  const cy = ty(Math.min(loss, maxLoss));
+  llCtx.beginPath();
+  llCtx.arc(cx, cy, 7, 0, Math.PI * 2);
+  llCtx.fillStyle = '#fff';
+  llCtx.fill();
+  llCtx.beginPath();
+  llCtx.arc(cx, cy, 4, 0, Math.PI * 2);
+  llCtx.fillStyle = loss > 1 ? '#f87171' : var_accent;
+  llCtx.fill();
+
+  // Dashed line to point
+  llCtx.setLineDash([3, 3]);
+  llCtx.strokeStyle = 'rgba(255,255,255,0.15)';
+  llCtx.lineWidth = 1;
+  llCtx.beginPath();
+  llCtx.moveTo(cx, h - pad);
+  llCtx.lineTo(cx, cy);
+  llCtx.stroke();
+  llCtx.setLineDash([]);
+}
+
+document.querySelectorAll('#ll-tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#ll-tabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    llActual = +btn.dataset.actual;
+    drawLogLoss();
+  });
+});
+
+llProbSlider.addEventListener('input', drawLogLoss);
+drawLogLoss();
+
+</script>
+</body>
+</html>

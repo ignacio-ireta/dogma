@@ -1,0 +1,17 @@
+id: cml/logistic-regression
+title: Logistic regression
+tier: A
+requires: [cml/sigmoid-and-log-odds, cml/maximum-likelihood-and-map, cml/chain-rule]
+aliases: [logit regression, binary logistic regression, log-loss, Bernoulli regression, IRLS, L2 logistic regression, separation]
+objectives:
+  - Fit an L2-regularised logistic regression by Newton's method, with the intercept unpenalised
+  - Derive the gradient X^T(p - y) and the Hessian, and state why the penalised loss is convex
+  - Explain perfect separation, what the penalty does to it, and what a calibrated fit guarantees
+minutes: {lesson: 12, practice: 35, min_viable: 20}
+interview_angle: >-
+  Expect the gradient in one line, why the loss is convex, what happens to coefficients under separation and
+  why a penalty fixes it, and the fact that the fitted probabilities average to the base rate.
+sources:
+  - "book: Murphy, Probabilistic Machine Learning: An Introduction, chapter on logistic regression"
+  - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter on linear methods for classification"
+status: reviewed

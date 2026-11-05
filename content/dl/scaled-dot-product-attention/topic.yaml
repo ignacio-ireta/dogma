@@ -1,0 +1,14 @@
+id: dl/scaled-dot-product-attention
+title: "Scaled dot-product attention"
+tier: A
+requires: ['cml/softmax', 'cml/matrix-multiplication']
+aliases: ['attention', 'softmax attention', 'QK transpose V', 'dot-product attention', 'attention weights']
+objectives:
+  - Implement masked scaled dot-product attention with named shapes and return output and weights
+  - Explain the sqrt(d_k) scaling from the variance of a dot product
+  - Use the max-subtraction softmax and boolean masks without producing NaN for large logits or fully masked rows
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: Derive the 1/sqrt(d_k) scale, state the shapes of Q, K, V and the weights, and explain why a fully masked row needs a policy.
+sources:
+  - "paper: Vaswani et al. 2017, Attention Is All You Need (arXiv:1706.03762), sections 3.2.1 and 3.2.3"
+status: reviewed

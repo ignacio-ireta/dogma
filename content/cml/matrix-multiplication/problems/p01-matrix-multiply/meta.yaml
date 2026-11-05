@@ -1,0 +1,13 @@
+id: cml/matrix-multiplication/p01-matrix-multiply
+version: 2
+title: Matrix multiplication
+language: python
+runtime: py-numpy
+entry: matmul
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}  # float oracle; integer cases are compared exactly
+banned_imports: [numpy]
+timeout_s: 30
+status: reviewed

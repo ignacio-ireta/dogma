@@ -1,0 +1,32 @@
+cards:
+  - id: cml/bernoulli-binomial-and-poisson#1
+    type: qa
+    front: What are the mean and variance of a Bernoulli(p) variable?
+    back: Mean p and variance p(1 − p).
+  - id: cml/bernoulli-binomial-and-poisson#2
+    type: qa
+    front: What are the mean and variance of a Binomial(n, p) count?
+    back: Mean np and variance np(1 − p).
+  - id: cml/bernoulli-binomial-and-poisson#3
+    type: cloze
+    text: "Poisson(λ) has mean {{c1::λ}} and variance {{c2::λ}}."
+  - id: cml/bernoulli-binomial-and-poisson#4
+    type: qa
+    front: Which limit turns a binomial into a Poisson?
+    back: n → ∞ with np = λ held fixed, so p = λ/n → 0.
+  - id: cml/bernoulli-binomial-and-poisson#5
+    type: qa
+    front: What is overdispersion in count data?
+    back: Variance larger than the mean.
+  - id: cml/bernoulli-binomial-and-poisson#6
+    type: qa
+    front: Why compute the binomial pmf with lgamma for large n?
+    back: C(n, k) and p^k overflow or underflow float64 for large n. lgamma keeps the work in log space, where the terms add.
+  - id: cml/bernoulli-binomial-and-poisson#7
+    type: qa
+    front: For which p is the Bernoulli variance largest, and what is it there?
+    back: p = 1/2, where the variance is 1/4.
+  - id: cml/bernoulli-binomial-and-poisson#8
+    type: qa
+    front: For a sum of n independent Bernoulli(p) trials, how do the mean and variance relate to one trial?
+    back: Both add across the trials, giving n p and n p(1 − p).

@@ -1,0 +1,14 @@
+# Problem metadata (CONTENT_SPEC §6.2).
+id: llm/incremental-decoding-with-a-kv-cache/p01-cached-causal-attention-step
+version: 2                       # bump when tests, tolerances or the contract change
+title: "Cached causal attention step"
+language: python                 # python | sql
+runtime: py-torch                # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: cached_attention_step     # the function or class name the learner implements
+difficulty: medium
+minutes: 25
+core: true                       # p01 is the core problem: exactly one per topic
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [torch.nn]       # covers torch.nn.MultiheadAttention and torch.nn.functional
+timeout_s: 30
+status: reviewed

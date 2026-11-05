@@ -1,0 +1,13 @@
+id: llm/pass-k-and-majority-voting/p01-unbiased-pass-at-k
+version: 1
+title: Unbiased pass@k from n samples
+language: python
+runtime: py-stdlib
+entry: pass_at_k
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 1.0e-12, rtol: 1.0e-9}
+banned_imports: [math.comb, scipy, numpy]
+timeout_s: 30
+status: reviewed

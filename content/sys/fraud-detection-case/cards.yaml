@@ -1,0 +1,16 @@
+cards:
+  - id: sys/fraud-detection-case#1
+    type: qa
+    front: Why is accuracy a poor metric for a 0.05 percent fraud rate?
+    back: A model that approves everything is almost perfectly accurate and catches no fraud.
+  - id: sys/fraud-detection-case#2
+    type: cloze
+    text: "The threshold for a fraud model is set by {{c1::the review team's daily capacity}}, not by a default cutoff."
+  - id: sys/fraud-detection-case#3
+    type: qa
+    front: What is the job of the first stage in a two-stage fraud system?
+    back: Decide the obvious cases quickly, within the latency budget, so only borderline cases reach the model.
+  - id: sys/fraud-detection-case#4
+    type: qa
+    front: Why do declines need per-decision reasons?
+    back: Customers and regulators must be able to read why a transaction was declined.

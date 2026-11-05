@@ -1,0 +1,13 @@
+id: llm/llm-as-judge-and-agreement-with-humans/p02-debiased-win-rate
+version: 1
+title: Position-debiased pairwise win rate
+language: python
+runtime: py-stdlib
+entry: debiased_win_rate
+difficulty: easy
+minutes: 15
+core: false
+tolerance: {atol: 1.0e-12, rtol: 1.0e-12}
+banned_imports: [statistics.fmean, statistics.mean]
+timeout_s: 30
+status: reviewed

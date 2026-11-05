@@ -1,0 +1,51 @@
+# Topic answer rubric, version 1. Scores a topic's interview answer (interview.md, Q-n) that the
+# learner gives written or aloud. Self-scoring is the source of truth (ADR-0007).
+#
+# A topic becomes interview-ready when it is retained and an interview answer scores at least
+# ready_score on every dimension. Rubrics are data: a wording change here is a new version.
+id: topic-answer
+version: 1
+kind: topic-answer
+title: Topic interview answer
+scale:
+  low: 1
+  high: 4
+  anchors:
+    1: Missing, wrong or unrelated to the question.
+    2: Partly there, with the key point muddled or absent.
+    3: Right and clear, with only small gaps.
+    4: Right, precise and complete, with nothing to correct.
+ready_score: 3
+dimensions:
+  - id: accuracy
+    title: Accuracy
+    question: Is the core claim correct and specific?
+    anchors:
+      1: The claim is wrong, vague, or missing.
+      2: The idea is there but muddled, or a fact is wrong.
+      3: The core idea is correct and stated plainly. Minor gaps are fine.
+      4: Correct and precise, with the key formula or fact and no slips.
+  - id: structure
+    title: Structure
+    question: "Does it follow the 60-second shape: direct answer, the reason, then where it is used?"
+    anchors:
+      1: No clear shape. It wanders.
+      2: Some order, but the answer comes late or the reason is missing.
+      3: Direct answer first, then a reason, then a use. Easy to follow.
+      4: The same shape, tight, and the follow-ups it invites are anticipated.
+  - id: trade-offs
+    title: Trade-offs
+    question: "Does it name caveats: when it breaks, what it costs, and what it is compared with?"
+    anchors:
+      1: No caveat, or the caveat is wrong.
+      2: One caveat, stated without a condition or cost.
+      3: At least one real caveat with the condition under which it applies.
+      4: Caveats with their conditions, costs and a stated alternative.
+  - id: communication
+    title: Communication
+    question: Is it concise, plain and calm, with jargon used only where it helps?
+    anchors:
+      1: Hard to follow, or padded with jargon.
+      2: Understandable, but long or hedged throughout.
+      3: Concise and plain. A senior colleague would follow it without effort.
+      4: Concise, plain and confident. Each sentence earns its place.

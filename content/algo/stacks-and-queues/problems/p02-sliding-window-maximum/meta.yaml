@@ -1,0 +1,13 @@
+id: algo/stacks-and-queues/p02-sliding-window-maximum
+version: 2                      # bump when tests, tolerances or the contract change
+title: Largest value in each window
+language: python
+runtime: py-stdlib
+entry: sliding_window_max
+difficulty: medium
+minutes: 25
+core: false
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: the answers are input values
+banned_imports: [heapq]         # a heap gives O(n log n); the deque is the point of this problem
+timeout_s: 30
+status: verified

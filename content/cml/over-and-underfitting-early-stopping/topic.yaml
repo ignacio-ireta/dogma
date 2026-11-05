@@ -1,0 +1,20 @@
+id: cml/over-and-underfitting-early-stopping
+title: Over- and underfitting, early stopping
+tier: A
+requires: [cml/k-fold-cross-validation, cml/ridge-regression-and-weight-decay]
+aliases: [overfitting, underfitting, capacity, validation curve, learning curve, early stopping, patience, regularisation, validation set, generalisation gap]
+objectives:
+  - Diagnose under- and overfitting from the train and validation curves, and name the fix that matches each signature
+  - Implement the early-stopping rule with patience and min_delta, using the exact improvement and stop semantics
+  - Explain why the validation set is used up by selection and early stopping, and report a separate test score
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "The model is great on training data and poor on validation. What do you do?" and "How do you decide when to stop
+  training?" The strong answer reads the gap and the level of both curves, chooses between capacity and regularisation
+  as the fix, and reports a test score that the tuning never touched.
+sources:
+  - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter 7 (model assessment and selection)"
+  - "book: Bishop, Pattern Recognition and Machine Learning, section 1.1 (polynomial curve fitting and over-fitting)"
+  - "book: Goodfellow, Bengio & Courville, Deep Learning, chapter 7 (regularization, early stopping)"
+  - "paper: Prechelt 1998, Early stopping - but when? (Neural Networks: Tricks of the Trade)"
+status: reviewed

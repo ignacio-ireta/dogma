@@ -1,0 +1,15 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: sql/sql-streaks-gaps-and-islands
+title: "SQL streaks (gaps and islands)"
+tier: A
+requires: ['sql/sql-lag-and-lead', 'sql/sql-running-totals-and-frames']
+aliases: [streak, gaps and islands, islands, consecutive days, run length, date minus row_number, gap flag, longest streak, retention streak, DISTINCT days]
+objectives:
+  - "Group consecutive active days into islands with the date-minus-row_number trick, after removing duplicate days"
+  - "Find each island with LAG-based gap flags and a running SUM, and state which one to use when"
+  - "Return one longest streak per user with its start and end dates, and break ties by the earliest start"
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: "Say what makes two days consecutive, remove duplicate days first, then group by a key that is constant inside each run. Name the tie rule before writing the query."
+sources:
+  - "book: Molinaro & de Graaf, SQL Cookbook (2nd ed.), finding islands and gaps in sequences"
+status: reviewed

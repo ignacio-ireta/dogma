@@ -1,0 +1,14 @@
+id: algo/bfs-and-dfs-on-graphs-and-grids
+title: "BFS and DFS on graphs and grids"
+tier: A
+requires: [algo/stacks-and-queues, algo/hash-maps-and-sets]
+aliases: [breadth-first search, depth-first search, BFS, DFS, flood fill, connected components, islands, grid shortest path, iterative DFS]
+objectives:
+  - Find the shortest path length in an unweighted grid with BFS, marking cells when they are enqueued
+  - Count connected components with an explicit stack, so deep grids do not hit the recursion limit
+  - Explain why DFS finds a path but not the shortest one, and why a missing visited set blows up on grids
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: "Say what the search answers before choosing the traversal. Shortest unweighted distance is BFS with visited-on-enqueue; reachability and components are DFS or BFS with a visited set."
+sources:
+  - "book: Cormen, Leiserson, Rivest & Stein, Introduction to Algorithms (3rd ed.), chapter on elementary graph algorithms (breadth-first and depth-first search)"
+status: reviewed

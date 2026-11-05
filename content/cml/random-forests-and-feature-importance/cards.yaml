@@ -1,0 +1,28 @@
+cards:
+  - id: cml/random-forests-and-feature-importance#1
+    type: qa
+    front: "What is the probability that a given row is missing from one bootstrap sample of size n?"
+    back: "(1 - 1/n)^n, which tends to 1/e, about 0.368. Those rows are out of bag for that tree."
+  - id: cml/random-forests-and-feature-importance#2
+    type: qa
+    front: "What extra step does a random forest add to bagging?"
+    back: "A random subset of features is considered at each split. This decorrelates the trees."
+  - id: cml/random-forests-and-feature-importance#3
+    type: cloze
+    text: "The variance of an average of B trees with variance sigma squared and pairwise correlation rho is rho sigma squared plus {{c1::(1 - rho) sigma squared / B}}."
+  - id: cml/random-forests-and-feature-importance#4
+    type: qa
+    front: "How is the out-of-bag error computed?"
+    back: "Each training row is predicted only by the trees whose bootstrap sample excluded it. Averaging those errors estimates test error."
+  - id: cml/random-forests-and-feature-importance#5
+    type: qa
+    front: "Why is impurity (MDI) importance biased toward continuous and high-cardinality features?"
+    back: "Those features offer many cut points, so some look useful by chance. Impurity is measured on training data, so the bias is not corrected."
+  - id: cml/random-forests-and-feature-importance#6
+    type: qa
+    front: "What is permutation importance, and where should it be measured?"
+    back: "The drop in score when one column is shuffled. Measure it on held-out data, so memorisation does not count as importance."
+  - id: cml/random-forests-and-feature-importance#7
+    type: qa
+    front: "What happens to permutation importance when a feature is duplicated?"
+    back: "Credit can be shared with the copy, reducing each copy's measured drop. The amount depends on the fitted model; check the group together."

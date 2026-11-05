@@ -1,0 +1,28 @@
+cards:
+  - id: cml/maximum-likelihood-and-map#1
+    type: qa
+    front: What is the difference between a likelihood and a probability?
+    back: "A probability is a function of the data for fixed parameters. A likelihood is a function of the parameters for fixed data."
+  - id: cml/maximum-likelihood-and-map#2
+    type: qa
+    front: What is the MAP estimate in terms of the log-likelihood and the prior?
+    back: "argmax over θ of ℓ(θ) + log p(θ). The MAP adds the log-prior to the log-likelihood."
+  - id: cml/maximum-likelihood-and-map#3
+    type: qa
+    front: What is the MLE of the Gaussian covariance matrix, and what is its expectation?
+    back: "Σ̂ = (1/n) Σᵢ (xᵢ − μ̂)(xᵢ − μ̂)ᵀ. Its expectation is ((n − 1)/n) Σ, so it is biased low."
+  - id: cml/maximum-likelihood-and-map#4
+    type: cloze
+    text: "The unbiased sample covariance divides by {{c1::n − 1}} instead of n."
+  - id: cml/maximum-likelihood-and-map#5
+    type: qa
+    front: With a Beta(α, β) prior and k successes in n trials, what is the posterior?
+    back: "Beta(α + k, β + n − k)."
+  - id: cml/maximum-likelihood-and-map#6
+    type: qa
+    front: What does a Gaussian prior on regression weights correspond to in the penalised loss?
+    back: "An L2 penalty, which is ridge regression (weight decay) in MAP form."
+  - id: cml/maximum-likelihood-and-map#7
+    type: qa
+    front: What assumption makes the log-likelihood a sum over the rows?
+    back: "The rows are independent and identically distributed given θ, so the joint likelihood is a product over rows."

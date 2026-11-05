@@ -1,0 +1,26 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: llm/moe-top-k-routing#1
+    type: qa
+    front: What does the router compute for each token before choosing experts?
+    back: "Logits z = x W_r of shape (T, E), then a softmax over the E experts to get probabilities p."
+  - id: llm/moe-top-k-routing#2
+    type: qa
+    front: How are the k gates of a token computed in the renormalised rule used in this topic?
+    back: "Each chosen gate is its probability divided by the sum of the k chosen probabilities, so the gates sum to 1."
+  - id: llm/moe-top-k-routing#3
+    type: cloze
+    text: "Expert capacity is the number of tokens an expert can process per batch group; a token over the limit is {{c1::dropped for that expert}}."
+  - id: llm/moe-top-k-routing#4
+    type: qa
+    front: What is the Switch-style load-balancing loss?
+    back: "alpha * E * sum_i f_i * P_i, where f_i is the fraction of tokens whose top-1 expert is i and P_i is the mean router probability for i."
+  - id: llm/moe-top-k-routing#5
+    type: qa
+    front: Why does the load-balancing loss carry no gradient through f?
+    back: "f counts top-1 choices, which is a discrete step. The gradient reaches the router through P."
+  - id: llm/moe-top-k-routing#6
+    type: qa
+    front: How do total and active parameters differ in an MoE layer with E experts and top-k routing?
+    back: "Total is shared plus E expert blocks. Active per token is shared plus k expert blocks."

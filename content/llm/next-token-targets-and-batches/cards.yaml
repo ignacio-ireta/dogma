@@ -1,0 +1,20 @@
+cards:
+  - id: llm/next-token-targets-and-batches#1
+    type: qa
+    front: What are the targets for a causal LM given inputs x?
+    back: The inputs shifted left by one token. Target y_t is the token after x_t.
+  - id: llm/next-token-targets-and-batches#2
+    type: qa
+    front: With a stream of N tokens and block size T, how many full blocks does a window of T+1 with stride T give?
+    back: floor((N - 1) / T). The N - 1 - B*T leftover tokens are dropped.
+  - id: llm/next-token-targets-and-batches#3
+    type: qa
+    front: Why does packing need an EOS between documents?
+    back: It marks where a document ends, so the model learns to stop and does not run one document into the next.
+  - id: llm/next-token-targets-and-batches#4
+    type: qa
+    front: What does packing without a document mask allow?
+    back: Attention across document boundaries inside one block, so tokens read unrelated earlier context.
+  - id: llm/next-token-targets-and-batches#5
+    type: cloze
+    text: "Packing blocks of T+1 tokens with stride T makes consecutive blocks share {{c1::one}} token."

@@ -1,0 +1,20 @@
+id: cml/maximum-likelihood-and-map
+title: Maximum likelihood and MAP
+tier: A
+requires: [cml/normal-and-multivariate-gaussian, cml/bernoulli-binomial-and-poisson]
+aliases: [MLE, MAP, log-likelihood, likelihood, maximum a posteriori, Beta-Bernoulli, regularisation as a prior]
+objectives:
+  - Derive the Gaussian maximum-likelihood mean and covariance, and state the bias of the covariance estimate
+  - Explain the difference between likelihood and probability, and write the MAP estimate as MLE plus log-prior
+  - Compute the Beta-Bernoulli MLE and MAP, including the boundary cases where the posterior mode sits on 0 or 1
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "Derive the Gaussian MLE and say why its covariance is biased." and "How does MAP differ from MLE, and what does a
+  Gaussian prior do?" A strong answer derives the estimator, names the (n-1)/n bias, and links the Gaussian prior to L2.
+sources:
+  - "book: Bishop, Pattern Recognition and Machine Learning, chapter on probability distributions (maximum likelihood for the Gaussian)"
+  - "book: Murphy, Probabilistic Machine Learning: An Introduction, chapter on maximum likelihood and MAP estimation"
+  - "book: Goodfellow, Bengio & Courville, Deep Learning, chapter on machine learning basics (maximum likelihood, MAP)"
+  - "source: library-refresh/01-Mathematics/07-Information-Theory/2003 -- MacKay -- Coding, Bayesian Inference and Learning as Compression -- Study Note.md"
+  - "source: library-refresh/02-AI-ML/00-Overviews-and-Books/2006 -- Bishop -- Probabilistic Models, Latent Variables and Approximate Inference -- Study Note.md"
+status: reviewed

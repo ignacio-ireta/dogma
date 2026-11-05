@@ -1,0 +1,18 @@
+id: algo/stacks-and-queues
+title: Stacks and queues
+tier: A
+requires: [algo/two-pointers-and-sliding-windows]
+aliases: [stack, queue, LIFO, FIFO, deque, monotonic stack, monotonic queue, next greater element, previous greater element, stock span, valid parentheses, sliding window maximum, amortised O(n)]
+objectives:
+  - Choose a stack (last in, first out) or a queue (first in, first out) from the item the answer needs next
+  - Solve next-greater questions with a monotonic stack, and argue O(n) by counting pushes and pops
+  - Use a deque at both ends for a sliding-window extreme, and check the front index for expiry on every step
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "Next greater element", "days until a warmer day", and "maximum of each sliding window" are common screen
+  questions. The interviewer checks whether you pick the structure from the order the answer needs, whether the
+  pop loop is a while, and whether you can argue O(n) by counting pushes and pops.
+sources:
+  - "book: Cormen et al., Introduction to Algorithms (3rd ed.), section 10.1, simple array-based stacks and queues"
+  - "book: Skiena, The Algorithm Design Manual (2nd ed.), chapter 3, data structures (stacks and queues)"
+status: verified

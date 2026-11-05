@@ -1,0 +1,14 @@
+id: cml/rolling-statistics-stationarity-and-autocorrelation/p02-acf
+version: 4
+title: Sample autocorrelation (biased estimator)
+language: python
+runtime: py-data
+entry: acf
+difficulty: medium
+minutes: 25
+core: false
+# Autocorrelations are bounded by 1 in magnitude, so an absolute tolerance of 1e-9 is tight.
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [statsmodels, pandas]
+timeout_s: 30
+status: reviewed

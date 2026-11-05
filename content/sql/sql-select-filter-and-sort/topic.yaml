@@ -1,0 +1,18 @@
+id: sql/sql-select-filter-and-sort
+title: SQL select, filter and sort
+tier: A
+requires: []
+aliases: [WHERE, ORDER BY, LIMIT, filtering rows, sorting results, NULL semantics, three-valued logic, top N]
+objectives:
+  - Write a SELECT that filters with WHERE, handling NULLs and half-open date ranges correctly
+  - Sort with a deterministic tie-breaker and cut the result with LIMIT
+  - Explain the logical evaluation order of a SELECT and why WHERE cannot use output aliases in standard SQL
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  The first SQL screen question is usually a top-N query. The interviewer checks three things:
+  which rows qualify, what NULL does to a filter, and whether the answer is deterministic when
+  values tie.
+sources:
+  - "book: Beaulieu, Learning SQL (3rd ed.), chapters on querying and filtering"
+  - "book: Molinaro, SQL Cookbook (O'Reilly, 2005), chapters on retrieving and sorting records"
+status: reviewed

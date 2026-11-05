@@ -1,0 +1,17 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: llm/negative-log-likelihood-and-perplexity
+title: "Negative log-likelihood and perplexity"
+tier: A
+requires: ['cml/cross-entropy', 'cml/softmax', 'llm/next-token-targets-and-batches']
+aliases: [NLL, perplexity, log-likelihood, nats, bits per token, masked mean, log-sum-exp, ignore_index]
+objectives:
+  - Compute per-token negative log-likelihood from (B, T, V) logits with a numerically stable log-softmax, and average it over the non-ignored tokens only
+  - Derive perplexity as exp of the mean NLL in nats, and convert between nats and bits
+  - Explain why perplexity depends on the tokenizer and how to compare models on a common unit
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: Explain what the masked mean NLL is, why perplexity is its exponential, why the mean is over tokens and not over the batch, and why two models with different tokenizers cannot be compared by perplexity alone.
+sources:
+  - "book: Jurafsky and Martin, Speech and Language Processing, chapter on language modeling and perplexity"
+  - "corpus: library-papers/radford-gpt2-2019.pdf.md p.4"
+  - "corpus: library-papers/radford-gpt2-2019.pdf.md p.5"
+status: reviewed

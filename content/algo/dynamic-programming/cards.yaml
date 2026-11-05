@@ -1,0 +1,24 @@
+cards:
+  - id: algo/dynamic-programming#1
+    type: qa
+    front: What are the five parts that define a dynamic program?
+    back: "State, base case, transition, order of evaluation, and answer location."
+  - id: algo/dynamic-programming#2
+    type: qa
+    front: What is the difference between top-down memoisation and bottom-up tabulation?
+    back: "Memoisation recurses from the answer and caches states as they are reached; tabulation loops over states in a dependency-respecting order."
+  - id: algo/dynamic-programming#3
+    type: qa
+    front: Why can greedy fail for minimum coins?
+    back: "Taking the largest coin first can use more coins than the optimum, e.g. 4 + 1 + 1 against 3 + 3 for amount 6 with coins 1, 3, 4."
+  - id: algo/dynamic-programming#4
+    type: qa
+    front: How do you recover the choices behind a DP optimum?
+    back: "Store a back-pointer with each minimum or maximum, then walk back from the answer state."
+  - id: algo/dynamic-programming#5
+    type: qa
+    front: Why choose a sentinel above any real answer for unreachable states?
+    back: "A real answer can equal 0 or be small, so a sentinel that is too low would be mistaken for a valid count."
+  - id: algo/dynamic-programming#6
+    type: cloze
+    text: "LCS over two strings uses a state of {{c1::two prefix lengths}}, and its table has (n+1) x (m+1) entries."

@@ -1,0 +1,27 @@
+cards:
+  - id: cml/handling-class-imbalance#1
+    type: cloze
+    text: "For calibrated probabilities, flag a sample when p > {{c1::c_FP / (c_FP + c_FN)}}."
+  - id: cml/handling-class-imbalance#2
+    type: qa
+    front: "What is the balanced class weight of class c?"
+    back: "n / (k * n_c): the sample size over the number of classes times the count of class c."
+  - id: cml/handling-class-imbalance#3
+    type: qa
+    front: "Under a prior shift, what do the odds of the positive class get multiplied by?"
+    back: "The ratio r of the deployment prior odds to the training prior odds. The likelihood ratio is unchanged."
+  - id: cml/handling-class-imbalance#4
+    type: qa
+    front: "Why does resampling change the probabilities a model outputs?"
+    back: "It changes the training base rate, so the probabilities refer to the resampled base rate, not the deployment one."
+  - id: cml/handling-class-imbalance#5
+    type: cloze
+    text: "SMOTE creates synthetic points by interpolating between a minority sample and one of its {{c1::k nearest minority neighbours}}."
+  - id: cml/handling-class-imbalance#6
+    type: qa
+    front: "Where must resampling happen in a validation pipeline?"
+    back: "Only inside the training folds. Resampling before the split leaks information into validation."
+  - id: cml/handling-class-imbalance#7
+    type: qa
+    front: "Which number should you report first when positives are rare?"
+    back: "Average precision against the prevalence baseline, or recall at a precision floor. Not accuracy."

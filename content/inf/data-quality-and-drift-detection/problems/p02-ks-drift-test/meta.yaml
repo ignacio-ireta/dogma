@@ -1,0 +1,15 @@
+id: inf/data-quality-and-drift-detection/p02-ks-drift-test
+version: 3
+title: Two-sample Kolmogorov-Smirnov drift check
+language: python
+runtime: py-data
+entry: ks_drift
+difficulty: medium
+minutes: 25
+core: false
+# The statistic is an exact count of ECDF gaps, so it is compared with scipy at 1e-12. The p-value is
+# the limiting series, compared with scipy's kstwobign at 1e-9.
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [scipy.stats.ks_2samp, scipy.stats.kstest]
+timeout_s: 30
+status: reviewed

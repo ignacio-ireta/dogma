@@ -1,0 +1,13 @@
+id: rl/mdps-and-discounted-returns/p01-discounted-returns
+version: 1
+title: "Discounted returns for an episode"
+language: python
+runtime: py-numpy
+entry: discounted_returns
+difficulty: easy
+minutes: 20
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [scipy.signal]
+timeout_s: 30
+status: reviewed

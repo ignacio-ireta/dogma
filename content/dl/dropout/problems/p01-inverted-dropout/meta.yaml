@@ -1,0 +1,13 @@
+id: dl/dropout/p01-inverted-dropout
+version: 3
+title: Seeded inverted dropout
+language: python
+runtime: py-numpy
+entry: dropout
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 1.0e-8, rtol: 1.0e-6}
+banned_imports: [torch, jax, tensorflow, sklearn]
+timeout_s: 30
+status: reviewed

@@ -1,0 +1,13 @@
+id: cml/chain-rule/p01-mse-sigmoid-gradient
+version: 2
+title: Sigmoid MSE gradient
+language: python
+runtime: py-numpy
+entry: mse_sigmoid_grad
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}  # the deep-saturation check uses rtol 1e-9 against a Decimal reference
+banned_imports: [scipy.special.expit, torch, jax, autograd]
+timeout_s: 30
+status: reviewed

@@ -1,0 +1,19 @@
+id: cml/xgboost-second-order-objective
+title: XGBoost second-order objective
+tier: A
+requires: [cml/adaboost-and-gradient-boosting, cml/taylor-expansion-and-newtons-method, cml/choosing-a-tree-split]
+aliases: [XGBoost, second-order boosting, Newton boosting, split gain, leaf weight, regularised tree boosting, histogram split finding, sparsity-aware split]
+objectives:
+  - Derive the optimal leaf weight -G/(H+lambda) and the split gain from the second-order Taylor expansion of the loss
+  - Compute the gradient and Hessian of the logistic loss with a numerically stable sigmoid
+  - Explain what lambda, gamma and min_child_weight each regularise, and how a split chooses a default direction for missing values
+minutes: {lesson: 12, practice: 40, min_viable: 20}
+interview_angle: >-
+  Expect the leaf weight and gain from G and H, what lambda and gamma do, and why boosted trees are the default for tabular data rather than a neural network.
+sources:
+  - "paper: Chen & Guestrin 2016, XGBoost: A Scalable Tree Boosting System (arXiv:1603.02754); leaf weight, score and gain are Eqs. 5-7 in section 2.2, checked against the PDF"
+  - "paper: Friedman 2001, Greedy Function Approximation: A Gradient Boosting Machine (Annals of Statistics 29(5))"
+  - "library: AI-ML/05-Classification/Chen Guestrin XGBoost 2016.md"
+  - "library: AI-ML/05-Classification/Friedman Gradient Boosting 2001.md"
+  - "library: AI-ML/05-Classification/XGBoost Interview Bridge.md"
+status: reviewed

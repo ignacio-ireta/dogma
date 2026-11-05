@@ -1,0 +1,32 @@
+cards:
+  - id: sql/sql-subqueries-and-ctes#1
+    type: qa
+    front: A scalar subquery returns no rows. What value does the outer query see?
+    back: NULL.
+  - id: sql/sql-subqueries-and-ctes#2
+    type: qa
+    front: A scalar subquery returns two rows. What happens?
+    back: A run-time error. A scalar subquery can return only one row.
+  - id: sql/sql-subqueries-and-ctes#3
+    type: qa
+    front: A NOT IN subquery returns one NULL among its values. How many outer rows does WHERE keep?
+    back: None. Each comparison with the NULL is NULL, and WHERE keeps only TRUE.
+  - id: sql/sql-subqueries-and-ctes#4
+    type: qa
+    front: Does NOT EXISTS have the same NULL trap as NOT IN?
+    back: No. It asks whether a matching row exists, and a NULL in the subquery matches nothing.
+  - id: sql/sql-subqueries-and-ctes#5
+    type: qa
+    front: What is a correlated subquery?
+    back: A subquery that refers to a column of the outer query, so its value can differ for each outer row.
+  - id: sql/sql-subqueries-and-ctes#6
+    type: cloze
+    text: "A CTE names an intermediate result. It makes each stage {{c1::easy to check on its own}}, and it does not change the answer."
+  - id: sql/sql-subqueries-and-ctes#7
+    type: qa
+    front: Can a window function appear in a WHERE clause?
+    back: No. Compute it in a CTE or a subquery, then filter on it in the outer query.
+  - id: sql/sql-subqueries-and-ctes#8
+    type: qa
+    front: What does AVG return for a group whose values are all NULL?
+    back: NULL. AVG skips NULL values, so with none left there is nothing to average.

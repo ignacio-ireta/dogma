@@ -1,0 +1,13 @@
+id: cml/over-and-underfitting-early-stopping/p01-early-stopping
+version: 3                      # bump when tests, tolerances or the contract change
+title: Early-stopping point
+language: python                # python | sql
+runtime: py-numpy               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: early_stopping           # the function or class name the learner implements
+difficulty: medium
+minutes: 20
+core: true                      # p01 is the core problem: exactly one per topic
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [keras, tensorflow]  # the callbacks that would solve the task; named in problem.md
+timeout_s: 30
+status: reviewed

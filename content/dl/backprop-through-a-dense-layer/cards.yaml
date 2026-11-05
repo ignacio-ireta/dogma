@@ -1,0 +1,21 @@
+cards:
+- id: dl/backprop-through-a-dense-layer#1
+  type: qa
+  front: What is the dense-layer input gradient for upstream G?
+  back: G @ W.T, retaining one row per example.
+- id: dl/backprop-through-a-dense-layer#2
+  type: qa
+  front: What is the dense-layer weight gradient?
+  back: X.T @ G, summing contributions over the batch.
+- id: dl/backprop-through-a-dense-layer#3
+  type: qa
+  front: Why does the bias gradient sum over examples?
+  back: The same bias vector was broadcast into every output row.
+- id: dl/backprop-through-a-dense-layer#4
+  type: qa
+  front: When must dense backward avoid dividing by batch size?
+  back: When the upstream gradient already includes the loss mean.
+- id: dl/backprop-through-a-dense-layer#5
+  type: qa
+  front: How do you finite-difference a dense VJP?
+  back: Perturb inputs of sum((X@W+b)*G) while holding G fixed.

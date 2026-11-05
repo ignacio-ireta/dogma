@@ -1,0 +1,13 @@
+id: llm/bpe-merge-training/p01-learn-bpe-merges
+version: 2                      # bump when tests, tolerances or the contract change
+title: Learn BPE merges from word counts
+language: python
+runtime: py-stdlib
+entry: train_bpe_merges
+difficulty: medium
+minutes: 20
+core: true
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: integer counts and string merge lists
+banned_imports: []                  # no BPE library is installed; the contract forbids them in words
+timeout_s: 30
+status: reviewed

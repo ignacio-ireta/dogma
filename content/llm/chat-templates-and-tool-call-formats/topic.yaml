@@ -1,0 +1,17 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: llm/chat-templates-and-tool-call-formats
+title: "Chat templates and tool-call formats"
+tier: A
+requires: [llm/word-and-character-tokenizers]
+aliases: [chat template, special tokens, generation prompt, role markers, function calling, tool call, tool result, JSON schema validation]
+objectives:
+  - "Render a list of role-tagged messages into one template string, with the generation prompt, and reject invalid turn orders with named errors"
+  - "Explain why a template that differs from training can lower quality without an error (practical guidance), and how reserved markers keep turn boundaries exact"
+  - "Parse one structured tool call from assistant text and validate its name, required keys and types against a parameter schema"
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: "Say that a chat model sees one flat string, so the template is part of the model. A tool call is structured text that must be parsed and checked against the schema before anything runs."
+sources:
+  - "library: AI-ML/12-Frontiers/Ouyang InstructGPT RLHF 2022.md"
+  - "library: AI-ML/12-Frontiers/Brown GPT-3 2020.md"
+  - "corpus: library-papers/deepseek-v4-2026.pdf.md p.30 (tool-call schema, vendor report)"
+status: reviewed

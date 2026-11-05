@@ -1,0 +1,18 @@
+id: cml/matrix-shapes-and-transpose
+title: Matrix shapes and transpose
+tier: A
+requires: [cml/vector-operations]
+aliases: [transpose, shape mismatch, row vector, column vector, rows and columns, reshape]
+objectives:
+  - Track the (rows, columns) shape of every matrix and vector in a computation before running it
+  - Implement the transpose of a rectangular nested-list matrix, rejecting ragged rows
+  - Explain why (AB)ᵀ = BᵀAᵀ, and why a 1-D array has no row or column orientation
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  Shape reasoning is what interviewers probe when you write or debug a linear layer, an
+  attention block or a batch of embeddings. Stating every shape out loud is the signal.
+sources:
+  - "book: Strang, Introduction to Linear Algebra (5th ed.), ch. 2 'Solving Linear Equations' (transposes)"
+  - "book: Deisenroth, Faisal & Ong, Mathematics for Machine Learning, §2.2 (matrices: multiplication and transpose)"
+  - "book: Goodfellow, Bengio & Courville, Deep Learning, §2.1 (scalars, vectors, matrices and tensors)"
+status: reviewed

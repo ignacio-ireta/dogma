@@ -1,0 +1,18 @@
+id: sys/rag-system-design-case
+title: RAG system design
+tier: B
+kind: case
+requires: []
+aliases: [RAG, retrieval augmented generation, document assistant, enterprise search, question answering over documents, grounded answers, internal knowledge base]
+objectives:
+  - "Separate retrieval failure from generation failure, and measure each with its own metric"
+  - "Design access control and document freshness into retrieval, not into a review step after generation"
+  - "Build an evaluation set with stated size, sampling and judging rules, and tie the launch to decision value"
+minutes: {lesson: 12, practice: 40, min_viable: 15}
+interview_angle: "How do you know a document assistant is ready to launch, and what do you change after a permissions leak?"
+sources:
+  - "library: AI-ML/12-Frontiers/Lewis Retrieval-Augmented Generation 2020.md"
+  - "paper: Lewis et al. 2020, Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (arXiv:2005.11401)"
+  - "book: Manning, Raghavan & Schütze, Introduction to Information Retrieval, chapter 8"
+  - "source: interview-prep/mock-interviews/SCORING_RUBRIC.md"
+status: reviewed

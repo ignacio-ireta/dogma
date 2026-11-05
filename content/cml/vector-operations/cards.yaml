@@ -1,0 +1,24 @@
+cards:
+  - id: cml/vector-operations#1
+    type: qa
+    front: What is the orthogonal projection of a onto b?
+    back: "proj_b(a) = (a·b / b·b) · b — a scalar multiple of b."
+  - id: cml/vector-operations#2
+    type: cloze
+    text: "a·b = ‖a‖ ‖b‖ {{c1::cos θ}}"
+  - id: cml/vector-operations#3
+    type: qa
+    front: What does a negative dot product tell you about two vectors?
+    back: The angle between them is more than 90°, so they point in roughly opposite directions.
+  - id: cml/vector-operations#4
+    type: qa
+    front: The residual a − proj_b(a) has what relationship to b?
+    back: It is orthogonal to b (their dot product is 0).
+  - id: cml/vector-operations#5
+    type: qa
+    front: Projecting a data vector onto the all-ones vector gives what?
+    back: Its mean repeated in every entry. The residual is the centred data.
+  - id: cml/vector-operations#6
+    type: qa
+    front: Why is the projection onto b undefined when b is the zero vector?
+    back: The coefficient divides by b·b = 0. There is no line to project onto.

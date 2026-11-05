@@ -1,0 +1,26 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: llm/grpo-and-its-variants#1
+    type: qa
+    front: How is a GRPO advantage computed for one response in a group?
+    back: (r_i - mean of the group) / (population std of the group + eps).
+  - id: llm/grpo-and-its-variants#2
+    type: qa
+    front: What is the population standard deviation of a group of G rewards?
+    back: The square root of the mean squared deviation from the group mean, dividing by G, not G - 1.
+  - id: llm/grpo-and-its-variants#3
+    type: qa
+    front: What advantage does a group with all-equal rewards get, and why does it matter?
+    back: Zero for every response, because the standard deviation is zero. The prompt gives no policy gradient.
+  - id: llm/grpo-and-its-variants#4
+    type: cloze
+    text: "GRPO replaces PPO's learned critic with the {{c1::mean reward of the sampled group}} as the baseline."
+  - id: llm/grpo-and-its-variants#5
+    type: qa
+    front: What does the clipped surrogate do when a positive-advantage token's ratio exceeds 1 + eps?
+    back: The clipped term wins the min, so the token's gradient is zero.
+  - id: llm/grpo-and-its-variants#6
+    type: qa
+    front: Which KL estimator does R1 use in GRPO, and why is it non-negative?
+    back: k3 = pi_ref/pi - log(pi_ref/pi) - 1, which is non-negative because log r is at most r - 1.

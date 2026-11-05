@@ -1,0 +1,19 @@
+id: dl/counting-network-parameters/p01-count-dense-parameters
+version: 2
+title: Count a dense network without allocating it
+language: python
+runtime: py-stdlib
+entry: count_dense_parameters
+difficulty: medium
+minutes: 20
+core: true
+tolerance:
+  atol: 1.0e-09
+  rtol: 1.0e-09
+banned_imports:
+- numpy
+- torch
+- jax
+- sklearn
+timeout_s: 30
+status: reviewed

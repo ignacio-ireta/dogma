@@ -1,0 +1,28 @@
+cards:
+  - id: cml/entropy-and-mutual-information#1
+    type: qa
+    front: "What is the entropy of a discrete distribution, in words?"
+    back: "The average surprise of its outcomes: the expectation of minus log p, in bits for base 2."
+  - id: cml/entropy-and-mutual-information#2
+    type: qa
+    front: "How is an outcome with probability 0 treated in the entropy sum?"
+    back: "Its term is 0 log 0 = 0, so it adds nothing. Compute the log only over the positive entries."
+  - id: cml/entropy-and-mutual-information#3
+    type: cloze
+    text: "The entropy of a uniform distribution over k outcomes, in bits, is {{c1::log2 k}}, the largest value for k outcomes."
+  - id: cml/entropy-and-mutual-information#4
+    type: qa
+    front: "How does cross-entropy split into entropy and KL divergence?"
+    back: "H(p, q) = H(p) + KL(p || q). KL is non-negative and zero only when q equals p."
+  - id: cml/entropy-and-mutual-information#5
+    type: qa
+    front: "Write mutual information in terms of entropies."
+    back: "I(X;Y) = H(X) + H(Y) - H(X,Y). It is zero exactly when X and Y are independent."
+  - id: cml/entropy-and-mutual-information#6
+    type: qa
+    front: "Why is the information gain of a tree split a mutual information?"
+    back: "IG = H(Y) - sum over split sides of p(s) H(Y given S = s), which is I(S;Y)."
+  - id: cml/entropy-and-mutual-information#7
+    type: qa
+    front: "Why can mutual information detect a dependence that Pearson correlation misses?"
+    back: "It depends on the whole joint distribution, not only the linear part. For Y = X squared with X symmetric, the correlation is 0 but I is positive."

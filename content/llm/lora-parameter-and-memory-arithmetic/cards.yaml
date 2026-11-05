@@ -1,0 +1,20 @@
+cards:
+  - id: llm/lora-parameter-and-memory-arithmetic#1
+    type: qa
+    front: "How many trainable parameters does a LoRA adapter hold on one d_in by d_out matrix?"
+    back: "rank * (d_in + d_out)."
+  - id: llm/lora-parameter-and-memory-arithmetic#2
+    type: qa
+    front: "Why does the LoRA trainable count scale with the layer count L?"
+    back: "Each block repeats the same adapted matrices, so the per-block count is multiplied by L."
+  - id: llm/lora-parameter-and-memory-arithmetic#3
+    type: qa
+    front: "How many bytes of fp32 Adam state does one trainable number need?"
+    back: "8 bytes: two fp32 moments of 4 bytes each."
+  - id: llm/lora-parameter-and-memory-arithmetic#4
+    type: qa
+    front: "Does LoRA reduce the memory of the frozen base weights?"
+    back: "No. It reduces gradients and optimizer states. The base is still stored; quantizing it reduces that term."
+  - id: llm/lora-parameter-and-memory-arithmetic#5
+    type: cloze
+    text: "Full fine-tuning with fp32 Adam costs {{c1::16}} bytes per parameter: weights, gradients and two moments."

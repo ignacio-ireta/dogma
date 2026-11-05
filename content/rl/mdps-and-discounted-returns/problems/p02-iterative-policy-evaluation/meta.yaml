@@ -1,0 +1,16 @@
+id: rl/mdps-and-discounted-returns/p02-iterative-policy-evaluation
+version: 2
+title: "Iterative policy evaluation for a tabular MDP"
+language: python
+runtime: py-numpy
+entry: iterative_policy_evaluation
+difficulty: medium
+minutes: 25
+core: false
+# The iteration stops when the max-norm change is below tol, so the error to the fixed point is at
+# most gamma/(1-gamma) * tol. The hidden tests use tol = 1e-10 with gamma <= 0.9 (bound 9e-9) and
+# tol = 1e-12 for gamma = 0.99. The 1e-8 atol and rtol cover that bound.
+tolerance: {atol: 1.0e-8, rtol: 1.0e-8}
+banned_imports: [numpy.linalg, scipy.linalg]
+timeout_s: 30
+status: reviewed

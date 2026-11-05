@@ -1,0 +1,6 @@
+- when_asked: How many trucks are there, and how many stations can one truck cover in an evening?
+  answer: Eight trucks, each covering about 25 stations between 17:00 and 21:00.
+- when_asked: What does an empty-station hour cost?
+  answer: About 40 lost trips per station-hour, and about 2 dollars of margin per trip.
+- when_asked: Is there any data on events or closures?
+  answer: Event calendars exist but are kept in a separate system, updated a few days ahead.

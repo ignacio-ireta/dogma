@@ -1,0 +1,15 @@
+id: inf/floating-point-formats/p02-round-to-nearest-even
+version: 2                      # bump when tests, tolerances or the contract change
+title: "Round a float to a low-precision format"
+language: python                # python | sql
+runtime: py-numpy               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: round_to_format          # the function or class name the learner implements
+difficulty: medium
+minutes: 20
+core: false                     # p02 is optional: the core problem is p01
+# Rounding is exact arithmetic on binary grids: the result is a dyadic rational that float64
+# holds exactly, so the comparisons use == with no tolerance.
+tolerance: {atol: 0.0, rtol: 0.0}
+banned_imports: [numpy, struct]   # numpy's casts and struct's packing would round for you
+timeout_s: 30
+status: reviewed

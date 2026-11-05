@@ -1,0 +1,13 @@
+id: inf/prefill-vs-decode-bottlenecks/p01-serving-step-times
+version: 3                      # bump when tests, tolerances or the contract change
+title: Prefill and decode step times from first-order traffic and FLOPs
+language: python
+runtime: py-stdlib
+entry: serving_step_times
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 0.0, rtol: 1.0e-9}   # relative only: times are floats with no absolute slack
+banned_imports: [numpy]
+timeout_s: 30
+status: reviewed

@@ -1,0 +1,92 @@
+/* Original SVG artwork. Palette belongs to the decorative Memphis system, not grading states. */
+.study-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.study-art .art-ink {
+  fill: var(--color-outline);
+}
+.study-art .art-white {
+  fill: var(--color-surface);
+}
+.study-art .art-coral {
+  fill: var(--color-coral);
+}
+.study-art .art-coral-soft {
+  fill: var(--color-coral-soft);
+}
+.study-art .art-violet {
+  fill: var(--color-violet);
+}
+.study-art .art-violet-soft {
+  fill: var(--color-violet-soft);
+}
+.study-art .art-cobalt {
+  fill: var(--color-cobalt);
+}
+.study-art .art-cobalt-soft {
+  fill: var(--color-cobalt-soft);
+}
+.study-art .art-mint {
+  fill: var(--color-mint-soft);
+}
+.study-art .art-skin {
+  fill: var(--color-art-umber);
+}
+.study-art .art-peach {
+  fill: var(--color-art-peach);
+}
+
+.study-art .art-line,
+.study-art .art-outlined {
+  stroke: var(--color-outline);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.study-art .art-line {
+  fill: none;
+}
+.study-art .art-bold-line {
+  stroke-width: 5;
+}
+.study-art .art-dashed {
+  stroke-dasharray: 4 6;
+}
+.study-art .art-muted-line {
+  stroke: var(--color-hero-line);
+}
+.study-art .art-white-line,
+.study-art .art-stitch {
+  stroke: var(--color-surface);
+}
+.study-art .art-coral-line {
+  stroke: var(--color-coral);
+}
+.study-art .art-cobalt-line {
+  stroke: var(--color-cobalt);
+}
+.study-art .art-violet-line {
+  stroke: var(--color-violet);
+}
+
+.problem__illustration {
+  width: clamp(10rem, 22vw, 15rem);
+  flex: 0 0 auto;
+}
+
+@media (max-width: 48rem) {
+  .problem__header {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+
+  .problem__illustration {
+    width: 9rem;
+  }
+}

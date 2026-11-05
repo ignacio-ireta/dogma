@@ -1,0 +1,15 @@
+id: sql/pandas-merge-and-reshape/p01-monthly-revenue-by-region
+version: 2                     # bump when tests, tolerances or the contract change
+title: Monthly revenue by region
+language: python
+runtime: py-data
+entry: monthly_revenue_by_region
+difficulty: medium
+minutes: 20
+core: true
+# Revenue sums are of 2-decimal amounts or of exact quarter multiples in the random tests, so the
+# tolerance only absorbs summation order. It is tight on purpose: no value here needs looseness.
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: []
+timeout_s: 30
+status: reviewed

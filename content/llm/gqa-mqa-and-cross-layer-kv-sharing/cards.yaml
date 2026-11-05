@@ -1,0 +1,24 @@
+cards:
+  - id: llm/gqa-mqa-and-cross-layer-kv-sharing#1
+    type: qa
+    front: "Which key/value head does query head h read under GQA with group size g?"
+    back: "Key/value head floor(h / g). The groups are contiguous, so heads 0..g-1 share head 0."
+  - id: llm/gqa-mqa-and-cross-layer-kv-sharing#2
+    type: cloze
+    text: "Cache values per token per layer are 2 * {{c1::n_kv * d_h}}, where n_kv is the number of key/value heads."
+  - id: llm/gqa-mqa-and-cross-layer-kv-sharing#3
+    type: qa
+    front: "What is the constraint between n_heads and n_kv_heads in GQA?"
+    back: "n_kv_heads must divide n_heads. Group size is n_heads / n_kv_heads."
+  - id: llm/gqa-mqa-and-cross-layer-kv-sharing#4
+    type: qa
+    front: What is MQA in terms of n_kv_heads?
+    back: "Multi-query attention is the case n_kv_heads = 1. Every query head reads the same key and value head."
+  - id: llm/gqa-mqa-and-cross-layer-kv-sharing#5
+    type: qa
+    front: "A 32-head model with 8 KV heads and 4096 tokens in bf16: how much smaller is its cache than MHA's?"
+    back: "Four times smaller (group size 4). The cache scales with n_kv_heads, so the ratio is n_kv / n_h = 1/4."
+  - id: llm/gqa-mqa-and-cross-layer-kv-sharing#6
+    type: qa
+    front: "Why does the modulo mapping h % n_kv_heads fail silently?"
+    back: "The shapes are unchanged, so nothing errors. It pairs query heads with the wrong keys and values, and only a value check finds it."

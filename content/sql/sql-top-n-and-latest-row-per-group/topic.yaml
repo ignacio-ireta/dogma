@@ -1,0 +1,14 @@
+id: sql/sql-top-n-and-latest-row-per-group
+title: SQL top-N and latest row per group
+tier: A
+requires: [sql/sql-ranking-window-functions]
+aliases: [top N, latest row, row number, greatest N per group, deterministic ties]
+objectives:
+  - Return a bounded number of complete rows per group with deterministic tie-breaking
+  - Apply eligibility filters before ranking and distinguish row-count from tie-preserving policies
+  - Explain why separate aggregate maxima cannot reconstruct the latest record
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: Clarify what latest means, then return the complete record with an explicit tie rule.
+sources:
+  - "book: Molinaro & de Graaf, SQL Cookbook (2nd ed.), window functions and ranking"
+status: reviewed

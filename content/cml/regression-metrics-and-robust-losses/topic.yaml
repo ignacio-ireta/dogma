@@ -1,0 +1,16 @@
+id: cml/regression-metrics-and-robust-losses
+title: Regression metrics and robust losses
+tier: A
+requires: [cml/normal-equation, cml/descriptive-statistics, cml/gradient-descent]
+aliases: [MAE, MSE, RMSE, R-squared, coefficient of determination, Huber loss, robust regression, MAPE, mean absolute error, mean squared error]
+objectives:
+  - Implement MAE, MSE, RMSE and R² from their formulas, and state the convention for constant targets
+  - Explain why MSE is minimised by the mean and MAE by the median, and what that means for outliers
+  - Implement the Huber loss and its gradient, and check the gradient numerically
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: "Which regression metric would you report, and why? Name the loss behind each metric, and say when R² misleads."
+sources:
+  - "paper: Huber 1964, Robust estimation of a location parameter (Ann. Math. Stat.)"
+  - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter 2, Overview of Supervised Learning (statistical decision theory)"
+  - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter 3 (linear methods for regression)"
+status: reviewed

@@ -1,0 +1,13 @@
+id: dl/adam/p02-amsgrad-step
+version: 3
+title: "AMSGrad: Adam with a running maximum of the second moment"
+language: python
+runtime: py-torch
+entry: amsgrad_step
+difficulty: hard
+minutes: 25
+core: false
+tolerance: {atol: 1.0e-10, rtol: 1.0e-10}
+banned_imports: [torch.optim]
+timeout_s: 30
+status: reviewed

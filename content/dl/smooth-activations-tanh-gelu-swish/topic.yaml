@@ -1,0 +1,22 @@
+id: dl/smooth-activations-tanh-gelu-swish
+title: 'Smooth activations: tanh, GELU, Swish'
+tier: A
+requires:
+- dl/relu-family-activations
+aliases:
+- SiLU
+- Gaussian error linear unit
+- smooth derivative
+objectives:
+- Implement tanh, exact GELU and beta-1 Swish with stable sigmoid tails
+- Derive local derivatives by the product rule and verify them numerically
+minutes:
+  lesson: 12
+  practice: 20
+  min_viable: 15
+interview_angle: Distinguish a smooth gate from a hard sign gate, and state the GELU
+  convention.
+sources:
+- 'paper: Hendrycks and Gimpel 2016, Gaussian Error Linear Units (GELUs) (arXiv:1606.08415)'
+- 'paper: Ramachandran, Zoph and Le 2017, Searching for Activation Functions (arXiv:1710.05941)'
+status: reviewed

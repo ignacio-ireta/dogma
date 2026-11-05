@@ -1,0 +1,18 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+# Sources: no primary text in the repository covers packing practice. The masking rule is the
+# causal mask (Vaswani et al.) extended by a same-document condition; the packing rules are
+# general practice and are checked by the problem's fixtures, not by a citation.
+id: llm/document-packing-and-cross-document-masks
+title: "Document packing and cross-document masks"
+tier: B
+requires: ['llm/next-token-targets-and-batches', 'dl/causal-masking']
+aliases: [sequence packing, document packing, document mask, block-diagonal causal mask, cross-document attention, position id reset, varlen attention, cu_seqlens, packed rows]
+objectives:
+  - Build a block-diagonal causal mask from document ids, and reject ids that do not form contiguous runs
+  - Restart position ids at each document boundary, and mask the loss target that crosses a boundary
+  - Explain why a plain causal mask leaks attention across packed documents, and why training needs the document-aware mask
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: Explain how packing removes padding waste, why the attention mask must be block-diagonal rather than plain causal, and which positions and loss targets change at each boundary.
+sources:
+  - "paper: Vaswani et al. 2017, Attention Is All You Need (arXiv:1706.03762), section 3.2.3"
+status: reviewed

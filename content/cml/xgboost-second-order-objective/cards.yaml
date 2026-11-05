@@ -1,0 +1,27 @@
+cards:
+  - id: cml/xgboost-second-order-objective#1
+    type: qa
+    front: What is the optimal leaf weight in XGBoost for a leaf with gradient sum G, hessian sum H and L2 penalty lambda?
+    back: w = −G / (H + lambda).
+  - id: cml/xgboost-second-order-objective#2
+    type: qa
+    front: What does the second-order Taylor expansion of the loss around the current margin contain?
+    back: "ℓ(m + δ) ≈ ℓ(m) + g·δ + ½·h·δ², with g the first derivative and h the second derivative at m."
+  - id: cml/xgboost-second-order-objective#3
+    type: cloze
+    text: "The split gain is ½[G_L²/(H_L+λ) + G_R²/(H_R+λ) − (G_L+G_R)²/(H_L+H_R+λ)] − γ, where γ is {{c1::a fixed cost per leaf that a split must beat}}."
+  - id: cml/xgboost-second-order-objective#4
+    type: qa
+    front: What do lambda and gamma each regularise?
+    back: Positive lambda is an L2 penalty that shrinks leaf weights and keeps H + lambda positive. Gamma is a minimum gain, a threshold that prunes splits.
+  - id: cml/xgboost-second-order-objective#5
+    type: qa
+    front: What are the gradient and Hessian of the logistic loss with respect to the margin m, for label y?
+    back: g = σ(m) − y and h = σ(m)(1 − σ(m)).
+  - id: cml/xgboost-second-order-objective#6
+    type: cloze
+    text: "min_child_weight is a threshold on the {{c1::sum of hessians}} in each child of a split."
+  - id: cml/xgboost-second-order-objective#7
+    type: qa
+    front: How does XGBoost handle a missing value during split finding?
+    back: It tries sending the missing samples left and right, and keeps the default direction with the higher gain.

@@ -1,0 +1,18 @@
+id: cml/matrix-multiplication
+title: Matrix multiplication
+tier: A
+requires: [cml/matrix-shapes-and-transpose, cml/vector-operations]
+aliases: [matmul, matrix product, row times column, inner dimension, batched matmul, composition]
+objectives:
+  - Compute a matrix product from the row-times-column rule, checking inner dimensions before computing
+  - Explain AB as a mixture of the columns of A, and as a sum of rank-one outer products
+  - Count the operations in a product and in a chain, and choose the cheaper bracketing
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  Expect "what does an m×n times n×p product cost" and "why does order matter in a chain".
+  Attention and every dense layer are batched matrix products, so shape fluency is assumed.
+sources:
+  - "book: Strang, Introduction to Linear Algebra (5th ed.), ch. 2 'Solving Linear Equations' (matrix products)"
+  - "book: Deisenroth, Faisal & Ong, Mathematics for Machine Learning, §2.2 (matrix addition and multiplication)"
+  - "book: Goodfellow, Bengio & Courville, Deep Learning, §2.2 (multiplying matrices and vectors)"
+status: reviewed

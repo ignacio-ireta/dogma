@@ -1,0 +1,16 @@
+cards:
+  - id: tst/beta#1
+    type: qa
+    front: What does GROUP BY produce for each distinct key?
+    back: One output row per key.
+  - id: tst/beta#2
+    type: cloze
+    text: "A non-aggregated column must appear in the {{c1::GROUP BY}} clause."
+  - id: tst/beta#3
+    type: qa
+    front: Does WHERE filter rows or groups?
+    back: Rows, before grouping.
+  - id: tst/beta#4
+    type: qa
+    front: Where does HAVING filter?
+    back: On the groups, after aggregation.

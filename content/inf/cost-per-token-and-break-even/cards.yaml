@@ -1,0 +1,26 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: inf/cost-per-token-and-break-even#1
+    type: qa
+    front: What is the self-hosted cost per million output tokens?
+    back: The daily cost divided by the tokens served per day, times a million. Equivalently, the hourly bill over tokens per hour, times a million.
+  - id: inf/cost-per-token-and-break-even#2
+    type: cloze
+    text: "Halving utilization {{c1::doubles}} the self-hosted cost per token, because the fixed bill covers half the tokens."
+  - id: inf/cost-per-token-and-break-even#3
+    type: qa
+    front: What is the break-even daily volume against an API price?
+    back: The daily self-hosted cost times a million, divided by the API price per million tokens.
+  - id: inf/cost-per-token-and-break-even#4
+    type: qa
+    front: Does the break-even volume depend on utilization?
+    back: No. Utilization decides whether the replica can reach that volume; the break-even volume itself is set by the daily cost and the API price.
+  - id: inf/cost-per-token-and-break-even#5
+    type: qa
+    front: Which throughput should a cost estimate use?
+    back: The sustained rate at the batch and context actually served, not the peak from a benchmark.
+  - id: inf/cost-per-token-and-break-even#6
+    type: qa
+    front: How should a half cent be rounded when reporting cost per million?
+    back: Half up, to the cent, computed exactly with no earlier rounding.

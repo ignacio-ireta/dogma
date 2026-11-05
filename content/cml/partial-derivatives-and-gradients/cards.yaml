@@ -1,0 +1,32 @@
+cards:
+  - id: cml/partial-derivatives-and-gradients#1
+    type: qa
+    front: What is the partial derivative ∂f/∂xᵢ?
+    back: The derivative of f with respect to xᵢ, holding every other coordinate fixed. It is the slope along axis i.
+  - id: cml/partial-derivatives-and-gradients#2
+    type: qa
+    front: "What is the gradient ∇f of a scalar function f: ℝⁿ → ℝ?"
+    back: "The vector (∂f/∂x₁, …, ∂f/∂xₙ), with shape (n,)."
+  - id: cml/partial-derivatives-and-gradients#3
+    type: cloze
+    text: "The directional derivative of f along a unit vector u is {{c1::∇f · u}}."
+  - id: cml/partial-derivatives-and-gradients#4
+    type: qa
+    front: What is the gradient of xᵀAx?
+    back: (A + Aᵀ)x. It equals 2Ax when A is symmetric.
+  - id: cml/partial-derivatives-and-gradients#5
+    type: qa
+    front: Why do gradient checks use central differences rather than forward ones?
+    back: Central error is O(h²) and forward error is O(h). In float64 a correct gradient agrees with central differences to about 2e-11 (median), but with forward differences only to about 2e-8, which can hide a small bug.
+  - id: cml/partial-derivatives-and-gradients#6
+    type: qa
+    front: How many evaluations of f does a central-difference gradient of an n-variable function need?
+    back: 2n, one pair per coordinate.
+  - id: cml/partial-derivatives-and-gradients#7
+    type: qa
+    front: What is the gradient of log-sum-exp at x?
+    back: softmax(x), the vector with entries exp(xᵢ) / Σⱼ exp(xⱼ).
+  - id: cml/partial-derivatives-and-gradients#8
+    type: qa
+    front: Which direction does the gradient point in?
+    back: Steepest ascent. Among unit vectors u, ∇f · u is largest when u is parallel to ∇f.

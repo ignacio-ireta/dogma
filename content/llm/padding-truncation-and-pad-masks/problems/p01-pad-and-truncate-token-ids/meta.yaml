@@ -1,0 +1,13 @@
+id: llm/padding-truncation-and-pad-masks/p01-pad-and-truncate-token-ids
+version: 2
+title: Pad and truncate token ids with an attention mask
+language: python
+runtime: py-torch
+entry: pad_and_truncate
+difficulty: easy
+minutes: 20
+core: true
+tolerance: {atol: 0.0, rtol: 0.0}  # integer outputs are compared exactly; no tolerance applies
+banned_imports: [torch.nn, torch.nested]
+timeout_s: 30
+status: reviewed

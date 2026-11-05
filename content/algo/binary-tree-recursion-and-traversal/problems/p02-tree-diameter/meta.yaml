@@ -1,0 +1,13 @@
+id: algo/binary-tree-recursion-and-traversal/p02-tree-diameter
+version: 2
+title: Diameter of a binary tree
+language: python
+runtime: py-stdlib
+entry: diameter
+difficulty: medium
+minutes: 25
+core: false
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: integer edge counts
+banned_imports: [sys, threading, sys.setrecursionlimit]
+timeout_s: 30
+status: reviewed

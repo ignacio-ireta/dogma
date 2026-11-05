@@ -1,0 +1,18 @@
+id: sql/sql-cohort-retention
+title: "SQL cohort retention"
+tier: A
+requires: [sql/sql-date-handling, sql/sql-group-by-and-having]
+aliases: [cohort, retention, cohort table, period offset, months since first activity, retention matrix, churn, DISTINCT users, empty periods]
+objectives:
+  - Assign each user to a cohort by the month of their first activity, and count each cohort's full size as the denominator
+  - Count DISTINCT active users per cohort and period, so several events by one user in one month count once
+  - Return the full cohort-by-period grid, including periods with no active users, and round the rate as stated
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "Build a monthly retention table from an events log" is a common SQL screen. The interviewer checks the cohort
+  definition, the denominator (the cohort size, not the previous period), DISTINCT on users, and whether empty
+  periods appear as rows.
+sources:
+  - "book: Molinaro & de Graaf, SQL Cookbook (2nd ed.), grouping and date arithmetic recipes"
+  - "book: Kimball & Ross, The Data Warehouse Toolkit (3rd ed.), the calendar (date) dimension"
+status: reviewed

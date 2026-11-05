@@ -1,0 +1,18 @@
+id: sql/sql-joins-and-unions
+title: SQL joins and unions
+tier: A
+requires: [sql/sql-group-by-and-having]
+aliases: [JOIN, INNER JOIN, LEFT JOIN, OUTER JOIN, anti join, UNION, UNION ALL, fan-out, grain, set operations, NOT EXISTS]
+objectives:
+  - Choose the join type from which side defines the answer, and start the query from that side
+  - Check the grain of each table before joining, and spot fan-out from a one-to-many key
+  - Count matches after a LEFT JOIN with the right-hand key, and pick UNION or UNION ALL knowing what each removes
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "Every customer with their order total, including the customers with no orders" is a common
+  screen question. The interviewer checks the join type, whether COUNT counts rows or matches,
+  the grain, and whether the totals double when a dimension has more than one row per key.
+sources:
+  - "book: Beaulieu, Learning SQL (3rd ed.), chapters on querying multiple tables and on working with sets"
+  - "book: Molinaro, SQL Cookbook, chapter on working with multiple tables"
+status: reviewed

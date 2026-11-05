@@ -1,0 +1,18 @@
+- when_asked: How is a failure defined in the records, and how many happen a year?
+  answer: A failure is an unplanned stop of more than four hours that closes a work order coded as a component failure. There are about 60 a year across the 1,200 compressors. Planned overhauls and faults fixed within a shift do not count. The split by site is in the exhibit.
+  exhibit: exhibits/failures-by-site.csv
+- when_asked: How much history is there, at what sampling, and how are overhauls and moves recorded?
+  answer: Three years of readings, one value every ten minutes per sensor for vibration, bearing temperature, motor current and discharge pressure. Each overhaul is logged with a timestamp. About 1 percent of compressors a year are moved between sites or retired, and their records stop or change site.
+- when_asked: "What does each event cost: an unplanned failure, an inspection, a planned repair?"
+  answer: An unplanned failure costs about 48,000 dollars in parts, expedited labour and lost output. An inspection visit costs about 1,200 dollars whether or not it finds a fault. A planned repair after a confirmed fault costs about 9,000 dollars.
+- when_asked: How long does a replacement part take to arrive?
+  answer: Common bearing and seal kits take about ten calendar days from order to site. A few kits are stocked on site and can be fitted within a day. An alert with less than ten days of warning cannot lead to a planned repair.
+- when_asked: How many inspections can the crews do, and how are alerts handled today?
+  answer: Two inspection crews can do about fifteen inspections a week between them. Today technicians walk each line every shift and log what they hear and see. Nothing ranks the compressors.
+- when_asked: How well does an existing prototype model perform on the held-out period?
+  answer: The data team's prototype, a boosted model trained on the first thirty months, has a ROC AUC of 0.93 on the last six months. A logistic baseline has 0.89. The exhibit lists what each weekly alert budget catches for the prototype on the same six months.
+  exhibit: exhibits/alert-budget.csv
+- when_asked: How are calibrations checked?
+  answer: Calibration is checked once a year on paper, and the paper is not digitised.
+- when_asked: What does an inspection work order say, and how is a repair done after an alert coded?
+  answer: Each inspection closes with a work order showing fault found or no fault found. A repair done after an alert is coded as planned, not as a failure. A unit repaired early therefore shows no failure in the window, even if it would have failed.

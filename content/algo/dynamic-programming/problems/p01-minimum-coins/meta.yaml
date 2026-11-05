@@ -1,0 +1,13 @@
+id: algo/dynamic-programming/p01-minimum-coins
+version: 3
+title: Minimum coins for change
+language: python
+runtime: py-stdlib
+entry: min_coins
+difficulty: medium
+minutes: 20
+core: true
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: integer counts
+banned_imports: [functools]
+timeout_s: 60
+status: reviewed

@@ -1,0 +1,16 @@
+id: dl/tensors-in-pytorch-and-tinygrad/p01-batched-pairwise-distances
+version: 3                      # bump when tests, tolerances or the contract change
+title: Batched pairwise squared distances
+language: python                # python | sql
+runtime: py-torch               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: batched_sq_distances     # the function or class name the learner implements
+difficulty: medium
+minutes: 25
+core: true                      # p01 is the core problem: exactly one per topic
+# atol=1e-6 is the usual float32 floor. rtol=1e-5 is looser than 1e-6 on purpose: float32 rounds
+# at about 6e-8 relative per operation, and different summation orders over D add a few more ulps.
+# It still rejects the cancellation error of the naive expansion (absolute errors near 0.5).
+tolerance: {atol: 1.0e-6, rtol: 1.0e-5}
+banned_imports: [torch.cdist, torch.nn]  # cdist and nn.PairwiseDistance are the library answers
+timeout_s: 30
+status: reviewed

@@ -1,0 +1,24 @@
+cards:
+  - id: cml/preprocessing-pipelines#1
+    type: qa
+    front: Which rows may the fit step of a preprocessing pipeline learn from?
+    back: Only the training rows of the current split or fold. The transform step is then applied to any rows.
+  - id: cml/preprocessing-pipelines#2
+    type: qa
+    front: What does the one-hot block of a category unseen in training look like at transform time?
+    back: All zeros. The row is recognized as having no training category, and no new column is created.
+  - id: cml/preprocessing-pipelines#3
+    type: qa
+    front: Why fill a missing test value with the training median rather than the test median?
+    back: The test table must not influence any fitted value. The training median is fixed before the test rows are seen.
+  - id: cml/preprocessing-pipelines#4
+    type: cloze
+    text: "A ColumnTransformer concatenates its output blocks in the {{c1::order the transformers are listed}}."
+  - id: cml/preprocessing-pipelines#5
+    type: qa
+    front: What is the main risk of one-hot encoding a high-cardinality column?
+    back: It makes many sparse columns, and many values are rare or unseen at serving time, so the model learns from little.
+  - id: cml/preprocessing-pipelines#6
+    type: qa
+    front: Why refit the whole pipeline inside each cross-validation fold?
+    back: So the held-out fold never influences the imputer, scaler or category map that transforms it.

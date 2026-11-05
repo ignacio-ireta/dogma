@@ -1,0 +1,13 @@
+id: tst/alpha
+title: Alpha topic
+tier: A
+requires: []
+aliases: [alpha, doubling]
+objectives:
+  - Double every value in a list without mutating the input
+  - Explain why doubling is multiplication by two
+minutes: {lesson: 10, practice: 15, min_viable: 10}
+interview_angle: A warm-up question about pure functions.
+sources:
+  - "book: Example Author, Example Book, ch. 1"
+status: draft

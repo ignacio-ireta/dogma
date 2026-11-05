@@ -1,0 +1,24 @@
+cards:
+  - id: dl/learning-rate-decay-schedules#1
+    type: qa
+    front: What is the cosine annealing rate at step t with base eta_0, floor eta_min and period T?
+    back: eta_min + (eta_0 - eta_min) * (1 + cos(pi * t / T)) / 2, for 0 <= t <= T.
+  - id: dl/learning-rate-decay-schedules#2
+    type: qa
+    front: What does T_max measure in cosine annealing?
+    back: The number of updates from the base rate to the floor, in the same unit as the counter.
+  - id: dl/learning-rate-decay-schedules#3
+    type: qa
+    front: After a scheduler is constructed and before any scheduler.step(), which rate applies?
+    back: The base rate, at step 0. Each later scheduler.step() advances the counter by one.
+  - id: dl/learning-rate-decay-schedules#4
+    type: qa
+    front: With optimizer.step() then scheduler.step() in a loop, which rate does the k-th update use?
+    back: eta_k, counting updates from 0. The floor eta_T is set after the last of T updates.
+  - id: dl/learning-rate-decay-schedules#5
+    type: qa
+    front: What goes wrong if T is set in epochs but scheduler.step() is called after every batch?
+    back: The schedule reaches its floor after T batches, a fraction of the intended run.
+  - id: dl/learning-rate-decay-schedules#6
+    type: cloze
+    text: "Step decay multiplies the base rate by gamma once for every {{c1::completed block of step_size updates}}."

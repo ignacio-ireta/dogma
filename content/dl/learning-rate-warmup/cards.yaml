@@ -1,0 +1,24 @@
+cards:
+  - id: dl/learning-rate-warmup#1
+    type: qa
+    front: What is the warmup rate at step 0 in a linear ramp to base_lr over W steps?
+    back: Zero, because the ramp is base_lr * step / W.
+  - id: dl/learning-rate-warmup#2
+    type: qa
+    front: Why do Adam-style optimizers need warmup early in training?
+    back: The common explanation is that the second-moment estimate rests on few gradients early on, so the first normalized steps can be large and noisy.
+  - id: dl/learning-rate-warmup#3
+    type: qa
+    front: What is the Vaswani et al. learning rate at update step t with model width d and warmup W?
+    back: d ** -0.5 * min(t ** -0.5, t * W ** -1.5), with t numbered from 1.
+  - id: dl/learning-rate-warmup#4
+    type: qa
+    front: Where does the Vaswani schedule peak?
+    back: At t = W, with height d ** -0.5 * W ** -0.5.
+  - id: dl/learning-rate-warmup#5
+    type: qa
+    front: What is the most common boundary error in a warmup-then-cosine schedule?
+    back: Starting the cosine one step early or late, so the rate at step W is not exactly base_lr.
+  - id: dl/learning-rate-warmup#6
+    type: cloze
+    text: "Warmup-then-cosine rises linearly for {{c1::W}} steps, then follows a half-cosine down to the floor at step {{c2::T}}."

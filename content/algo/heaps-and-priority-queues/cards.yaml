@@ -1,0 +1,24 @@
+cards:
+  - id: algo/heaps-and-priority-queues#1
+    type: qa
+    front: "What does heapq.heappush cost on a heap of n items?"
+    back: "O(log n): the new item sifts up along one path. heappop costs O(log n) too."
+  - id: algo/heaps-and-priority-queues#2
+    type: qa
+    front: "How do you get a max-heap from heapq?"
+    back: "Store negated values. The largest value is then the smallest negative, at index 0."
+  - id: algo/heaps-and-priority-queues#3
+    type: cloze
+    text: "heapq.heapify builds a heap from a list in {{c1::O(n)}} time."
+  - id: algo/heaps-and-priority-queues#4
+    type: qa
+    front: "Why store (key, stream index, label) in a k-way merge heap?"
+    back: "Equal keys then compare by stream index, so the lower stream comes first and the labels are never compared."
+  - id: algo/heaps-and-priority-queues#5
+    type: qa
+    front: "What size heap keeps the top k items of a stream?"
+    back: "k. Push each item, and pop the smallest when the size exceeds k."
+  - id: algo/heaps-and-priority-queues#6
+    type: qa
+    front: "What keeps a two-heap running median correct?"
+    back: "Every lower-heap value must be at most every upper-heap value, and their sizes differ by at most one. The median is then the larger heap’s top or the mean of both tops."

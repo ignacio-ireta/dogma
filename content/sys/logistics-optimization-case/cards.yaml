@@ -1,0 +1,24 @@
+cards:
+  - id: sys/logistics-optimization-case#1
+    type: qa
+    front: What is the first feasibility check for a transport plan?
+    back: Compare total demand with total capacity. If demand is larger, no plan exists without a shortfall variable.
+  - id: sys/logistics-optimization-case#2
+    type: cloze
+    text: "A dual price is valid only within {{c1::a range of demand or capacity changes}}, and at a degenerate vertex the dual itself can take several values."
+  - id: sys/logistics-optimization-case#3
+    type: qa
+    front: Why is the LP relaxation of a fixed-charge plan a bound rather than a dispatchable plan?
+    back: The relaxation allows fractional trucks, so its cost is at most the whole-truck optimum. It bounds the cost; it is not a plan.
+  - id: sys/logistics-optimization-case#4
+    type: qa
+    front: What is the reduced cost of a lane in a transport LP at optimality?
+    back: The cost minus the zone dual plus the depot dual. It is zero on used lanes and nonnegative on unused lanes.
+  - id: sys/logistics-optimization-case#5
+    type: qa
+    front: Why compare evolutionary search on equal evaluation budgets across many seeds?
+    back: One seed can win by luck, and an unequal budget compares effort rather than method.
+  - id: sys/logistics-optimization-case#6
+    type: qa
+    front: What does the shadow price of a depot's capacity mean?
+    back: The cost saved by one extra pallet of capacity, including any re-routing that the extra pallet allows.

@@ -1,0 +1,18 @@
+id: cml/handling-class-imbalance
+title: Handling class imbalance
+tier: A
+requires: [cml/roc-pr-curves-and-auc, cml/bayes-theorem]
+aliases: [class imbalance, rare events, class weights, balanced weights, resampling, oversampling, undersampling, SMOTE, prior shift, threshold moving, cost-sensitive learning]
+objectives:
+  - Choose the metric and the decision threshold for a rare positive class before changing the training data
+  - Derive the cost-optimal threshold for calibrated probabilities, and the odds correction for a change in base rate
+  - Compute balanced class weights, and explain why class weights and resampling both change the probabilities a model outputs
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "Your data is 1% positive. What do you do?" A strong answer picks the metric first, sets the threshold from costs,
+  changes training only when the minority signal is too weak, and resamples only inside training folds.
+sources:
+  - "paper: Elkan 2001, The Foundations of Cost-Sensitive Learning (IJCAI)"
+  - "paper: King & Zeng 2001, Logistic Regression in Rare Events Data (Political Analysis)"
+  - "paper: Chawla, Bowyer, Hall & Kegelmeyer 2002, SMOTE: Synthetic Minority Over-sampling Technique (Journal of Artificial Intelligence Research)"
+status: reviewed

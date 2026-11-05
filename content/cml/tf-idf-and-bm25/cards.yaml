@@ -1,0 +1,24 @@
+cards:
+  - id: cml/tf-idf-and-bm25#1
+    type: qa
+    front: "What is the smoothed idf of a term that appears in every document?"
+    back: "1, because ln((1 + N) / (1 + N)) + 1 = 1."
+  - id: cml/tf-idf-and-bm25#2
+    type: qa
+    front: "Why is the Lucene-form BM25 idf positive for a term in most documents?"
+    back: "The +1 inside the log makes the argument 1 + (N - n + 0.5) / (n + 0.5), which is above 1, so the log is positive."
+  - id: cml/tf-idf-and-bm25#3
+    type: cloze
+    text: "BM25's k1 controls {{c1::term-frequency saturation}}: the higher k1, the longer the score keeps rising with more occurrences."
+  - id: cml/tf-idf-and-bm25#4
+    type: qa
+    front: "What does b control in BM25?"
+    back: "Length normalisation. b = 0 ignores document length; b = 1 scales the term part fully by |D| / avgdl."
+  - id: cml/tf-idf-and-bm25#5
+    type: qa
+    front: "What does a matching document score in BM25 when k1 = 0?"
+    back: "Exactly its idf, whatever the count of the term."
+  - id: cml/tf-idf-and-bm25#6
+    type: qa
+    front: "In dogma corpus search, which way is a better BM25 score ordered?"
+    back: "Ascending: FTS5's bm25() returns negated scores, so lower values rank first."

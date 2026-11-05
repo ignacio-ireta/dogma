@@ -1,0 +1,17 @@
+# Seven reveals. Each trigger describes one question, and no two triggers overlap.
+- when_asked: What events are logged, and are there ratings?
+  answer: Every impression is logged with its slot, and so are clicks, saves, cart adds and purchases. Star ratings are rare, with fewer than 1 in 200 purchases reviewed.
+- when_asked: How many buyers and listings are new, and how much history do they have?
+  answer: About 35 percent of monthly buyers have had fewer than three sessions in the last 90 days. About 60,000 listings arrive each week, and a new listing has no interaction history for its first 48 hours. Each listing has a title, category, price, condition and seller. Photos exist but are not used.
+- when_asked: Is any traffic randomised, so that exposure can be estimated?
+  answer: One percent of sessions get a randomised slice, in which the top 10 organic items are shuffled uniformly across slots 1 to 10. The exhibit gives clicks by slot for the organic feed and for the slice.
+  exhibit: exhibits/slot-click-rates.csv
+- when_asked: What are the latency and freshness limits?
+  answer: The feed must render in 150 milliseconds at p95, and ranking gets about 60 of those milliseconds. The item store returns up to 500 candidates for a buyer in 20 milliseconds. Buyer features refresh every 24 hours, and item features every hour.
+- when_asked: What does a purchase earn, and what does the model cost to run?
+  answer: An average purchase is 38 dollars of sales, and the marketplace keeps a 12 percent commission, so about 4.56 dollars of revenue. Running the ranker and its model team costs about 350,000 dollars a year.
+- when_asked: How are views spread across sellers, and what does leadership require for new sellers?
+  answer: The top 10 percent of sellers receive 68 percent of listing views, as the exhibit shows. Leadership requires that new sellers, those who joined in the last 90 days, keep at least 9 percent of feed impressions, which is their current share.
+  exhibit: exhibits/seller-views.csv
+- when_asked: Has the team tried a model before, and what happened?
+  answer: "A matrix factorisation model trained 14 months ago beat popularity on offline recall@20 by 11 percent, at 0.20 against 0.18. In an A/B test it was flat, with purchases moving from 2.10 to 2.12 per 100 sessions, and an interval on the difference from minus 0.04 to plus 0.08 purchases per 100 sessions. It was never launched."

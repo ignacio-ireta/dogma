@@ -1,0 +1,19 @@
+id: cml/roc-pr-curves-and-auc
+title: ROC, PR curves and AUC
+tier: A
+requires: [cml/precision-recall-and-f1]
+aliases: [ROC curve, AUC, ROC AUC, Mann-Whitney, rank statistic, precision-recall curve, average precision, PR AUC, operating point, class imbalance]
+objectives:
+  - Compute ROC AUC from ranks, counting ties as one half, and explain it as the probability that a positive outranks a negative
+  - Compute average precision as a step-wise sum over thresholds, and state why it has no interpolation
+  - Explain why ROC AUC looks optimistic under heavy imbalance while PR and average precision do not, and choose an operating point
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "The ROC-AUC is 0.95 on a 1% positive problem. Is the model useful?" A strong answer says AUC ignores prevalence,
+  compares average precision with the prevalence baseline, and checks precision at the operating point.
+sources:
+  - "paper: Hanley & McNeil 1982, The meaning and use of the area under a receiver operating characteristic (ROC) curve (Radiology)"
+  - "paper: Saito & Rehmsmeier 2015, The precision-recall plot is more informative than the ROC plot when evaluating binary classifiers on imbalanced datasets (PLoS ONE)"
+  - "paper: Fawcett 2006, An introduction to ROC analysis (Pattern Recognition Letters)"
+  - "paper: Davis & Goadrich 2006, The relationship between Precision-Recall and ROC curves (ICML)"
+status: reviewed

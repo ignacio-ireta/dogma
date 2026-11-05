@@ -1,0 +1,27 @@
+cards:
+  - id: cml/roc-pr-curves-and-auc#1
+    type: qa
+    front: "What are the axes of the ROC curve?"
+    back: "Horizontal: false positive rate FP / (FP + TN). Vertical: true positive rate, which is recall."
+  - id: cml/roc-pr-curves-and-auc#2
+    type: qa
+    front: "What is ROC AUC, probabilistically?"
+    back: "P(score of a random positive > score of a random negative), with a tie counting as one half."
+  - id: cml/roc-pr-curves-and-auc#3
+    type: qa
+    front: "What is the expected ROC AUC of a random ranking, with both classes present?"
+    back: "0.5. A finite random sample can differ; the population ROC curve is diagonal regardless of prevalence."
+  - id: cml/roc-pr-curves-and-auc#4
+    type: cloze
+    text: "A random ranking has average precision close to {{c1::the prevalence of the positive class}}."
+  - id: cml/roc-pr-curves-and-auc#5
+    type: cloze
+    text: "Average precision is the sum over thresholds of (R_k - R_(k-1)) times {{c1::P_k}}, with no interpolation between points."
+  - id: cml/roc-pr-curves-and-auc#6
+    type: qa
+    front: "Why does ROC AUC look optimistic under heavy imbalance?"
+    back: "FPR divides by the large negative count, so many false positives give a small rate. The ROC curve contains no prevalence term."
+  - id: cml/roc-pr-curves-and-auc#7
+    type: qa
+    front: "Does ROC AUC change under a strictly increasing transform of the scores?"
+    back: "No. It depends only on the ranking of the scores, so it cannot check calibration."

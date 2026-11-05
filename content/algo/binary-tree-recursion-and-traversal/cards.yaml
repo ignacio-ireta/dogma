@@ -1,0 +1,26 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: algo/binary-tree-recursion-and-traversal#1
+    type: qa
+    front: What is the first thing a recursive tree function checks?
+    back: Whether the node is None, and if so it returns the answer for the empty tree.
+  - id: algo/binary-tree-recursion-and-traversal#2
+    type: qa
+    front: When does in-order traversal emit a node's value?
+    back: After the whole left subtree and before the right subtree.
+  - id: algo/binary-tree-recursion-and-traversal#3
+    type: qa
+    front: Why does in-order traversal of a binary search tree return sorted values?
+    back: Every value in the left subtree is smaller than the node, and every value in the right subtree is larger, so emitting left, node, right gives ascending order.
+  - id: algo/binary-tree-recursion-and-traversal#4
+    type: qa
+    front: What does the explicit stack in an iterative in-order walk hold?
+    back: Nodes whose left subtree is finished but whose own value has not been emitted yet.
+  - id: algo/binary-tree-recursion-and-traversal#5
+    type: qa
+    front: Why does a recursive traversal fail on a 10,000-deep chain under Python's default settings?
+    back: Each level uses a stack frame, and the default recursion limit is about 1000, so it raises RecursionError.
+  - id: algo/binary-tree-recursion-and-traversal#6
+    type: cloze
+    text: "A diameter in edges through a node is {{c1::left height + right height + 2}}, where the height of None is {{c2::-1}}."

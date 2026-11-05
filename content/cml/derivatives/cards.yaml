@@ -1,0 +1,28 @@
+cards:
+  - id: cml/derivatives#1
+    type: qa
+    front: What is the derivative of f at x, as a limit?
+    back: "f'(x) = lim_{h→0} (f(x+h) − f(x)) / h. Equivalently, the slope of the best linear approximation f(x+h) ≈ f(x) + f'(x)·h."
+  - id: cml/derivatives#2
+    type: qa
+    front: Write the central difference and its truncation error order.
+    back: "(f(x+h) − f(x−h)) / (2h). Its error is (h²/6)·f'''(x) + O(h⁴), so it is O(h²)."
+  - id: cml/derivatives#3
+    type: cloze
+    text: "The forward difference (f(x+h) − f(x)) / h has truncation error {{c1::O(h)}}."
+  - id: cml/derivatives#4
+    type: qa
+    front: Why is the central difference more accurate than the forward one at the same cost?
+    back: The O(h) term cancels by symmetry, so the error drops from O(h) to O(h²).
+  - id: cml/derivatives#5
+    type: qa
+    front: What limits how small a finite-difference step can be?
+    back: Round-off. Subtracting nearly equal values loses digits, so the error grows like ε·|f|/h, with ε ≈ 2.2×10⁻¹⁶ in float64.
+  - id: cml/derivatives#6
+    type: qa
+    front: What is the best central-difference step size for float64 near x = 1?
+    back: About ε^(1/3) ≈ 6×10⁻⁶ for a central difference, where the error is near 10⁻¹¹.
+  - id: cml/derivatives#7
+    type: qa
+    front: What does a finite difference of |x| at x = 0 return?
+    back: A number that depends on the scheme. For h > 0 it gives 1 with forward and 0 with central, so the estimate is not a true derivative at a kink.

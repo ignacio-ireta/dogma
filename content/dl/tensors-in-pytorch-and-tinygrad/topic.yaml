@@ -1,0 +1,17 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: dl/tensors-in-pytorch-and-tinygrad
+title: "Tensors in PyTorch and tinygrad"
+tier: A
+requires: [dl/building-tensors-by-broadcasting]
+aliases: [tensor strides, views and copies, broadcasting in torch, dtype promotion, numpy interop, lazy tensors, patchify]
+objectives:
+  - Predict from shape and strides whether a PyTorch operation returns a view or a copy
+  - Apply broadcasting and dtype promotion rules to a batched expression before running it
+  - Reshape and permute image tensors into token layouts with the feature order stated in the contract
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "Is this a view or a copy, and how do you know?" comes up in most tensor-manipulation questions.
+  Naming storage and strides, then the one call that forces a copy, separates a careful answer from a guess.
+sources:
+  - "book: Goodfellow, Bengio and Courville, Deep Learning, ch. 2 (linear algebra: tensors and broadcasting)"
+status: reviewed

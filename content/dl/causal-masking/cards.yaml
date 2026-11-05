@@ -1,0 +1,20 @@
+cards:
+  - id: dl/causal-masking#1
+    type: qa
+    front: What is the causal mask rule for L queries and S keys, bottom-right aligned?
+    back: Query i may attend key j when j <= S - L + i. For L = S this is the lower triangle.
+  - id: dl/causal-masking#2
+    type: qa
+    front: How is a key padding mask combined with the causal mask?
+    back: Logical AND. The causal rule applies per (query, key) pair and the padding rule masks whole key columns.
+  - id: dl/causal-masking#3
+    type: qa
+    front: Which alignment does torch's is_causal use for a non-square mask?
+    back: Top-left (upper-left). For a KV-cache decoding step you need bottom-right alignment instead.
+  - id: dl/causal-masking#4
+    type: qa
+    front: When is a query row fully masked?
+    back: When no key is allowed for it, for example when L > S for the early queries or when all keys are padding. Its softmax is NaN unless handled.
+  - id: dl/causal-masking#5
+    type: cloze
+    text: "With L queries and S keys, query i sees key j when j <= {{c1::S - L + i}}."

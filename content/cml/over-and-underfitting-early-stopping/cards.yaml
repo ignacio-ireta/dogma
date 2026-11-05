@@ -1,0 +1,32 @@
+cards:
+  - id: cml/over-and-underfitting-early-stopping#1
+    type: qa
+    front: What does a low training error with a much higher validation error indicate?
+    back: Overfitting, the usual explanation.
+  - id: cml/over-and-underfitting-early-stopping#2
+    type: qa
+    front: What do high training and validation errors with a small gap indicate?
+    back: Underfitting, the usual explanation.
+  - id: cml/over-and-underfitting-early-stopping#3
+    type: cloze
+    text: "Early stopping limits effective complexity as {{c1::an implicit regulariser}}, by stopping the optimiser before it fits the noise."
+  - id: cml/over-and-underfitting-early-stopping#4
+    type: qa
+    front: What does patience count?
+    back: The number of consecutive epochs without an improvement in validation loss, after which training stops.
+  - id: cml/over-and-underfitting-early-stopping#5
+    type: qa
+    front: What does min_delta define?
+    back: The smallest decrease in validation loss that counts as an improvement. A decrease of exactly min_delta does not count.
+  - id: cml/over-and-underfitting-early-stopping#6
+    type: qa
+    front: Why is the validation set used up once it chooses the stop epoch or the degree?
+    back: The chosen model's validation score is optimistically biased, so a separate test set is needed for an honest final score.
+  - id: cml/over-and-underfitting-early-stopping#7
+    type: qa
+    front: How can an L2 penalty help control overfitting?
+    back: It shrinks coefficients, restricting the effective flexibility of the fitted model.
+  - id: cml/over-and-underfitting-early-stopping#8
+    type: qa
+    front: Why report the win rate across seeds next to the mean test error of early stopping?
+    back: A small mean gain can coexist with a checkpoint that beats the final weights on fewer than half the seeds.

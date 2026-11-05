@@ -1,0 +1,6 @@
+- when_asked: What is the fraud rate, and what do fraud and legitimate transactions typically cost?
+  answer: About 0.05 percent of transactions are fraud, around 25,000 a month. A fraud averages 640 dollars. A legitimate purchase averages 85 dollars.
+- when_asked: What does each kind of error cost?
+  answer: A missed fraud costs about 640 dollars plus reputational harm. A false alarm costs about 15 dollars in lost commerce, plus the support contact.
+- when_asked: How much review capacity is there?
+  answer: Twenty analysts, each reviewing about 50 cases a day, which is roughly 30,000 reviews a month.

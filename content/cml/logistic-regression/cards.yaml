@@ -1,0 +1,24 @@
+cards:
+  - id: cml/logistic-regression#1
+    type: qa
+    front: What is the gradient of the mean log-loss with respect to the weights w, with X the design matrix and p the predicted probabilities?
+    back: Xᵀ(p − y) / n. Each sample contributes its residual times its feature vector.
+  - id: cml/logistic-regression#2
+    type: qa
+    front: What is the Hessian of the mean log-loss in the weights?
+    back: Xᵀ diag(p(1 − p)) X / n, which is positive semidefinite because p(1 − p) ≥ 0.
+  - id: cml/logistic-regression#3
+    type: cloze
+    text: "At the optimum of an unpenalised intercept, the mean predicted probability equals {{c1::the observed positive rate}}."
+  - id: cml/logistic-regression#4
+    type: qa
+    front: What happens to the coefficients of a logistic regression on perfectly separated data with no penalty?
+    back: The likelihood keeps increasing as the coefficients grow, so no finite maximum exists and the coefficients diverge.
+  - id: cml/logistic-regression#5
+    type: qa
+    front: When does L2 logistic regression with an unpenalised intercept have a unique finite minimiser?
+    back: With a positive L2 weight penalty and both classes present. One-class data still lets the unpenalised intercept diverge.
+  - id: cml/logistic-regression#6
+    type: qa
+    front: Write the Newton step for logistic regression.
+    back: Δθ = −H⁻¹∇J, with A = [1, X], H = AᵀWA/n + Λ, W = diag(p(1 − p)), and Λ = diag(0, λ, …, λ).

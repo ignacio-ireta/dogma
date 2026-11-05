@@ -1,0 +1,32 @@
+cards:
+  - id: math/monte-carlo-simulation#1
+    type: qa
+    front: What is the standard error of a Monte Carlo mean estimate?
+    back: "SE = s / sqrt(n), where s is the sample standard deviation of f(X_i) with divisor n - 1."
+  - id: math/monte-carlo-simulation#2
+    type: qa
+    front: How many times more draws halve the standard error?
+    back: Four times. The error falls as 1/sqrt(n).
+  - id: math/monte-carlo-simulation#3
+    type: qa
+    front: What is the normal quantile z for a 95% two-sided interval?
+    back: "z = 1.95996, the 0.975 quantile of the standard normal."
+  - id: math/monte-carlo-simulation#4
+    type: cloze
+    text: "The Monte Carlo standard error shrinks like {{c1::1/sqrt(n)}}."
+  - id: math/monte-carlo-simulation#5
+    type: qa
+    front: Which theorem justifies the normal confidence interval for a sample mean?
+    back: The central limit theorem.
+  - id: math/monte-carlo-simulation#6
+    type: qa
+    front: Do antithetic and control variates change the convergence rate or only the constant?
+    back: Only the constant. The error still falls as 1/sqrt(n).
+  - id: math/monte-carlo-simulation#7
+    type: qa
+    front: Why should the variance be computed from deviations of the mean, not from E[Y^2] - E[Y]^2?
+    back: The one-pass formula cancels catastrophically when the mean is large compared with the spread.
+  - id: math/monte-carlo-simulation#8
+    type: qa
+    front: What does Hoeffding's inequality bound for the mean of n i.i.d. values in [0, 1]?
+    back: "P(|mean - mu| >= eps) <= 2 exp(-2 n eps^2), with no normality assumption."

@@ -1,0 +1,21 @@
+cards:
+- id: dl/reverse-mode-autograd-engine#1
+  type: qa
+  front: Why must shared-node gradient updates use +=?
+  back: One node can influence the objective along several paths.
+- id: dl/reverse-mode-autograd-engine#2
+  type: qa
+  front: How many parent edges does x*x have?
+  back: Two, even though both refer to the same node.
+- id: dl/reverse-mode-autograd-engine#3
+  type: qa
+  front: Why propagate in reverse topological order?
+  back: Every child contribution arrives before its parent propagates.
+- id: dl/reverse-mode-autograd-engine#4
+  type: qa
+  front: What derivative seeds a scalar root?
+  back: 'One: the root derivative with respect to itself.'
+- id: dl/reverse-mode-autograd-engine#5
+  type: qa
+  front: What does repeat backward do in this exercise?
+  back: It resets all reachable gradients before recomputing them.

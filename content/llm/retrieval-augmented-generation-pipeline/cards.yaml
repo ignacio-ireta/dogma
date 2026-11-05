@@ -1,0 +1,29 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+cards:
+  - id: llm/retrieval-augmented-generation-pipeline#1
+    type: qa
+    front: With window W and overlap O, what is the step between window starts?
+    back: "S = W - O words."
+  - id: llm/retrieval-augmented-generation-pipeline#2
+    type: qa
+    front: Why does overlap help with chunk boundaries?
+    back: "Any span of at most O+1 words lies wholly inside at least one window."
+  - id: llm/retrieval-augmented-generation-pipeline#3
+    type: cloze
+    text: "A chunking loop must stop after the first window that {{c1::reaches the last word}}, so no trailing window is contained in its predecessor."
+  - id: llm/retrieval-augmented-generation-pipeline#4
+    type: qa
+    front: Why use cosine rather than a raw dot product for chunk ranking?
+    back: "Cosine divides by both norms, so it compares direction and ignores vector length."
+  - id: llm/retrieval-augmented-generation-pipeline#5
+    type: qa
+    front: What does recall@k measure?
+    back: "The fraction of labelled questions whose gold chunk appears among the top k retrieved chunks."
+  - id: llm/retrieval-augmented-generation-pipeline#6
+    type: qa
+    front: Which failure happens when the source text changes but the embeddings are not rebuilt?
+    back: "A stale index: answers cite text that no longer exists."
+  - id: llm/retrieval-augmented-generation-pipeline#7
+    type: qa
+    front: What is the check for citation hallucination?
+    back: "Every cited id must be one of the chunk ids that was packed into the prompt."

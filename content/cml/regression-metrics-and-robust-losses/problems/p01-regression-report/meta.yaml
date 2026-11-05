@@ -1,0 +1,15 @@
+id: cml/regression-metrics-and-robust-losses/p01-regression-report
+version: 3
+title: Regression report
+language: python
+runtime: py-numpy
+entry: regression_report
+difficulty: easy
+minutes: 20
+core: true
+# Oracle: scikit-learn's mean_absolute_error, mean_squared_error and r2_score. The random cases
+# agree with them to about 1e-15 relative.
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [sklearn, scipy]
+timeout_s: 30
+status: reviewed

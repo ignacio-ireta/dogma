@@ -1,0 +1,19 @@
+id: cml/stochastic-and-mini-batch-gradient-descent
+title: Stochastic and mini-batch gradient descent
+tier: A
+requires: [cml/gradient-descent]
+aliases: [SGD, mini-batch, batch size, epoch, shuffling, gradient noise, linear scaling rule]
+objectives:
+  - Implement mini-batch gradient descent for least squares with a fixed, reproducible shuffling protocol
+  - Explain the trade-off between gradient noise and compute per update, and what one epoch means in steps
+  - Explain why data is shuffled each epoch, and how batch size and learning rate interact
+minutes: {lesson: 12, practice: 30, min_viable: 15}
+interview_angle: >-
+  "Why mini-batch rather than full batch, and how do you pick the batch size and learning rate?"
+  A strong answer separates gradient noise from compute, and says what shuffling protects against.
+sources:
+  - "book: Goodfellow, Bengio & Courville, Deep Learning, chapter on optimization for training deep models (stochastic and mini-batch gradient descent)"
+  - "paper: Robbins & Monro 1951, A Stochastic Approximation Method (Annals of Mathematical Statistics)"
+  - "paper: Goyal et al. 2017, Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour (arXiv:1706.02677)"
+  - "source: library-refresh/01-Mathematics/08-Optimization/2018 -- Bottou, Curtis and Nocedal -- Stochastic Gradients, Noise and Computation -- Study Note.md"
+status: reviewed

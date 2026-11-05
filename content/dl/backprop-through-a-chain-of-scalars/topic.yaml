@@ -1,0 +1,22 @@
+id: dl/backprop-through-a-chain-of-scalars
+title: Backprop through a chain of scalars
+tier: A
+requires:
+- dl/smooth-activations-tanh-gelu-swish
+aliases:
+- chain rule
+- adjoint
+- gradient accumulation
+objectives:
+- Evaluate a scalar computational graph while retaining required intermediate values
+- Accumulate all reverse-mode contributions at reused inputs and check with finite
+  differences
+minutes:
+  lesson: 12
+  practice: 25
+  min_viable: 15
+interview_angle: Explain reverse-mode credit assignment through reuse, including accumulation
+  at branches.
+sources:
+- 'library: AI-ML/10-Backpropagation/Rumelhart Hinton Williams Backpropagation 1986.md'
+status: reviewed

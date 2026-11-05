@@ -1,0 +1,19 @@
+id: math/monte-carlo-simulation
+title: Monte Carlo simulation
+tier: A
+requires: [cml/probability-basics, cml/descriptive-statistics]
+aliases: [Monte Carlo estimate, simulation error bars, standard error of a mean, law of large numbers, central limit theorem, antithetic variates, control variates, variance reduction]
+objectives:
+  - Estimate an expectation by simulation and report its standard error and a normal-approximation confidence interval
+  - Explain why the error shrinks like 1/sqrt(n), so halving the error takes four times the draws
+  - Name the failure modes of a normal interval (heavy tails, rare events, cancellation) and what variance reduction changes
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "How would you estimate this quantity by simulation, and how sure are you of the answer?" A strong
+  answer gives the estimator, its standard error, and how many draws a target precision needs.
+sources:
+  - "book: Ross, Simulation (5th ed.), chapters on statistical analysis of simulated data and on variance reduction techniques"
+  - "paper: Metropolis & Ulam 1949, The Monte Carlo Method (Journal of the American Statistical Association 44(247))"
+  - "source: library-refresh/01-Mathematics/09-Learning-Theory/1963-2014 -- Hoeffding et al -- Concentration, Uniform Convergence and PAC Learning -- Study Note.md"
+  - "book: Glasserman, Monte Carlo Methods in Financial Engineering, chapter on variance reduction techniques"
+status: reviewed

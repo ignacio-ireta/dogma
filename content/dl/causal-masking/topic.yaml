@@ -1,0 +1,14 @@
+id: dl/causal-masking
+title: "Causal masking"
+tier: A
+requires: ['dl/scaled-dot-product-attention']
+aliases: ['lower-triangular mask', 'autoregressive mask', 'padding mask', 'KV cache mask', 'fully masked row', 'is_causal']
+objectives:
+  - Build a bottom-right aligned causal mask for L queries and S keys, combined with a key padding mask
+  - Explain why torch's is_causal flag is top-left aligned for non-square masks, and what a KV cache needs
+  - State and test a policy for fully masked rows that avoids NaN in attention
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: Explain the lower-triangular rule, how a KV cache shifts it, why a fully masked row produces NaN, and which alignment a decoding step needs.
+sources:
+  - "paper: Vaswani et al. 2017, Attention Is All You Need (arXiv:1706.03762), section 3.2.3"
+status: reviewed

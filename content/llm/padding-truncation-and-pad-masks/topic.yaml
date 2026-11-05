@@ -1,0 +1,16 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: llm/padding-truncation-and-pad-masks
+title: "Padding, truncation and pad masks"
+tier: A
+requires: ['dl/causal-masking']
+aliases: [padding side, truncation side, pad mask, attention mask, left padding, right padding, collate, ignore_index, "-100"]
+objectives:
+  - Collate variable-length token-id lists into (input_ids, attention_mask) with an explicit pad id, max length, truncation side and padding side
+  - Explain why decoder-only generation pads on the left, and why the attention mask and the loss mask are different tensors
+  - Build the mask from lengths, not token values, and test that a real token equal to the pad id stays unmasked
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: Explain why batches are rectangular, why generation pads on the left, and why an attention mask and a loss mask must not be confused.
+sources:
+  - "paper: Vaswani et al. 2017, Attention Is All You Need (arXiv:1706.03762), section 3.2.3"
+  - "corpus: library-papers/1706.03762.pdf.md p.5"
+status: reviewed

@@ -1,0 +1,13 @@
+id: llm/bradley-terry-reward-models/p01-reward-pair-loss-and-accuracy
+version: 3                      # bump when tests, tolerances or the contract change
+title: Bradley-Terry pair loss and pair accuracy
+language: python                # python | sql
+runtime: py-torch               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: bradley_terry_loss_and_accuracy   # the function the learner implements
+difficulty: medium
+minutes: 25
+core: true                      # p01 is the core problem: exactly one per topic
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}  # float64 agreement with the reference; float32 check uses 1e-6
+banned_imports: [torch.nn, torch.nn.functional, torch.binary_cross_entropy_with_logits]  # torch.nn covers nn.functional.logsigmoid and softplus; named in problem.md
+timeout_s: 30
+status: reviewed

@@ -1,0 +1,32 @@
+cards:
+  - id: cml/matrix-inverse-and-rank#1
+    type: qa
+    front: When does a square matrix A have an inverse?
+    back: When rank(A) = n. Equivalently det(A) ≠ 0, or its columns are linearly independent.
+  - id: cml/matrix-inverse-and-rank#2
+    type: qa
+    front: What is the rank of a matrix?
+    back: The number of pivots after row reduction. It equals the dimension of the column space and the maximum number of linearly independent columns.
+  - id: cml/matrix-inverse-and-rank#3
+    type: cloze
+    text: "Gauss-Jordan row-reduces [A | I] to [{{c1::I}} | {{c2::A⁻¹}}]."
+  - id: cml/matrix-inverse-and-rank#4
+    type: qa
+    front: Why does partial pivoting choose the largest-magnitude entry in the column?
+    back: It keeps every multiplier at most 1 in absolute value, so elimination never multiplies a row by a huge factor.
+  - id: cml/matrix-inverse-and-rank#5
+    type: qa
+    front: What does the condition number κ(A) = ‖A‖ ‖A⁻¹‖ bound?
+    back: An upper bound on how much relative errors in A or b can be amplified in the solution x.
+  - id: cml/matrix-inverse-and-rank#6
+    type: qa
+    front: Why solve Ax = b with a factorisation instead of multiplying by A⁻¹?
+    back: A factorisation costs the same O(n³), is more accurate, and is reused for many right-hand sides. The inverse is extra work and loses precision.
+  - id: cml/matrix-inverse-and-rank#7
+    type: qa
+    front: Two features are perfectly collinear in a regression design matrix. What happens to XᵀX?
+    back: It becomes singular (rank deficient), so the normal equation has no unique solution. Drop a feature or regularise, for example with ridge.
+  - id: cml/matrix-inverse-and-rank#8
+    type: qa
+    front: Why must a numerical rank tolerance scale with the matrix?
+    back: Rounding error grows with the size of the entries, so an absolute threshold drops or keeps pivots according to scale rather than rank.

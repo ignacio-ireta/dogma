@@ -1,0 +1,21 @@
+cards:
+- id: dl/smooth-activations-tanh-gelu-swish#1
+  type: qa
+  front: What exact GELU definition is used here?
+  back: x * Phi(x), with Phi the standard normal CDF.
+- id: dl/smooth-activations-tanh-gelu-swish#2
+  type: qa
+  front: What is beta-1 Swish?
+  back: x * sigmoid(x), also called SiLU.
+- id: dl/smooth-activations-tanh-gelu-swish#3
+  type: qa
+  front: What is the derivative of tanh(x)?
+  back: 1 - tanh(x)**2.
+- id: dl/smooth-activations-tanh-gelu-swish#4
+  type: qa
+  front: What is the derivative of exact GELU?
+  back: Phi(x) + x * phi(x), with phi the standard normal density.
+- id: dl/smooth-activations-tanh-gelu-swish#5
+  type: qa
+  front: What is the derivative of beta-1 Swish?
+  back: s + x*s*(1-s), where s = sigmoid(x).

@@ -1,0 +1,16 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: inf/paged-kv-cache
+title: "Paged KV cache"
+tier: A
+requires: ['inf/kv-cache-size-arithmetic', 'algo/hash-maps-and-sets']
+aliases: [PagedAttention, paged attention, block table, block allocator, KV blocks, vLLM, internal fragmentation, copy-on-write, prefix sharing]
+objectives:
+  - "Allocate KV-cache blocks on demand for each sequence through a block table, and free them on completion"
+  - "Explain why internal fragmentation is confined to the last block of a sequence, and how that raises the batch size"
+  - "Describe copy-on-write prefix sharing at the level of block tables, without implementing it"
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: "Explain that a contiguous per-request KV reservation wastes memory on unknown output lengths, and that a block table with lowest-free reuse removes that waste except in the last block."
+sources:
+  - "paper: Kwon et al. 2023, Efficient Memory Management for Large Language Model Serving with PagedAttention (arXiv:2309.06180); general topic source, not quoted"
+  - "corpus: library-papers/deepseek-v4-2026.pdf p.22"
+status: reviewed

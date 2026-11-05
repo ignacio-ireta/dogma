@@ -1,0 +1,16 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: llm/autoregressive-generation-loop
+title: "Autoregressive generation loop"
+tier: A
+requires: [dl/causal-masking]
+aliases: [greedy decoding, decode loop, prefill and decode, EOS stopping, argmax decoding, generation loop]
+objectives:
+  - "Implement greedy decoding over a batch with a per-sequence finished flag and a fixed padding rule"
+  - "Explain prefill versus one-token decode steps, and why each decode step is memory-bound"
+  - "State the stop rules: EOS per sequence, and max_new_tokens for the whole batch"
+minutes: {lesson: 12, practice: 25, min_viable: 12}
+interview_angle: "Describe the loop in four lines: prefill, pick the next token, append, stop each row on EOS or the step cap. Then say why a decode step is memory-bound and what batching changes."
+sources:
+  - "paper: Vaswani et al. 2017, Attention Is All You Need (arXiv:1706.03762), section 3.2.3"
+  - "book: Jurafsky and Martin, Speech and Language Processing, the chapters on language models and decoding"
+status: reviewed

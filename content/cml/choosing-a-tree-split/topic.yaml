@@ -1,0 +1,17 @@
+id: cml/choosing-a-tree-split
+title: Choosing a tree split
+tier: A
+requires: [cml/entropy-and-mutual-information, cml/expectation-and-variance]
+aliases: [Gini impurity, impurity decrease, information gain, CART split, threshold search, variance reduction, decision stump, greedy splitting]
+objectives:
+  - Implement the best threshold for one numeric feature under Gini or entropy impurity, with the child-weighted impurity decrease
+  - Explain why sorting once and scanning prefix class counts finds the best threshold in O(n log n) for a fixed number of classes, and why ties need a rule
+  - Explain why greedy splitting can miss an interaction such as XOR, and what a single split cannot see
+  - Derive the regression split as variance reduction, and state how a categorical feature is handled for a binary target
+minutes: {lesson: 12, practice: 35, min_viable: 20}
+interview_angle: >-
+  Expect the Gini impurity and the weighted decrease, why a split is found by sorting and prefix counts, why greedy splits miss XOR, and why Gini and entropy often choose similar splits.
+sources:
+  - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter 9 (tree-based methods: node impurity and splitting)"
+  - "book: Breiman, Friedman, Olshen & Stone, Classification and Regression Trees (1984), splitting rules"
+status: reviewed

@@ -1,0 +1,16 @@
+id: dl/sgd-with-momentum
+title: "SGD with momentum"
+tier: A
+requires: ['cml/gradient-descent', 'cml/stochastic-and-mini-batch-gradient-descent']
+aliases: [heavy ball, momentum buffer, Nesterov momentum, exponential moving direction, coupled weight decay]
+objectives:
+  - Implement the PyTorch momentum-buffer update, including the first-step rule, and match torch.optim.SGD over several steps
+  - Explain why the learning rate placement in the buffer changes the result only when the learning rate varies
+  - Derive the Nesterov look-ahead update and where coupled weight decay enters the gradient
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: "Write the momentum update and say what the buffer remembers; then explain why changing the learning rate mid-run is not the same under the two common conventions."
+sources:
+  - "book: Goodfellow, Bengio and Courville, Deep Learning, ch. 8 (optimization: momentum); general reference, not checked against the text"
+  - "library: AI-ML/03-Optimization/Polyak Heavy-Ball Momentum 1964.md"
+  - "corpus: library-papers/hinton-rmsprop-2012.pdf.md p.20"
+status: reviewed

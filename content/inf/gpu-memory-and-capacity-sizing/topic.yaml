@@ -1,0 +1,16 @@
+id: inf/gpu-memory-and-capacity-sizing
+title: "GPU memory and capacity sizing"
+tier: A
+requires: [inf/kv-cache-size-arithmetic, llm/model-parameter-and-memory-footprint]
+aliases: [capacity planning, GPU count, tensor parallel degree, weights per GPU, memory budget, reserve fraction, fragmentation, concurrency sizing]
+objectives:
+  - "Split a model's weights and KV cache across a tensor-parallel group, and state which share follows the KV heads"
+  - "Compute the usable memory after a reserve and the per-GPU total with exact integer rules, including the ceiling of the weight shard"
+  - "Find the smallest power-of-two degree that divides the KV heads and fits, and the concurrency that remains"
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: "Start from the per-GPU share: weights over the degree, the cache over the KV heads, workspace and a reserve. Then choose the smallest allowed degree that fits, and say the load it is sized for."
+sources:
+  - "corpus: library-papers/2202.08906.pdf p.14"
+  - "paper: Shoeybi et al. 2019, Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism (arXiv:1909.08053)"
+  - "paper: Kwon et al. 2023, Efficient Memory Management for Large Language Model Serving with PagedAttention (arXiv:2309.06180)"
+status: reviewed

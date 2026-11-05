@@ -1,0 +1,28 @@
+cards:
+  - id: cml/adaboost-and-gradient-boosting#1
+    type: qa
+    front: "What does a gradient boosting round fit under squared error?"
+    back: "The residuals y minus the current prediction F. They are the negative gradient of one half the squared error."
+  - id: cml/adaboost-and-gradient-boosting#2
+    type: qa
+    front: "What does the learning rate do in gradient boosting?"
+    back: "It shrinks each step. A smaller rate needs more rounds, and usually generalises better."
+  - id: cml/adaboost-and-gradient-boosting#3
+    type: qa
+    front: "Which loss does AdaBoost minimise?"
+    back: "The exponential loss exp(-y F) for labels in {-1, +1}, fitted stagewise."
+  - id: cml/adaboost-and-gradient-boosting#4
+    type: cloze
+    text: "The AdaBoost vote for a learner with weighted error e is alpha = {{c1::one half times ln((1 - e) / e)}}."
+  - id: cml/adaboost-and-gradient-boosting#5
+    type: qa
+    front: "Why is AdaBoost sensitive to mislabelled points?"
+    back: "A point that is wrong in every round gains weight relative to correct points, by a factor e^(2 alpha) per round, so the next learner keeps chasing it."
+  - id: cml/adaboost-and-gradient-boosting#6
+    type: qa
+    front: "After one AdaBoost update, what is the weighted error of the same learner?"
+    back: "Exactly one half, under the new normalised weights. The learner is at chance level for the next round."
+  - id: cml/adaboost-and-gradient-boosting#7
+    type: qa
+    front: "How is the number of boosting rounds chosen in practice?"
+    back: "By early stopping: stop when the error on held-out data stops improving, not when training error does."

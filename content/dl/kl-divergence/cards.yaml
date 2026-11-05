@@ -1,0 +1,28 @@
+cards:
+  - id: dl/kl-divergence#1
+    type: qa
+    front: Write KL(P || Q) for discrete distributions.
+    back: "sum_j p_j log(p_j / q_j)."
+  - id: dl/kl-divergence#2
+    type: qa
+    front: What does a term with p_j = 0 contribute?
+    back: Zero, by the convention 0 log 0 = 0, even when q_j = 0.
+  - id: dl/kl-divergence#3
+    type: qa
+    front: What is KL(P || Q) when q_j = 0 and p_j > 0?
+    back: +infinity. Q forbids mass that P has.
+  - id: dl/kl-divergence#4
+    type: qa
+    front: How is KL related to cross-entropy and entropy?
+    back: "KL(P || Q) = H(P, Q) - H(P)."
+  - id: dl/kl-divergence#5
+    type: qa
+    front: Which direction is mean-seeking, and which is mode-seeking?
+    back: KL(P || Q), the forward direction, is mean-seeking. KL(Q || P) is mode-seeking.
+  - id: dl/kl-divergence#6
+    type: qa
+    front: What does torch.nn.functional.kl_div expect as its first argument by default?
+    back: Log-probabilities of Q, with the target P as probabilities.
+  - id: dl/kl-divergence#7
+    type: cloze
+    text: "KL(P || Q) with the natural log is measured in {{c1::nats}}, and with log base 2 in bits."

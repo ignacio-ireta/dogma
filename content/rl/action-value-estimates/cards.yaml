@@ -1,0 +1,24 @@
+cards:
+- id: rl/action-value-estimates#1
+  type: qa
+  front: What is the incremental sample-average update for Q after reward r for an action taken n times, counting this one?
+  back: "Q <- Q + (1/n)(r - Q). It reproduces the batch mean of the n rewards without storing them."
+- id: rl/action-value-estimates#2
+  type: qa
+  front: What is the general incremental form of an action-value update?
+  back: "NewEstimate <- OldEstimate + StepSize * (Target - OldEstimate)."
+- id: rl/action-value-estimates#3
+  type: qa
+  front: Why does the constant step size alpha track a changing reward distribution?
+  back: It gives recent rewards exponentially larger weight, so old rewards decay as (1 - alpha) per update.
+- id: rl/action-value-estimates#4
+  type: qa
+  front: What is the step size on the first update of a sample-average estimate, and what does it do to the initial value?
+  back: "1/1 = 1, so the first reward overwrites the initial value completely."
+- id: rl/action-value-estimates#5
+  type: cloze
+  text: "With a constant alpha, after n updates the weight on the initial value is {{c1::(1 - alpha)^n}}."
+- id: rl/action-value-estimates#6
+  type: qa
+  front: How does an optimistic initial value encourage exploration?
+  back: An untried action looks better than it is, so greedy choice tries it, and the estimate falls once real rewards arrive.

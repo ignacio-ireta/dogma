@@ -1,0 +1,13 @@
+id: cml/rolling-statistics-stationarity-and-autocorrelation/p03-seasonal-naive-forecast-and-mase
+version: 3
+title: Seasonal naive forecast and MASE
+language: python
+runtime: py-numpy
+entry: seasonal_naive_forecast_and_mase
+difficulty: medium
+minutes: 25
+core: false
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [statsmodels, pandas]
+timeout_s: 30
+status: reviewed

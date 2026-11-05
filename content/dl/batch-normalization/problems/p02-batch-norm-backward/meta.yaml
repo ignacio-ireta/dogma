@@ -1,0 +1,13 @@
+id: dl/batch-normalization/p02-batch-norm-backward
+version: 3
+title: Batch normalization backward (training mode)
+language: python
+runtime: py-torch
+entry: batch_norm_backward
+difficulty: hard
+minutes: 30
+core: false
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [torch.nn, torch.autograd, torch.func, torch.ops, torch.batch_norm, torch.native_batch_norm, torch._native_batch_norm_legit, torch._native_batch_norm_legit_no_training, torch._batch_norm_impl_index, torch.batch_norm_backward_elemt, torch.batch_norm_backward_reduce, torch.batch_norm_stats, torch.batch_norm_elemt, torch.batch_norm_update_stats, torch.batch_norm_gather_stats, torch.cudnn_batch_norm, torch.miopen_batch_norm, torch.instance_norm, torch.group_norm]
+timeout_s: 30
+status: reviewed

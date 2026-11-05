@@ -1,0 +1,20 @@
+cards:
+- id: rl/epsilon-greedy-exploration#1
+  type: qa
+  front: What is the probability that epsilon-greedy picks the greedy action when there are A actions and one unique maximum?
+  back: "1 - epsilon + epsilon / A. The exploration draw can also land on the greedy action."
+- id: rl/epsilon-greedy-exploration#2
+  type: qa
+  front: What is the probability that epsilon-greedy picks any one specific non-greedy action?
+  back: "epsilon / A."
+- id: rl/epsilon-greedy-exploration#3
+  type: qa
+  front: Why does a fixed epsilon pay a cost on every step?
+  back: With probability epsilon the agent picks a random action, which can be worse than the greedy one, even after the estimates are accurate.
+- id: rl/epsilon-greedy-exploration#4
+  type: qa
+  front: Why is a fixed tie-breaking rule useful when exploiting?
+  back: So that two runs with the same seed and estimates take the same action, which makes results reproducible and debugging possible.
+- id: rl/epsilon-greedy-exploration#5
+  type: cloze
+  text: "With a seeded generator, reproducibility needs a fixed {{c1::order of random draws}} as well as a fixed seed."

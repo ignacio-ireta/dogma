@@ -1,0 +1,16 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: llm/instruction-tuning-batches-and-loss-masks
+title: "Instruction-tuning batches and loss masks"
+tier: A
+requires: ['llm/padding-truncation-and-pad-masks', 'llm/negative-log-likelihood-and-perplexity']
+aliases: [SFT, supervised fine-tuning, loss mask, label masking, response-only loss, prompt masking, ignore_index, multi-turn masking, packing, chat template]
+objectives:
+  - Build (input_ids, labels, attention_mask) for (prompt, response) pairs, with labels -100 on every prompt and padding position
+  - State the label alignment (labels sit on the same positions as the inputs; the one-token shift happens in the loss) and check it with a test that uses the shifted loss
+  - Explain why training on prompt tokens spends capacity on text the user wrote, and what multi-turn masking and packing change
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: "Start with the mask: which positions are targets, and where the one-token shift happens. Then say what changes with several assistant turns and with packed conversations."
+sources:
+  - "paper: Ouyang et al. 2022, Training language models to follow instructions with human feedback (arXiv:2203.02155), supervised fine-tuning stage"
+  - "library: AI-ML/12-Frontiers/Ouyang InstructGPT RLHF 2022.md"
+status: reviewed

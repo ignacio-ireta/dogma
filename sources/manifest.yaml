@@ -1,0 +1,216 @@
+# Import manifest: the executable form of docs/IMPORT_PLAN.md (run once by scripts/import_sources.py).
+#
+# snapshots: rules are evaluated in order; a later matching rule overrides an earlier one.
+#   action: import   -> copy to sources/<id>/<relative path>, committed after scrubbing
+#   action: exclude  -> not copied
+#   rename           -> optional {regex: replacement} applied to destination file names
+# corpus:   copied as-is into corpus/raw/<id>/ (gitignored, third-party). An entry may name
+#           exact files with `include:` instead of `glob:`; a missing listed file stops the run.
+# vendor:   copied into tools/<id>/ (committed, license kept), with VENDORED.md provenance
+# `root:` is a key resolved through private/import_roots.yaml (gitignored), so no origin paths are
+# committed. Origins are read only at import time; afterwards the repo never reads them again.
+version: 2
+
+snapshots:
+  - id: library
+    root: library
+    rules:
+      - {glob: "AI-ML/**/*.md", action: import}
+      - {glob: "Mathematics/**/*.md", action: import}
+      - {glob: "LINEAGE.md", action: import}
+      - {glob: "_MOC.md", action: import}
+      - {glob: "scripts/arxiv-fetch.py", action: import}
+    rename:            # regex on the destination file name
+      "^(.* Interview Bridge) - .*\\.md$": "\\1.md"
+
+  - id: interview-prep
+    root: interview-prep
+    rules:
+      - {glob: "frameworks/*.md", action: import}
+      - {glob: "lessons/ref-failure-modes.md", action: import}
+      - {glob: "lessons/ref-model-selection.md", action: import}
+      - {glob: "lessons/ref-rass.md", action: import}
+      - {glob: "lessons/ref-three-phrases.md", action: import}
+      - {glob: "drills/**/*", action: import}
+      - {glob: "mock-interviews/SCORING_RUBRIC.md", action: import}
+      - {glob: "mock-interviews/INTERVIEWER_README.md", action: import}
+      - {glob: "mock-interviews/mock_assessment_v2*", action: import}
+      - {glob: "mock-interviews/pack-*/**/*", action: import}
+      - {glob: "reference/ml_flashcards.md", action: import}
+      - {glob: "reference/ml_concepts_flashcards.md", action: import}
+      - {glob: "reference/ml_ds_interview_refresher.md", action: import}
+      - {glob: "reference/sklearn_cheatsheet.md", action: import}
+      - {glob: "reference/syntax_cheatsheet.md", action: import}
+      - {glob: "reference/business_vocabulary.md", action: import}
+      - {glob: "data/*.csv", action: import}
+      - {glob: "generate_mock_data.py", action: import}
+      - {glob: "DAILY_HABITS.md", action: import}
+      - {glob: "archive/xgboost_guide.md", action: import}
+      - {glob: "archive/mlflow_guide.md", action: import}
+      - {glob: "archive/aws_sagemaker_ai_guide.md", action: import}
+      - {glob: "**/*.zip", action: exclude}
+      - {glob: "**/.DS_Store", action: exclude}
+      - {glob: "**/.ipynb_checkpoints/**", action: exclude}
+      - {glob: "**/__pycache__/**", action: exclude}
+
+  - id: mvs
+    root: mvs
+    rules:
+      - {glob: "tools/build_*.py", action: import}
+      - {glob: "tools/nbbuild.py", action: import}
+      - {glob: "*.ipynb", action: import}
+      - {glob: "mvslib/*.py", action: import}
+      - {glob: "data/*.csv", action: import}
+      - {glob: "DATA_SOURCES.md", action: import}
+      - {glob: "README.md", action: import}
+      - {glob: "METHOD_COMPARISON.md", action: import}
+
+  - id: exam-lessons
+    root: exam-lessons
+    rules:
+      - {glob: "multivariate_statistics/daily-lessons/*.md", action: import}
+      - {glob: "study-notes/*.md", action: import}
+      - {glob: "dp100/daily-lessons/*rag*.md", action: import}
+      - {glob: "dp100/daily-lessons/*prompt-flow*.md", action: import}
+      - {glob: "dp100/daily-lessons/*finetuning*.md", action: import}
+
+  - id: legacy-viz
+    root: legacy-viz
+    rules:
+      - {glob: "ml-metrics.html", action: import}
+      - {glob: "ml-concepts.html", action: import}
+      - {glob: "model-selection.html", action: import}
+      - {glob: "probability-stats.html", action: import}
+      - {glob: "sql-concepts.html", action: import}
+      - {glob: "data-wrangling.html", action: import}
+
+  # I-25a refresh: reviewed Library notes (36) from docs/source-refresh-2026-10-28.json.
+  # Destination keeps the Library-relative path. Scrub, then relock (see docs/IMPORT_PLAN.md).
+  - id: library-refresh
+    root: library
+    rules:
+      - {glob: "01-Mathematics/00-Seed-Sources/2020 -- Deisenroth, Faisal and Ong -- A Map from Mathematical Foundations to Machine Learning -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/03-Calculus/2018 -- Baydin et al -- Automatic Differentiation as Executable Chain Rules -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/03-Calculus/2018 -- Chen et al -- Neural ODEs and Continuous Adjoint Sensitivity -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/03-Calculus/2026 -- Library -- From Derivatives to Jacobians and Hessians -- Concept Note.md", action: import}
+      - {glob: "01-Mathematics/04-Analysis-and-Measure/2026 -- Library -- Dominated Convergence and Gradients of Expectations -- Concept Note.md", action: import}
+      - {glob: "01-Mathematics/05-Linear-Algebra/1955-1970 -- Penrose, Golub and Reinsch -- Least Squares, Pseudoinverses and Numerical Stability -- Concept Note.md", action: import}
+      - {glob: "01-Mathematics/05-Linear-Algebra/1990-2021 -- Library -- From Latent Semantic Analysis to Embeddings and Low-Rank Adaptation -- Concept Note.md", action: import}
+      - {glob: "01-Mathematics/05-Linear-Algebra/1991 -- Goldberg -- Finite Precision, Rounding Error and Stable Computation -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/05-Linear-Algebra/2003 -- Dasgupta and Gupta -- Random Projection and the Johnson-Lindenstrauss Guarantee -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/05-Linear-Algebra/2005-2006 -- Candès, Romberg and Tao -- Sparse Recovery from Incomplete and Noisy Measurements -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/05-Linear-Algebra/2011 -- Halko, Martinsson and Tropp -- Randomized SVD as a Computational Bridge -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/05-Linear-Algebra/2012 -- Petersen and Pedersen -- Matrix Differentials for Machine Learning -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/05-Linear-Algebra/2024 -- Axler -- Vector Spaces, Inner Products and Representation Geometry -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/06-Probability-and-Statistics/1933 -- Kolmogorov -- Probability Spaces, Conditioning and Limit Laws -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/06-Probability-and-Statistics/1933 -- Neyman and Pearson -- Hypothesis Tests as Controlled Decisions -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/06-Probability-and-Statistics/1977 -- Dempster, Laird and Rubin -- EM and Latent Variable Likelihood -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/06-Probability-and-Statistics/1979 -- Efron -- Bootstrap and Sampling Uncertainty -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/06-Probability-and-Statistics/2008 -- Wainwright and Jordan -- Graphical Models and Variational Inference -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/06-Probability-and-Statistics/2020 -- Hernán and Robins -- Identification Before Estimation -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/06-Probability-and-Statistics/2022-2026 -- Angelopoulos et al -- Conformal Prediction and the Limits of Coverage -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/07-Information-Theory/2003 -- MacKay -- Coding, Bayesian Inference and Learning as Compression -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/08-Optimization/1951 -- Dantzig -- Linear Programming - Models, Polyhedra and Simplex -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/08-Optimization/1984 -- Karmarkar -- Interior-Point Methods, Complexity and Practical Limits -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/08-Optimization/1994 -- Goemans -- Linear Programming - Duality and Alternative Certificates -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/08-Optimization/2004 -- Boyd and Vandenberghe -- Convexity, Duality and KKT Certificates -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/08-Optimization/2018 -- Bottou, Curtis and Nocedal -- Stochastic Gradients, Noise and Computation -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/08-Optimization/2022 -- Blondel et al -- Implicit Differentiation and Optimization Layers -- Study Note.md", action: import}
+      - {glob: "01-Mathematics/08-Optimization/2026 -- Library -- Choosing Between Linear Programming, Gradients and Evolution -- Concept Note.md", action: import}
+      - {glob: "01-Mathematics/08-Optimization/2026 -- Library -- Proximal Steps and Accelerated Convex Optimization -- Concept Note.md", action: import}
+      - {glob: "01-Mathematics/09-Learning-Theory/1963-2014 -- Hoeffding et al -- Concentration, Uniform Convergence and PAC Learning -- Study Note.md", action: import}
+      - {glob: "02-AI-ML/00-Overviews-and-Books/2006 -- Bishop -- Probabilistic Models, Latent Variables and Approximate Inference -- Study Note.md", action: import}
+      - {glob: "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/1997 -- Storn and Price -- Differential Evolution for Real-Valued Search -- Study Note.md", action: import}
+      - {glob: "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2002 -- Deb et al -- Pareto Search, NSGA-II and Honest Benchmarking -- Study Note.md", action: import}
+      - {glob: "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2002 -- Stanley and Miikkulainen -- NEAT - Evolving Network Structure and Weights -- Study Note.md", action: import}
+      - {glob: "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2013 -- Luke -- Genetic Algorithms - Representation, Variation and Selection -- Study Note.md", action: import}
+      - {glob: "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2016 -- Hansen -- Evolution Strategies and CMA-ES Covariance Adaptation -- Study Note.md", action: import}
+
+corpus:
+  - {id: library-papers, root: library-papers, glob: "*.pdf"}
+  # I-25a refresh: 72 PDFs listed exactly in the inventory. Gitignored third-party copies.
+  # Missing listed files stop the run (see IMPORT_PLAN section 4 and scripts/import_sources.py).
+  - id: library-refresh
+    root: library
+    include:
+      - "01-Mathematics/00-Seed-Sources/2020 -- Deisenroth, Faisal and Ong -- Mathematics for Machine Learning -- Cambridge UP -- Author draft 2024-01-15.pdf"
+      - "01-Mathematics/03-Calculus/2016 -- Herman and Strang -- Calculus Volume 1 -- OpenStax -- Revised 2020.pdf"
+      - "01-Mathematics/03-Calculus/2016 -- Herman and Strang -- Calculus Volume 3 -- OpenStax -- Revised 2018.pdf"
+      - "01-Mathematics/03-Calculus/2018 -- Baydin et al -- Automatic Differentiation in Machine Learning - A Survey -- JMLR.pdf"
+      - "01-Mathematics/03-Calculus/2018 -- Chen et al -- Neural Ordinary Differential Equations -- NeurIPS.pdf"
+      - "01-Mathematics/03-Calculus/2026-05-15 -- Lebl -- Basic Analysis II -- Version 6.3.pdf"
+      - "01-Mathematics/04-Analysis-and-Measure/2020 -- Axler -- Measure, Integration and Real Analysis -- Springer -- Revised 2026.pdf"
+      - "01-Mathematics/04-Analysis-and-Measure/2026-05-15 -- Lebl -- Basic Analysis I -- Version 6.3.pdf"
+      - "01-Mathematics/05-Linear-Algebra/1955 -- Penrose -- A Generalized Inverse for Matrices -- Proceedings of the Cambridge Philosophical Society.pdf"
+      - "01-Mathematics/05-Linear-Algebra/1970 -- Golub and Reinsch -- Singular Value Decomposition and Least Squares Solutions -- Numerische Mathematik.pdf"
+      - "01-Mathematics/05-Linear-Algebra/1990 -- Deerwester et al -- Indexing by Latent Semantic Analysis -- JASIS.pdf"
+      - "01-Mathematics/05-Linear-Algebra/1991 -- Goldberg -- What Every Computer Scientist Should Know About Floating-Point Arithmetic -- ACM Computing Surveys.pdf"
+      - "01-Mathematics/05-Linear-Algebra/2003 -- Dasgupta and Gupta -- An Elementary Proof of a Theorem of Johnson and Lindenstrauss -- Random Structures and Algorithms.pdf"
+      - "01-Mathematics/05-Linear-Algebra/2005 -- Candès, Romberg and Tao -- Stable Signal Recovery from Incomplete and Inaccurate Measurements -- arXiv -- v2.pdf"
+      - "01-Mathematics/05-Linear-Algebra/2011 -- Halko, Martinsson and Tropp -- Finding Structure with Randomness -- SIAM Review.pdf"
+      - "01-Mathematics/05-Linear-Algebra/2012 -- Petersen and Pedersen -- The Matrix Cookbook -- Technical University of Denmark -- November 15 version.pdf"
+      - "01-Mathematics/05-Linear-Algebra/2014 -- Levy and Goldberg -- Neural Word Embedding as Implicit Matrix Factorization -- NeurIPS.pdf"
+      - "01-Mathematics/05-Linear-Algebra/2018 -- Boyd and Vandenberghe -- Introduction to Applied Linear Algebra - Vectors, Matrices, and Least Squares -- Cambridge UP.pdf"
+      - "01-Mathematics/05-Linear-Algebra/2021 -- Hu et al -- LoRA - Low-Rank Adaptation of Large Language Models -- arXiv -- v2.pdf"
+      - "01-Mathematics/05-Linear-Algebra/2024 -- Axler -- Linear Algebra Done Right -- Springer -- 4th edition.pdf"
+      - "01-Mathematics/06-Probability-and-Statistics/1763 -- Bayes -- An Essay towards Solving a Problem in the Doctrine of Chances -- Modern transcription.pdf"
+      - "01-Mathematics/06-Probability-and-Statistics/1933 -- Kolmogorov -- Foundations of the Theory of Probability -- Chelsea -- Second English edition 1956.pdf"
+      - "01-Mathematics/06-Probability-and-Statistics/1933 -- Neyman and Pearson -- On the Problem of the Most Efficient Tests of Statistical Hypotheses -- Phil Trans R Soc A.pdf"
+      - "01-Mathematics/06-Probability-and-Statistics/1977 -- Dempster, Laird and Rubin -- Maximum Likelihood from Incomplete Data via the EM Algorithm -- JRSS B -- With discussion.pdf"
+      - "01-Mathematics/06-Probability-and-Statistics/1979 -- Efron -- Bootstrap Methods - Another Look at the Jackknife -- Annals of Statistics.pdf"
+      - "01-Mathematics/06-Probability-and-Statistics/2008 -- Wainwright and Jordan -- Graphical Models, Exponential Families and Variational Inference -- Author manuscript.pdf"
+      - "01-Mathematics/06-Probability-and-Statistics/2019 -- Durrett -- Probability - Theory and Examples -- Author manuscript 2019-01-11.pdf"
+      - "01-Mathematics/06-Probability-and-Statistics/2020 -- Hernán and Robins -- Causal Inference - What If -- Online revision 2026-08-19.pdf"
+      - "01-Mathematics/06-Probability-and-Statistics/2021 -- Barber et al -- The Limits of Distribution-Free Conditional Predictive Inference -- Information and Inference.pdf"
+      - "01-Mathematics/06-Probability-and-Statistics/2022 -- Angelopoulos and Bates -- A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification -- arXiv -- v6.pdf"
+      - "01-Mathematics/06-Probability-and-Statistics/2026 -- Angelopoulos, Barber and Bates -- Theoretical Foundations of Conformal Prediction -- arXiv -- v5.pdf"
+      - "01-Mathematics/07-Information-Theory/2003 -- MacKay -- Information Theory, Inference, and Learning Algorithms -- Cambridge UP -- 4th printing 2005.pdf"
+      - "01-Mathematics/08-Optimization/1951 -- Koopmans -- Activity Analysis of Production and Allocation -- Wiley -- Cowles Monograph 13.pdf"
+      - "01-Mathematics/08-Optimization/1984 -- Karmarkar -- A New Polynomial-Time Algorithm for Linear Programming -- Combinatorica.pdf"
+      - "01-Mathematics/08-Optimization/1994 -- Goemans -- Linear Programming -- MIT -- Lecture Notes.pdf"
+      - "01-Mathematics/08-Optimization/2004 -- Boyd and Vandenberghe -- Convex Optimization -- Cambridge UP.pdf"
+      - "01-Mathematics/08-Optimization/2013 -- Parikh and Boyd -- Proximal Algorithms -- Author manuscript.pdf"
+      - "01-Mathematics/08-Optimization/2015 -- Bubeck -- Convex Optimization - Algorithms and Complexity -- Foundations and Trends in Machine Learning.pdf"
+      - "01-Mathematics/08-Optimization/2017 -- Amos and Kolter -- OptNet - Differentiable Optimization as a Layer in Neural Networks -- ICML.pdf"
+      - "01-Mathematics/08-Optimization/2018 -- Bottou, Curtis and Nocedal -- Optimization Methods for Large-Scale Machine Learning -- Author manuscript.pdf"
+      - "01-Mathematics/08-Optimization/2022 -- Blondel et al -- Efficient and Modular Implicit Differentiation -- NeurIPS.pdf"
+      - "01-Mathematics/08-Optimization/undated -- Ferguson -- Linear Programming - A Concise Introduction -- UCLA -- Electronic Text.pdf"
+      - "01-Mathematics/09-Learning-Theory/1963 -- Hoeffding -- Probability Inequalities for Sums of Bounded Random Variables -- JASA.pdf"
+      - "01-Mathematics/09-Learning-Theory/1971 -- Vapnik and Chervonenkis -- Uniform Convergence of Relative Frequencies -- Theory of Probability and Its Applications -- English translation.pdf"
+      - "02-AI-ML/00-Overviews-and-Books/2006 -- Bishop -- Pattern Recognition and Machine Learning -- Springer.pdf"
+      - "02-AI-ML/02-Statistical-Learning/1936 -- Fisher -- The Use of Multiple Measurements in Taxonomic Problems -- Annals of Eugenics.pdf"
+      - "02-AI-ML/02-Statistical-Learning/1992 -- Boser, Guyon and Vapnik -- A Training Algorithm for Optimal Margin Classifiers -- COLT.pdf"
+      - "02-AI-ML/02-Statistical-Learning/2001 -- Friedman -- Greedy Function Approximation - A Gradient Boosting Machine -- Annals of Statistics.pdf"
+      - "02-AI-ML/02-Statistical-Learning/2016 -- Chen and Guestrin -- XGBoost - A Scalable Tree Boosting System -- arXiv.pdf"
+      - "02-AI-ML/05-Computer-Vision/2012 -- Krizhevsky, Sutskever and Hinton -- ImageNet Classification with Deep Convolutional Neural Networks -- NeurIPS.pdf"
+      - "02-AI-ML/07-Attention-and-Transformers/2020 -- Lewis et al -- Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks -- arXiv.pdf"
+      - "02-AI-ML/08-State-Space-Models/2021 -- Gu, Goel and Ré -- Efficiently Modeling Long Sequences with Structured State Spaces -- arXiv.pdf"
+      - "02-AI-ML/08-State-Space-Models/2024 -- Dao and Gu -- Transformers are SSMs - Generalized Models and Efficient Algorithms Through Structured State Space Duality -- arXiv.pdf"
+      - "02-AI-ML/09-Mixture-of-Experts/1991 -- Jacobs et al -- Adaptive Mixtures of Local Experts -- Neural Computation.pdf"
+      - "02-AI-ML/09-Mixture-of-Experts/1994 -- Jordan and Jacobs -- Hierarchical Mixtures of Experts and the EM Algorithm -- Neural Computation.pdf"
+      - "02-AI-ML/09-Mixture-of-Experts/2020 -- Lepikhin et al -- GShard - Scaling Giant Models with Conditional Computation and Automatic Sharding -- arXiv.pdf"
+      - "02-AI-ML/09-Mixture-of-Experts/2021 -- Du et al -- GLaM - Efficient Scaling of Language Models with Mixture-of-Experts -- arXiv.pdf"
+      - "02-AI-ML/09-Mixture-of-Experts/2021 -- Fedus, Zoph and Shazeer -- Switch Transformers - Scaling to Trillion Parameter Models with Simple and Efficient Sparsity -- arXiv.pdf"
+      - "02-AI-ML/09-Mixture-of-Experts/2024 -- Dai et al -- DeepSeekMoE - Towards Ultimate Expert Specialization in Mixture-of-Experts Language Models -- arXiv.pdf"
+      - "02-AI-ML/13-Alignment-and-Reasoning/2017 -- Christiano et al -- Deep Reinforcement Learning from Human Preferences -- arXiv.pdf"
+      - "02-AI-ML/13-Alignment-and-Reasoning/2020 -- Stiennon et al -- Learning to Summarize from Human Feedback -- arXiv.pdf"
+      - "02-AI-ML/13-Alignment-and-Reasoning/2022 -- Bai et al -- Constitutional AI - Harmlessness from AI Feedback -- arXiv.pdf"
+      - "02-AI-ML/13-Alignment-and-Reasoning/2022 -- Ouyang et al -- Training Language Models to Follow Instructions with Human Feedback -- arXiv.pdf"
+      - "02-AI-ML/13-Alignment-and-Reasoning/2023 -- Rafailov et al -- Direct Preference Optimization - Your Language Model is Secretly a Reward Model -- arXiv.pdf"
+      - "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/1994 -- Whitley -- A Genetic Algorithm Tutorial -- Author manuscript.pdf"
+      - "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/1997 -- Storn and Price -- Differential Evolution -- Journal of Global Optimization.pdf"
+      - "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/1997 -- Wolpert and Macready -- No Free Lunch Theorems for Optimization -- IEEE TEC.pdf"
+      - "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2002 -- Stanley and Miikkulainen -- Evolving Neural Networks through Augmenting Topologies -- Evolutionary Computation.pdf"
+      - "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2013 -- Luke -- Essentials of Metaheuristics -- Lulu -- 2nd edition - Online 2.4 January 2026.pdf"
+      - "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2016 -- Hansen -- The CMA Evolution Strategy - A Tutorial -- arXiv -- v2 2023.pdf"
+      - "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/2017 -- Salimans et al -- Evolution Strategies as a Scalable Alternative to Reinforcement Learning -- arXiv -- v2.pdf"
+      - "02-AI-ML/15-Evolutionary-and-Genetic-Algorithms/undated -- Deb et al -- A Fast and Elitist Multiobjective Genetic Algorithm - NSGA-II -- KanGAL Report 200001.pdf"
+
+vendor:
+  - id: docmd
+    root: docmd
+    origin_commit: 127aa5d
+    license: MIT
+    include: [src/**, tests/**, docs/**, pyproject.toml, uv.lock, LICENSE, README.md,
+              CHANGELOG.md, CONTRIBUTING.md, .gitignore]
+    exclude: [tests/fixtures/_build/**, "**/__pycache__/**", "**/.DS_Store", "*_USAGE.md"]

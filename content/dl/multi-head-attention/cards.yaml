@@ -1,0 +1,20 @@
+cards:
+  - id: dl/multi-head-attention#1
+    type: qa
+    front: What are the shapes of Q, K and V in multi-head attention?
+    back: "Each is (B, L, d_model), produced by a linear map from the input x of the same shape."
+  - id: dl/multi-head-attention#2
+    type: qa
+    front: What is d_k in a layer with h heads?
+    back: "d_k = d_model / h. Each head works on d_k features of Q, K and V."
+  - id: dl/multi-head-attention#3
+    type: cloze
+    text: "Head splitting is reshape to (B, L, h, d_k) followed by transpose(1, 2), giving {{c1::(B, h, L, d_k)}}."
+  - id: dl/multi-head-attention#4
+    type: qa
+    front: How many parameters does a multi-head attention layer with weight matrices and biases have?
+    back: "Four (d_model, d_model) matrices and four bias vectors: 4(d_model^2 + d_model). The head count does not change it."
+  - id: dl/multi-head-attention#5
+    type: qa
+    front: Why divide the scores by sqrt(d_k)?
+    back: "Dot products of unit-variance features have variance d_k, so unscaled scores grow with width and saturate the softmax."

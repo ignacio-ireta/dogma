@@ -1,0 +1,15 @@
+id: dl/batch-normalization
+title: "Batch normalization"
+tier: A
+requires: ['dl/dense-layer-forward-pass', 'cml/expectation-and-variance']
+aliases: ['batch norm', 'BatchNorm', 'running statistics', 'internal covariate shift', 'momentum update']
+objectives:
+  - Implement the training and inference forward passes of batch normalization for (N, C) inputs, including the running-statistics update
+  - Explain why normalization uses biased variance while the running estimate uses unbiased variance, and which momentum convention PyTorch uses
+  - Derive the closed-form backward pass and verify it against autograd and finite differences
+minutes: {lesson: 14, practice: 30, min_viable: 15}
+interview_angle: Explain the train-versus-eval split, why batch size one breaks the method, and what the running statistics are for before writing any code.
+sources:
+  - "paper: Ioffe and Szegedy 2015, Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift (arXiv:1502.03167)"
+  - "library: AI-ML/10-Backpropagation/Ioffe Szegedy Batch Normalization 2015.md"
+status: reviewed

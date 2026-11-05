@@ -1,0 +1,28 @@
+cards:
+  - id: cml/regression-metrics-and-robust-losses#1
+    type: qa
+    front: Which constant prediction minimises the sum of squared errors?
+    back: "The mean of y. Setting the derivative of sum (y_i - c)^2 to zero gives c = mean(y)."
+  - id: cml/regression-metrics-and-robust-losses#2
+    type: qa
+    front: Which constant prediction minimises the sum of absolute errors?
+    back: "The median of y. The derivative of sum |y_i - c| is a sum of signs, which changes sign at the median."
+  - id: cml/regression-metrics-and-robust-losses#3
+    type: qa
+    front: What does R² = 0 mean?
+    back: "The model is no better than predicting the mean of y for every row. The denominator is the squared error of that predictor."
+  - id: cml/regression-metrics-and-robust-losses#4
+    type: qa
+    front: Can R² be negative, and why?
+    back: "Yes. When the model's squared error exceeds the squared error of predicting the mean, the numerator exceeds the denominator. R² has no floor at zero."
+  - id: cml/regression-metrics-and-robust-losses#5
+    type: qa
+    front: What is the Huber gradient outside the threshold?
+    back: "delta * sign(r). It is capped at delta in size, so large residuals stop pulling harder."
+  - id: cml/regression-metrics-and-robust-losses#6
+    type: cloze
+    text: "The Huber loss is quadratic for |r| <= delta and {{c1::linear}} beyond it, so its residual derivative is bounded."
+  - id: cml/regression-metrics-and-robust-losses#7
+    type: qa
+    front: Why is MAPE unreliable for targets near zero?
+    back: "It divides each error by the actual value, so a zero target has no defined percentage error. Small actuals also inflate it without bound."

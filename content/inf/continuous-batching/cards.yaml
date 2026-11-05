@@ -1,0 +1,22 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: inf/continuous-batching#1
+    type: qa
+    front: What is the difference between static and continuous batching?
+    back: "Static starts a batch only when nothing is running. Continuous admits a request whenever a slot is free."
+  - id: inf/continuous-batching#2
+    type: qa
+    front: In the step model, what is a request's finish step?
+    back: "first token step + output length - 1. The admission step produces token 1."
+  - id: inf/continuous-batching#3
+    type: cloze
+    text: "A slot freed at the end of step t can be reused by a request admitted at step {{c1::t + 1}}."
+  - id: inf/continuous-batching#4
+    type: qa
+    front: What does FCFS admission without skipping mean for a request that does not fit?
+    back: "No later request is admitted ahead of it. The queue waits behind the blocked head."
+  - id: inf/continuous-batching#5
+    type: qa
+    front: Why does static batching lose throughput when output lengths vary?
+    back: "Slots freed by early finishers stay idle until the longest request in the batch finishes."

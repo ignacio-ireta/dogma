@@ -1,0 +1,15 @@
+id: dl/one-training-step/p01-manual-sgd-train-step
+version: 2                      # bump when tests, tolerances or the contract change
+title: One manual SGD step
+language: python                # python | sql
+runtime: py-torch               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: train_step               # the function or class name the learner implements
+difficulty: medium
+minutes: 25
+core: true                      # p01 is the core problem: exactly one per topic
+# atol 1e-9 and rtol 1e-9 are the float64 bar: the step is one multiply and one subtract per entry,
+# so the learner's and the oracle's values must agree to roundoff.
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [torch.optim, torch.Tensor.data]  # the library optimizer is the oracle; .data hides the update
+timeout_s: 30
+status: reviewed

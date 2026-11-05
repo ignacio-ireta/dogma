@@ -1,0 +1,32 @@
+cards:
+  - id: algo/hash-maps-and-sets#1
+    type: qa
+    front: What is the average cost of a dict lookup, and what is the worst case?
+    back: O(1) on average. O(n) in the worst case, when many keys land in one bucket.
+  - id: algo/hash-maps-and-sets#2
+    type: qa
+    front: Write the counting idiom in one line.
+    back: "counts[t] = counts.get(t, 0) + 1"
+  - id: algo/hash-maps-and-sets#3
+    type: qa
+    front: What are the costs of top-k by sorting d distinct items, and by a heap of size k?
+    back: O(d log d) for the sort, O(d log k) for the heap. The heap wins when k is much smaller than d.
+  - id: algo/hash-maps-and-sets#4
+    type: qa
+    front: Why is x in some_set faster than x in some_list?
+    back: A set uses a hash lookup, O(1) on average. A list checks each element, O(n).
+  - id: algo/hash-maps-and-sets#5
+    type: cloze
+    text: "A hash map finds a key by computing a {{c1::hash}} to choose a bucket, so lookup is O(1) on average."
+  - id: algo/hash-maps-and-sets#6
+    type: qa
+    front: Why is (-count, token) a good sort key for top-k?
+    back: One sort puts the highest count first and breaks ties by token in ascending order.
+  - id: algo/hash-maps-and-sets#7
+    type: qa
+    front: What is a hash collision, and does it change the answer?
+    back: Two keys share a bucket. The table still finds the right key, so the answer is unchanged. Only the speed suffers.
+  - id: algo/hash-maps-and-sets#8
+    type: qa
+    front: Why can't a list be a dict key?
+    back: A list is mutable, so its hash could change. Python raises TypeError. Use a tuple.

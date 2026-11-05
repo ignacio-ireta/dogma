@@ -1,0 +1,16 @@
+cards:
+  - id: sys/churn-prediction-case#1
+    type: qa
+    front: Why segment subscribers by plan before modelling churn?
+    back: Prepaid and postpaid subscribers churn for different reasons, so they need different signals and thresholds.
+  - id: sys/churn-prediction-case#2
+    type: cloze
+    text: "Churn is a targeting problem: rank by risk, then spend the offer budget on the top of the list, weighted by {{c1::lifetime value}}."
+  - id: sys/churn-prediction-case#3
+    type: qa
+    front: What usage signal is a strong early warning of churn?
+    back: A usage decline sustained over about three months.
+  - id: sys/churn-prediction-case#4
+    type: qa
+    front: Why can a blanket discount raise churn?
+    back: It spends money on loyal subscribers and can teach price-sensitive customers to wait for offers.

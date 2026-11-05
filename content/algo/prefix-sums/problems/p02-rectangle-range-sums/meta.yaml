@@ -1,0 +1,13 @@
+id: algo/prefix-sums/p02-rectangle-range-sums
+version: 2
+title: Rectangle range sums
+language: python
+runtime: py-stdlib
+entry: rectangle_sums
+difficulty: medium
+minutes: 25
+core: false
+tolerance: {atol: 0.0, rtol: 0.0}
+banned_imports: [numpy, scipy]
+timeout_s: 30
+status: reviewed

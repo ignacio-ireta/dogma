@@ -1,0 +1,17 @@
+id: cml/nearest-neighbour-search-and-knn
+title: Nearest-neighbour search and KNN
+tier: A
+requires: [cml/vector-operations, cml/feature-scaling]
+aliases: [KNN, k-nearest neighbours, lazy learning, Euclidean distance, brute-force search, approximate nearest neighbour, HNSW, k-d tree, curse of dimensionality]
+objectives:
+  - Implement a KNN classifier and regressor with Euclidean distance, a documented vote-tie rule and a zero-distance rule
+  - Explain why feature scaling decides which neighbours are "near", and how k sets the bias-variance trade-off
+  - Describe exact and approximate nearest-neighbour search (k-d trees, graph and inverted-file indexes) and their link to vector retrieval
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  Expect the KNN algorithm with its tie rules, why scaling is mandatory, why distances lose contrast in high dimension, and how you would search a million embeddings in milliseconds.
+sources:
+  - "paper: Cover & Hart 1967, Nearest neighbor pattern classification (IEEE Transactions on Information Theory 13(1))"
+  - "paper: Malkov & Yashunin 2016, Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs (arXiv:1603.09320)"
+  - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter on nearest-neighbour methods"
+status: reviewed

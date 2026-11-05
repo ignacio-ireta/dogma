@@ -1,0 +1,13 @@
+id: cml/maximum-likelihood-and-map/p02-beta-bernoulli-map
+version: 2
+title: Beta-Bernoulli maximum likelihood and MAP
+language: python
+runtime: py-numpy
+entry: beta_bernoulli_map
+difficulty: medium
+minutes: 25
+core: false
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [scipy]
+timeout_s: 30
+status: reviewed

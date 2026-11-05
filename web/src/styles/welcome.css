@@ -1,0 +1,217 @@
+/* The introduction and the guide strip on its first problem. Colours come from tokens.css. */
+.welcome {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.welcome > .page-heading {
+  margin-bottom: 0;
+}
+
+.welcome__section {
+  min-width: 0;
+  container-type: inline-size;
+  padding: var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.welcome__section h2 {
+  margin-top: 0;
+}
+
+.welcome__section > p {
+  max-width: 44rem;
+}
+
+.welcome__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: 0;
+}
+
+.welcome__actions .button {
+  display: inline-block;
+}
+
+.welcome__blocks,
+.welcome__places {
+  list-style: none;
+  margin: var(--space-4) 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+/* The five blocks read as one row, and the six places as two even rows. */
+.welcome__blocks {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.welcome__places {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@container (max-width: 44rem) {
+  .welcome__blocks {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .welcome__places {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 26rem) {
+  .welcome__places {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.welcome__block {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border-radius: var(--radius);
+  background: var(--color-violet-soft);
+  border: 1px solid var(--color-outline);
+  box-shadow: 3px 3px 0 var(--color-outline);
+  overflow-wrap: anywhere;
+}
+
+.welcome__block:nth-child(3n + 1) {
+  background: var(--color-coral-soft);
+}
+
+.welcome__block:nth-child(3n) {
+  background: var(--color-cobalt-soft);
+}
+
+.welcome__minutes {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.welcome__place {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  height: 100%;
+  padding: var(--space-4);
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius);
+  color: inherit;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  box-shadow: 3px 3px 0 var(--color-hero-line);
+  transition: box-shadow var(--transition);
+}
+
+.welcome__place:hover {
+  box-shadow: 3px 3px 0 var(--color-violet);
+}
+
+.welcome__place:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.welcome__place h3,
+.welcome__place p {
+  margin: 0;
+}
+
+.welcome__steps,
+.tour-strip ol {
+  counter-reset: step;
+  list-style: none;
+  margin: var(--space-4) 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.welcome__steps li,
+.tour-strip li {
+  counter-increment: step;
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  column-gap: var(--space-3);
+  overflow-wrap: anywhere;
+}
+
+.welcome__steps li::before,
+.tour-strip li::before {
+  content: counter(step);
+  grid-row: span 2;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-violet-soft);
+  border: 1px solid var(--color-outline);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.welcome__glossary {
+  margin: var(--space-4) 0 0;
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+}
+
+.welcome__glossary dt {
+  font-weight: 600;
+}
+
+.welcome__glossary dd {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-muted);
+}
+
+.tour-strip {
+  min-width: 0;
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-input-soft);
+}
+
+.tour-strip__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.tour-strip h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.tour-strip ol {
+  grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
+  margin: var(--space-2) 0 0;
+}
+
+.tour-strip li {
+  align-items: center;
+}
+
+.tour-strip li::before {
+  grid-row: auto;
+}
+
+@media (max-width: 40rem) {
+  .welcome__section {
+    padding: var(--space-4);
+  }
+}

@@ -1,0 +1,13 @@
+id: algo/binary-search/p01-lower-bound
+version: 1                      # bump when tests, tolerances or the contract change
+title: Lower bound in a sorted list
+language: python
+runtime: py-stdlib
+entry: lower_bound
+difficulty: easy
+minutes: 20
+core: true
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: the answer is an index
+banned_imports: [bisect, numpy]
+timeout_s: 30
+status: reviewed

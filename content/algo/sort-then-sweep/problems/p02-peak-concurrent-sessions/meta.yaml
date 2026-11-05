@@ -1,0 +1,13 @@
+id: algo/sort-then-sweep/p02-peak-concurrent-sessions
+version: 2                      # bump when tests, tolerances or the contract change
+title: Peak number of concurrent sessions
+language: python
+runtime: py-stdlib
+entry: max_concurrent
+difficulty: medium
+minutes: 25
+core: false
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: an integer count
+banned_imports: []
+timeout_s: 30
+status: reviewed

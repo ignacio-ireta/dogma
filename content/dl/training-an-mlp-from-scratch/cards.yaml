@@ -1,0 +1,21 @@
+cards:
+- id: dl/training-an-mlp-from-scratch#1
+  type: qa
+  front: Why cache every MLP gradient before updates?
+  back: Each gradient must describe the same pre-update objective.
+- id: dl/training-an-mlp-from-scratch#2
+  type: qa
+  front: What prediction gradient follows half-mean-squared loss?
+  back: (prediction-y)/n for n examples and one output.
+- id: dl/training-an-mlp-from-scratch#3
+  type: qa
+  front: What is the tanh local derivative from activation H?
+  back: 1-H**2, applied elementwise.
+- id: dl/training-an-mlp-from-scratch#4
+  type: qa
+  front: How many loss checkpoints follow s training updates?
+  back: 's+1: the initial loss plus each post-update loss.'
+- id: dl/training-an-mlp-from-scratch#5
+  type: qa
+  front: How can one SGD step expose its gradient?
+  back: Divide the old-minus-new parameter array by the learning rate.

@@ -1,0 +1,2031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Probability &amp; Statistics Visualized</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --border: #2a2d3a;
+    --text: #e0e0e6;
+    --muted: #8888a0;
+    --accent: #6c8aff;
+    --tp: #4ade80;
+    --fp: #f87171;
+    --tn: #60a5fa;
+    --fn: #fbbf24;
+    --positive: #4ade80;
+    --negative: #f87171;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  header {
+    text-align: center;
+    padding: 3rem 1rem 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  header h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.5rem;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 1.05rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  section h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+
+  section .subtitle {
+    color: var(--muted);
+    font-size: 0.92rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .formula {
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    background: rgba(108, 138, 255, 0.08);
+    border: 1px solid rgba(108, 138, 255, 0.15);
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    display: inline-block;
+    margin-bottom: 1.2rem;
+    font-size: 1.05rem;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  @media (max-width: 700px) {
+    .two-col { grid-template-columns: 1fr; }
+  }
+
+  canvas { display: block; }
+
+  .slider-group {
+    margin-bottom: 1rem;
+  }
+
+  .slider-group label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+    color: var(--muted);
+  }
+
+  .slider-group label strong {
+    color: var(--text);
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+    outline: none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid var(--bg);
+  }
+
+  .metrics-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 1.2rem;
+  }
+
+  .metric-card {
+    flex: 1;
+    min-width: 100px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.8rem;
+    text-align: center;
+    transition: border-color 0.3s, background 0.3s;
+  }
+
+  .metric-card.active {
+    border-color: var(--accent);
+    background: rgba(108, 138, 255, 0.06);
+  }
+
+  .metric-card .label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+
+  .metric-card .value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 1.2rem;
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    padding: 4px;
+  }
+
+  .tab-bar button {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 0.5rem 0.8rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab-bar button.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .explanation {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-top: 1rem;
+  }
+
+  .explanation strong {
+    color: var(--text);
+  }
+
+  .btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1.2rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .btn:hover { opacity: 0.85; }
+
+  .btn-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+
+  .btn-secondary {
+    background: rgba(108, 138, 255, 0.15);
+    color: var(--accent);
+  }
+
+  .warning-note {
+    background: rgba(251, 191, 36, 0.08);
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    color: var(--fn);
+    margin-top: 1rem;
+  }
+
+  .pop-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin: 1rem 0;
+  }
+
+  .pop-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+  }
+
+  .ci-bar-area {
+    position: relative;
+    min-height: 200px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    padding: 0.5rem;
+  }
+
+  input[type="checkbox"] {
+    accent-color: var(--accent);
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .toggle-row strong { color: var(--text); }
+  nav { display: flex; gap: 0.5rem; justify-content: center; padding: 1rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); }
+  nav a { color: var(--muted); text-decoration: none; font-size: 0.82rem; font-weight: 500; padding: 0.4rem 0.8rem; border-radius: 8px; transition: all 0.2s; }
+  nav a:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+  nav a.active { color: #fff; background: var(--accent); }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="ml-metrics.html">ML Metrics</a>
+  <a href="ml-concepts.html">ML Concepts</a>
+  <a href="probability-stats.html" class="active">Probability &amp; Stats</a>
+  <a href="model-selection.html">Model Selection</a>
+  <a href="sql-concepts.html">SQL Concepts</a>
+  <a href="data-wrangling.html">Pandas &amp; sklearn</a>
+  <a href="case-frameworks.html">Case Frameworks</a>
+</nav>
+
+<header>
+  <h1>Probability &amp; Statistics Visualized</h1>
+  <p>Interactive explorations of probability distributions, Bayes' theorem, hypothesis testing, and more.</p>
+</header>
+
+<div class="container">
+
+  <!-- ==================== 1. PROBABILITY DISTRIBUTIONS ==================== -->
+  <section id="sec-distributions">
+    <h2>Probability Distributions</h2>
+    <p class="subtitle">Explore the shapes and properties of common probability distributions.</p>
+
+    <div class="tab-bar" id="dist-tabs">
+      <button class="active" data-dist="normal">Normal</button>
+      <button data-dist="binomial">Binomial</button>
+      <button data-dist="poisson">Poisson</button>
+      <button data-dist="exponential">Exponential</button>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <canvas id="dist-canvas" width="500" height="350"></canvas>
+      </div>
+      <div>
+        <div id="dist-formula" class="formula"></div>
+        <div id="dist-controls"></div>
+        <div class="metrics-row" id="dist-metrics"></div>
+        <div class="explanation" id="dist-explanation"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 2. BAYES' THEOREM ==================== -->
+  <section id="sec-bayes">
+    <h2>Bayes' Theorem</h2>
+    <p class="subtitle">The base rate fallacy: why a positive test doesn't always mean you have the disease.</p>
+
+    <div class="formula">P(Disease | Positive) = P(Positive | Disease) &middot; P(Disease) / P(Positive)</div>
+
+    <div class="two-col">
+      <div>
+        <div class="slider-group">
+          <label>Base Rate (Prevalence) <strong id="bayes-prev-val">1.0%</strong></label>
+          <input type="range" id="bayes-prev" min="1" max="300" value="10">
+        </div>
+        <div class="slider-group">
+          <label>Sensitivity (True Positive Rate) <strong id="bayes-sens-val">95%</strong></label>
+          <input type="range" id="bayes-sens" min="50" max="100" value="95">
+        </div>
+        <div class="slider-group">
+          <label>False Positive Rate <strong id="bayes-fpr-val">5%</strong></label>
+          <input type="range" id="bayes-fpr" min="1" max="50" value="5">
+        </div>
+
+        <div class="metric-card active" style="margin-top:1rem;">
+          <div class="label">P(Disease | Positive Test)</div>
+          <div class="value" id="bayes-result">16.1%</div>
+        </div>
+
+        <div id="bayes-freq" class="explanation" style="margin-top:1rem;"></div>
+      </div>
+      <div>
+        <div id="bayes-math" class="explanation" style="margin-top:0; font-family: Georgia, serif;"></div>
+        <div id="bayes-grid" class="pop-grid"></div>
+        <div style="display:flex; gap:1.5rem; font-size:0.75rem; color:var(--muted); margin-top:0.5rem;">
+          <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--tp);vertical-align:middle;margin-right:4px;"></span>True Positive</span>
+          <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--fp);vertical-align:middle;margin-right:4px;"></span>False Positive</span>
+          <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--tn);vertical-align:middle;margin-right:4px;"></span>True Negative</span>
+          <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:rgba(251,191,36,0.3);vertical-align:middle;margin-right:4px;"></span>False Negative</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 3. CENTRAL LIMIT THEOREM ==================== -->
+  <section id="sec-clt">
+    <h2>Central Limit Theorem</h2>
+    <p class="subtitle">No matter the source distribution, the distribution of sample means approaches normal as sample size increases.</p>
+
+    <div class="tab-bar" id="clt-tabs">
+      <button class="active" data-src="uniform">Uniform</button>
+      <button data-src="exponential">Exponential</button>
+      <button data-src="bimodal">Bimodal</button>
+    </div>
+
+    <div class="slider-group">
+      <label>Sample Size (n) <strong id="clt-n-val">5</strong></label>
+      <input type="range" id="clt-n" min="1" max="100" value="5">
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" id="clt-draw1">Draw 1</button>
+      <button class="btn btn-secondary" id="clt-draw100">Draw 100</button>
+      <button class="btn btn-secondary" id="clt-draw1000">Draw 1000</button>
+      <button class="btn btn-secondary" id="clt-reset">Reset</button>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div style="font-size:0.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.3rem;">Source Distribution</div>
+        <canvas id="clt-source-canvas" width="500" height="200"></canvas>
+      </div>
+      <div>
+        <div style="font-size:0.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.3rem;">Sampling Distribution of Means</div>
+        <canvas id="clt-means-canvas" width="500" height="200"></canvas>
+      </div>
+    </div>
+
+    <div class="metrics-row" id="clt-metrics"></div>
+
+    <div class="explanation">
+      The <strong>Central Limit Theorem</strong> states that the distribution of sample means approaches a normal distribution as sample size increases, regardless of the shape of the source distribution. The mean of the sampling distribution equals the population mean, and its standard deviation equals &sigma;/&radic;n.
+    </div>
+  </section>
+
+  <!-- ==================== 4. HYPOTHESIS TESTING ==================== -->
+  <section id="sec-hypothesis">
+    <h2>Hypothesis Testing &amp; p-values</h2>
+    <p class="subtitle">Drag the test statistic to see how p-values change. The shaded area is the probability of seeing this result (or more extreme) if the null hypothesis is true.</p>
+
+    <div class="two-col">
+      <div>
+        <canvas id="hyp-canvas" width="500" height="350"></canvas>
+      </div>
+      <div>
+        <div class="slider-group">
+          <label>Test Statistic (z) <strong id="hyp-z-val">1.96</strong></label>
+          <input type="range" id="hyp-z" min="-40" max="40" value="20" step="1">
+        </div>
+
+        <div class="toggle-row">
+          <input type="checkbox" id="hyp-twotail" checked>
+          <strong>Two-tailed test</strong> (vs one-tailed)
+        </div>
+
+        <div class="metrics-row" id="hyp-metrics"></div>
+
+        <div class="explanation">
+          <strong>p-value</strong> = probability of seeing this result (or more extreme) IF the null hypothesis is true. A small p-value means the data is unlikely under the null hypothesis.
+        </div>
+
+        <div class="warning-note">
+          p-value does NOT tell you the SIZE of the effect, nor the probability that the null hypothesis is true. It only tells you how surprising the data would be if the null were true.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 5. CONFIDENCE INTERVALS ==================== -->
+  <section id="sec-ci">
+    <h2>Confidence Intervals</h2>
+    <p class="subtitle">Run many experiments to see that ~95% of 95% confidence intervals contain the true parameter.</p>
+
+    <div class="two-col">
+      <div>
+        <canvas id="ci-canvas" width="500" height="400"></canvas>
+      </div>
+      <div>
+        <div class="slider-group">
+          <label>Confidence Level <strong id="ci-level-val">95%</strong></label>
+          <input type="range" id="ci-level" min="0" max="3" value="2" step="1">
+        </div>
+
+        <div class="btn-row">
+          <button class="btn" id="ci-run1">Run 1 Experiment</button>
+          <button class="btn btn-secondary" id="ci-run25">Run 25</button>
+          <button class="btn btn-secondary" id="ci-reset">Reset</button>
+        </div>
+
+        <div class="metrics-row" id="ci-metrics"></div>
+
+        <div class="explanation">
+          A <strong>95% confidence interval</strong> means: if we repeated this experiment many times, about 95% of the intervals would contain the true parameter. It does NOT mean there is a 95% probability the true value is in this particular interval.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 6. A/B TESTING SIMULATOR ==================== -->
+  <section id="sec-ab">
+    <h2>A/B Testing Simulator</h2>
+    <p class="subtitle">Simulate experiments to understand statistical power, Type I and Type II errors.</p>
+
+    <div class="two-col">
+      <div>
+        <canvas id="ab-canvas" width="500" height="350"></canvas>
+      </div>
+      <div>
+        <div class="slider-group">
+          <label>Sample Size Per Group <strong id="ab-n-val">500</strong></label>
+          <input type="range" id="ab-n" min="20" max="5000" value="500" step="10">
+        </div>
+        <div class="slider-group">
+          <label>True Rate A (Control) <strong id="ab-ra-val">10.0%</strong></label>
+          <input type="range" id="ab-ra" min="1" max="50" value="10">
+        </div>
+        <div class="slider-group">
+          <label>True Rate B (Treatment) <strong id="ab-rb-val">12.0%</strong></label>
+          <input type="range" id="ab-rb" min="1" max="50" value="12">
+        </div>
+
+        <div class="toggle-row">
+          <input type="checkbox" id="ab-effect" checked>
+          <strong>Effect exists</strong> (uncheck: B = A, no real effect)
+        </div>
+
+        <div class="btn-row">
+          <button class="btn" id="ab-run1">Run Test</button>
+          <button class="btn btn-secondary" id="ab-run100">Run 100 Tests</button>
+          <button class="btn btn-secondary" id="ab-reset">Reset</button>
+        </div>
+
+        <div class="metrics-row" id="ab-metrics"></div>
+      </div>
+    </div>
+
+    <div id="ab-power-wrap" style="margin-top:1.5rem;">
+      <div style="font-size:0.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.3rem;">Power Curve: How Power Changes with Sample Size</div>
+      <canvas id="ab-power-canvas" width="1060" height="200"></canvas>
+    </div>
+
+    <div class="explanation">
+      <strong>Type I error</strong> (false positive): concluding there is an effect when there isn't one. <strong>Type II error</strong> (false negative): failing to detect a real effect. <strong>Statistical power</strong> = 1 &minus; P(Type II error) = probability of detecting a real effect.
+    </div>
+  </section>
+
+  <!-- ==================== 7. EXPECTED VALUE ==================== -->
+  <section id="sec-ev">
+    <h2>Expected Value &amp; Decision Making</h2>
+    <p class="subtitle">Calculate the expected value of decisions under uncertainty.</p>
+
+    <div class="tab-bar" id="ev-tabs">
+      <button class="active" data-scenario="launch">Product Launch</button>
+      <button data-scenario="fraud">Fraud Model Threshold</button>
+      <button data-scenario="abtest">A/B Test Duration</button>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <canvas id="ev-canvas" width="500" height="350"></canvas>
+      </div>
+      <div>
+        <div id="ev-controls"></div>
+        <div class="metric-card active" style="margin-top:1rem;">
+          <div class="label">Expected Value</div>
+          <div class="value" id="ev-result">$0</div>
+        </div>
+        <div class="explanation" id="ev-explanation"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 8. CORRELATION VS CAUSATION ==================== -->
+  <section id="sec-corr">
+    <h2>Correlation vs Causation</h2>
+    <p class="subtitle">A strong correlation does not imply a causal relationship. Explore spurious correlations and confounding variables.</p>
+
+    <div class="tab-bar" id="corr-tabs">
+      <button class="active" data-scenario="custom">Interactive</button>
+      <button data-scenario="icecream">Ice Cream vs Drownings</button>
+      <button data-scenario="cheese">Cheese vs Bedsheet Deaths</button>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <canvas id="corr-canvas" width="500" height="400"></canvas>
+      </div>
+      <div>
+        <div id="corr-controls">
+          <div class="slider-group">
+            <label>Correlation (r) <strong id="corr-r-val">0.70</strong></label>
+            <input type="range" id="corr-r" min="-100" max="100" value="70">
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-secondary" id="corr-confound-btn">Reveal Confounding Variable</button>
+        </div>
+
+        <div class="metrics-row" id="corr-metrics"></div>
+
+        <div id="corr-confound-info" class="explanation" style="display:none;"></div>
+
+        <div class="explanation">
+          <strong>Correlation does not equal causation.</strong> To establish causality, consider: A/B tests (randomized experiments), instrumental variables, difference-in-differences, or regression discontinuity designs.
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+// ─── Utilities ────────────────────────────────────────
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+function gaussianRandom(mean, std) {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return mean + std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+}
+
+function normalPDF(x, mu, sigma) {
+  return (1 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * ((x - mu) / sigma) ** 2);
+}
+
+function normalCDF(x, mu, sigma) {
+  const z = (x - mu) / sigma;
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989422804014327;
+  const p = d * Math.exp(-z * z / 2) * (t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.8212560 + t * 1.3302744)))));
+  return z > 0 ? 1 - p : p;
+}
+
+function factorial(n) { let r = 1; for (let i = 2; i <= n; i++) r *= i; return r; }
+function comb(n, k) { if (k > n) return 0; if (k === 0 || k === n) return 1; let r = 1; for (let i = 0; i < k; i++) r = r * (n - i) / (i + 1); return r; }
+
+function makeMetricCards(container, metrics) {
+  container.innerHTML = metrics.map(m =>
+    `<div class="metric-card${m.active ? ' active' : ''}">
+      <div class="label">${m.label}</div>
+      <div class="value" style="${m.color ? 'color:' + m.color : ''}">${m.value}</div>
+    </div>`
+  ).join('');
+}
+
+function drawAxes(ctx, w, h, pad, xLabel, yLabel, xTicks, yTicks) {
+  ctx.strokeStyle = '#2a2d3a';
+  ctx.lineWidth = 1;
+  ctx.fillStyle = '#8888a0';
+  ctx.font = '11px Inter, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+
+  // x-axis
+  ctx.beginPath();
+  ctx.moveTo(pad, h - pad);
+  ctx.lineTo(w - 10, h - pad);
+  ctx.stroke();
+
+  // y-axis
+  ctx.beginPath();
+  ctx.moveTo(pad, h - pad);
+  ctx.lineTo(pad, 10);
+  ctx.stroke();
+
+  // grid lines & ticks
+  if (xTicks) {
+    xTicks.forEach(t => {
+      const x = pad + (t.pos) * (w - pad - 10);
+      ctx.fillText(t.label, x, h - pad + 16);
+      ctx.beginPath();
+      ctx.moveTo(x, h - pad);
+      ctx.lineTo(x, h - pad + 4);
+      ctx.stroke();
+      // grid
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.beginPath();
+      ctx.moveTo(x, h - pad);
+      ctx.lineTo(x, 10);
+      ctx.stroke();
+      ctx.restore();
+    });
+  }
+
+  if (yTicks) {
+    ctx.textAlign = 'right';
+    yTicks.forEach(t => {
+      const y = h - pad - t.pos * (h - pad - 10);
+      ctx.fillText(t.label, pad - 6, y + 4);
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.beginPath();
+      ctx.moveTo(pad, y);
+      ctx.lineTo(w - 10, y);
+      ctx.stroke();
+      ctx.restore();
+    });
+  }
+
+  // labels
+  ctx.fillStyle = '#8888a0';
+  ctx.font = '11px Inter, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  if (xLabel) ctx.fillText(xLabel, (w + pad) / 2, h - 2);
+  if (yLabel) {
+    ctx.save();
+    ctx.translate(12, (h - pad) / 2 + 10);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText(yLabel, 0, 0);
+    ctx.restore();
+  }
+}
+
+const dpr = window.devicePixelRatio || 1;
+function setupCanvas(canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const w = canvas.width;
+  const h = canvas.height;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  return { ctx, w, h };
+}
+
+// ─── 1. Probability Distributions ────────────────────────────────────────
+(function() {
+  const canvas = document.getElementById('dist-canvas');
+  const { ctx, w, h } = setupCanvas(canvas);
+  const pad = 50;
+  let currentDist = 'normal';
+  let normalMu = 0, normalSigma = 1, normalX = 1;
+  let binN = 20, binP = 0.5, binK = 10;
+  let poisLambda = 5;
+  let expLambda = 1;
+
+  function buildControls() {
+    const c = document.getElementById('dist-controls');
+    const f = document.getElementById('dist-formula');
+    if (currentDist === 'normal') {
+      f.innerHTML = 'f(x) = (1/&sigma;&radic;2&pi;) e<sup>&minus;(x&minus;&mu;)&sup2;/2&sigma;&sup2;</sup>';
+      c.innerHTML = `
+        <div class="slider-group"><label>&mu; (Mean) <strong id="dist-mu-val">${normalMu.toFixed(1)}</strong></label>
+        <input type="range" id="dist-mu" min="-40" max="40" value="${normalMu*10}" step="1"></div>
+        <div class="slider-group"><label>&sigma; (Std Dev) <strong id="dist-sigma-val">${normalSigma.toFixed(1)}</strong></label>
+        <input type="range" id="dist-sigma" min="2" max="40" value="${normalSigma*10}" step="1"></div>
+        <div class="slider-group"><label>x value <strong id="dist-x-val">${normalX.toFixed(1)}</strong></label>
+        <input type="range" id="dist-xval" min="-50" max="50" value="${normalX*10}" step="1"></div>`;
+      c.querySelector('#dist-mu').addEventListener('input', e => { normalMu = e.target.value / 10; c.querySelector('#dist-mu-val').textContent = normalMu.toFixed(1); draw(); });
+      c.querySelector('#dist-sigma').addEventListener('input', e => { normalSigma = Math.max(0.2, e.target.value / 10); c.querySelector('#dist-sigma-val').textContent = normalSigma.toFixed(1); draw(); });
+      c.querySelector('#dist-xval').addEventListener('input', e => { normalX = e.target.value / 10; c.querySelector('#dist-x-val').textContent = normalX.toFixed(1); draw(); });
+    } else if (currentDist === 'binomial') {
+      f.innerHTML = 'P(X=k) = C(n,k) p<sup>k</sup> (1&minus;p)<sup>n&minus;k</sup>';
+      c.innerHTML = `
+        <div class="slider-group"><label>n (trials) <strong id="dist-bn-val">${binN}</strong></label>
+        <input type="range" id="dist-bn" min="1" max="50" value="${binN}"></div>
+        <div class="slider-group"><label>p (probability) <strong id="dist-bp-val">${binP.toFixed(2)}</strong></label>
+        <input type="range" id="dist-bp" min="0" max="100" value="${binP*100}"></div>
+        <div class="slider-group"><label>Highlight k <strong id="dist-bk-val">${binK}</strong></label>
+        <input type="range" id="dist-bk" min="0" max="${binN}" value="${Math.min(binK, binN)}"></div>`;
+      c.querySelector('#dist-bn').addEventListener('input', e => { binN = +e.target.value; c.querySelector('#dist-bn-val').textContent = binN; const bks = c.querySelector('#dist-bk'); bks.max = binN; if (binK > binN) { binK = binN; bks.value = binK; } draw(); buildControls(); });
+      c.querySelector('#dist-bp').addEventListener('input', e => { binP = e.target.value / 100; c.querySelector('#dist-bp-val').textContent = binP.toFixed(2); draw(); });
+      c.querySelector('#dist-bk').addEventListener('input', e => { binK = +e.target.value; c.querySelector('#dist-bk-val').textContent = binK; draw(); });
+    } else if (currentDist === 'poisson') {
+      f.innerHTML = 'P(X=k) = &lambda;<sup>k</sup> e<sup>&minus;&lambda;</sup> / k!';
+      c.innerHTML = `
+        <div class="slider-group"><label>&lambda; (Rate) <strong id="dist-pl-val">${poisLambda.toFixed(1)}</strong></label>
+        <input type="range" id="dist-pl" min="5" max="200" value="${poisLambda*10}"></div>`;
+      c.querySelector('#dist-pl').addEventListener('input', e => { poisLambda = e.target.value / 10; c.querySelector('#dist-pl-val').textContent = poisLambda.toFixed(1); draw(); });
+    } else if (currentDist === 'exponential') {
+      f.innerHTML = 'f(x) = &lambda; e<sup>&minus;&lambda;x</sup>';
+      c.innerHTML = `
+        <div class="slider-group"><label>&lambda; (Rate) <strong id="dist-el-val">${expLambda.toFixed(1)}</strong></label>
+        <input type="range" id="dist-el" min="2" max="50" value="${expLambda*10}"></div>`;
+      c.querySelector('#dist-el').addEventListener('input', e => { expLambda = e.target.value / 10; c.querySelector('#dist-el-val').textContent = expLambda.toFixed(1); draw(); });
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    const plotW = w - pad - 10;
+    const plotH = h - pad - 20;
+
+    if (currentDist === 'normal') {
+      const lo = normalMu - 4 * normalSigma, hi = normalMu + 4 * normalSigma;
+      const maxY = normalPDF(normalMu, normalMu, normalSigma);
+      const xTicks = [];
+      for (let i = -3; i <= 3; i++) {
+        const v = normalMu + i * normalSigma;
+        xTicks.push({ pos: (v - lo) / (hi - lo), label: v.toFixed(1) });
+      }
+      const yTicks = [{ pos: 0, label: '0' }, { pos: 0.5, label: (maxY * 0.5).toFixed(2) }, { pos: 1, label: maxY.toFixed(2) }];
+      drawAxes(ctx, w, h, pad, 'x', 'f(x)', xTicks, yTicks);
+
+      // 68-95-99.7 bands
+      const bands = [
+        { k: 3, color: 'rgba(108,138,255,0.06)' },
+        { k: 2, color: 'rgba(108,138,255,0.10)' },
+        { k: 1, color: 'rgba(108,138,255,0.16)' },
+      ];
+      bands.forEach(b => {
+        ctx.fillStyle = b.color;
+        ctx.beginPath();
+        const x1 = normalMu - b.k * normalSigma, x2 = normalMu + b.k * normalSigma;
+        const px1 = pad + ((x1 - lo) / (hi - lo)) * plotW;
+        const px2 = pad + ((x2 - lo) / (hi - lo)) * plotW;
+        ctx.moveTo(px1, h - pad);
+        for (let px = px1; px <= px2; px++) {
+          const xv = lo + ((px - pad) / plotW) * (hi - lo);
+          const yv = normalPDF(xv, normalMu, normalSigma);
+          ctx.lineTo(px, h - pad - (yv / maxY) * plotH);
+        }
+        ctx.lineTo(px2, h - pad);
+        ctx.closePath();
+        ctx.fill();
+      });
+
+      // P(X < x) shaded area
+      ctx.fillStyle = 'rgba(74, 222, 128, 0.2)';
+      ctx.beginPath();
+      const xPx = pad + ((normalX - lo) / (hi - lo)) * plotW;
+      ctx.moveTo(pad, h - pad);
+      for (let px = pad; px <= Math.min(xPx, pad + plotW); px++) {
+        const xv = lo + ((px - pad) / plotW) * (hi - lo);
+        const yv = normalPDF(xv, normalMu, normalSigma);
+        ctx.lineTo(px, h - pad - (yv / maxY) * plotH);
+      }
+      ctx.lineTo(Math.min(xPx, pad + plotW), h - pad);
+      ctx.closePath();
+      ctx.fill();
+
+      // curve
+      ctx.strokeStyle = 'var(--accent)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let px = pad; px <= pad + plotW; px++) {
+        const xv = lo + ((px - pad) / plotW) * (hi - lo);
+        const yv = normalPDF(xv, normalMu, normalSigma);
+        const py = h - pad - (yv / maxY) * plotH;
+        px === pad ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+
+      // x line
+      if (normalX >= lo && normalX <= hi) {
+        ctx.strokeStyle = 'var(--positive)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.moveTo(xPx, h - pad);
+        const yAtX = normalPDF(normalX, normalMu, normalSigma);
+        ctx.lineTo(xPx, h - pad - (yAtX / maxY) * plotH);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // labels for bands
+      ctx.fillStyle = '#8888a0';
+      ctx.font = '10px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      const bandLabels = ['68.3%', '95.4%', '99.7%'];
+      [1, 2, 3].forEach((k, i) => {
+        const yPos = h - pad - (0.25 - i * 0.07) * plotH;
+        ctx.fillText(bandLabels[i], pad + 0.5 * plotW, yPos);
+      });
+
+      const pLess = normalCDF(normalX, normalMu, normalSigma);
+      makeMetricCards(document.getElementById('dist-metrics'), [
+        { label: 'Mean (&mu;)', value: normalMu.toFixed(1) },
+        { label: 'Std Dev (&sigma;)', value: normalSigma.toFixed(1) },
+        { label: 'Variance (&sigma;&sup2;)', value: (normalSigma ** 2).toFixed(2) },
+        { label: 'P(X < ' + normalX.toFixed(1) + ')', value: pLess.toFixed(4), active: true },
+      ]);
+      document.getElementById('dist-explanation').innerHTML = 'The <strong>normal distribution</strong> is the most important distribution in statistics. The shaded bands show the 68-95-99.7 rule: 68.3% of data falls within 1&sigma; of the mean, 95.4% within 2&sigma;, and 99.7% within 3&sigma;. The green shaded area shows P(X &lt; x).';
+
+    } else if (currentDist === 'binomial') {
+      const probs = [];
+      let maxP = 0;
+      for (let k = 0; k <= binN; k++) {
+        const p = comb(binN, k) * Math.pow(binP, k) * Math.pow(1 - binP, binN - k);
+        probs.push(p);
+        if (p > maxP) maxP = p;
+      }
+      maxP = maxP * 1.15;
+
+      const xTicks = [];
+      const step = Math.max(1, Math.floor(binN / 10));
+      for (let k = 0; k <= binN; k += step) xTicks.push({ pos: k / binN, label: '' + k });
+      const yTicks = [{ pos: 0, label: '0' }, { pos: 0.5, label: (maxP * 0.5).toFixed(2) }, { pos: 1, label: maxP.toFixed(2) }];
+      drawAxes(ctx, w, h, pad, 'k', 'P(X=k)', xTicks, yTicks);
+
+      const barW = Math.max(2, plotW / (binN + 1) - 2);
+      probs.forEach((p, k) => {
+        const x = pad + (k / binN) * plotW - barW / 2;
+        const bh = (p / maxP) * plotH;
+        ctx.fillStyle = k === binK ? '#6c8aff' : 'rgba(108,138,255,0.35)';
+        ctx.fillRect(x, h - pad - bh, barW, bh);
+      });
+
+      const mean = binN * binP;
+      const variance = binN * binP * (1 - binP);
+      const pK = binK <= binN ? probs[binK] : 0;
+      makeMetricCards(document.getElementById('dist-metrics'), [
+        { label: 'Mean (np)', value: mean.toFixed(2) },
+        { label: 'Variance', value: variance.toFixed(2) },
+        { label: 'P(X=' + binK + ')', value: pK.toFixed(4), active: true },
+      ]);
+      document.getElementById('dist-explanation').innerHTML = 'The <strong>binomial distribution</strong> models the number of successes in n independent trials, each with probability p. The highlighted bar shows P(X=' + binK + ').';
+
+    } else if (currentDist === 'poisson') {
+      const kMax = Math.max(20, Math.ceil(poisLambda + 4 * Math.sqrt(poisLambda)));
+      const probs = [];
+      let maxP = 0;
+      for (let k = 0; k <= kMax; k++) {
+        let lp = Math.exp(-poisLambda) * Math.pow(poisLambda, k);
+        let fk = 1; for (let i = 2; i <= k; i++) fk *= i;
+        const p = lp / fk;
+        probs.push(p);
+        if (p > maxP) maxP = p;
+      }
+      maxP *= 1.15;
+
+      const xTicks = [];
+      const step = Math.max(1, Math.floor(kMax / 10));
+      for (let k = 0; k <= kMax; k += step) xTicks.push({ pos: k / kMax, label: '' + k });
+      const yTicks = [{ pos: 0, label: '0' }, { pos: 0.5, label: (maxP * 0.5).toFixed(3) }, { pos: 1, label: maxP.toFixed(3) }];
+      drawAxes(ctx, w, h, pad, 'k', 'P(X=k)', xTicks, yTicks);
+
+      const barW = Math.max(2, plotW / (kMax + 1) - 2);
+      probs.forEach((p, k) => {
+        const x = pad + (k / kMax) * plotW - barW / 2;
+        const bh = (p / maxP) * plotH;
+        const nearMean = Math.abs(k - poisLambda) < 0.5;
+        ctx.fillStyle = nearMean ? '#6c8aff' : 'rgba(108,138,255,0.35)';
+        ctx.fillRect(x, h - pad - bh, barW, bh);
+      });
+
+      makeMetricCards(document.getElementById('dist-metrics'), [
+        { label: 'Mean (&lambda;)', value: poisLambda.toFixed(1) },
+        { label: 'Variance (&lambda;)', value: poisLambda.toFixed(1) },
+      ]);
+      document.getElementById('dist-explanation').innerHTML = 'The <strong>Poisson distribution</strong> models the number of events in a fixed interval when events occur independently at a constant average rate &lambda;. Mean and variance are both equal to &lambda;.';
+
+    } else if (currentDist === 'exponential') {
+      const xMax = Math.max(5, 5 / expLambda);
+      const maxY = expLambda;
+
+      const xTicks = [];
+      for (let i = 0; i <= 5; i++) xTicks.push({ pos: i / 5, label: (i * xMax / 5).toFixed(1) });
+      const yTicks = [{ pos: 0, label: '0' }, { pos: 0.5, label: (maxY * 0.5).toFixed(2) }, { pos: 1, label: maxY.toFixed(2) }];
+      drawAxes(ctx, w, h, pad, 'x', 'f(x)', xTicks, yTicks);
+
+      // fill
+      ctx.fillStyle = 'rgba(108,138,255,0.15)';
+      ctx.beginPath();
+      ctx.moveTo(pad, h - pad);
+      for (let px = pad; px <= pad + plotW; px++) {
+        const xv = ((px - pad) / plotW) * xMax;
+        const yv = expLambda * Math.exp(-expLambda * xv);
+        ctx.lineTo(px, h - pad - (yv / maxY) * plotH);
+      }
+      ctx.lineTo(pad + plotW, h - pad);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = '#6c8aff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let px = pad; px <= pad + plotW; px++) {
+        const xv = ((px - pad) / plotW) * xMax;
+        const yv = expLambda * Math.exp(-expLambda * xv);
+        const py = h - pad - (yv / maxY) * plotH;
+        px === pad ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+
+      // mean line
+      const meanX = 1 / expLambda;
+      const meanPx = pad + (meanX / xMax) * plotW;
+      ctx.strokeStyle = 'var(--positive)';
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      ctx.moveTo(meanPx, h - pad);
+      ctx.lineTo(meanPx, 20);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = 'var(--positive)';
+      ctx.font = '11px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Mean = ' + meanX.toFixed(2), meanPx, 16);
+
+      makeMetricCards(document.getElementById('dist-metrics'), [
+        { label: 'Mean (1/&lambda;)', value: meanX.toFixed(3) },
+        { label: 'Variance (1/&lambda;&sup2;)', value: (1 / (expLambda ** 2)).toFixed(3) },
+        { label: '&lambda;', value: expLambda.toFixed(1) },
+      ]);
+      document.getElementById('dist-explanation').innerHTML = 'The <strong>exponential distribution</strong> models the time between events in a Poisson process. It is memoryless: the probability of waiting another t units is the same regardless of how long you have already waited.';
+    }
+  }
+
+  document.getElementById('dist-tabs').addEventListener('click', e => {
+    if (!e.target.dataset.dist) return;
+    document.querySelectorAll('#dist-tabs button').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    currentDist = e.target.dataset.dist;
+    buildControls();
+    draw();
+  });
+
+  buildControls();
+  draw();
+})();
+
+// ─── 2. Bayes' Theorem ────────────────────────────────────────
+(function() {
+  function update() {
+    const prev = document.getElementById('bayes-prev').value / 1000;
+    const sens = document.getElementById('bayes-sens').value / 100;
+    const fpr = document.getElementById('bayes-fpr').value / 100;
+
+    document.getElementById('bayes-prev-val').textContent = (prev * 100).toFixed(1) + '%';
+    document.getElementById('bayes-sens-val').textContent = (sens * 100).toFixed(0) + '%';
+    document.getElementById('bayes-fpr-val').textContent = (fpr * 100).toFixed(0) + '%';
+
+    const pPositive = sens * prev + fpr * (1 - prev);
+    const pDiseaseGivenPos = (sens * prev) / pPositive;
+
+    document.getElementById('bayes-result').textContent = (pDiseaseGivenPos * 100).toFixed(1) + '%';
+    document.getElementById('bayes-result').style.color = pDiseaseGivenPos > 0.5 ? 'var(--fp)' : 'var(--fn)';
+
+    // natural frequency
+    const N = 1000;
+    const sick = Math.round(N * prev);
+    const healthy = N - sick;
+    const tp = Math.round(sick * sens);
+    const fn = sick - tp;
+    const fp = Math.round(healthy * fpr);
+    const tn = healthy - fp;
+    const totalPos = tp + fp;
+
+    document.getElementById('bayes-freq').innerHTML =
+      `<strong>Natural frequencies (out of ${N} people):</strong><br>` +
+      `${sick} have the disease. Of those, ${tp} test positive (true positives).<br>` +
+      `${healthy} are healthy. Of those, ${fp} test positive (false positives).<br>` +
+      `Total positive tests: ${totalPos}. Of those, <strong>${tp} actually have the disease</strong>.<br>` +
+      `So P(disease | positive) = ${tp} / ${totalPos} = <strong>${totalPos > 0 ? (tp / totalPos * 100).toFixed(1) : 0}%</strong>`;
+
+    document.getElementById('bayes-math').innerHTML =
+      `<strong>Step-by-step:</strong><br><br>` +
+      `P(D) = ${(prev*100).toFixed(1)}%<br>` +
+      `P(+|D) = ${(sens*100).toFixed(0)}%<br>` +
+      `P(+|&not;D) = ${(fpr*100).toFixed(0)}%<br><br>` +
+      `P(+) = P(+|D)&middot;P(D) + P(+|&not;D)&middot;P(&not;D)<br>` +
+      `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= ${(sens*prev).toFixed(4)} + ${(fpr*(1-prev)).toFixed(4)} = ${pPositive.toFixed(4)}<br><br>` +
+      `P(D|+) = P(+|D)&middot;P(D) / P(+)<br>` +
+      `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= ${(sens*prev).toFixed(4)} / ${pPositive.toFixed(4)}<br>` +
+      `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <strong style="font-size:1.2em;color:var(--accent);">${(pDiseaseGivenPos*100).toFixed(1)}%</strong>`;
+
+    // grid
+    const grid = document.getElementById('bayes-grid');
+    let dots = '';
+    // We'll show up to 200 dots for performance
+    const scale = N > 200 ? 200 / N : 1;
+    const sTP = Math.round(tp * scale), sFN = Math.round(fn * scale);
+    const sFP = Math.round(fp * scale), sTN = Math.round(tn * scale);
+    for (let i = 0; i < sTP; i++) dots += '<div class="pop-dot" style="background:var(--tp);"></div>';
+    for (let i = 0; i < sFN; i++) dots += '<div class="pop-dot" style="background:rgba(251,191,36,0.3);"></div>';
+    for (let i = 0; i < sFP; i++) dots += '<div class="pop-dot" style="background:var(--fp);"></div>';
+    for (let i = 0; i < sTN; i++) dots += '<div class="pop-dot" style="background:var(--tn);"></div>';
+    grid.innerHTML = dots;
+  }
+
+  ['bayes-prev', 'bayes-sens', 'bayes-fpr'].forEach(id =>
+    document.getElementById(id).addEventListener('input', update));
+  update();
+})();
+
+// ─── 3. Central Limit Theorem ────────────────────────────────────────
+(function() {
+  const srcCanvas = document.getElementById('clt-source-canvas');
+  const meansCanvas = document.getElementById('clt-means-canvas');
+  const srcSetup = setupCanvas(srcCanvas);
+  const meansSetup = setupCanvas(meansCanvas);
+  const pad = 45;
+
+  let srcType = 'uniform';
+  let sampleSize = 5;
+  let sampleMeans = [];
+
+  function sampleFromSource() {
+    if (srcType === 'uniform') return Math.random() * 10;
+    if (srcType === 'exponential') return -Math.log(1 - Math.random()) * 2;
+    // bimodal
+    return Math.random() < 0.5 ? gaussianRandom(3, 0.8) : gaussianRandom(7, 0.8);
+  }
+
+  function getSourceStats() {
+    if (srcType === 'uniform') return { mean: 5, std: Math.sqrt(100/12) };
+    if (srcType === 'exponential') return { mean: 2, std: 2 };
+    return { mean: 5, std: Math.sqrt(0.64 + 4) };
+  }
+
+  function drawSource() {
+    const { ctx, w, h } = srcSetup;
+    ctx.clearRect(0, 0, w, h);
+    const plotW = w - pad - 10, plotH = h - pad - 10;
+
+    if (srcType === 'uniform') {
+      drawAxes(ctx, w, h, pad, '', '', [
+        {pos:0,label:'0'},{pos:0.5,label:'5'},{pos:1,label:'10'}
+      ], [{pos:0,label:'0'},{pos:1,label:'0.10'}]);
+      ctx.fillStyle = 'rgba(108,138,255,0.3)';
+      ctx.fillRect(pad, h - pad - plotH * 0.8, plotW, plotH * 0.8);
+      ctx.strokeStyle = '#6c8aff'; ctx.lineWidth = 2;
+      ctx.strokeRect(pad, h - pad - plotH * 0.8, plotW, plotH * 0.8);
+    } else if (srcType === 'exponential') {
+      drawAxes(ctx, w, h, pad, '', '', [
+        {pos:0,label:'0'},{pos:0.25,label:'2.5'},{pos:0.5,label:'5'},{pos:0.75,label:'7.5'},{pos:1,label:'10'}
+      ], [{pos:0,label:'0'},{pos:1,label:'0.50'}]);
+      const lam = 0.5;
+      ctx.fillStyle = 'rgba(108,138,255,0.2)';
+      ctx.beginPath(); ctx.moveTo(pad, h - pad);
+      for (let px = pad; px <= pad + plotW; px++) {
+        const xv = ((px - pad) / plotW) * 10;
+        const yv = lam * Math.exp(-lam * xv);
+        ctx.lineTo(px, h - pad - (yv / 0.5) * plotH);
+      }
+      ctx.lineTo(pad + plotW, h - pad); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#6c8aff'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let px = pad; px <= pad + plotW; px++) {
+        const xv = ((px - pad) / plotW) * 10;
+        const yv = lam * Math.exp(-lam * xv);
+        px === pad ? ctx.moveTo(px, h - pad - (yv / 0.5) * plotH) : ctx.lineTo(px, h - pad - (yv / 0.5) * plotH);
+      }
+      ctx.stroke();
+    } else {
+      drawAxes(ctx, w, h, pad, '', '', [
+        {pos:0,label:'0'},{pos:0.3,label:'3'},{pos:0.5,label:'5'},{pos:0.7,label:'7'},{pos:1,label:'10'}
+      ], [{pos:0,label:'0'},{pos:1,label:'0.30'}]);
+      ctx.fillStyle = 'rgba(108,138,255,0.2)';
+      ctx.beginPath(); ctx.moveTo(pad, h - pad);
+      for (let px = pad; px <= pad + plotW; px++) {
+        const xv = ((px - pad) / plotW) * 10;
+        const yv = 0.5 * normalPDF(xv, 3, 0.8) + 0.5 * normalPDF(xv, 7, 0.8);
+        ctx.lineTo(px, h - pad - (yv / 0.3) * plotH);
+      }
+      ctx.lineTo(pad + plotW, h - pad); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#6c8aff'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let px = pad; px <= pad + plotW; px++) {
+        const xv = ((px - pad) / plotW) * 10;
+        const yv = 0.5 * normalPDF(xv, 3, 0.8) + 0.5 * normalPDF(xv, 7, 0.8);
+        px === pad ? ctx.moveTo(px, h - pad - (yv / 0.3) * plotH) : ctx.lineTo(px, h - pad - (yv / 0.3) * plotH);
+      }
+      ctx.stroke();
+    }
+  }
+
+  function drawMeans() {
+    const { ctx, w, h } = meansSetup;
+    ctx.clearRect(0, 0, w, h);
+    const plotW = w - pad - 10, plotH = h - pad - 10;
+
+    if (sampleMeans.length === 0) {
+      ctx.fillStyle = '#8888a0';
+      ctx.font = '13px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Click "Draw" to start sampling', w / 2, h / 2);
+      makeMetricCards(document.getElementById('clt-metrics'), [
+        { label: 'Samples Drawn', value: '0' },
+        { label: 'Mean of Means', value: '--' },
+        { label: 'Std of Means', value: '--' },
+        { label: 'Theory: &sigma;/&radic;n', value: '--' },
+      ]);
+      return;
+    }
+
+    const bins = 40;
+    const lo = 0, hi = 10;
+    const binW = (hi - lo) / bins;
+    const counts = new Array(bins).fill(0);
+    sampleMeans.forEach(m => {
+      const b = Math.min(bins - 1, Math.max(0, Math.floor((m - lo) / binW)));
+      counts[b]++;
+    });
+    const maxCount = Math.max(...counts, 1);
+
+    const xTicks = [];
+    for (let i = 0; i <= 5; i++) xTicks.push({ pos: i / 5, label: (lo + i * (hi - lo) / 5).toFixed(0) });
+    drawAxes(ctx, w, h, pad, '', '', xTicks, []);
+
+    const bw = plotW / bins;
+    counts.forEach((c, i) => {
+      const bh = (c / maxCount) * plotH;
+      ctx.fillStyle = 'rgba(108,138,255,0.5)';
+      ctx.fillRect(pad + i * bw, h - pad - bh, bw - 1, bh);
+    });
+
+    // normal overlay
+    const stats = getSourceStats();
+    const thMean = stats.mean;
+    const thStd = stats.std / Math.sqrt(sampleSize);
+    const maxNorm = normalPDF(thMean, thMean, thStd);
+    const normScale = maxCount * binW;
+
+    ctx.strokeStyle = 'var(--positive)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let px = pad; px <= pad + plotW; px++) {
+      const xv = lo + ((px - pad) / plotW) * (hi - lo);
+      const yv = normalPDF(xv, thMean, thStd) * normScale;
+      const py = h - pad - (yv / maxCount) * plotH;
+      px === pad ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    const meanOfMeans = sampleMeans.reduce((a, b) => a + b, 0) / sampleMeans.length;
+    const stdOfMeans = Math.sqrt(sampleMeans.reduce((a, b) => a + (b - meanOfMeans) ** 2, 0) / sampleMeans.length);
+
+    makeMetricCards(document.getElementById('clt-metrics'), [
+      { label: 'Samples Drawn', value: sampleMeans.length },
+      { label: 'Mean of Means', value: meanOfMeans.toFixed(3) },
+      { label: 'Std of Means', value: stdOfMeans.toFixed(3), active: true },
+      { label: 'Theory: &sigma;/&radic;n', value: thStd.toFixed(3) },
+    ]);
+  }
+
+  function drawSamples(count) {
+    for (let i = 0; i < count; i++) {
+      let sum = 0;
+      for (let j = 0; j < sampleSize; j++) sum += sampleFromSource();
+      sampleMeans.push(sum / sampleSize);
+    }
+    drawMeans();
+  }
+
+  document.getElementById('clt-n').addEventListener('input', e => {
+    sampleSize = +e.target.value;
+    document.getElementById('clt-n-val').textContent = sampleSize;
+  });
+
+  document.getElementById('clt-tabs').addEventListener('click', e => {
+    if (!e.target.dataset.src) return;
+    document.querySelectorAll('#clt-tabs button').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    srcType = e.target.dataset.src;
+    sampleMeans = [];
+    drawSource();
+    drawMeans();
+  });
+
+  document.getElementById('clt-draw1').addEventListener('click', () => drawSamples(1));
+  document.getElementById('clt-draw100').addEventListener('click', () => drawSamples(100));
+  document.getElementById('clt-draw1000').addEventListener('click', () => drawSamples(1000));
+  document.getElementById('clt-reset').addEventListener('click', () => { sampleMeans = []; drawMeans(); });
+
+  drawSource();
+  drawMeans();
+})();
+
+// ─── 4. Hypothesis Testing ────────────────────────────────────────
+(function() {
+  const canvas = document.getElementById('hyp-canvas');
+  const { ctx, w, h } = setupCanvas(canvas);
+  const pad = 50;
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    const z = document.getElementById('hyp-z').value / 10;
+    const twoTail = document.getElementById('hyp-twotail').checked;
+    document.getElementById('hyp-z-val').textContent = z.toFixed(2);
+
+    const plotW = w - pad - 10, plotH = h - pad - 20;
+    const lo = -4, hi = 4;
+    const maxY = normalPDF(0, 0, 1);
+
+    const xTicks = [];
+    for (let i = -4; i <= 4; i++) xTicks.push({ pos: (i - lo) / (hi - lo), label: '' + i });
+    const yTicks = [{ pos: 0, label: '0' }, { pos: 0.5, label: '0.20' }, { pos: 1, label: '0.40' }];
+    drawAxes(ctx, w, h, pad, 'z', 'Density', xTicks, yTicks);
+
+    // p-value shading
+    ctx.fillStyle = 'rgba(248, 113, 113, 0.3)';
+    if (twoTail) {
+      // right tail
+      ctx.beginPath();
+      const absZ = Math.abs(z);
+      const zPx = pad + ((absZ - lo) / (hi - lo)) * plotW;
+      ctx.moveTo(zPx, h - pad);
+      for (let px = zPx; px <= pad + plotW; px++) {
+        const xv = lo + ((px - pad) / plotW) * (hi - lo);
+        const yv = normalPDF(xv, 0, 1);
+        ctx.lineTo(px, h - pad - (yv / maxY) * plotH);
+      }
+      ctx.lineTo(pad + plotW, h - pad);
+      ctx.closePath(); ctx.fill();
+
+      // left tail
+      ctx.beginPath();
+      const nzPx = pad + ((-absZ - lo) / (hi - lo)) * plotW;
+      ctx.moveTo(pad, h - pad);
+      for (let px = pad; px <= nzPx; px++) {
+        const xv = lo + ((px - pad) / plotW) * (hi - lo);
+        const yv = normalPDF(xv, 0, 1);
+        ctx.lineTo(px, h - pad - (yv / maxY) * plotH);
+      }
+      ctx.lineTo(nzPx, h - pad);
+      ctx.closePath(); ctx.fill();
+    } else {
+      if (z >= 0) {
+        ctx.beginPath();
+        const zPx = pad + ((z - lo) / (hi - lo)) * plotW;
+        ctx.moveTo(zPx, h - pad);
+        for (let px = zPx; px <= pad + plotW; px++) {
+          const xv = lo + ((px - pad) / plotW) * (hi - lo);
+          ctx.lineTo(px, h - pad - (normalPDF(xv, 0, 1) / maxY) * plotH);
+        }
+        ctx.lineTo(pad + plotW, h - pad);
+        ctx.closePath(); ctx.fill();
+      } else {
+        ctx.beginPath();
+        const zPx = pad + ((z - lo) / (hi - lo)) * plotW;
+        ctx.moveTo(pad, h - pad);
+        for (let px = pad; px <= zPx; px++) {
+          const xv = lo + ((px - pad) / plotW) * (hi - lo);
+          ctx.lineTo(px, h - pad - (normalPDF(xv, 0, 1) / maxY) * plotH);
+        }
+        ctx.lineTo(zPx, h - pad);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+
+    // curve
+    ctx.strokeStyle = '#6c8aff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let px = pad; px <= pad + plotW; px++) {
+      const xv = lo + ((px - pad) / plotW) * (hi - lo);
+      const yv = normalPDF(xv, 0, 1);
+      const py = h - pad - (yv / maxY) * plotH;
+      px === pad ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // alpha threshold lines at z = +-1.96
+    const alpha05 = twoTail ? 1.96 : 1.645;
+    ctx.strokeStyle = 'rgba(251, 191, 36, 0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    const aPx = pad + ((alpha05 - lo) / (hi - lo)) * plotW;
+    ctx.beginPath(); ctx.moveTo(aPx, h - pad); ctx.lineTo(aPx, 20); ctx.stroke();
+    if (twoTail) {
+      const naPx = pad + ((-alpha05 - lo) / (hi - lo)) * plotW;
+      ctx.beginPath(); ctx.moveTo(naPx, h - pad); ctx.lineTo(naPx, 20); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+
+    // label alpha
+    ctx.fillStyle = 'var(--fn)';
+    ctx.font = '10px Inter, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\u03B1 = 0.05', aPx, 15);
+
+    // test statistic line
+    const zPx = pad + ((z - lo) / (hi - lo)) * plotW;
+    ctx.strokeStyle = 'var(--fp)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(zPx, h - pad); ctx.lineTo(zPx, 20); ctx.stroke();
+    ctx.fillStyle = 'var(--fp)';
+    ctx.fillText('z = ' + z.toFixed(2), zPx, 15);
+
+    // p-value
+    let pVal;
+    if (twoTail) {
+      pVal = 2 * (1 - normalCDF(Math.abs(z), 0, 1));
+    } else {
+      pVal = z >= 0 ? 1 - normalCDF(z, 0, 1) : normalCDF(z, 0, 1);
+    }
+    const reject = pVal < 0.05;
+
+    makeMetricCards(document.getElementById('hyp-metrics'), [
+      { label: 'Test Statistic', value: z.toFixed(2) },
+      { label: 'p-value', value: pVal.toFixed(4), active: true },
+      { label: 'Decision', value: reject ? 'Reject H\u2080' : 'Fail to Reject', color: reject ? 'var(--fp)' : 'var(--positive)' },
+      { label: 'Test Type', value: twoTail ? 'Two-tailed' : 'One-tailed' },
+    ]);
+  }
+
+  document.getElementById('hyp-z').addEventListener('input', draw);
+  document.getElementById('hyp-twotail').addEventListener('change', draw);
+  draw();
+})();
+
+// ─── 5. Confidence Intervals ────────────────────────────────────────
+(function() {
+  const canvas = document.getElementById('ci-canvas');
+  const { ctx, w, h } = setupCanvas(canvas);
+  const pad = 40;
+  const levels = [0.80, 0.90, 0.95, 0.99];
+  const zScores = [1.282, 1.645, 1.96, 2.576];
+  let levelIdx = 2;
+  const trueParam = 50;
+  let intervals = [];
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    const plotW = w - pad - 10, plotH = h - pad - 20;
+    const lo = 30, hi = 70;
+
+    // axes
+    const xTicks = [];
+    for (let v = 30; v <= 70; v += 5) xTicks.push({ pos: (v - lo) / (hi - lo), label: '' + v });
+    drawAxes(ctx, w, h, pad, '', '', xTicks, []);
+
+    // true parameter line
+    const truePx = pad + ((trueParam - lo) / (hi - lo)) * plotW;
+    ctx.strokeStyle = 'rgba(108,138,255,0.4)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(truePx, 10); ctx.lineTo(truePx, h - pad); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'var(--accent)';
+    ctx.font = '11px Inter, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('True \u03BC = ' + trueParam, truePx, 12);
+
+    if (intervals.length === 0) {
+      ctx.fillStyle = '#8888a0';
+      ctx.font = '13px Inter, system-ui, sans-serif';
+      ctx.fillText('Click "Run Experiment" to generate intervals', w / 2, h / 2);
+    }
+
+    // Draw intervals (most recent at top, show up to ~50)
+    const maxShow = Math.min(intervals.length, 50);
+    const barH = Math.min(6, (plotH - 10) / maxShow);
+    const startIdx = Math.max(0, intervals.length - maxShow);
+    for (let i = startIdx; i < intervals.length; i++) {
+      const ci = intervals[i];
+      const idx = i - startIdx;
+      const contains = ci.lo <= trueParam && ci.hi >= trueParam;
+      const y = 22 + idx * (barH + 2);
+      const x1 = pad + ((ci.lo - lo) / (hi - lo)) * plotW;
+      const x2 = pad + ((ci.hi - lo) / (hi - lo)) * plotW;
+      const xm = pad + ((ci.mean - lo) / (hi - lo)) * plotW;
+
+      ctx.strokeStyle = contains ? 'var(--positive)' : 'var(--negative)';
+      ctx.fillStyle = contains ? 'var(--positive)' : 'var(--negative)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(x1, y + barH / 2); ctx.lineTo(x2, y + barH / 2); ctx.stroke();
+      // end caps
+      ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x1, y + barH); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x2, y); ctx.lineTo(x2, y + barH); ctx.stroke();
+      // center dot
+      ctx.beginPath(); ctx.arc(xm, y + barH / 2, 2, 0, Math.PI * 2); ctx.fill();
+    }
+
+    const containing = intervals.filter(ci => ci.lo <= trueParam && ci.hi >= trueParam).length;
+    makeMetricCards(document.getElementById('ci-metrics'), [
+      { label: 'Experiments', value: intervals.length },
+      { label: 'Containing True \u03BC', value: containing, active: true },
+      { label: 'Coverage Rate', value: intervals.length > 0 ? (containing / intervals.length * 100).toFixed(1) + '%' : '--' },
+      { label: 'Expected', value: (levels[levelIdx] * 100).toFixed(0) + '%' },
+    ]);
+  }
+
+  function runExperiments(count) {
+    const z = zScores[levelIdx];
+    const sigma = 15; // population std
+    const n = 25; // sample size
+    const se = sigma / Math.sqrt(n);
+    for (let i = 0; i < count; i++) {
+      const sampleMean = gaussianRandom(trueParam, se);
+      intervals.push({
+        mean: sampleMean,
+        lo: sampleMean - z * se,
+        hi: sampleMean + z * se,
+      });
+    }
+    draw();
+  }
+
+  document.getElementById('ci-level').addEventListener('input', e => {
+    levelIdx = +e.target.value;
+    document.getElementById('ci-level-val').textContent = (levels[levelIdx] * 100).toFixed(0) + '%';
+    intervals = [];
+    draw();
+  });
+
+  document.getElementById('ci-run1').addEventListener('click', () => runExperiments(1));
+  document.getElementById('ci-run25').addEventListener('click', () => runExperiments(25));
+  document.getElementById('ci-reset').addEventListener('click', () => { intervals = []; draw(); });
+
+  draw();
+})();
+
+// ─── 6. A/B Testing Simulator ────────────────────────────────────────
+(function() {
+  const canvas = document.getElementById('ab-canvas');
+  const { ctx, w, h } = setupCanvas(canvas);
+  const powerCanvas = document.getElementById('ab-power-canvas');
+  const powerSetup = setupCanvas(powerCanvas);
+  const pad = 50;
+
+  let testResults = [];
+  let multiResults = [];
+
+  function runSingleTest() {
+    const n = +document.getElementById('ab-n').value;
+    const rA = +document.getElementById('ab-ra').value / 100;
+    const effectExists = document.getElementById('ab-effect').checked;
+    const rB = effectExists ? +document.getElementById('ab-rb').value / 100 : rA;
+
+    // simulate
+    let convA = 0, convB = 0;
+    for (let i = 0; i < n; i++) { if (Math.random() < rA) convA++; }
+    for (let i = 0; i < n; i++) { if (Math.random() < rB) convB++; }
+
+    const pA = convA / n, pB = convB / n;
+    const pooledP = (convA + convB) / (2 * n);
+    const se = Math.sqrt(pooledP * (1 - pooledP) * (2 / n));
+    const z = se > 0 ? (pB - pA) / se : 0;
+    const pVal = 2 * (1 - normalCDF(Math.abs(z), 0, 1));
+    const diffSE = Math.sqrt(pA * (1 - pA) / n + pB * (1 - pB) / n);
+    const ciLo = (pB - pA) - 1.96 * diffSE;
+    const ciHi = (pB - pA) + 1.96 * diffSE;
+
+    return { pA, pB, pVal, z, ciLo, ciHi, n, significant: pVal < 0.05, effectExists, trueA: rA, trueB: rB };
+  }
+
+  function drawResult(result) {
+    ctx.clearRect(0, 0, w, h);
+    if (!result) {
+      ctx.fillStyle = '#8888a0';
+      ctx.font = '13px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Click "Run Test" to simulate an experiment', w / 2, h / 2);
+      return;
+    }
+
+    const plotW = w - pad - 20, plotH = h - pad - 40;
+    const maxR = Math.max(result.pA, result.pB, 0.05) * 1.5;
+
+    drawAxes(ctx, w, h, pad, '', 'Conversion Rate', [], []);
+
+    const barW = 80;
+    const xA = pad + plotW * 0.3;
+    const xB = pad + plotW * 0.7;
+
+    // bar A
+    const hA = (result.pA / maxR) * plotH;
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.5)';
+    ctx.fillRect(xA - barW / 2, h - pad - hA, barW, hA);
+    ctx.strokeStyle = '#60a5fa'; ctx.lineWidth = 2;
+    ctx.strokeRect(xA - barW / 2, h - pad - hA, barW, hA);
+
+    // bar B
+    const hB = (result.pB / maxR) * plotH;
+    ctx.fillStyle = result.significant ? 'rgba(74, 222, 128, 0.5)' : 'rgba(251, 191, 36, 0.5)';
+    ctx.fillRect(xB - barW / 2, h - pad - hB, barW, hB);
+    ctx.strokeStyle = result.significant ? '#4ade80' : '#fbbf24'; ctx.lineWidth = 2;
+    ctx.strokeRect(xB - barW / 2, h - pad - hB, barW, hB);
+
+    // error bars (CI for difference shown on B)
+    const diffSE = Math.sqrt(result.pA * (1 - result.pA) / result.n + result.pB * (1 - result.pB) / result.n);
+    const eLo = (result.pB - 1.96 * diffSE);
+    const eHi = (result.pB + 1.96 * diffSE);
+    const eLoPx = h - pad - (Math.max(0, eLo) / maxR) * plotH;
+    const eHiPx = h - pad - (Math.min(maxR, eHi) / maxR) * plotH;
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(xB, eHiPx); ctx.lineTo(xB, eLoPx); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(xB - 8, eHiPx); ctx.lineTo(xB + 8, eHiPx); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(xB - 8, eLoPx); ctx.lineTo(xB + 8, eLoPx); ctx.stroke();
+
+    // labels
+    ctx.fillStyle = 'var(--text)'; ctx.font = 'bold 14px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('A (Control)', xA, h - pad + 20);
+    ctx.fillText('B (Treatment)', xB, h - pad + 20);
+    ctx.fillText((result.pA * 100).toFixed(1) + '%', xA, h - pad - hA - 8);
+    ctx.fillText((result.pB * 100).toFixed(1) + '%', xB, h - pad - hB - 8);
+  }
+
+  function drawPowerCurve() {
+    const { ctx, w, h } = powerSetup;
+    ctx.clearRect(0, 0, w, h);
+    const pPad = 50, plotW = w - pPad - 20, plotH = h - pPad - 20;
+
+    const rA = +document.getElementById('ab-ra').value / 100;
+    const rB = +document.getElementById('ab-rb').value / 100;
+
+    const xTicks = [], yTicks = [];
+    const nValues = [20, 50, 100, 200, 500, 1000, 2000, 5000];
+    nValues.forEach((nv, i) => xTicks.push({ pos: i / (nValues.length - 1), label: '' + nv }));
+    for (let i = 0; i <= 4; i++) yTicks.push({ pos: i / 4, label: (i * 25) + '%' });
+    drawAxes(ctx, w, h, pPad, 'Sample Size per Group', 'Power', xTicks, yTicks);
+
+    // power at each n
+    ctx.strokeStyle = '#6c8aff'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    nValues.forEach((nv, i) => {
+      const diff = Math.abs(rB - rA);
+      const pooledP = (rA + rB) / 2;
+      const se = Math.sqrt(pooledP * (1 - pooledP) * 2 / nv);
+      const zEffect = se > 0 ? diff / se : 0;
+      const power = 1 - normalCDF(1.96 - zEffect, 0, 1);
+      const px = pPad + (i / (nValues.length - 1)) * plotW;
+      const py = h - pPad - clamp(power, 0, 1) * plotH;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      // dot
+      ctx.save(); ctx.fillStyle = '#6c8aff';
+      ctx.beginPath(); ctx.arc(px, py, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    });
+    ctx.stroke();
+
+    // 80% power line
+    ctx.strokeStyle = 'rgba(74, 222, 128, 0.4)';
+    ctx.setLineDash([5, 4]);
+    const y80 = h - pPad - 0.8 * plotH;
+    ctx.beginPath(); ctx.moveTo(pPad, y80); ctx.lineTo(pPad + plotW, y80); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'var(--positive)'; ctx.font = '10px Inter, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('80% power', pPad + plotW + 4, y80 + 4);
+  }
+
+  function updateMetrics(result) {
+    if (!result) {
+      makeMetricCards(document.getElementById('ab-metrics'), [
+        { label: 'p-value', value: '--' },
+        { label: 'CI for Diff', value: '--' },
+        { label: 'Significant', value: '--' },
+      ]);
+      return;
+    }
+    let typeLabel = '';
+    if (multiResults.length > 0) {
+      const fp = multiResults.filter(r => !r.effectExists && r.significant).length;
+      const fn = multiResults.filter(r => r.effectExists && !r.significant).length;
+      const total = multiResults.length;
+      const effectTests = multiResults.filter(r => r.effectExists).length;
+      const noEffectTests = total - effectTests;
+      if (noEffectTests > 0) typeLabel = `Type I: ${(fp/noEffectTests*100).toFixed(0)}%`;
+      if (effectTests > 0) typeLabel += ` Type II: ${(fn/effectTests*100).toFixed(0)}%`;
+    }
+
+    makeMetricCards(document.getElementById('ab-metrics'), [
+      { label: 'p-value', value: result.pVal.toFixed(4), active: result.pVal < 0.05 },
+      { label: 'CI for Difference', value: `[${(result.ciLo*100).toFixed(1)}, ${(result.ciHi*100).toFixed(1)}]%` },
+      { label: 'Result', value: result.significant ? 'Significant' : 'Not Significant', color: result.significant ? 'var(--positive)' : 'var(--muted)' },
+      { label: typeLabel ? 'Error Rates' : 'Tests Run', value: typeLabel || multiResults.length },
+    ]);
+  }
+
+  document.getElementById('ab-n').addEventListener('input', e => { document.getElementById('ab-n-val').textContent = e.target.value; drawPowerCurve(); });
+  document.getElementById('ab-ra').addEventListener('input', e => { document.getElementById('ab-ra-val').textContent = (e.target.value).toFixed(1) + '%'; drawPowerCurve(); });
+  document.getElementById('ab-rb').addEventListener('input', e => { document.getElementById('ab-rb-val').textContent = (e.target.value).toFixed(1) + '%'; drawPowerCurve(); });
+
+  document.getElementById('ab-run1').addEventListener('click', () => {
+    const r = runSingleTest();
+    multiResults.push(r);
+    testResults.push(r);
+    drawResult(r);
+    updateMetrics(r);
+  });
+
+  document.getElementById('ab-run100').addEventListener('click', () => {
+    let last;
+    for (let i = 0; i < 100; i++) {
+      last = runSingleTest();
+      multiResults.push(last);
+    }
+    testResults.push(last);
+    drawResult(last);
+    updateMetrics(last);
+  });
+
+  document.getElementById('ab-reset').addEventListener('click', () => {
+    testResults = []; multiResults = [];
+    drawResult(null);
+    updateMetrics(null);
+  });
+
+  drawResult(null);
+  updateMetrics(null);
+  drawPowerCurve();
+})();
+
+// ─── 7. Expected Value & Decision Making ────────────────────────────────────────
+(function() {
+  const canvas = document.getElementById('ev-canvas');
+  const { ctx, w, h } = setupCanvas(canvas);
+  let scenario = 'launch';
+
+  const scenarios = {
+    launch: {
+      title: 'Product Launch',
+      branches: [
+        { name: 'Success', probId: 'ev-p1', outcomeId: 'ev-o1', defaultP: 40, defaultO: 500000, color: 'var(--positive)' },
+        { name: 'Moderate', probId: 'ev-p2', outcomeId: 'ev-o2', defaultP: 35, defaultO: 100000, color: 'var(--accent)' },
+        { name: 'Failure', probId: 'ev-p3', outcomeId: 'ev-o3', defaultP: 25, defaultO: -200000, color: 'var(--negative)' },
+      ],
+      explanation: 'The <strong>expected value</strong> is the probability-weighted average of all outcomes. A positive EV suggests the decision is favorable on average, but individual outcomes may vary widely.'
+    },
+    fraud: {
+      title: 'Fraud Model Threshold',
+      branches: [
+        { name: 'Catch Fraud (TP)', probId: 'ev-p1', outcomeId: 'ev-o1', defaultP: 30, defaultO: 5000, color: 'var(--positive)' },
+        { name: 'False Alarm (FP)', probId: 'ev-p2', outcomeId: 'ev-o2', defaultP: 50, defaultO: -200, color: 'var(--fn)' },
+        { name: 'Miss Fraud (FN)', probId: 'ev-p3', outcomeId: 'ev-o3', defaultP: 20, defaultO: -5000, color: 'var(--negative)' },
+      ],
+      explanation: 'If we lower the threshold, we catch more fraud (benefit) but increase false alarms (cost). <strong>What threshold maximizes expected profit?</strong> This is where ML model tuning meets business value.'
+    },
+    abtest: {
+      title: 'A/B Test Duration',
+      branches: [
+        { name: 'True Winner Found', probId: 'ev-p1', outcomeId: 'ev-o1', defaultP: 60, defaultO: 50000, color: 'var(--positive)' },
+        { name: 'Inconclusive', probId: 'ev-p2', outcomeId: 'ev-o2', defaultP: 25, defaultO: -5000, color: 'var(--fn)' },
+        { name: 'Wrong Winner', probId: 'ev-p3', outcomeId: 'ev-o3', defaultP: 15, defaultO: -30000, color: 'var(--negative)' },
+      ],
+      explanation: 'Running a test longer increases the chance of finding a true winner but costs time. Stopping too early risks picking a false winner. The <strong>expected value</strong> helps decide the optimal test duration.'
+    }
+  };
+
+  function buildControls() {
+    const s = scenarios[scenario];
+    const c = document.getElementById('ev-controls');
+    c.innerHTML = s.branches.map((b, i) => `
+      <div style="margin-bottom:0.8rem; padding:0.5rem; border-radius:8px; border:1px solid var(--border);">
+        <div style="font-size:0.8rem; font-weight:600; color:${b.color}; margin-bottom:0.3rem;">${b.name}</div>
+        <div class="slider-group" style="margin-bottom:0.5rem;">
+          <label>Probability <strong id="${b.probId}-val">${b.defaultP}%</strong></label>
+          <input type="range" id="${b.probId}" min="0" max="100" value="${b.defaultP}">
+        </div>
+        <div class="slider-group" style="margin-bottom:0;">
+          <label>Outcome ($) <strong id="${b.outcomeId}-val">${b.defaultO.toLocaleString()}</strong></label>
+          <input type="range" id="${b.outcomeId}" min="-500000" max="1000000" value="${b.defaultO}" step="10000">
+        </div>
+      </div>
+    `).join('');
+
+    s.branches.forEach(b => {
+      document.getElementById(b.probId).addEventListener('input', e => {
+        document.getElementById(b.probId + '-val').textContent = e.target.value + '%';
+        draw();
+      });
+      document.getElementById(b.outcomeId).addEventListener('input', e => {
+        document.getElementById(b.outcomeId + '-val').textContent = (+e.target.value).toLocaleString();
+        draw();
+      });
+    });
+
+    document.getElementById('ev-explanation').innerHTML = s.explanation;
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    const s = scenarios[scenario];
+
+    const branches = s.branches.map(b => ({
+      name: b.name,
+      prob: +document.getElementById(b.probId).value / 100,
+      outcome: +document.getElementById(b.outcomeId).value,
+      color: b.color,
+    }));
+
+    // Normalize probabilities
+    const totalP = branches.reduce((a, b) => a + b.prob, 0) || 1;
+    branches.forEach(b => b.normProb = b.prob / totalP);
+
+    const ev = branches.reduce((a, b) => a + b.normProb * b.outcome, 0);
+    document.getElementById('ev-result').textContent = '$' + ev.toLocaleString(undefined, { maximumFractionDigits: 0 });
+    document.getElementById('ev-result').style.color = ev >= 0 ? 'var(--positive)' : 'var(--negative)';
+
+    // Draw decision tree
+    const startX = 60, startY = h / 2;
+    const branchLen = 160;
+    const endX = startX + branchLen;
+    const spacing = (h - 60) / (branches.length + 1);
+
+    // Decision node
+    ctx.fillStyle = 'var(--accent)';
+    ctx.beginPath(); ctx.arc(startX, startY, 12, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 12px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('D', startX, startY + 4);
+
+    branches.forEach((b, i) => {
+      const endY = spacing * (i + 1);
+
+      // branch line
+      ctx.strokeStyle = b.color;
+      ctx.lineWidth = Math.max(1, b.normProb * 6);
+      ctx.beginPath(); ctx.moveTo(startX + 12, startY); ctx.lineTo(endX, endY); ctx.stroke();
+
+      // probability label on line
+      ctx.fillStyle = 'var(--muted)';
+      ctx.font = '11px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      const midX = (startX + endX) / 2, midY = (startY + endY) / 2;
+      ctx.fillText((b.normProb * 100).toFixed(0) + '%', midX - 15, midY - 5);
+
+      // outcome circle
+      ctx.fillStyle = b.color;
+      ctx.beginPath(); ctx.arc(endX, endY, 8, 0, Math.PI * 2); ctx.fill();
+
+      // label
+      ctx.fillStyle = 'var(--text)';
+      ctx.font = '12px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(b.name, endX + 16, endY - 8);
+      ctx.fillStyle = b.outcome >= 0 ? 'var(--positive)' : 'var(--negative)';
+      ctx.font = 'bold 13px Inter, system-ui, sans-serif';
+      ctx.fillText('$' + b.outcome.toLocaleString(), endX + 16, endY + 8);
+
+      // EV contribution
+      const contrib = b.normProb * b.outcome;
+      ctx.fillStyle = 'var(--muted)';
+      ctx.font = '10px Inter, system-ui, sans-serif';
+      ctx.fillText('EV: $' + contrib.toLocaleString(undefined, { maximumFractionDigits: 0 }), endX + 16, endY + 24);
+    });
+
+    // EV bar at bottom
+    ctx.fillStyle = 'var(--muted)';
+    ctx.font = '11px Inter, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('E[V] = \u03A3 p\u1D62 \u00D7 v\u1D62 = $' + ev.toLocaleString(undefined, { maximumFractionDigits: 0 }), w - 20, h - 10);
+  }
+
+  document.getElementById('ev-tabs').addEventListener('click', e => {
+    if (!e.target.dataset.scenario) return;
+    document.querySelectorAll('#ev-tabs button').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    scenario = e.target.dataset.scenario;
+    buildControls();
+    draw();
+  });
+
+  buildControls();
+  draw();
+})();
+
+// ─── 8. Correlation vs Causation ────────────────────────────────────────
+(function() {
+  const canvas = document.getElementById('corr-canvas');
+  const { ctx, w, h } = setupCanvas(canvas);
+  const pad = 50;
+
+  let corrScenario = 'custom';
+  let dataPoints = [];
+  let showConfound = false;
+
+  const spuriousData = {
+    icecream: {
+      xLabel: 'Ice Cream Sales ($K)',
+      yLabel: 'Drowning Incidents',
+      confound: 'Temperature (Summer)',
+      confoundExplanation: '<strong>The hidden factor: Temperature.</strong> Both ice cream sales and drownings increase in summer due to hot weather. Ice cream does not cause drownings; warm weather causes both.',
+      points: generateSpurious(0.85, 30, 50, 200, 5, 40),
+    },
+    cheese: {
+      xLabel: 'Per Capita Cheese Consumption (lbs)',
+      yLabel: 'Bedsheet Tangling Deaths',
+      confound: 'Population Growth / Data Mining',
+      confoundExplanation: '<strong>Spurious correlation from data mining.</strong> With enough datasets, you will always find correlations by chance. This is a famous example from Tyler Vigen\'s "Spurious Correlations" project. There is no causal mechanism.',
+      points: generateSpurious(0.95, 20, 30, 45, 300, 900),
+    }
+  };
+
+  function generateSpurious(r, n, xLo, xHi, yLo, yHi) {
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      const t = i / (n - 1);
+      const x = xLo + t * (xHi - xLo) + gaussianRandom(0, (xHi - xLo) * 0.05);
+      const y = yLo + t * (yHi - yLo) * r + gaussianRandom(0, (yHi - yLo) * 0.1);
+      pts.push({ x, y });
+    }
+    return pts;
+  }
+
+  function generateCorrelated(r, n) {
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      const x = gaussianRandom(50, 15);
+      const noise = gaussianRandom(0, 15 * Math.sqrt(1 - r * r));
+      const y = 50 + r * (x - 50) + noise;
+      pts.push({ x, y });
+    }
+    return pts;
+  }
+
+  function computeR(pts) {
+    const n = pts.length;
+    if (n < 2) return 0;
+    const mx = pts.reduce((a, p) => a + p.x, 0) / n;
+    const my = pts.reduce((a, p) => a + p.y, 0) / n;
+    let num = 0, dx2 = 0, dy2 = 0;
+    pts.forEach(p => {
+      const dx = p.x - mx, dy = p.y - my;
+      num += dx * dy; dx2 += dx * dx; dy2 += dy * dy;
+    });
+    return dx2 > 0 && dy2 > 0 ? num / Math.sqrt(dx2 * dy2) : 0;
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    const plotW = w - pad - 20, plotH = h - pad - 30;
+
+    let pts, xLabel, yLabel;
+    if (corrScenario === 'custom') {
+      const r = +document.getElementById('corr-r').value / 100;
+      document.getElementById('corr-r-val').textContent = r.toFixed(2);
+      pts = generateCorrelated(r, 80);
+      xLabel = 'X'; yLabel = 'Y';
+    } else {
+      const data = spuriousData[corrScenario];
+      pts = data.points;
+      xLabel = data.xLabel; yLabel = data.yLabel;
+    }
+    dataPoints = pts;
+
+    const xMin = Math.min(...pts.map(p => p.x)), xMax = Math.max(...pts.map(p => p.x));
+    const yMin = Math.min(...pts.map(p => p.y)), yMax = Math.max(...pts.map(p => p.y));
+    const xRange = (xMax - xMin) || 1, yRange = (yMax - yMin) || 1;
+    const xPad = xRange * 0.1, yPad = yRange * 0.1;
+    const xl = xMin - xPad, xh = xMax + xPad, yl = yMin - yPad, yh = yMax + yPad;
+
+    const xTicks = [], yTicks = [];
+    for (let i = 0; i <= 4; i++) {
+      xTicks.push({ pos: i / 4, label: (xl + i * (xh - xl) / 4).toFixed(0) });
+      yTicks.push({ pos: i / 4, label: (yl + i * (yh - yl) / 4).toFixed(0) });
+    }
+    drawAxes(ctx, w, h, pad, xLabel, yLabel, xTicks, yTicks);
+
+    // points
+    pts.forEach(p => {
+      const px = pad + ((p.x - xl) / (xh - xl)) * plotW;
+      const py = h - pad - ((p.y - yl) / (yh - yl)) * plotH;
+      ctx.fillStyle = 'rgba(108, 138, 255, 0.6)';
+      ctx.beginPath(); ctx.arc(px, py, 4, 0, Math.PI * 2); ctx.fill();
+    });
+
+    // regression line
+    const r = computeR(pts);
+    const mx = pts.reduce((a, p) => a + p.x, 0) / pts.length;
+    const my = pts.reduce((a, p) => a + p.y, 0) / pts.length;
+    let sx = 0, sy = 0;
+    pts.forEach(p => { sx += (p.x - mx) ** 2; sy += (p.y - my) ** 2; });
+    const sdx = Math.sqrt(sx / pts.length), sdy = Math.sqrt(sy / pts.length);
+    const slope = sdx > 0 ? r * (sdy / sdx) : 0;
+    const intercept = my - slope * mx;
+
+    ctx.strokeStyle = 'rgba(248, 113, 113, 0.7)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    const lx1 = xl, ly1 = slope * lx1 + intercept;
+    const lx2 = xh, ly2 = slope * lx2 + intercept;
+    const px1 = pad + ((lx1 - xl) / (xh - xl)) * plotW;
+    const py1 = h - pad - ((ly1 - yl) / (yh - yl)) * plotH;
+    const px2 = pad + ((lx2 - xl) / (xh - xl)) * plotW;
+    const py2 = h - pad - ((ly2 - yl) / (yh - yl)) * plotH;
+    ctx.moveTo(px1, py1); ctx.lineTo(px2, py2);
+    ctx.stroke();
+
+    // r value on chart
+    ctx.fillStyle = 'var(--text)';
+    ctx.font = 'bold 16px Inter, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('r = ' + r.toFixed(3), w - 20, 25);
+    ctx.font = '11px Inter, system-ui, sans-serif';
+    ctx.fillStyle = 'var(--muted)';
+    ctx.fillText('r\u00B2 = ' + (r * r).toFixed(3), w - 20, 42);
+
+    // confound diagram
+    if (showConfound && corrScenario !== 'custom') {
+      const data = spuriousData[corrScenario];
+      ctx.fillStyle = 'rgba(15,17,23,0.85)';
+      ctx.fillRect(pad + 20, 50, 250, 90);
+      ctx.strokeStyle = 'var(--fn)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(pad + 20, 50, 250, 90);
+
+      ctx.fillStyle = 'var(--fn)';
+      ctx.font = 'bold 12px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(data.confound, pad + 145, 72);
+
+      // arrows
+      ctx.strokeStyle = 'var(--fn)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(pad + 95, 80); ctx.lineTo(pad + 60, 115); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(pad + 195, 80); ctx.lineTo(pad + 230, 115); ctx.stroke();
+
+      ctx.fillStyle = 'var(--accent)'; ctx.font = '11px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('X', pad + 55, 130);
+      ctx.fillText('Y', pad + 235, 130);
+    }
+
+    makeMetricCards(document.getElementById('corr-metrics'), [
+      { label: 'Correlation (r)', value: r.toFixed(3), active: true },
+      { label: 'r\u00B2', value: (r * r).toFixed(3) },
+      { label: 'N', value: pts.length },
+    ]);
+  }
+
+  document.getElementById('corr-tabs').addEventListener('click', e => {
+    if (!e.target.dataset.scenario) return;
+    document.querySelectorAll('#corr-tabs button').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    corrScenario = e.target.dataset.scenario;
+    showConfound = false;
+    document.getElementById('corr-confound-info').style.display = 'none';
+
+    const controls = document.getElementById('corr-controls');
+    if (corrScenario === 'custom') {
+      controls.innerHTML = `<div class="slider-group"><label>Correlation (r) <strong id="corr-r-val">0.70</strong></label><input type="range" id="corr-r" min="-100" max="100" value="70"></div>`;
+      controls.querySelector('#corr-r').addEventListener('input', draw);
+    } else {
+      controls.innerHTML = '';
+    }
+    draw();
+  });
+
+  document.getElementById('corr-confound-btn').addEventListener('click', () => {
+    if (corrScenario === 'custom') {
+      document.getElementById('corr-confound-info').style.display = 'block';
+      document.getElementById('corr-confound-info').innerHTML = '<strong>In the interactive mode</strong>, you control the correlation directly. In real data, always ask: is there a hidden variable driving both X and Y?';
+      return;
+    }
+    showConfound = !showConfound;
+    document.getElementById('corr-confound-info').style.display = showConfound ? 'block' : 'none';
+    if (showConfound) {
+      document.getElementById('corr-confound-info').innerHTML = spuriousData[corrScenario].confoundExplanation;
+    }
+    draw();
+  });
+
+  document.getElementById('corr-r').addEventListener('input', draw);
+  draw();
+})();
+
+</script>
+</body>
+</html>

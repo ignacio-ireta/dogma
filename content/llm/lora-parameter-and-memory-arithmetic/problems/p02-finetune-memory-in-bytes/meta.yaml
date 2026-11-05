@@ -1,0 +1,13 @@
+id: llm/lora-parameter-and-memory-arithmetic/p02-finetune-memory-in-bytes
+version: 1                       # bump when tests, tolerances or the contract change
+title: Fine-tuning memory in bytes, frozen base plus LoRA adapter
+language: python                 # python | sql
+runtime: py-stdlib               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: finetune_memory_bytes     # the function or class name the learner implements
+difficulty: medium
+minutes: 20
+core: false                      # p01 is the core problem: exactly one per topic
+tolerance: {atol: 0, rtol: 0}    # integer byte counts: exact equality, no tolerance
+banned_imports: [numpy, torch, jax, sklearn]
+timeout_s: 30
+status: reviewed

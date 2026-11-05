@@ -1,0 +1,13 @@
+id: tst/beta/p01-sql-total-by-user
+version: 1
+title: Total spend by user
+language: sql
+runtime: sql-duckdb
+entry: query
+difficulty: easy
+minutes: 10
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: []
+timeout_s: 30
+status: draft

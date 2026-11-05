@@ -1,0 +1,13 @@
+id: dl/adamw-decoupled-weight-decay/p02-decay-parameter-groups
+version: 3
+title: "Decay and no-decay parameter groups"
+language: python
+runtime: py-torch
+entry: build_adamw_groups
+difficulty: medium
+minutes: 25
+core: false
+tolerance: {atol: 1.0e-10, rtol: 1.0e-10}
+banned_imports: [torch.optim]
+timeout_s: 30
+status: reviewed

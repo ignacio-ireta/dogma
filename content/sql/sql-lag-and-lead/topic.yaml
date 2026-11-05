@@ -1,0 +1,14 @@
+id: sql/sql-lag-and-lead
+title: "SQL LAG and LEAD"
+tier: A
+requires: [sql/sql-ranking-window-functions]
+aliases: [lag, lead, previous row, next row, day over day, offset window, sessionization, inactivity gap, running sum flag]
+objectives:
+  - Compare each row with its predecessor inside a partition using LAG, including the NULL first row
+  - Choose an ordering with a tiebreaker so that the previous row is well defined
+  - Build sessions from a gap threshold with LAG and a running SUM of start flags
+minutes: {lesson: 12, practice: 30, min_viable: 15}
+interview_angle: "Given events per user, compute the gap to the previous event and split sessions at a threshold, with the tie rule stated."
+sources:
+  - "book: Molinaro & de Graaf, SQL Cookbook (2nd ed.), chapter on window functions"
+status: reviewed

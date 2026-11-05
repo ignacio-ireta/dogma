@@ -1,0 +1,26 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: inf/prefill-vs-decode-bottlenecks#1
+    type: qa
+    front: Is prefill compute-bound or memory-bound for a long prompt?
+    back: Compute-bound. The whole prompt is one parallel pass, so the weights are reused for every prompt token.
+  - id: inf/prefill-vs-decode-bottlenecks#2
+    type: qa
+    front: How many tokens does one decode step produce for a batch of B sequences?
+    back: One per sequence, so B tokens in total. The step reads the weights once and each sequence's cache.
+  - id: inf/prefill-vs-decode-bottlenecks#3
+    type: cloze
+    text: "Forward-pass FLOPs per token are about {{c1::2 times the non-embedding parameter count}}."
+  - id: inf/prefill-vs-decode-bottlenecks#4
+    type: qa
+    front: What bytes does a decode step read, in the first-order model?
+    back: The weight bytes once, plus (context + 1) times the KV bytes per token for every sequence in the batch.
+  - id: inf/prefill-vs-decode-bottlenecks#5
+    type: qa
+    front: Why does decode throughput rise with the batch size at first?
+    back: The weight read is shared by the batch, so bytes per token fall while the step time barely changes.
+  - id: inf/prefill-vs-decode-bottlenecks#6
+    type: qa
+    front: Why can no batch size make decode compute-bound for a multi-head model at long context?
+    back: Each sequence adds its own cache bytes, so intensity tends to 2P / ((context + 1) * kv) from below, and that limit can sit under the ridge.

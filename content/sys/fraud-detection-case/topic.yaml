@@ -1,0 +1,15 @@
+id: sys/fraud-detection-case
+title: Fraud detection system
+tier: B
+kind: case
+requires: []
+aliases: [fraud, card fraud, transaction fraud, anomaly detection, two-stage scoring]
+objectives:
+  - Design a two-stage scoring path that fits a latency budget
+  - Choose a metric from the cost of each error and the review capacity
+  - Explain each decline in terms a customer and a regulator can read
+minutes: {lesson: 10, practice: 40, min_viable: 15}
+interview_angle: How do you catch more fraud with a fixed review team, and still explain every decline?
+sources:
+  - "source: interview-prep/drills/case-scenarios/02-credit-card-fraud.md"
+status: verified

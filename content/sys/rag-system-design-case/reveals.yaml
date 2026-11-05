@@ -1,0 +1,19 @@
+# Seven reveals. Each trigger describes one question, and no two triggers overlap.
+- when_asked: What do employees ask, and how often?
+  answer: "About 2,000 questions a working day. Roughly 45 percent are how-to questions, 25 percent policy lookups, 20 percent troubleshooting with an error code or product name, and 10 percent other. The exhibit gives the split."
+  exhibit: exhibits/question-types.csv
+- when_asked: What do the documents look like?
+  answer: "Wiki pages are short and use headings and tables. Policy PDFs run 40 to 200 pages, and text extraction often splits table rows across lines. About 15,000 documents are edited each working day. Each source system keeps old versions with a status field: current, draft or superseded."
+- when_asked: Is there labelled data, and how reliable are the labels?
+  answer: "The support log holds 3,100 resolved tickets, each with the document link the agent used. Two reviewers double-judged 300 of them and agreed on 88 percent. Most disagreements were about whether a partial answer was enough."
+- when_asked: How does the index copy permissions, and how long does a change in the source take to reach it?
+  answer: "Each source system owns its permissions. The assistant keeps a copy of each document with its access groups, synced nightly, so a change in the source takes up to 24 hours to reach the index. About 8 percent of documents, around 96,000, are restricted."
+- when_asked: Do the source systems expose a user's access groups through an API?
+  answer: "All six do. A live lookup of a user's groups takes about 50 milliseconds, and it sits inside the 0.6 seconds of overhead in the latency budget."
+- when_asked: What are the latency limits, and the model cost per answer?
+  answer: "An answer must return within 4 seconds at p95, and the model cost budget is 0.02 dollars per answer. The prototype sends 12 chunks of about 300 words to the model and costs about 0.06 dollars per answer."
+- when_asked: How well does current search work, and what does leadership require?
+  answer: "Keyword search over titles and bodies returns the gold document in the top 5 for 61 percent of the 300 double-judged questions from the support log, measured at document level. Leadership requires that at least 90 percent of answers are rated helpful by reviewers, and that no answer shows content the asker cannot open. Leadership accepts an abstention when no document supports an answer."
+  exhibit: exhibits/retrieval-baseline.csv
+- when_asked: What does an escalated question cost the support desk in agent time?
+  answer: "A median escalated question takes 14 agent minutes, and a support agent costs about 45 dollars an hour loaded. About 44,000 questions a month come in, which is 2,000 a working day over 22 days."

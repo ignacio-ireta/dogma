@@ -1,0 +1,32 @@
+cards:
+  - id: cml/bayes-theorem#1
+    type: qa
+    front: In proportional form, what is the posterior P(H | E)?
+    back: P(H | E) ∝ P(E | H) P(H). Prior times likelihood, then divide by the evidence P(E) to normalise.
+  - id: cml/bayes-theorem#2
+    type: qa
+    front: How is the evidence P(E) computed for a discrete set of hypotheses?
+    back: P(E) = Σ_h P(E | h) P(h). It is the total probability of the data, and it normalises the posterior.
+  - id: cml/bayes-theorem#3
+    type: cloze
+    text: "For two hypotheses, posterior odds = prior odds × {{c1::likelihood ratio}}"
+  - id: cml/bayes-theorem#4
+    type: qa
+    front: Why does the base-rate fallacy happen?
+    back: People read P(positive | disease) as P(disease | positive) and ignore the prior. When the condition is rare, the healthy group is large enough that its false positives outnumber the true positives.
+  - id: cml/bayes-theorem#5
+    type: qa
+    front: Why compute a long sequence of likelihoods in log space?
+    back: A product of many probabilities underflows float64 to 0, leaving the normaliser 0/0. A sum of logs stays in range.
+  - id: cml/bayes-theorem#6
+    type: qa
+    front: What does the log-sum-exp step subtract, and why?
+    back: The maximum log-weight. After subtracting it, the largest term is exp(0) = 1, so the normaliser cannot underflow to zero.
+  - id: cml/bayes-theorem#7
+    type: qa
+    front: When does updating one observation at a time give the same answer as a batch update?
+    back: When the observations are conditionally independent given the hypothesis. Each posterior then serves as the prior for the next observation.
+  - id: cml/bayes-theorem#8
+    type: qa
+    front: Do the likelihood values for one observation sum to 1 over the hypotheses?
+    back: "Not in general. A likelihood row sums to 1 over the observations for one hypothesis. Here P(+ | D) + P(+ | not D) = 0.99 + 0.05 = 1.04."

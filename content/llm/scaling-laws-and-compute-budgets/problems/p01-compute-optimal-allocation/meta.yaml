@@ -1,0 +1,13 @@
+id: llm/scaling-laws-and-compute-budgets/p01-compute-optimal-allocation
+version: 1                      # bump when tests, tolerances or the contract change
+title: Compute-optimal model and token counts
+language: python                # python | sql
+runtime: py-stdlib              # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: compute_optimal_allocation  # the function or class name the learner implements
+difficulty: easy
+minutes: 20
+core: true                      # p01 is the core problem: exactly one per topic
+tolerance: {atol: 0.0, rtol: 0.0}   # exact integer answers, no floating point
+banned_imports: [math.sqrt, numpy.sqrt]  # named in problem.md Constraints
+timeout_s: 30
+status: reviewed

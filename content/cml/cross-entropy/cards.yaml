@@ -1,0 +1,27 @@
+cards:
+  - id: cml/cross-entropy#1
+    type: qa
+    front: What is the cross-entropy of a categorical model, in words?
+    back: The negative log-likelihood of the true class, averaged over examples.
+  - id: cml/cross-entropy#2
+    type: qa
+    front: What is the gradient of the mean cross-entropy with respect to the logits of row i?
+    back: (softmax(z_i) − onehot(t_i)) / n. Each row sums to zero.
+  - id: cml/cross-entropy#3
+    type: cloze
+    text: "Cross-entropy decomposes as H(p, q) = H(p) + {{c1::D_KL(p ‖ q)}}, so minimising it over q minimises the KL divergence."
+  - id: cml/cross-entropy#4
+    type: qa
+    front: Why is the cross-entropy computed from the logits instead of from the softmax probabilities?
+    back: The probability of a confident wrong class can round to 0, and log 0 is −∞. The log-sum-exp form stays finite.
+  - id: cml/cross-entropy#5
+    type: qa
+    front: What is the label-smoothed target for class t with smoothing ε and K classes?
+    back: (1 − ε) · onehot(t) + ε / K, a softened distribution that sums to 1.
+  - id: cml/cross-entropy#6
+    type: qa
+    front: What is the stable per-example form of binary cross-entropy from a logit z and target y?
+    back: max(z, 0) − z·y + log(1 + exp(−|z|)). No probability is formed.
+  - id: cml/cross-entropy#7
+    type: cloze
+    text: "With a sigmoid output and binary cross-entropy, the gradient with respect to z is {{c1::σ(z) − y}}, with no σ' factor."

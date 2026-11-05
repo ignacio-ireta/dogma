@@ -1,0 +1,14 @@
+id: cml/gradient-descent/p01-gradient-descent
+version: 2
+title: Gradient descent
+language: python
+runtime: py-numpy
+entry: gradient_descent
+difficulty: medium
+minutes: 25
+core: true
+# The stop rule bounds the distance to the solution by tol / lambda_min, which is about 1e-8 here.
+tolerance: {atol: 1.0e-6, rtol: 1.0e-6}
+banned_imports: [numpy.linalg, scipy]
+timeout_s: 30
+status: reviewed

@@ -1,0 +1,13 @@
+id: cml/normal-and-multivariate-gaussian/p01-mvn-logpdf
+version: 3
+title: Multivariate normal log-density
+language: python
+runtime: py-numpy
+entry: mvn_logpdf
+difficulty: hard
+minutes: 30
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [scipy, numpy.linalg.inv, numpy.linalg.det]
+timeout_s: 30
+status: reviewed

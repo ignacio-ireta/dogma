@@ -1,0 +1,15 @@
+id: dl/rmsnorm
+title: "RMSNorm"
+tier: A
+requires: ['dl/layer-normalization']
+aliases: ['root mean square norm', 'RMS norm', 'RMSNorm', 'LLaMA normalization']
+objectives:
+  - Implement RMSNorm with gain and eps, placing eps inside the square root
+  - Explain what mean-centering costs and why dropping it is cheaper and still stable
+  - Recognise RMSNorm as the normalizer used in many modern decoder-only language models
+minutes: {lesson: 10, practice: 15, min_viable: 12}
+interview_angle: Explain layer norm first, then say which statistic RMSNorm drops, what that saves, and what invariance it gives up.
+sources:
+  - "paper: Zhang and Sennrich 2019, Root Mean Square Layer Normalization (arXiv:1910.07467); not in the local corpus, claims unverified"
+  - "library: AI-ML/13-Scaling-and-Alignment/Touvron et al. — LLaMA 2023.md"
+status: reviewed

@@ -1,0 +1,13 @@
+id: cml/derivatives/p01-numerical-derivative
+version: 3
+title: Numerical derivative
+language: python
+runtime: py-numpy
+entry: numerical_derivative
+difficulty: easy
+minutes: 20
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-8}  # central accuracy; forward is checked at rtol 1e-6
+banned_imports: [scipy.misc, scipy.differentiate, numpy.gradient]
+timeout_s: 30
+status: reviewed

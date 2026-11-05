@@ -1,0 +1,24 @@
+cards:
+  - id: dl/convolution-forward-pass#1
+    type: qa
+    front: What is the output size along one spatial axis of a convolution?
+    back: "floor((H + 2p - k) / s) + 1."
+  - id: dl/convolution-forward-pass#2
+    type: qa
+    front: Is deep learning's convolution flipped relative to the textbook operation?
+    back: "No. It is cross-correlation: the kernel is applied as stored, without flipping."
+  - id: dl/convolution-forward-pass#3
+    type: qa
+    front: How many parameters does a conv layer have, with bias?
+    back: "C_out * C_in * kH * kW + C_out."
+  - id: dl/convolution-forward-pass#4
+    type: qa
+    front: What is W_out for input width 6, kernel width 3, stride 2 and no padding?
+    back: "2, because floor(3 / 2) + 1 = 2. Rounding up would give 3."
+  - id: dl/convolution-forward-pass#5
+    type: cloze
+    text: "Convolution can be computed as a matrix multiplication after {{c1::im2col}} unfolds each receptive field into a column."
+  - id: dl/convolution-forward-pass#6
+    type: qa
+    front: Why does a conv layer's parameter count not depend on the input's height or width?
+    back: The same kernel is shared across all spatial positions.

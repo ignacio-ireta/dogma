@@ -1,0 +1,18 @@
+id: algo/binary-tree-recursion-and-traversal
+title: "Binary tree recursion and traversal"
+tier: A
+requires: [algo/stacks-and-queues]
+aliases: [binary tree, tree traversal, in-order, pre-order, post-order, level order, recursion, explicit stack, tree height, diameter, recursion depth]
+objectives:
+  - Write the recursion template for a binary tree (base case on None, then combine the two child results) and name the traversal order it produces
+  - Convert an in-order walk to an explicit stack, and say which pending nodes the stack holds
+  - Compute a tree quantity that needs two returns (height and a best-so-far value) in one post-order pass
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "Traverse a binary tree without recursion" and "longest path between any two nodes" are common screens. The
+  interviewer checks the base case for None, which order the visit happens in, the height convention for an empty
+  subtree, and whether a deep input breaks a recursive solution.
+sources:
+  - "book: Cormen et al., Introduction to Algorithms (3rd ed.), section 12.1, binary search trees and the inorder tree walk"
+  - "book: Skiena, The Algorithm Design Manual (2nd ed.), chapter 3, trees and traversal"
+status: reviewed

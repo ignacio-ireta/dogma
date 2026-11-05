@@ -1,0 +1,17 @@
+id: cml/preprocessing-pipelines
+title: Preprocessing pipelines
+tier: A
+requires: [cml/feature-scaling, cml/shuffling-splitting-and-batching-data]
+aliases: [pipeline, ColumnTransformer, one-hot encoding, imputation, leakage, fit transform, unknown categories]
+objectives:
+  - Fit imputers, scalers and category maps on training rows only, then transform held-out rows with them
+  - Build mixed numeric and categorical preprocessing whose output columns and order are fixed by contract
+  - Explain why a pipeline object, not a loose sequence of transforms, is the unit that gets validated
+minutes: {lesson: 12, practice: 30, min_viable: 15}
+interview_angle: >-
+  "How do you keep preprocessing from leaking test information?" A strong answer names the fit/transform
+  split, says where unseen categories go, and says the whole pipeline is refitted inside each training fold.
+sources:
+  - "book: Kuhn & Johnson, Applied Predictive Modeling, chapter 3 (data pre-processing)"
+  - "book: Kuhn & Johnson, Applied Predictive Modeling, chapter 4 (over-fitting and model tuning, resampling)"
+status: reviewed

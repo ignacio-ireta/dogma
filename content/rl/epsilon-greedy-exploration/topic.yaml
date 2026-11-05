@@ -1,0 +1,14 @@
+id: rl/epsilon-greedy-exploration
+title: "Epsilon-greedy exploration"
+tier: A
+requires: ['rl/action-value-estimates']
+aliases: ['epsilon-greedy', 'explore exploit', 'exploration rate', 'greedy action', 'decaying epsilon', 'regret']
+objectives:
+  - Implement epsilon-greedy action selection with a fixed, documented tie-breaking rule and a fixed draw order from a seeded generator
+  - Verify the selection frequencies against the analytic probabilities with a justified tolerance
+  - Explain why a fixed epsilon keeps paying a cost per step and when a decaying epsilon is the right trade
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: Explain the explore-exploit trade-off, what epsilon costs in expected reward per step, and why a decaying schedule can be better than a fixed value.
+sources:
+  - "book: Sutton and Barto, Reinforcement Learning: An Introduction (2nd ed.), ch. 2.2 (epsilon-greedy action selection) and ch. 2.4 (incremental implementation)"
+status: reviewed

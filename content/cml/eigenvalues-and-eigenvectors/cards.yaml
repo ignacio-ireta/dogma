@@ -1,0 +1,32 @@
+cards:
+  - id: cml/eigenvalues-and-eigenvectors#1
+    type: qa
+    front: What does Av = λv say about v?
+    back: v is a direction that A only stretches (or flips, if λ < 0) by the factor λ. A maps v to a multiple of itself.
+  - id: cml/eigenvalues-and-eigenvectors#2
+    type: qa
+    front: What does the spectral theorem guarantee for a real symmetric matrix?
+    back: Real eigenvalues and an orthonormal eigenbasis, so A = QΛQᵀ with Q orthogonal and Λ diagonal.
+  - id: cml/eigenvalues-and-eigenvectors#3
+    type: cloze
+    text: "For a real symmetric matrix, eigenvectors belonging to distinct eigenvalues are {{c1::orthogonal}}."
+  - id: cml/eigenvalues-and-eigenvectors#4
+    type: qa
+    front: Why does power iteration converge to the dominant eigenvector?
+    back: Each step multiplies every eigencomponent by its eigenvalue. Every other component shrinks relative to the dominant one by the factor |λ2/λ1| per step.
+  - id: cml/eigenvalues-and-eigenvectors#5
+    type: qa
+    front: What two conditions does power iteration need in order to converge?
+    back: A strict gap |λ1| > |λ2|, and a start vector with a nonzero component along the dominant eigenvector.
+  - id: cml/eigenvalues-and-eigenvectors#6
+    type: qa
+    front: Why are eigenvectors compared up to sign?
+    back: If Av = λv then A(−v) = λ(−v), so −v is an eigenvector too. Only the line matters.
+  - id: cml/eigenvalues-and-eigenvectors#7
+    type: qa
+    front: How are PCA and eigenvalues connected?
+    back: The principal components are eigenvectors of the covariance matrix, and each eigenvalue is the variance along its component.
+  - id: cml/eigenvalues-and-eigenvectors#8
+    type: qa
+    front: Why stop power iteration on the residual ‖Av − λv‖ rather than the change in λ?
+    back: The eigenvalue error is quadratic in the vector error, so λ can look converged while the vector is still off by about √tol.

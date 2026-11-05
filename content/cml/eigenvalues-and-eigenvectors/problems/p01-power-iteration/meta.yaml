@@ -1,0 +1,13 @@
+id: cml/eigenvalues-and-eigenvectors/p01-power-iteration
+version: 3
+title: Power iteration
+language: python
+runtime: py-numpy
+entry: power_iteration
+difficulty: hard
+minutes: 30
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [numpy.linalg, scipy]
+timeout_s: 30
+status: reviewed

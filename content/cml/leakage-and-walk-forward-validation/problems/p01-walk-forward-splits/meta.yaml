@@ -1,0 +1,13 @@
+id: cml/leakage-and-walk-forward-validation/p01-walk-forward-splits
+version: 1                      # bump when tests, tolerances or the contract change
+title: Walk-forward splits
+language: python                # python | sql
+runtime: py-numpy               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: walk_forward_splits      # the function or class name the learner implements
+difficulty: medium
+minutes: 25
+core: true                      # p01 is the core problem: exactly one per topic
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [sklearn]       # the library that would solve the task; named in problem.md
+timeout_s: 30
+status: reviewed

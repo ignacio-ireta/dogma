@@ -1,0 +1,19 @@
+id: cml/probability-basics
+title: Probability basics
+tier: A
+requires: [cml/descriptive-statistics]
+aliases: [joint distribution, marginal probability, conditional probability, product rule, independence, mutual exclusivity, law of total probability]
+objectives:
+  - Compute marginal and conditional distributions from a joint probability table with NumPy
+  - Test independence with P(A and B) = P(A) P(B), and tell it apart from mutual exclusivity
+  - Apply the product rule and the law of total probability to split an event over a partition
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  Probability questions are the screening round for ML roles. Interviewers check whether you can
+  condition correctly, separate independence from mutual exclusivity, and name the denominator
+  you are dividing by.
+sources:
+  - "book: Blitzstein & Hwang, Introduction to Probability, chapters on probability and on conditional probability"
+  - "book: Deisenroth, Faisal & Ong, Mathematics for Machine Learning, chapter on probability and distributions"
+  - "source: library-refresh/01-Mathematics/06-Probability-and-Statistics/1933 -- Kolmogorov -- Probability Spaces, Conditioning and Limit Laws -- Study Note.md"
+status: reviewed

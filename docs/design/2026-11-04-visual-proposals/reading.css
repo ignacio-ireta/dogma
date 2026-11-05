@@ -1,0 +1,75 @@
+/* Shared reading and interaction treatment across all six design studies. */
+body { --muted: #526157; }
+body[data-theme=atlas] { --muted: #466064; }
+body[data-theme=notebook] { --muted: #625c51; }
+body[data-theme=console] { --muted: #536174; }
+body[data-theme=geometry] { --muted: #645976; }
+body[data-theme=memphis] { --muted: #62584f; }
+[hidden] { display: none !important; }
+
+.nav-link { font-size: 12px; }
+.kicker, .rail-caption, .week-chip, .status-tag, .reading-label,
+.hero-duration, .pill, .card-number, .sticker, .section-heading>span,
+.note-signature, .local-dot { font-size: 10px; }
+.task-row p, .mini-lesson p, .note-card>p:not(.kicker),
+.continue-bottom>span, .progress-card>p:last-child { font-size: 12px; }
+.progress-title>span, .memphis-footer p { font-size: 12px; }
+.progress-topics { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+.progress-topics span { padding: 5px 9px; background: var(--soft); border-radius: 6px; font-size: 12px; }
+.reading { font-size: 16px; line-height: 1.85; }
+.reading h3 { font-size: 18px; line-height: 1.5; }
+.reading-note, .lesson-table table { font-size: 14px; }
+.workspace-tabs { gap: 18px; padding: 12px 16px 0; }
+.workspace-tabs button {
+  border: 0; background: none; color: var(--muted); padding: 10px 0 14px;
+  font: 700 11px/1.6 OpenDyslexic, sans-serif;
+  border-bottom: 3px solid transparent; min-height: 44px;
+}
+.workspace-tabs button[aria-selected=true] { color: var(--accent); border-bottom-color: var(--accent); }
+[data-theme=memphis] .workspace-tabs button[aria-selected=true] { border-bottom-color: #bb5036; }
+.workspace-tabs button:focus-visible { outline-offset: -3px; }
+.material-panel:focus-visible { outline-offset: -4px; }
+.reading pre { overflow: auto; padding: 14px; background: var(--bg); font: 12px/1.8 JetBrains, monospace; }
+.reading code { font-family: JetBrains, monospace; font-size: .85em; }
+.hint-disclosure { border-block-end: 1px solid var(--line); padding: 16px 0; }
+.hint-disclosure summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
+.hint-disclosure p { margin-block: 12px 0; }
+.reading label { display: block; margin-block: 16px 8px; }
+.reading textarea, .reading select {
+  display: block; box-sizing: border-box; width: 100%; max-width: 100%;
+  font: 14px/1.7 Inter, sans-serif; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--muted); border-radius: 6px; padding: 10px;
+}
+.reading textarea { min-height: 130px; resize: vertical; }
+.answer-ratings { display: grid; gap: 12px; border: 0; padding: 0; margin: 20px 0; }
+.answer-ratings legend { font-weight: 600; }
+.answer-ratings fieldset { min-width: 0; display: flex; flex-wrap: wrap; gap: 16px; border: 1px solid var(--line); border-radius: 6px; padding: 12px; }
+.answer-ratings fieldset label { display: inline-flex; align-items: center; gap: 5px; margin: 0; }
+.reading button { min-height: 44px; white-space: normal; }
+.reading button:disabled { cursor: default; opacity: .6; }
+.reading input[type=checkbox] { width: 18px; height: 18px; vertical-align: middle; accent-color: var(--accent); }
+.reading input:focus-visible, .reading textarea:focus-visible,
+.reading select:focus-visible, .reading summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.editor-code pre { font-size: 12px; }
+.code-comment { color: #58665a; }
+.editor-header, .editor-header small, .editor-header>span:last-child,
+.editor-actions>span, .results-tabs, .results-panel>span { font-size: 11px; }
+.editor-actions button { font-size: 11px; min-height: 44px; }
+.results-panel { font-size: 14px; }
+.preview-footer { font-size: 9px; flex-wrap: wrap; }
+
+@media(max-width:640px) {
+  .notebook-intro { grid-template-columns: minmax(0, 1fr); }
+  .notebook-intro>div { min-width: 0; }
+  .notebook-intro h1 { font-size: clamp(24px, 7.3vw, 29px); }
+  .nav-link { font-size: 11px; }
+  .workspace-tabs { gap: 16px; }
+  .workspace-tabs button { font-size: 11px; }
+  .section-heading { align-items: flex-start; flex-wrap: wrap; }
+  .section-heading>span { font-size: 10px; }
+  .task-row strong { font-size: 13px; }
+  .task-time { font-size: 10px; }
+  .editor-actions { flex-wrap: wrap; }
+  .editor-actions>span { width: 100%; }
+  .memphis-footer { flex-wrap: wrap; }
+}

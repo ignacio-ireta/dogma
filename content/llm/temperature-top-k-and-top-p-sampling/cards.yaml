@@ -1,0 +1,26 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: llm/temperature-top-k-and-top-p-sampling#1
+    type: qa
+    front: What does temperature do to the logits before the softmax?
+    back: "It divides them by T. T < 1 sharpens the distribution and T > 1 flattens it."
+  - id: llm/temperature-top-k-and-top-p-sampling#2
+    type: qa
+    front: What does top-k keep?
+    back: "The k tokens with the largest probability. Ties at the k-th place go to the lower index."
+  - id: llm/temperature-top-k-and-top-p-sampling#3
+    type: cloze
+    text: "Top-p keeps the smallest prefix of the sorted probabilities whose cumulative sum is {{c1::>= p}}, including the token that reaches it."
+  - id: llm/temperature-top-k-and-top-p-sampling#4
+    type: qa
+    front: Why is top-p adaptive where top-k is not?
+    back: "Top-p fixes the mass, so a confident model keeps few tokens and an unsure one keeps many. Top-k fixes the count."
+  - id: llm/temperature-top-k-and-top-p-sampling#5
+    type: qa
+    front: Why is temperature 0 rejected in the contract?
+    back: "Dividing by zero is undefined. Greedy decoding is a separate branch that takes the argmax."
+  - id: llm/temperature-top-k-and-top-p-sampling#6
+    type: qa
+    front: Why must filters run before the draw?
+    back: "A draw from the raw distribution would still give tail tokens their full mass."

@@ -1,0 +1,14 @@
+id: sql/sql-first-and-last-activity-per-user
+title: "SQL first and last activity per user"
+tier: A
+requires: [sql/sql-ranking-window-functions, sql/sql-running-totals-and-frames]
+aliases: [first event, last event, first value, last value, arg_min, arg_max, min by, default frame, earliest per group, tie break]
+objectives:
+  - Return the first and last event per user with the event type at each time, from one row per user
+  - Explain why MIN and MAX give the times but not the matching types, and why a join back on time duplicates tied rows
+  - Explain the LAST_VALUE default-frame trap and fix it with an explicit frame or a reversed order
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: "Ask how ties are broken before writing SQL. Then pick one of a join on ranks, arg_min/arg_max with a struct tie-break, or a window with an explicit frame, and say why it returns exactly one row per user."
+sources:
+  - "book: Molinaro & de Graaf, SQL Cookbook (2nd ed.), window functions and ranking"
+status: reviewed

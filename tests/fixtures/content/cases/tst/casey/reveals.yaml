@@ -1,0 +1,5 @@
+- when_asked: How many customers churned last quarter?
+  answer: Thirty of the two hundred. Churn is rare, about fifteen percent.
+  exhibit: exhibits/counts.csv
+- when_asked: What data do we have per customer?
+  answer: Tenure in months, a support-ticket count and the plan name.

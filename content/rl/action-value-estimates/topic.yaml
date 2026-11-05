@@ -1,0 +1,15 @@
+id: rl/action-value-estimates
+title: "Action-value estimates"
+tier: A
+requires: ['rl/mdps-and-discounted-returns']
+aliases: ['sample-average method', 'incremental update', 'constant step size', 'action value', 'optimistic initial values', 'nonstationary bandit', 'running mean']
+objectives:
+  - Implement the sample-average action-value estimate as the incremental update Q <- Q + (1/n)(r - Q) and verify it against the batch mean
+  - Implement the constant-step-size update and explain the exponential recency weights it gives past rewards
+  - Explain how an optimistic initial value changes early behaviour and why the sample-average estimate forgets it
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: Explain why a running mean needs no stored history, and when a constant step size is the right choice instead of 1/n.
+sources:
+  - "book: Sutton and Barto, Reinforcement Learning: An Introduction (2nd ed.), ch. 2 (action-value methods, incremental implementation, nonstationary problems, optimistic initial values)"
+  - "library: Mathematics/11-Optimization-Theory/Robbins-Monro - Stochastic Approximation 1951.md"
+status: reviewed

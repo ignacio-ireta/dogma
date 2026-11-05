@@ -1,0 +1,14 @@
+# Problem metadata (CONTENT_SPEC §6.2).
+id: dl/convolution-forward-pass/p01-conv2d-forward
+version: 3                     # bump when tests, tolerances or the contract change
+title: Conv2d forward pass
+language: python               # python | sql
+runtime: py-torch              # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: conv2d_forward          # the function or class name the learner implements
+difficulty: medium             # easy | medium | hard
+minutes: 25
+core: true                     # p01 is the core problem: exactly one per topic
+tolerance: {atol: 1.0e-10, rtol: 1.0e-10}
+banned_imports: [torch.nn, torch.conv2d]   # each must be named in problem.md Constraints
+timeout_s: 30
+status: reviewed

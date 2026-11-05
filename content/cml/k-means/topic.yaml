@@ -1,0 +1,17 @@
+id: cml/k-means
+title: K-means
+tier: A
+requires: [cml/nearest-neighbour-search-and-knn, cml/feature-scaling]
+aliases: [k-means clustering, Lloyd's algorithm, k-means++, inertia, within-cluster sum of squares, elbow method, centroid, vector quantisation]
+objectives:
+  - Implement Lloyd's algorithm from given centroids, with a documented empty-cluster rule and a centroid-shift stopping test
+  - Derive why the centroid update is the mean and why each step lowers the inertia, and state what that guarantees
+  - Explain k-means++ seeding, choosing k, and the failure modes of spherical, equal-scale clusters under outliers
+minutes: {lesson: 12, practice: 45, min_viable: 20}
+interview_angle: >-
+  Expect Lloyd's two steps and why they converge to a local minimum, why initialisation matters and how k-means++ helps, and when k-means gives a wrong answer.
+sources:
+  - "paper: Arthur & Vassilvitskii 2007, k-means++: the advantages of careful seeding (SODA)"
+  - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter on unsupervised learning"
+  - "book: Bishop, Pattern Recognition and Machine Learning, chapter on mixture models and EM"
+status: reviewed

@@ -1,0 +1,27 @@
+cards:
+  - id: cml/sigmoid-and-log-odds#1
+    type: qa
+    front: Define the logit of a probability p and state its inverse.
+    back: logit(p) = log(p / (1 − p)). Its inverse is the sigmoid σ(z) = 1 / (1 + e^(−z)).
+  - id: cml/sigmoid-and-log-odds#2
+    type: qa
+    front: What is the value of the sigmoid at zero, and why is that exact?
+    back: σ(0) = 0.5, because e^0 = 1 gives 1 / (1 + 1).
+  - id: cml/sigmoid-and-log-odds#3
+    type: qa
+    front: Why does the naive sigmoid 1 / (1 + exp(−z)) fail for large negative z?
+    back: exp(−z) becomes huge and positive, and overflows float64 near 710. Build the sigmoid from exp(−|z|), which is never above 1.
+  - id: cml/sigmoid-and-log-odds#4
+    type: cloze
+    text: "In logistic regression the {{c1::log-odds}} are linear in the features, not the probability."
+  - id: cml/sigmoid-and-log-odds#5
+    type: qa
+    front: What does e to the power of a logistic coefficient β_j measure?
+    back: The odds ratio for a one-unit increase in x_j, holding the other features fixed.
+  - id: cml/sigmoid-and-log-odds#6
+    type: qa
+    front: Why compute σ(−z) directly instead of as 1 − σ(z) for large z?
+    back: σ(−z) is the small value. 1 − σ(z) subtracts two nearly equal numbers and loses its relative precision.
+  - id: cml/sigmoid-and-log-odds#7
+    type: cloze
+    text: "The sigmoid's slope is σ'(z) = {{c1::σ(z)(1 − σ(z))}}, which is at most 0.25."

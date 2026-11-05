@@ -1,0 +1,24 @@
+cards:
+- id: rl/reinforce#1
+  type: qa
+  front: State the score-function identity behind the policy gradient.
+  back: "grad_theta E[f(x)] = E[f(x) grad_theta log p_theta(x)], so sampled returns can estimate the gradient."
+- id: rl/reinforce#2
+  type: qa
+  front: What is the REINFORCE loss for one step t of one episode?
+  back: "-log pi(a_t | s_t) * G_t, summed over steps and averaged over episodes; minimising it ascends the expected return."
+- id: rl/reinforce#3
+  type: qa
+  front: Why use reward-to-go G_t rather than the whole-episode return?
+  back: An action cannot change rewards that came before it, so only the rewards from step t onward should weight its log-probability.
+- id: rl/reinforce#4
+  type: qa
+  front: Why does subtracting a baseline that does not depend on the action keep the policy gradient unbiased?
+  back: The expected value of grad log pi times a function of the state alone is zero. A batch mean that includes the sampled episode depends on it, so it adds a bias of order 1/B.
+- id: rl/reinforce#5
+  type: qa
+  front: What does return normalisation change, and what does it not guarantee?
+  back: It rescales the weights to a common scale, which changes the step size and the variance. It is a heuristic and does not give an unbiased gradient of the original objective.
+- id: rl/reinforce#6
+  type: cloze
+  text: "The gradient of log pi(a) with respect to the logits is {{c1::one-hot(a) - pi}}."

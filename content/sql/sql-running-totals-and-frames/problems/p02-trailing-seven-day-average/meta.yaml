@@ -1,0 +1,13 @@
+id: sql/sql-running-totals-and-frames/p02-trailing-seven-day-average
+version: 1
+title: Trailing seven-day average of daily sales
+language: sql
+runtime: sql-duckdb
+entry: query
+difficulty: medium
+minutes: 20
+core: false
+tolerance: {atol: 1.0e-9, rtol: 1.0e-12}  # averages of integers: DOUBLE rounding only
+banned_imports: []
+timeout_s: 30
+status: reviewed

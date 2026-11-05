@@ -1,0 +1,10 @@
+# Destinations removed from sources/ after scrub review (IMPORT_PLAN section 2, rule 1).
+# scripts/import_sources.py never re-imports these paths. Reasons are deliberately generic.
+- dest: sources/interview-prep/archive/aws_sagemaker_ai_guide.md
+  reason: outside the approved technical source set
+- dest: sources/interview-prep/archive/mlflow_guide.md
+  reason: outside the approved technical source set
+- dest: sources/interview-prep/archive/xgboost_guide.md
+  reason: outside the approved technical source set
+- dest: sources/interview-prep/DAILY_HABITS.md
+  reason: outside the approved technical source set

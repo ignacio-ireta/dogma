@@ -1,0 +1,13 @@
+id: cml/partial-derivatives-and-gradients/p01-numerical-gradient
+version: 2
+title: Numerical gradient
+language: python
+runtime: py-numpy
+entry: numerical_gradient
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}  # central differences; the Rosenbrock check uses rtol 1e-7
+banned_imports: [numpy.gradient, scipy.optimize.approx_fprime, scipy.misc]
+timeout_s: 30
+status: reviewed

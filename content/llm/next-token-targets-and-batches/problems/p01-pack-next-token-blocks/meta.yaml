@@ -1,0 +1,13 @@
+id: llm/next-token-targets-and-batches/p01-pack-next-token-blocks
+version: 2
+title: Pack documents into next-token (inputs, targets) blocks
+language: python
+runtime: py-torch
+entry: pack_next_token_blocks
+difficulty: medium
+minutes: 20
+core: true
+tolerance: {atol: 0.0, rtol: 0.0}  # integer outputs are compared exactly; no tolerance applies
+banned_imports: [torch.nn, torch.utils.data, torch.as_strided, torch.Tensor.unfold]
+timeout_s: 30
+status: reviewed

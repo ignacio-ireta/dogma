@@ -1,0 +1,32 @@
+cards:
+  - id: cml/chain-rule#1
+    type: qa
+    front: State the chain rule for z = g(f(x)).
+    back: dz/dx = g'(f(x)) · f'(x), the product of the local derivatives along the path.
+  - id: cml/chain-rule#2
+    type: cloze
+    text: "The derivative of the sigmoid is σ'(z) = {{c1::s(1 − s)}}, where s = σ(z)."
+  - id: cml/chain-rule#3
+    type: qa
+    front: What is the largest value of the sigmoid's derivative, and where is it attained?
+    back: 0.25, attained at z = 0.
+  - id: cml/chain-rule#4
+    type: qa
+    front: What is the gradient of mean squared error on sigmoid outputs with respect to w?
+    back: "(2/n) Xᵀ[(σ(Xw) − y) ⊙ σ(Xw) ⊙ (1 − σ(Xw))]."
+  - id: cml/chain-rule#5
+    type: qa
+    front: Why does the sigmoid get computed from exp(−|z|) rather than exp(z)?
+    back: exp(z) overflows to inf for large positive z, which gives NaN in inf/inf. exp(−|z|) never exceeds 1.
+  - id: cml/chain-rule#6
+    type: qa
+    front: Why does cross-entropy avoid the vanishing factor that squared error has with a sigmoid output?
+    back: The gradient of cross-entropy with respect to z is σ(z) − y, which has no σ'(z) factor. The gradient does not vanish when a wrong prediction saturates.
+  - id: cml/chain-rule#7
+    type: qa
+    front: Roughly how much does the gradient shrink through ten sigmoid links at most?
+    back: By a factor of 0.25¹⁰, about 10⁻⁶, because each sigmoid link contributes at most 0.25.
+  - id: cml/chain-rule#8
+    type: qa
+    front: In reverse mode, how does a value that feeds two downstream operations get its gradient?
+    back: Each use sends back its own adjoint, and the two are summed at the shared node before the total passes further back.

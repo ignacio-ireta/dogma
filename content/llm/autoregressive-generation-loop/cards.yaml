@@ -1,0 +1,26 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: llm/autoregressive-generation-loop#1
+    type: qa
+    front: What is prefill in a generation loop?
+    back: "One forward pass over the whole prompt, which produces the logits for the first new token."
+  - id: llm/autoregressive-generation-loop#2
+    type: qa
+    front: What is the greedy decoding rule?
+    back: "Take the argmax over the vocabulary of the logits at the last position. This contract breaks ties by the lowest token id."
+  - id: llm/autoregressive-generation-loop#3
+    type: cloze
+    text: "After its EOS, a finished row appends {{c1::pad_id}} at every later step, and the batch stops when every row is finished or max_new_tokens is reached."
+  - id: llm/autoregressive-generation-loop#4
+    type: qa
+    front: Why is a decode step memory-bound?
+    back: "It rereads all weights to produce one token per row, so the arithmetic per byte read is about the batch size."
+  - id: llm/autoregressive-generation-loop#5
+    type: qa
+    front: Does greedy decoding return the most likely full sequence?
+    back: "No. It takes the most likely next token at each step, which is a local choice. Beam search searches over sequences."
+  - id: llm/autoregressive-generation-loop#6
+    type: qa
+    front: Which tokens count toward max_new_tokens?
+    back: "Only the generated tokens. The prompt does not count."

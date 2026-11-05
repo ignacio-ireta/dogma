@@ -1,0 +1,17 @@
+id: cml/entropy-and-mutual-information
+title: Entropy and mutual information
+tier: A
+requires: [cml/probability-basics]
+aliases: [Shannon entropy, surprisal, information gain, KL divergence, mutual information, bits and nats, joint distribution]
+objectives:
+  - Implement the Shannon entropy of a probability vector in any base, with 0 log 0 = 0 and invalid distributions rejected
+  - Compute mutual information in nats from a joint count table, and state its unit
+  - Explain cross-entropy as entropy plus KL divergence, and information gain as mutual information between a split and the label
+  - Explain why mutual information detects a non-linear dependence that correlation misses
+minutes: {lesson: 12, practice: 35, min_viable: 20}
+interview_angle: >-
+  Expect entropy as average surprise, the cross-entropy and KL split, information gain as mutual information between a split and the label, and the warning that plug-in mutual information is biased upward on small samples.
+sources:
+  - "book: Cover & Thomas, Elements of Information Theory, chapter 2 (entropy, relative entropy and mutual information)"
+  - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter 9 (tree-based methods, node impurity)"
+status: reviewed

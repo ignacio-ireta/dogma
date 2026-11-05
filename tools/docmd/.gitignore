@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Environments
+.venv/
+.env
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Generated test fixtures (built by tests/fixtures/generate_fixtures.py)
+tests/fixtures/_build/
+
+# Local scratch output
+/tmp_output/
+runs/
+
+# OS
+.DS_Store

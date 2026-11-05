@@ -1,0 +1,18 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: dl/mixed-precision
+title: "Mixed precision"
+tier: A
+requires: [dl/one-training-step, inf/floating-point-formats]
+aliases: [autocast, loss scaling, GradScaler, fp16, bf16, master weights, dynamic loss scale]
+objectives:
+  - "Implement a dynamic loss scaler: skip the step and halve the scale on overflow, double it after a run of good steps"
+  - "Explain why fp16 needs loss scaling and bf16 usually does not, using the formats' ranges"
+  - "Keep fp32 master weights and decide which operations must stay in fp32, checking the dtypes autocast returns"
+minutes: {lesson: 12, practice: 20, min_viable: 12}
+interview_angle: "Explain what happens in one fp16 training step with dynamic loss scaling, and why bf16 removes the need for it."
+sources:
+  - "corpus: library-papers/2202.08906.pdf pp.8-9 (fp32 weights for updates, bf16 matrix multiplies, roundoff)"
+  - "corpus: library-papers/1904.10509.pdf p.7 (dynamic loss scaling for fp16 underflow)"
+  - "paper: Micikevicius et al. 2017, Mixed precision training (arXiv:1710.03740); cited from memory, not in the corpus"
+  - "source: library-refresh/01-Mathematics/05-Linear-Algebra/1991 -- Goldberg -- Finite Precision, Rounding Error and Stable Computation -- Study Note.md"
+status: reviewed

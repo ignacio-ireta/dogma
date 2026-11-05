@@ -1,0 +1,32 @@
+cards:
+  - id: cml/probability-basics#1
+    type: qa
+    front: How do you compute P(Y = j | X = i) from a joint table?
+    back: P(X = i, Y = j) / P(X = i). Take the cell and divide by its row sum (the marginal of X).
+  - id: cml/probability-basics#2
+    type: qa
+    front: Are two mutually exclusive events with positive probability independent?
+    back: No. Exclusive means P(A and B) = 0, but independence needs P(A) P(B) > 0.
+  - id: cml/probability-basics#3
+    type: cloze
+    text: "The product rule: P(A ∩ B) = P(A) × {{c1::P(B | A)}}"
+  - id: cml/probability-basics#4
+    type: qa
+    front: How does a joint table look when X and Y are independent?
+    back: It is the outer product of its marginals, P(X = i, Y = j) = P(X = i) P(Y = j) in every cell.
+  - id: cml/probability-basics#5
+    type: qa
+    front: State the law of total probability.
+    back: For a partition A_1, ..., A_n of the outcomes, P(B) = Σ_i P(B | A_i) P(A_i).
+  - id: cml/probability-basics#6
+    type: qa
+    front: When is P(Y | X = i) undefined, and what should code return?
+    back: When P(X = i) = 0. Return NaN for that row, not zeros or a made-up distribution.
+  - id: cml/probability-basics#7
+    type: qa
+    front: Is P(A | B) equal to P(B | A)?
+    back: No, not in general. Converting one into the other needs Bayes' rule, P(A | B) = P(B | A) P(A) / P(B).
+  - id: cml/probability-basics#8
+    type: qa
+    front: Does conditional independence given C imply independence?
+    back: "No. Two events can be independent given C and still be dependent overall, as when a shared cause C drives both."

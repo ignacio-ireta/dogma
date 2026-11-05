@@ -1,0 +1,19 @@
+id: cml/ranking-metrics
+title: Ranking metrics
+tier: A
+requires: [cml/precision-recall-and-f1, cml/roc-pr-curves-and-auc]
+aliases: [NDCG, DCG, nDCG, discounted cumulative gain, MRR, mean reciprocal rank, reciprocal rank, precision at k, recall at k, average precision at k, MAP, mean average precision, hit rate, graded relevance, position discount, RAG retrieval evaluation, recall@k]
+objectives:
+  - Compute NDCG at k from graded relevance, with the gain, the log discount and the normalisation by the ideal order, and state the tie rule
+  - Compute precision, recall, reciprocal rank and average precision at k for one query, and name the denominator of each
+  - Choose offline ranking metrics for a task, and say when an online A/B test is needed to confirm them
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "How would you evaluate this search or RAG retriever?" A strong answer starts with recall@k over labelled
+  queries, because the generator can only use what is retrieved, adds a position-aware metric such as NDCG or
+  MRR for the order, reports k and the query count, and confirms the offline gain with an online test.
+sources:
+  - "paper: Järvelin & Kekäläinen 2002, Cumulated gain-based evaluation of IR techniques (ACM Transactions on Information Systems)"
+  - "book: Manning, Raghavan & Schütze, Introduction to Information Retrieval, chapter 8 (evaluation of ranked retrieval results)"
+  - "paper: Voorhees 1999, The TREC-8 Question Answering Track Report (TREC-8 proceedings)"
+status: reviewed

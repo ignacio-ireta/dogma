@@ -1,0 +1,14 @@
+# Problem metadata (CONTENT_SPEC §6.2).
+id: cml/adaboost-and-gradient-boosting/p01-boost-stumps-mse
+version: 3                      # bump when tests, tolerances or the contract change
+title: Gradient boosting with stumps for squared error
+language: python                # python | sql
+runtime: py-numpy               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: boost_stumps_mse         # the function or class name the learner implements
+difficulty: hard                # easy | medium | hard
+minutes: 40
+core: true                      # p01 is the core problem: exactly one per topic
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [sklearn, scipy]  # each must be named in problem.md Constraints
+timeout_s: 30
+status: reviewed

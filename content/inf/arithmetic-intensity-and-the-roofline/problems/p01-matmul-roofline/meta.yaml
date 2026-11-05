@@ -1,0 +1,13 @@
+id: inf/arithmetic-intensity-and-the-roofline/p01-matmul-roofline
+version: 1                      # bump when tests, tolerances or the contract change
+title: Matmul roofline bound and time floor
+language: python
+runtime: py-stdlib
+entry: matmul_roofline
+difficulty: medium
+minutes: 20
+core: true
+tolerance: {atol: 0.0, rtol: 1.0e-9}   # relative only: time floors can be ~1e-17 s, where an absolute slack would accept anything
+banned_imports: [numpy]
+timeout_s: 30
+status: reviewed

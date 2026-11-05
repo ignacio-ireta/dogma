@@ -1,0 +1,13 @@
+id: dl/residual-connections/p01-residual-block
+version: 3
+title: Residual block with identity or projection shortcut
+language: python
+runtime: py-torch
+entry: residual_block
+difficulty: medium
+minutes: 20
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [torch.nn]
+timeout_s: 30
+status: reviewed

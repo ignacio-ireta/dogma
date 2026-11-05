@@ -1,0 +1,20 @@
+id: cml/partial-derivatives-and-gradients
+title: Partial derivatives and gradients
+tier: A
+requires: [cml/derivatives, cml/vector-operations]
+aliases: [gradient, partial derivative, steepest ascent, directional derivative, gradient checking, numerical gradient, Jacobian]
+objectives:
+  - Compute partial derivatives and the gradient of a scalar function of several variables, including quadratic forms and log-sum-exp
+  - Explain why the gradient is the direction of steepest ascent, and why descent steps along its negative
+  - Check a hand-written gradient against central finite differences, and say why central is the right scheme
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  The gradient is the object under every training loop. Expect "why is the gradient the direction of
+  steepest ascent" and "how would you check a gradient you derived by hand".
+sources:
+  - "book: Deisenroth, Faisal & Ong, Mathematics for Machine Learning, chapter 5 (vector calculus), partial differentiation and gradients"
+  - "book: Goodfellow, Bengio & Courville, Deep Learning, chapter on back-propagation"
+  - "source: library-refresh/01-Mathematics/03-Calculus/2026 -- Library -- From Derivatives to Jacobians and Hessians -- Concept Note.md"
+  - "source: library-refresh/01-Mathematics/03-Calculus/2018 -- Baydin et al -- Automatic Differentiation as Executable Chain Rules -- Study Note.md"
+  - "source: library-refresh/01-Mathematics/05-Linear-Algebra/2012 -- Petersen and Pedersen -- Matrix Differentials for Machine Learning -- Study Note.md"
+status: reviewed

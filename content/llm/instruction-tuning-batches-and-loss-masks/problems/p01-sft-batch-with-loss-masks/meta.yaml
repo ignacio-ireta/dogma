@@ -1,0 +1,13 @@
+id: llm/instruction-tuning-batches-and-loss-masks/p01-sft-batch-with-loss-masks
+version: 3                      # bump when tests, tolerances or the contract change
+title: Supervised fine-tuning batch with response-only loss masks
+language: python                # python | sql
+runtime: py-torch               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: build_sft_batch          # the function or class name the learner implements
+difficulty: medium
+minutes: 20
+core: true                      # p01 is the core problem: exactly one per topic
+tolerance: {atol: 0.0, rtol: 0.0}  # integer outputs are compared exactly; the loss check uses 1e-9
+banned_imports: [torch.nn, torch.utils.data]  # torch.nn covers nn.functional and nn.utils.rnn; in problem.md
+timeout_s: 30
+status: reviewed

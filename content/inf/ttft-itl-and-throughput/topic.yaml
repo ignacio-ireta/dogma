@@ -1,0 +1,14 @@
+id: inf/ttft-itl-and-throughput
+title: "TTFT, ITL and throughput"
+tier: A
+requires: [cml/descriptive-statistics]
+aliases: [TTFT, time to first token, ITL, inter-token latency, tokens per second, goodput, p95 latency, serving latency]
+objectives:
+  - "Compute TTFT, mean inter-token latency and end-to-end latency per request, and check that end-to-end = TTFT + (n - 1) x ITL"
+  - "Report p50 and p95 with a stated percentile definition, and explain why a mean hides the tail"
+  - "Separate throughput from goodput: tokens per second overall versus requests that meet a latency SLO"
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: "Ask which latency the product cares about, then name TTFT, ITL and end-to-end separately, and report p95 rather than the mean. Throughput alone never settles a latency question."
+sources:
+  - "paper: Hyndman & Fan 1996, Sample quantiles in statistical packages (The American Statistician 50(4))"
+status: reviewed

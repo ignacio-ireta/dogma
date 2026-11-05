@@ -1,0 +1,26 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: algo/topological-sort#1
+    type: qa
+    front: What does an edge (a, b) mean in a dependency graph?
+    back: a must come before b in every valid order.
+  - id: algo/topological-sort#2
+    type: qa
+    front: What is the in-degree of a node in Kahn's algorithm?
+    back: The number of edges ending at that node, which is the number of unplaced prerequisites it still waits for.
+  - id: algo/topological-sort#3
+    type: qa
+    front: Why is a node with in-degree 0 safe to place next?
+    back: All its prerequisites are already placed, so every incoming edge is respected.
+  - id: algo/topological-sort#4
+    type: qa
+    front: How does Kahn's algorithm detect a cycle?
+    back: If it places fewer nodes than exist, the remaining nodes each wait for an unplaced predecessor, which means a cycle.
+  - id: algo/topological-sort#5
+    type: qa
+    front: Why does a min-heap give the lexicographically smallest topological order?
+    back: At each step the heap gives the smallest ready name. Placing a ready name never makes another ready name unready, so the smallest can always go first.
+  - id: algo/topological-sort#6
+    type: cloze
+    text: "Each edge is handled once, so Kahn's algorithm runs in {{c1::O(V + E)}} time without a heap, and {{c2::O((V + E) log V)}} with a heap as the ready set."

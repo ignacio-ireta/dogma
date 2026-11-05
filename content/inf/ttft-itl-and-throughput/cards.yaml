@@ -1,0 +1,26 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: inf/ttft-itl-and-throughput#1
+    type: qa
+    front: What does TTFT include?
+    back: Queue wait plus prefill, measured from arrival to the first token.
+  - id: inf/ttft-itl-and-throughput#2
+    type: qa
+    front: What is the identity linking end-to-end latency, TTFT and ITL?
+    back: E2E = TTFT + (n - 1) x mean ITL, for n generated tokens.
+  - id: inf/ttft-itl-and-throughput#3
+    type: qa
+    front: Over how many gaps is mean ITL averaged for a response of n tokens?
+    back: n - 1 gaps between consecutive tokens, not n.
+  - id: inf/ttft-itl-and-throughput#4
+    type: qa
+    front: Does a single-token response contribute an ITL value?
+    back: No. It has no gaps, so it is left out of ITL percentiles, not counted as zero.
+  - id: inf/ttft-itl-and-throughput#5
+    type: cloze
+    text: "Goodput counts only requests that meet a stated {{c1::SLO}}, so its rate never exceeds the matching throughput."
+  - id: inf/ttft-itl-and-throughput#6
+    type: qa
+    front: Why state the percentile method?
+    back: Statistical packages use different sample-quantile definitions, so the same data give slightly different p95 values.

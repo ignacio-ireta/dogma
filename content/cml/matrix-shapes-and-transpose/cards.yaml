@@ -1,0 +1,28 @@
+cards:
+  - id: cml/matrix-shapes-and-transpose#1
+    type: qa
+    front: If A has shape (r, c), what is the shape of its transpose?
+    back: (c, r). Rows and columns swap.
+  - id: cml/matrix-shapes-and-transpose#2
+    type: qa
+    front: What is the entry rule for the transpose?
+    back: "(Aᵀ)_ij = A_ji. Row i of the transpose is column i of A."
+  - id: cml/matrix-shapes-and-transpose#3
+    type: cloze
+    text: "(AB)ᵀ = {{c1::BᵀAᵀ}}: the order of the factors reverses."
+  - id: cml/matrix-shapes-and-transpose#4
+    type: qa
+    front: What does x.T return for a NumPy array x of shape (n,)?
+    back: An array of shape (n,), unchanged. A 1-D array has no row or column orientation.
+  - id: cml/matrix-shapes-and-transpose#5
+    type: qa
+    front: How do you make an (n,) array into a column of shape (n, 1)?
+    back: x[:, None], or x.reshape(-1, 1).
+  - id: cml/matrix-shapes-and-transpose#6
+    type: qa
+    front: Why is reshape(c, r) not a transpose of an (r, c) matrix?
+    back: reshape keeps the row-major order of the flat data. Transpose moves each entry to a new position.
+  - id: cml/matrix-shapes-and-transpose#7
+    type: qa
+    front: What does zip(*rows) do with ragged rows?
+    back: It silently truncates to the shortest row. Check that all row lengths match first.

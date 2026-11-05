@@ -1,0 +1,32 @@
+cards:
+  - id: cml/ridge-regression-and-weight-decay#1
+    type: qa
+    front: What does the ridge objective penalise, and what is left unpenalised?
+    back: "||y - b0 1 - X beta||^2 + alpha ||beta||^2. The penalty is on the slopes beta only; the intercept b0 is not penalised."
+  - id: cml/ridge-regression-and-weight-decay#2
+    type: qa
+    front: What is the ridge solution on centred data?
+    back: "beta = (Xc^T Xc + alpha I)^(-1) Xc^T yc, with intercept b0 = mean(y) - mean(X) @ beta."
+  - id: cml/ridge-regression-and-weight-decay#3
+    type: qa
+    front: Why is ridge solvable for a rank-deficient design when alpha > 0?
+    back: "Adding alpha I to X^T X makes it positive definite, so the system has a unique solution even when X has dependent columns."
+  - id: cml/ridge-regression-and-weight-decay#4
+    type: qa
+    front: By what factor does ridge shrink the SVD direction with singular value d?
+    back: "d^2 / (d^2 + alpha) relative to the OLS coefficient in that direction. Low-variance directions shrink the most."
+  - id: cml/ridge-regression-and-weight-decay#5
+    type: qa
+    front: Why standardise features before a ridge fit?
+    back: "The penalty treats every coefficient alike, so a feature's units decide how strongly it is shrunk. Standardising makes alpha comparable across features."
+  - id: cml/ridge-regression-and-weight-decay#6
+    type: qa
+    front: Why does weight decay match L2 for plain SGD?
+    back: "One step on L + (lambda/2)||w||^2 is w <- (1 - eta lambda) w - eta grad L, which is the same as shrinking the weights by (1 - eta lambda)."
+  - id: cml/ridge-regression-and-weight-decay#7
+    type: qa
+    front: Why is L2 under Adam not the same as weight decay?
+    back: "Adam divides each coordinate's gradient by its running scale, so the L2 term is divided too. AdamW applies the decay directly to the weights instead."
+  - id: cml/ridge-regression-and-weight-decay#8
+    type: cloze
+    text: "As alpha grows without bound, the ridge slopes go to {{c1::zero}} and the intercept goes to the mean of y."

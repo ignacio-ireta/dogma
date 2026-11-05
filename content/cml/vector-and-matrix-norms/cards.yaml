@@ -1,0 +1,32 @@
+cards:
+  - id: cml/vector-and-matrix-norms#1
+    type: qa
+    front: What are the three axioms of a norm?
+    back: Positivity (zero only at the zero vector), homogeneity ‖αx‖ = |α|‖x‖, and the triangle inequality.
+  - id: cml/vector-and-matrix-norms#2
+    type: qa
+    front: What is the L1 norm, and what does its unit ball look like in R²?
+    back: The sum of absolute values. The unit ball is a diamond with corners on the axes.
+  - id: cml/vector-and-matrix-norms#3
+    type: cloze
+    text: "‖x‖∞ ≤ ‖x‖₂ ≤ {{c1::‖x‖₁}}"
+  - id: cml/vector-and-matrix-norms#4
+    type: qa
+    front: Why does L1 regularisation give exact zeros while L2 usually does not?
+    back: The L1 ball has corners on the axes, where the loss contour often first touches. The L2 ball is smooth, so coefficients shrink but rarely reach zero.
+  - id: cml/vector-and-matrix-norms#5
+    type: qa
+    front: Why divide by max|xᵢ| before computing an Lp norm?
+    back: Squaring or raising to a power can overflow for huge entries and underflow for tiny ones. Dividing by the largest entry keeps every term in [0, 1], and homogeneity makes the rescaling exact.
+  - id: cml/vector-and-matrix-norms#6
+    type: qa
+    front: What is the spectral norm of a matrix?
+    back: Its largest singular value, which is the maximum of ‖Ax‖₂ over unit vectors x.
+  - id: cml/vector-and-matrix-norms#7
+    type: qa
+    front: Is ‖x‖_(1/2) a norm?
+    back: No. For e1 = (1, 0) and e2 = (0, 1) the norms are 1 each, but ‖(1, 1)‖_(1/2) = 4 > 2, so the triangle inequality fails.
+  - id: cml/vector-and-matrix-norms#8
+    type: qa
+    front: What is the Frobenius norm in terms of entries?
+    back: The square root of the sum of squared entries. It equals the L2 norm of the flattened matrix.

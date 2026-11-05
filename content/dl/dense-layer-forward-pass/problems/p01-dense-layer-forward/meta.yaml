@@ -1,0 +1,17 @@
+id: dl/dense-layer-forward-pass/p01-dense-layer-forward
+version: 3
+title: Dense layer forward for a batch
+language: python
+runtime: py-numpy
+entry: dense_forward
+difficulty: easy
+minutes: 20
+core: true
+tolerance:
+  atol: 1.0e-10
+  rtol: 1.0e-10
+banned_imports:
+- scipy
+- sklearn
+timeout_s: 30
+status: reviewed

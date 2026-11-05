@@ -1,0 +1,14 @@
+# Problem metadata (CONTENT_SPEC §6.2).
+id: inf/speculative-decoding-speedup-math/p01-speculative-speedup
+version: 2                      # bump when tests, tolerances or the contract change
+title: "Expected tokens and speedup per speculative round"
+language: python
+runtime: py-stdlib
+entry: speculative_speedup
+difficulty: medium
+minutes: 10
+core: true
+tolerance: {atol: 1.0e-15, rtol: 1.0e-12}   # tests compare against an exact-rational oracle; see test_hidden.py
+banned_imports: [fractions, decimal, numpy]
+timeout_s: 30
+status: reviewed

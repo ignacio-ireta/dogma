@@ -1,0 +1,20 @@
+id: cml/bayes-theorem
+title: Bayes' theorem
+tier: A
+requires: [cml/probability-basics]
+aliases: [Bayes rule, posterior, prior, likelihood, evidence, base rate, log-sum-exp, sequential updating]
+objectives:
+  - Apply Bayes' rule to a discrete hypothesis set, naming the prior, likelihood, evidence and posterior
+  - Explain the base-rate fallacy with natural frequencies, and reject it with the numbers
+  - Update a posterior over a long sequence of observations in log space, without underflow
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  The most common probability question in ML interviews. Interviewers want the base-rate
+  reasoning stated first, then the calculation, then the assumption that makes sequential updates
+  valid (conditional independence), and a note on numerical stability.
+sources:
+  - "book: Blitzstein & Hwang, Introduction to Probability, chapter on conditional probability (Bayes' rule)"
+  - "book: Murphy, Probabilistic Machine Learning: An Introduction, chapter on probability"
+  - "book: Goodfellow, Bengio & Courville, Deep Learning, chapter on numerical computation (overflow and underflow)"
+  - "source: library-refresh/01-Mathematics/07-Information-Theory/2003 -- MacKay -- Coding, Bayesian Inference and Learning as Compression -- Study Note.md"
+status: reviewed

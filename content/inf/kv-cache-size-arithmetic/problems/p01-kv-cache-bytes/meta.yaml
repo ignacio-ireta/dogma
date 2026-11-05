@@ -1,0 +1,13 @@
+id: inf/kv-cache-size-arithmetic/p01-kv-cache-bytes
+version: 2                      # bump when tests, tolerances or the contract change
+title: KV-cache bytes from a config
+language: python
+runtime: py-stdlib
+entry: kv_cache_bytes
+difficulty: easy
+minutes: 20
+core: true
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: integer byte counts, no floating point
+banned_imports: []
+timeout_s: 30
+status: reviewed

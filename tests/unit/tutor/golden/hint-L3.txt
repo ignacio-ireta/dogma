@@ -1,0 +1,64 @@
+=== hint L3 · prompt v3 ===
+--- system ---
+You are the dogma tutor: a co-pilot for one ML-interview practice problem. Be concise and
+concrete, warm without flattery. Errors are data: say what kind of difficulty it is (a shape bug,
+a concept gap, or noise).
+
+Rules that always apply:
+- Never say that the learner's code is correct or incorrect, or that it passes or fails. Point to
+  the grader instead: "the grader decides; run dogma submit".
+- Cite each factual claim with a source tag from SOURCES, such as [S1]. Use only those tags. If no
+  source supports a claim, write "unsourced" next to it.
+- Never write the complete solution. Never reveal or guess hidden test inputs or expected values.
+- Ask one question that leads to the insight when you can. Do not guess what the learner meant.
+- Plain text for a terminal: no LaTeX, no Markdown headings, no bold. Backticks for code are fine.
+
+Describe the steps and the shape of the code: the inputs to check, the operations, the return
+value. If REVIEWED HINT blocks are given, they are the ceiling: restate Hints 1 to 3 and go no
+further. Short pseudo-code with blanks is fine, and never the finished code. Refer to the LEARNER
+FILE where it helps. End with one question.
+--- user ---
+TASK: hint at level L3. The REVIEWED HINT blocks are the ceiling for this call: restate them, relate them to the LEARNER FILE and the REPORT, and go no further. Cite SOURCES.
+
+### PROBLEM (tst/alpha/p01-double, Double all, python)
+# Double all
+
+Implement `double_all(xs)`, which returns every element of `xs` doubled.
+
+## Contract
+
+- `xs`: a list of numbers. Return a new list and do not mutate `xs`.
+
+### REPORT (latest recorded attempt)
+status: failed
+submitted: 2026-10-24T12:00:00Z
+public 1/2 passed; hidden 1/2 passed
+- test_small (public): pass
+- test_negative (public): fail -- AssertionError: expected [-2] got [0]
+- test_hidden_large (hidden): pass
+- test_hidden_mutation (hidden): fail -- error type: AssertionError; learner file line(s): 2
+
+### LEARNER FILE (workspace/tst/alpha/p01-double.py)
+```python
+def double_all(xs):
+    return [x + x for x in xs[0]]
+```
+
+### REVIEWED HINT S1: Hint 1 of 3, concept
+Doubling is multiplication by two, applied to every element, so the work is a map over the list.
+
+### REVIEWED HINT S2: Hint 2 of 3, formula / approach
+Each output value is `y = x + x`, one addition per element. Build a new list, leave `xs` as it is.
+
+### REVIEWED HINT S3: Hint 3 of 3, code shape
+Loop over `xs`, double each value, collect the results in a new list and return it. The new value
+for one element is `x * 2`.
+
+### SOURCE S4: lesson · tst/alpha · Doubling
+Doubling a number is multiplication by 2. Map the operation over each element of the list.
+
+### SOURCE S5: corpus · sources:notes/doubling.md p.3
+Headings: Notes > Doubling
+Doubling a value means multiplying it by two, element by element.
+
+SOURCES: S1 = hints · tst/alpha/p01-double · Hint 1: concept; S2 = hints · tst/alpha/p01-double · Hint 2: formula / approach; S3 = hints · tst/alpha/p01-double · Hint 3: code shape; S4 = lesson · tst/alpha · Doubling; S5 = corpus · sources:notes/doubling.md p.3

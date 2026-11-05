@@ -1,0 +1,16 @@
+cards:
+  - id: tst/alpha#1
+    type: qa
+    front: What does doubling multiply each value by?
+    back: Two.
+  - id: tst/alpha#2
+    type: cloze
+    text: "Doubling is multiplying by {{c1::2}}."
+  - id: tst/alpha#3
+    type: qa
+    front: Does doubling mutate the input list?
+    back: No. It builds a new list.
+  - id: tst/alpha#4
+    type: qa
+    front: What does doubling zero give?
+    back: Zero.

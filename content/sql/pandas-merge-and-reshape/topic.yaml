@@ -1,0 +1,17 @@
+id: sql/pandas-merge-and-reshape
+title: pandas merge and reshape
+tier: A
+requires: [sql/sql-joins-and-unions]
+aliases: [merge, join, how=left, validate, many_to_one, pivot, pivot_table, unstack, melt, reshape, wide to long, long to wide, fillna, dropna]
+objectives:
+  - Merge two DataFrames with the join type that matches the question, and validate the key cardinality so a duplicate cannot double a total
+  - Decide, and state, whether a missing amount is dropped or filled, and what each choice does to the rows and columns that appear
+  - Reshape long to wide with groupby and unstack or pivot_table, and wide to long with melt, with the index and column names set explicitly
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "Revenue by region and month, with orders from unknown customers" is a common take-home. The
+  interviewer checks the merge type, whether the key is unique on the lookup side, how missing values
+  are treated, and whether the output shape is what the question asked for.
+sources:
+  - "book: McKinney, Python for Data Analysis (3rd ed.), chapter on data wrangling: join, combine and reshape"
+status: reviewed

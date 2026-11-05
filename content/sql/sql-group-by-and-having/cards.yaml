@@ -1,0 +1,28 @@
+cards:
+  - id: sql/sql-group-by-and-having#1
+    type: qa
+    front: A condition on each order's status. Does it go in WHERE or HAVING?
+    back: WHERE. It is a row condition and filters rows before they are grouped.
+  - id: sql/sql-group-by-and-having#2
+    type: qa
+    front: A condition on COUNT(*) per customer. Does it go in WHERE or HAVING?
+    back: HAVING. Aggregates exist only after grouping, so only HAVING can test them.
+  - id: sql/sql-group-by-and-having#3
+    type: qa
+    front: Three rows have amounts 40, NULL and 10. What are COUNT(*) and COUNT(amount)?
+    back: COUNT(*) is 3 (counts rows). COUNT(amount) is 2 (counts non-NULL values).
+  - id: sql/sql-group-by-and-having#4
+    type: qa
+    front: What does SUM(amount) return for a group where every amount is NULL?
+    back: NULL, not 0. Use COALESCE(SUM(amount), 0) only when 0 is the correct answer.
+  - id: sql/sql-group-by-and-having#5
+    type: qa
+    front: Why can AVG(amount) differ from SUM(amount) / COUNT(*)?
+    back: AVG divides by the number of non-NULL amounts. SUM / COUNT(*) divides by all rows, including NULL ones.
+  - id: sql/sql-group-by-and-having#6
+    type: cloze
+    text: "Every column in SELECT must be a {{c1::group key}} or inside an aggregate function."
+  - id: sql/sql-group-by-and-having#7
+    type: qa
+    front: Why can a join before GROUP BY inflate COUNT(*) and SUM?
+    back: If a row on the left matches several rows on the right, it is repeated once per match. Fix the grain, one row per order, before joining.

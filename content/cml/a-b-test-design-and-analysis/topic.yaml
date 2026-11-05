@@ -1,0 +1,20 @@
+id: cml/a-b-test-design-and-analysis
+title: A/B test design and analysis
+tier: A
+requires: [cml/t-tests-and-anova, cml/bernoulli-binomial-and-poisson]
+aliases: [A/B testing, online experiment, minimum detectable effect, power analysis, sample ratio mismatch, peeking, optional stopping, novelty effect, two-proportion test]
+objectives:
+  - "Plan an A/B test: choose the metric, the unit of randomisation, the minimum detectable effect, the sample size per arm and the duration"
+  - "Compute the sample size for two proportions and check it by simulation, then test the difference with a pooled two-proportion z-test"
+  - "Name the analysis traps interviewers probe: peeking, sample ratio mismatch, novelty effects, and practical versus statistical significance"
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "Design an experiment for a checkout change: what is the metric, how many users, how long, and what
+  would make you distrust the result?" The strong answer fixes the plan before launch and checks the
+  assignment before reading the outcome.
+sources:
+  - "book: Kohavi, Tang & Xu, Trustworthy Online Controlled Experiments, chapters on experiment design, sample size and power, and on pitfalls such as sample ratio mismatch and novelty effects"
+  - "book: Fleiss, Levin & Paik, Statistical Methods for Rates and Proportions, chapters on comparing two proportions and on sample size"
+  - "source: library-refresh/01-Mathematics/06-Probability-and-Statistics/1933 -- Neyman and Pearson -- Hypothesis Tests as Controlled Decisions -- Study Note.md"
+  - "source: library-refresh/01-Mathematics/06-Probability-and-Statistics/2020 -- Hernán and Robins -- Identification Before Estimation -- Study Note.md"
+status: reviewed

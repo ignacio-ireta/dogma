@@ -1,0 +1,22 @@
+-- Problem: channel conversion and device revenue, one row per channel.
+--
+-- Table:
+--   sessions
+--     session_id   BIGINT    -- unique
+--     channel      VARCHAR   -- never NULL, e.g. 'ads'
+--     device       VARCHAR   -- 'mobile' or 'desktop', never NULL
+--     converted    BOOLEAN   -- never NULL; TRUE when the session converted
+--     revenue      DOUBLE    -- may be NULL: no revenue recorded on the session
+--
+-- For every channel with at least one session, return, in this column order:
+--   channel              the channel name
+--   sessions             number of sessions, every device, converted or not
+--   converted_sessions   number of converted sessions (0 when none)
+--   conversion_rate      converted_sessions / sessions as a fraction, ROUND(x, 4); 0.0 when none
+--   mobile_revenue       sum of revenue over mobile sessions; 0.0 when none is recorded
+--   desktop_revenue      sum of revenue over desktop sessions; 0.0 when none is recorded
+-- Order by channel ascending. An empty sessions table gives zero rows with these six columns.
+--
+-- Replace the line below with your query.
+
+SELECT 1;

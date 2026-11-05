@@ -1,0 +1,13 @@
+id: algo/binary-tree-recursion-and-traversal/p01-inorder-traversal-iterative
+version: 2                      # bump when tests, tolerances or the contract change
+title: In-order traversal without recursion
+language: python
+runtime: py-stdlib
+entry: inorder_traversal
+difficulty: medium
+minutes: 20
+core: true
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: lists of integers
+banned_imports: [sys, threading, sys.setrecursionlimit]
+timeout_s: 30
+status: reviewed

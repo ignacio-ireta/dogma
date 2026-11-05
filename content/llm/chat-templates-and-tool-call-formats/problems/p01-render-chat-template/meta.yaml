@@ -1,0 +1,13 @@
+id: llm/chat-templates-and-tool-call-formats/p01-render-chat-template
+version: 3                      # bump when tests, tolerances or the contract change
+title: Render chat messages into a template string
+language: python                # python | sql
+runtime: py-stdlib              # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: render_chat              # the function or class name the learner implements
+difficulty: easy
+minutes: 20
+core: true                      # p01 is the core problem: exactly one per topic
+tolerance: {atol: 0.0, rtol: 0.0}   # exact string output, no floating point
+banned_imports: [jinja2]        # a template engine would write the template for the learner
+timeout_s: 30
+status: reviewed

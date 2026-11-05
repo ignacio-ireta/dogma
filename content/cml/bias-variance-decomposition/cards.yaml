@@ -1,0 +1,31 @@
+cards:
+  - id: cml/bias-variance-decomposition#1
+    type: qa
+    front: "Write the expected squared test error at a point x as a sum of three terms."
+    back: "σ² + bias² + variance: the noise variance, the squared gap between the average model and the truth, and the spread of the models around their average."
+  - id: cml/bias-variance-decomposition#2
+    type: cloze
+    text: "The noise term σ² is {{c1::irreducible}}: no model, however good, can predict the noise in a fresh label."
+  - id: cml/bias-variance-decomposition#3
+    type: qa
+    front: What does the variance term measure?
+    back: The spread of the predictions across training sets drawn from the same process, at a fixed test point.
+  - id: cml/bias-variance-decomposition#4
+    type: qa
+    front: Why does the cross term between the noise and the model's error vanish?
+    back: The noise has mean zero and is independent of the model's prediction, so its expected product with the error is zero.
+  - id: cml/bias-variance-decomposition#5
+    type: qa
+    front: Why does the cross term between the model's error and its average vanish?
+    back: The deviations of the predictions from their average have mean zero across training sets.
+  - id: cml/bias-variance-decomposition#6
+    type: cloze
+    text: "Ridge regularisation usually {{c1::raises bias and lowers variance}}, by shrinking the coefficients toward zero."
+  - id: cml/bias-variance-decomposition#7
+    type: qa
+    front: What does the double-descent curve show that the classical picture does not?
+    back: That test error can fall again beyond the interpolation threshold, where the number of parameters exceeds the number of training rows.
+  - id: cml/bias-variance-decomposition#8
+    type: qa
+    front: Why is the variance of a high-degree polynomial fit hard to estimate reliably?
+    back: Its spread is heavy-tailed, because a few training sets with unusual designs produce extreme predictions, so the estimate moves a lot between seeds.

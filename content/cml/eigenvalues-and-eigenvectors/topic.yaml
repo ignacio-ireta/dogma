@@ -1,0 +1,18 @@
+id: cml/eigenvalues-and-eigenvectors
+title: Eigenvalues and eigenvectors
+tier: A
+requires: [cml/matrix-multiplication, cml/vector-and-matrix-norms, math/determinants-and-trace]
+aliases: [eigenpair, characteristic polynomial, spectral theorem, Rayleigh quotient, power method, dominant eigenvalue, eigendecomposition]
+objectives:
+  - Find eigenvalues and eigenvectors of a small matrix from the characteristic polynomial, and verify Av = λv
+  - Implement power iteration for the dominant eigenpair of a symmetric matrix, with a residual-based stopping rule and a sign convention
+  - Explain the spectral theorem for symmetric matrices, and why power iteration converges at the rate |λ2 / λ1|
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  The standard sequence is "explain eigenvalues and eigenvectors", then PCA, then "how would you get
+  the top eigenvector of a huge matrix?" Power iteration is the answer to the last question.
+sources:
+  - "book: Strang, Introduction to Linear Algebra (5th ed.), chapter on eigenvalues and eigenvectors"
+  - "book: Deisenroth, Faisal & Ong, Mathematics for Machine Learning, §4.2 (eigenvalues and eigenvectors) and §4.4 (eigendecomposition)"
+  - "book: Trefethen & Bau, Numerical Linear Algebra, lectures on eigenvalue problems and the power method"
+status: reviewed

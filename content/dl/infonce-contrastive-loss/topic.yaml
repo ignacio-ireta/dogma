@@ -1,0 +1,18 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: dl/infonce-contrastive-loss
+title: "InfoNCE contrastive loss"
+tier: A
+requires: ['cml/cosine-similarity', 'cml/cross-entropy', 'cml/softmax']
+aliases: [InfoNCE, contrastive loss, in-batch negatives, temperature, symmetric loss, CLIP loss, n-pair loss, normalised embeddings]
+objectives:
+  - Implement the symmetric InfoNCE loss for N paired (N, D) embeddings, with L2 normalisation inside and a temperature
+  - Explain why in-batch negatives make the loss depend on batch size, and what chance level log N means
+  - Explain the effect of the temperature on the softmax and why the log-sum-exp must be stable at small temperatures
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: Explain what the positives and negatives are in a batch, why the loss is symmetric, what the temperature does, and why a larger batch gives harder, more informative negatives.
+sources:
+  - "paper: van den Oord et al. 2018, Representation Learning with Contrastive Predictive Coding (arXiv:1807.03748), cited for the name InfoNCE only (not in the corpus)"
+  - "paper: Radford et al. 2021, Learning Transferable Visual Models From Natural Language Supervision (arXiv:2103.00020)"
+  - "corpus: library-papers/2103.00020.pdf.md p.4"
+  - "corpus: library-papers/2103.00020.pdf.md p.5"
+status: reviewed

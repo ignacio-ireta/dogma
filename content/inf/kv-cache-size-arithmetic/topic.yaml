@@ -1,0 +1,16 @@
+id: inf/kv-cache-size-arithmetic
+title: "KV-cache size arithmetic"
+tier: A
+requires: [dl/multi-head-attention]
+aliases: [KV cache, key value cache, cache memory, GQA memory, MQA, sliding window cache, batch sizing]
+objectives:
+  - Compute KV-cache bytes from a model config, a context length, a batch size and a dtype, with exact integer units
+  - Show how grouped-query and multi-query attention shrink the cache through the KV-head count, and how a sliding window caps it
+  - Find the batch size that fits a memory budget after the weights, and the batch at which the cache overtakes the weights
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: "Estimate serving memory from the config in one line: 2 x layers x KV heads x head dim x tokens x batch x bytes. Interviewers check the factor of 2, the KV-head count and the units."
+sources:
+  - "library: AI-ML/12-Frontiers/Vaswani Attention Is All You Need 2017.md"
+  - "library: AI-ML/13-Scaling-and-Alignment/Qwen — Alibaba 2023-2025.md"
+  - "corpus: library-papers/deepseek-v4-2026.pdf p.22"
+status: reviewed

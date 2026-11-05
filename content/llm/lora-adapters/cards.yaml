@@ -1,0 +1,24 @@
+cards:
+  - id: llm/lora-adapters#1
+    type: qa
+    front: "What is the LoRA forward pass for a linear layer with a frozen W?"
+    back: "y = x W^T + b + (alpha / r) x A^T B^T, with A of shape (r, d_in) and B of shape (d_out, r)."
+  - id: llm/lora-adapters#2
+    type: qa
+    front: "Why is B initialised to zero, and why must A not also be zero?"
+    back: "B = 0 makes the update zero, so the first output equals the base model. A must be random so that gradients can reach B."
+  - id: llm/lora-adapters#3
+    type: qa
+    front: "What is the merged weight in LoRA?"
+    back: "W' = W + (alpha / r) B A, with the shape of W. The merged output x W'^T + b equals the unmerged output."
+  - id: llm/lora-adapters#4
+    type: qa
+    front: "Which tensors receive gradients in LoRA?"
+    back: "A and B. The base weight W and the bias b are frozen."
+  - id: llm/lora-adapters#5
+    type: cloze
+    text: "The LoRA update BA has rank at most {{c1::r}}."
+  - id: llm/lora-adapters#6
+    type: qa
+    front: "Does LoRA assume the pretrained weight W is low rank?"
+    back: "No. W is frozen and never factored. LoRA constrains only the update (alpha / r) B A to rank at most r."

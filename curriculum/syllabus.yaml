@@ -1,0 +1,647 @@
+# deep-ml curriculum outline, mirrored as the coverage spine for this repo.
+# Source: topic titles from deep-ml.com as pasted by the learner on 2026-10-23. Titles only:
+# no deep-ml problem statements, solutions or tests are copied (docs/IMPORT_PLAN.md).
+#
+# id    stable, never renumbered or reused: <track>/<slug-of-original-title>
+# tier  A core | B differentiator | C specialist | null = not yet triaged
+#       (rules: docs/ARCHITECTURE.md §2; A = exactly the topics in curriculum/paths/core.yaml). Content lives in content/<track>/<slug>/.
+version: 1
+source: deep-ml.com outline (pasted 2026-10-23)
+tracks:
+  - code: cml
+    order: 1
+    title: "Classical Machine Learning"
+    origin: deepml
+    topic_count: 111
+    topics:
+      - {id: cml/vector-operations, title: "Vector operations", tier: A}
+      - {id: cml/matrix-shapes-and-transpose, title: "Matrix shapes and transpose", tier: A}
+      - {id: cml/derivatives, title: "Derivatives", tier: A}
+      - {id: cml/descriptive-statistics, title: "Descriptive statistics", tier: A}
+      - {id: cml/categorical-encoding, title: "Categorical encoding", tier: B}
+      - {id: cml/shuffling-splitting-and-batching-data, title: "Shuffling, splitting and batching data", tier: A}
+      - {id: cml/dummy-and-naive-baselines, title: "Dummy and naive baselines", tier: B}
+      - {id: cml/probability-basics, title: "Probability basics", tier: A}
+      - {id: cml/sigmoid-and-log-odds, title: "Sigmoid and log-odds", tier: A}
+      - {id: cml/confusion-matrix-and-count-based-scores, title: "Confusion matrix and count-based scores", tier: A}
+      - {id: cml/voting-and-stacking, title: "Voting and stacking", tier: B}
+      - {id: cml/ranking-metrics, title: "Ranking metrics", tier: A}
+      - {id: cml/edit-distance, title: "Edit distance", tier: B}
+      - {id: cml/tf-idf-and-bm25, title: "TF-IDF and BM25", tier: A}
+      - {id: cml/tick-volume-and-dollar-bars, title: "Tick, volume and dollar bars", tier: C}
+      - {id: cml/matrix-multiplication, title: "Matrix multiplication", tier: A}
+      - {id: cml/matrix-inverse-and-rank, title: "Matrix inverse and rank", tier: A}
+      - {id: cml/solving-linear-systems, title: "Solving linear systems", tier: B}
+      - {id: cml/lu-and-cholesky-decomposition, title: "LU and Cholesky decomposition", tier: B}
+      - {id: cml/orthogonal-projection, title: "Orthogonal projection", tier: B}
+      - {id: cml/gram-schmidt-and-qr-decomposition, title: "Gram-Schmidt and QR decomposition", tier: B}
+      - {id: cml/normal-equation, title: "Normal equation", tier: A}
+      - {id: cml/partial-derivatives-and-gradients, title: "Partial derivatives and gradients", tier: A}
+      - {id: cml/chain-rule, title: "Chain rule", tier: A}
+      - {id: cml/gradient-descent, title: "Gradient descent", tier: A}
+      - {id: cml/stochastic-and-mini-batch-gradient-descent, title: "Stochastic and mini-batch gradient descent", tier: A}
+      - {id: cml/feature-scaling, title: "Feature scaling", tier: A}
+      - {id: cml/preprocessing-pipelines, title: "Preprocessing pipelines", tier: A}
+      - {id: cml/k-fold-cross-validation, title: "K-fold cross-validation", tier: A}
+      - {id: cml/missing-values-and-outliers, title: "Missing values and outliers", tier: A}
+      - {id: cml/leakage-and-walk-forward-validation, title: "Leakage and walk-forward validation", tier: A}
+      - {id: cml/regression-metrics-and-robust-losses, title: "Regression metrics and robust losses", tier: A}
+      - {id: cml/over-and-underfitting-early-stopping, title: "Over- and underfitting, early stopping", tier: A}
+      - {id: cml/vector-and-matrix-norms, title: "Vector and matrix norms", tier: A}
+      - {id: cml/eigenvalues-and-eigenvectors, title: "Eigenvalues and eigenvectors", tier: A}
+      - {id: cml/hessians-definiteness-and-critical-points, title: "Hessians, definiteness and critical points", tier: B}
+      - {id: cml/lagrange-multipliers, title: "Lagrange multipliers", tier: B}
+      - {id: cml/bias-variance-decomposition, title: "Bias-variance decomposition", tier: A}
+      - {id: cml/normal-and-multivariate-gaussian, title: "Normal and multivariate Gaussian", tier: A}
+      - {id: cml/maximum-likelihood-and-map, title: "Maximum likelihood and MAP", tier: A}
+      - {id: cml/aic-bic-and-stepwise-selection, title: "AIC, BIC and stepwise selection", tier: B}
+      - {id: cml/lasso-and-elastic-net, title: "Lasso and elastic net", tier: A}
+      - {id: cml/ridge-regression-and-weight-decay, title: "Ridge regression and weight decay", tier: A}
+      - {id: cml/hyperparameter-search, title: "Hyperparameter search", tier: B}
+      - {id: cml/expectation-and-variance, title: "Expectation and variance", tier: A}
+      - {id: cml/sampling-distributions-standard-errors-and-cis, title: "Sampling distributions, standard errors and CIs", tier: A}
+      - {id: cml/regression-inference-t-f-and-intervals, title: "Regression inference: t, F and intervals", tier: B}
+      - {id: cml/leverage-influence-vif-and-omitted-variables, title: "Leverage, influence, VIF and omitted variables", tier: B}
+      - {id: cml/t-tests-and-anova, title: "t-tests and ANOVA", tier: A}
+      - {id: cml/a-b-test-design-and-analysis, title: "A/B test design and analysis", tier: A}
+      - {id: cml/chi-square-tests, title: "Chi-square tests", tier: B}
+      - {id: cml/multiple-testing-corrections, title: "Multiple testing corrections", tier: B}
+      - {id: cml/bootstrap-and-permutation-resampling, title: "Bootstrap and permutation resampling", tier: A}
+      - {id: cml/logistic-regression, title: "Logistic regression", tier: A}
+      - {id: cml/confounding-propensity-scores-and-uplift, title: "Confounding, propensity scores and uplift", tier: B}
+      - {id: cml/did-instrumental-variables-and-rd, title: "DiD, instrumental variables and RD", tier: B}
+      - {id: cml/covariance-and-correlation, title: "Covariance and correlation", tier: A}
+      - {id: cml/cuped-delta-method-and-design-effect, title: "CUPED, delta method and design effect", tier: B}
+      - {id: cml/bayes-theorem, title: "Bayes' theorem", tier: A}
+      - {id: cml/bernoulli-binomial-and-poisson, title: "Bernoulli, binomial and Poisson", tier: A}
+      - {id: cml/beta-binomial-conjugate-updating, title: "Beta-binomial conjugate updating", tier: B}
+      - {id: cml/kaplan-meier-and-the-log-rank-test, title: "Kaplan-Meier and the log-rank test", tier: B}
+      - {id: cml/cox-proportional-hazards, title: "Cox proportional hazards", tier: C}
+      - {id: cml/softmax, title: "Softmax", tier: A}
+      - {id: cml/cross-entropy, title: "Cross-entropy", tier: A}
+      - {id: cml/taylor-expansion-and-newtons-method, title: "Taylor expansion and Newton's method", tier: B}
+      - {id: cml/softmax-regression-and-one-vs-rest, title: "Softmax regression and one-vs-rest", tier: B}
+      - {id: cml/generalized-linear-models, title: "Generalized linear models", tier: B}
+      - {id: cml/precision-recall-and-f1, title: "Precision, recall and F1", tier: A}
+      - {id: cml/roc-pr-curves-and-auc, title: "ROC, PR curves and AUC", tier: A}
+      - {id: cml/handling-class-imbalance, title: "Handling class imbalance", tier: A}
+      - {id: cml/probability-calibration, title: "Probability calibration", tier: B}
+      - {id: cml/multi-class-and-multi-label-metrics, title: "Multi-class and multi-label metrics", tier: B}
+      - {id: cml/lda-and-qda, title: "LDA and QDA", tier: B}
+      - {id: cml/naive-bayes, title: "Naive Bayes", tier: B}
+      - {id: cml/nearest-neighbour-search-and-knn, title: "Nearest-neighbour search and KNN", tier: A}
+      - {id: cml/entropy-and-mutual-information, title: "Entropy and mutual information", tier: A}
+      - {id: cml/choosing-a-tree-split, title: "Choosing a tree split", tier: A}
+      - {id: cml/building-and-pruning-a-cart-tree, title: "Building and pruning a CART tree", tier: B}
+      - {id: cml/bagging, title: "Bagging", tier: B}
+      - {id: cml/adaboost-and-gradient-boosting, title: "AdaBoost and gradient boosting", tier: A}
+      - {id: cml/xgboost-second-order-objective, title: "XGBoost second-order objective", tier: A}
+      - {id: cml/random-forests-and-feature-importance, title: "Random forests and feature importance", tier: A}
+      - {id: cml/kernel-functions, title: "Kernel functions", tier: B}
+      - {id: cml/support-vector-machines, title: "Support vector machines", tier: B}
+      - {id: cml/gaussian-process-regression, title: "Gaussian process regression", tier: C}
+      - {id: cml/polynomial-features-and-regression, title: "Polynomial features and regression", tier: B}
+      - {id: cml/regression-and-smoothing-splines, title: "Regression and smoothing splines", tier: C}
+      - {id: cml/local-regression-and-gams, title: "Local regression and GAMs", tier: C}
+      - {id: cml/k-means, title: "K-means", tier: A}
+      - {id: cml/hierarchical-clustering, title: "Hierarchical clustering", tier: B}
+      - {id: cml/cluster-quality-scores, title: "Cluster quality scores", tier: B}
+      - {id: cml/dbscan-and-mean-shift, title: "DBSCAN and mean shift", tier: B}
+      - {id: cml/spectral-clustering-and-affinity-propagation, title: "Spectral clustering and affinity propagation", tier: C}
+      - {id: cml/cluster-based-label-propagation, title: "Cluster-based label propagation", tier: C}
+      - {id: cml/gaussian-mixtures-and-em, title: "Gaussian mixtures and EM", tier: B}
+      - {id: cml/change-of-basis, title: "Change of basis", tier: B}
+      - {id: cml/principal-component-analysis, title: "Principal component analysis", tier: A}
+      - {id: cml/singular-value-decomposition, title: "Singular value decomposition", tier: A}
+      - {id: cml/low-rank-approximation, title: "Low-rank approximation", tier: B}
+      - {id: cml/matrix-completion-and-factorization, title: "Matrix completion and factorization", tier: B}
+      - {id: cml/manifold-learning, title: "Manifold learning", tier: C}
+      - {id: cml/incremental-randomized-pca-and-random-projection, title: "Incremental, randomized PCA and random projection", tier: C}
+      - {id: cml/anomaly-scoring, title: "Anomaly scoring", tier: B}
+      - {id: cml/cosine-similarity, title: "Cosine similarity", tier: A}
+      - {id: cml/sparse-matrix-formats, title: "Sparse matrix formats", tier: B}
+      - {id: cml/frequent-itemsets-and-association-rules, title: "Frequent itemsets and association rules", tier: C}
+      - {id: cml/reranking-and-diversity, title: "Reranking and diversity", tier: B}
+      - {id: cml/rolling-statistics-stationarity-and-autocorrelation, title: "Rolling statistics, stationarity and autocorrelation", tier: A}
+      - {id: cml/portfolio-variance-and-covariance-shrinkage, title: "Portfolio variance and covariance shrinkage", tier: C}
+      - {id: cml/industrial-ranking-model-components, title: "Industrial ranking model components", tier: B}
+  - code: dl
+    order: 2
+    title: "Deep Learning"
+    origin: deepml
+    topic_count: 88
+    topics:
+      - {id: dl/relu-family-activations, title: "ReLU-family activations", tier: A}
+      - {id: dl/dropout, title: "Dropout", tier: A}
+      - {id: dl/weight-averaging-and-ema, title: "Weight averaging and EMA", tier: B}
+      - {id: dl/convolution-arithmetic, title: "Convolution arithmetic", tier: B}
+      - {id: dl/iou-anchor-matching-and-nms, title: "IoU, anchor matching and NMS", tier: B}
+      - {id: dl/long-memory-sequence-benchmarks, title: "Long-memory sequence benchmarks", tier: C}
+      - {id: dl/positional-encodings, title: "Positional encodings", tier: A}
+      - {id: dl/magnitude-and-head-pruning, title: "Magnitude and head pruning", tier: C}
+      - {id: dl/building-tensors-by-broadcasting, title: "Building tensors by broadcasting", tier: A}
+      - {id: dl/index-arithmetic-shift-gather-and-mask, title: "Index arithmetic: shift, gather and mask", tier: B}
+      - {id: dl/scatter-add-and-bucketize, title: "Scatter-add and bucketize", tier: B}
+      - {id: dl/dense-layer-forward-pass, title: "Dense layer forward pass", tier: A}
+      - {id: dl/smooth-activations-tanh-gelu-swish, title: "Smooth activations: tanh, GELU, Swish", tier: A}
+      - {id: dl/perceptron-convergence, title: "Perceptron convergence", tier: B}
+      - {id: dl/counting-network-parameters, title: "Counting network parameters", tier: A}
+      - {id: dl/xavier-and-he-initialization, title: "Xavier and He initialization", tier: A}
+      - {id: dl/jacobians-and-matrix-calculus, title: "Jacobians and matrix calculus", tier: B}
+      - {id: dl/backprop-through-a-chain-of-scalars, title: "Backprop through a chain of scalars", tier: A}
+      - {id: dl/backward-rules-for-tensor-ops, title: "Backward rules for tensor ops", tier: B}
+      - {id: dl/backprop-through-a-dense-layer, title: "Backprop through a dense layer", tier: A}
+      - {id: dl/reverse-mode-autograd-engine, title: "Reverse-mode autograd engine", tier: A}
+      - {id: dl/training-an-mlp-from-scratch, title: "Training an MLP from scratch", tier: A}
+      - {id: dl/tensors-in-pytorch-and-tinygrad, title: "Tensors in PyTorch and tinygrad", tier: A}
+      - {id: dl/gradients-with-framework-autograd, title: "Gradients with framework autograd", tier: A}
+      - {id: dl/custom-autograd-functions, title: "Custom autograd functions", tier: B}
+      - {id: dl/composing-layers-into-a-model, title: "Composing layers into a model", tier: B}
+      - {id: dl/module-state-parameters-buffers-hooks-state-dict, title: "Module state: parameters, buffers, hooks, state_dict", tier: B}
+      - {id: dl/one-training-step, title: "One training step", tier: A}
+      - {id: dl/datasets-and-dataloaders, title: "Datasets and DataLoaders", tier: B}
+      - {id: dl/a-complete-training-loop, title: "A complete training loop", tier: A}
+      - {id: dl/jax-arrays-and-prng-keys, title: "JAX arrays and PRNG keys", tier: C}
+      - {id: dl/gradients-in-jax, title: "Gradients in JAX", tier: C}
+      - {id: dl/jit-and-vmap, title: "jit and vmap", tier: C}
+      - {id: dl/sgd-with-momentum, title: "SGD with momentum", tier: A}
+      - {id: dl/adagrad-rmsprop-and-adadelta, title: "Adagrad, RMSProp and Adadelta", tier: B}
+      - {id: dl/adam, title: "Adam", tier: A}
+      - {id: dl/adamw-decoupled-weight-decay, title: "AdamW decoupled weight decay", tier: A}
+      - {id: dl/writing-an-optimizer, title: "Writing an optimizer", tier: B}
+      - {id: dl/newton-schulz-orthogonalization, title: "Newton-Schulz orthogonalization", tier: C}
+      - {id: dl/muon-optimizer, title: "Muon optimizer", tier: C}
+      - {id: dl/scaled-dot-product-attention, title: "Scaled dot-product attention", tier: A}
+      - {id: dl/qk-clip-muonclip, title: "QK-clip (MuonClip)", tier: C}
+      - {id: dl/gradient-clipping, title: "Gradient clipping", tier: B}
+      - {id: dl/learning-rate-decay-schedules, title: "Learning-rate decay schedules", tier: A}
+      - {id: dl/learning-rate-warmup, title: "Learning-rate warmup", tier: A}
+      - {id: dl/batch-size-scaling, title: "Batch size scaling", tier: B}
+      - {id: dl/batch-normalization, title: "Batch normalization", tier: A}
+      - {id: dl/batch-norm-backward-pass, title: "Batch norm backward pass", tier: B}
+      - {id: dl/layer-normalization, title: "Layer normalization", tier: A}
+      - {id: dl/rmsnorm, title: "RMSNorm", tier: A}
+      - {id: dl/group-instance-and-local-response-norm, title: "Group, instance and local response norm", tier: C}
+      - {id: dl/adaptive-layer-norm, title: "Adaptive layer norm", tier: C}
+      - {id: dl/spectral-normalization, title: "Spectral normalization", tier: C}
+      - {id: dl/residual-connections, title: "Residual connections", tier: A}
+      - {id: dl/gradient-accumulation, title: "Gradient accumulation", tier: B}
+      - {id: dl/data-parallel-gradient-averaging, title: "Data-parallel gradient averaging", tier: B}
+      - {id: dl/mixed-precision, title: "Mixed precision", tier: A}
+      - {id: dl/gradient-checkpointing, title: "Gradient checkpointing", tier: B}
+      - {id: dl/convolution-forward-pass, title: "Convolution forward pass", tier: A}
+      - {id: dl/pooling, title: "Pooling", tier: B}
+      - {id: dl/training-a-cnn, title: "Training a CNN", tier: B}
+      - {id: dl/resnet-and-densenet-blocks, title: "ResNet and DenseNet blocks", tier: B}
+      - {id: dl/adversarial-examples, title: "Adversarial examples", tier: B}
+      - {id: dl/image-arrays-channels-flips-padding-resizing, title: "Image arrays: channels, flips, padding, resizing", tier: B}
+      - {id: dl/pca-color-augmentation, title: "PCA color augmentation", tier: C}
+      - {id: dl/image-patch-embedding, title: "Image patch embedding", tier: B}
+      - {id: dl/multi-head-attention, title: "Multi-head attention", tier: A}
+      - {id: dl/position-wise-feed-forward-block, title: "Position-wise feed-forward block", tier: A}
+      - {id: dl/transformer-block, title: "Transformer block", tier: A}
+      - {id: dl/vision-transformer-encoder, title: "Vision Transformer encoder", tier: B}
+      - {id: dl/feature-pyramid-network, title: "Feature pyramid network", tier: C}
+      - {id: dl/image-quality-metrics, title: "Image quality metrics", tier: C}
+      - {id: dl/triplet-and-angular-margin-losses, title: "Triplet and angular margin losses", tier: B}
+      - {id: dl/simple-rnn-forward-pass, title: "Simple RNN forward pass", tier: B}
+      - {id: dl/backpropagation-through-time, title: "Backpropagation through time", tier: B}
+      - {id: dl/lstm-and-gru-cells, title: "LSTM and GRU cells", tier: B}
+      - {id: dl/forget-gates-and-the-constant-error-carousel, title: "Forget gates and the constant error carousel", tier: C}
+      - {id: dl/seq2seq-with-additive-attention, title: "Seq2seq with additive attention", tier: B}
+      - {id: dl/causal-masking, title: "Causal masking", tier: A}
+      - {id: dl/flash-attention, title: "Flash attention", tier: B}
+      - {id: dl/encoder-decoder-cross-attention, title: "Encoder-decoder cross-attention", tier: B}
+      - {id: dl/beam-search, title: "Beam search", tier: B}
+      - {id: dl/kl-divergence, title: "KL divergence", tier: A}
+      - {id: dl/vae-loss-elbo-and-reparameterization, title: "VAE loss: ELBO and reparameterization", tier: B}
+      - {id: dl/vector-quantization, title: "Vector quantization", tier: C}
+      - {id: dl/gan-training, title: "GAN training", tier: B}
+      - {id: dl/infonce-contrastive-loss, title: "InfoNCE contrastive loss", tier: A}
+      - {id: dl/knowledge-distillation, title: "Knowledge distillation", tier: B}
+  - code: llm
+    order: 3
+    title: "Large Language Models"
+    origin: deepml
+    topic_count: 115
+    topics:
+      - {id: llm/word-and-character-tokenizers, title: "Word and character tokenizers", tier: A}
+      - {id: llm/long-context-retrieval-evaluation, title: "Long-context retrieval evaluation", tier: B}
+      - {id: llm/scaling-laws-and-compute-budgets, title: "Scaling laws and compute budgets", tier: A}
+      - {id: llm/data-mixtures-and-selection-signals, title: "Data mixtures and selection signals", tier: B}
+      - {id: llm/reasoning-length-budgets, title: "Reasoning length budgets", tier: C}
+      - {id: llm/multiple-choice-benchmark-scoring, title: "Multiple-choice benchmark scoring", tier: B}
+      - {id: llm/answer-extraction-and-verification, title: "Answer extraction and verification", tier: B}
+      - {id: llm/forgetting-and-continual-learning-metrics, title: "Forgetting and continual-learning metrics", tier: C}
+      - {id: llm/lattices-of-partial-information, title: "Lattices of partial information", tier: C}
+      - {id: llm/bpe-merge-training, title: "BPE merge training", tier: A}
+      - {id: llm/bpe-encode-and-decode, title: "BPE encode and decode", tier: A}
+      - {id: llm/padding-truncation-and-pad-masks, title: "Padding, truncation and pad masks", tier: A}
+      - {id: llm/token-embedding-lookup, title: "Token embedding lookup", tier: B}
+      - {id: llm/growing-a-vocabulary, title: "Growing a vocabulary", tier: C}
+      - {id: llm/next-token-targets-and-batches, title: "Next-token targets and batches", tier: A}
+      - {id: llm/document-packing-and-cross-document-masks, title: "Document packing and cross-document masks", tier: B}
+      - {id: llm/fim-span-corruption-and-multi-token-prediction, title: "FIM, span corruption and multi-token prediction", tier: B}
+      - {id: llm/n-gram-count-language-models, title: "N-gram count language models", tier: B}
+      - {id: llm/negative-log-likelihood-and-perplexity, title: "Negative log-likelihood and perplexity", tier: A}
+      - {id: llm/neural-character-level-language-models, title: "Neural character-level language models", tier: B}
+      - {id: llm/gpt-forward-pass, title: "GPT forward pass", tier: A}
+      - {id: llm/weight-tying, title: "Weight tying", tier: B}
+      - {id: llm/model-parameter-and-memory-footprint, title: "Model parameter and memory footprint", tier: A}
+      - {id: llm/logit-soft-capping-clipping-and-qk-norm, title: "Logit soft-capping, clipping and QK-norm", tier: C}
+      - {id: llm/autoregressive-generation-loop, title: "Autoregressive generation loop", tier: A}
+      - {id: llm/temperature-top-k-and-top-p-sampling, title: "Temperature, top-k and top-p sampling", tier: A}
+      - {id: llm/repetition-penalties-and-constrained-decoding, title: "Repetition penalties and constrained decoding", tier: B}
+      - {id: llm/incremental-decoding-with-a-kv-cache, title: "Incremental decoding with a KV cache", tier: A}
+      - {id: llm/gqa-mqa-and-cross-layer-kv-sharing, title: "GQA, MQA and cross-layer KV sharing", tier: A}
+      - {id: llm/multi-head-latent-attention-mla, title: "Multi-head latent attention (MLA)", tier: B}
+      - {id: llm/sliding-window-attention, title: "Sliding-window attention", tier: B}
+      - {id: llm/hybrid-attention-layer-schedules, title: "Hybrid attention layer schedules", tier: C}
+      - {id: llm/linear-attention-and-the-delta-rule, title: "Linear attention and the delta rule", tier: C}
+      - {id: llm/selective-state-space-models-mamba, title: "Selective state-space models (Mamba)", tier: B}
+      - {id: llm/compressing-the-kv-sequence, title: "Compressing the KV sequence", tier: C}
+      - {id: llm/indexer-selected-sparse-attention, title: "Indexer-selected sparse attention", tier: C}
+      - {id: llm/attention-sinks-and-gated-attention, title: "Attention sinks and gated attention", tier: C}
+      - {id: llm/per-layer-embeddings-and-gated-memory-lookups, title: "Per-layer embeddings and gated memory lookups", tier: C}
+      - {id: llm/batch-invariant-and-deterministic-computation, title: "Batch-invariant and deterministic computation", tier: C}
+      - {id: llm/recurrence-over-time-in-transformers, title: "Recurrence over time in transformers", tier: C}
+      - {id: llm/moe-parameter-and-compute-arithmetic, title: "MoE parameter and compute arithmetic", tier: B}
+      - {id: llm/moe-top-k-routing, title: "MoE top-k routing", tier: A}
+      - {id: llm/moe-load-balancing, title: "MoE load balancing", tier: B}
+      - {id: llm/pipeline-zero-context-and-expert-parallelism, title: "Pipeline, ZeRO, context and expert parallelism", tier: B}
+      - {id: llm/federated-and-low-communication-training, title: "Federated and low-communication training", tier: C}
+      - {id: llm/chat-templates-and-tool-call-formats, title: "Chat templates and tool-call formats", tier: A}
+      - {id: llm/instruction-tuning-batches-and-loss-masks, title: "Instruction-tuning batches and loss masks", tier: A}
+      - {id: llm/sequence-log-probabilities, title: "Sequence log-probabilities", tier: B}
+      - {id: llm/pooling-and-classification-heads-on-an-lm, title: "Pooling and classification heads on an LM", tier: B}
+      - {id: llm/lora-adapters, title: "LoRA adapters", tier: A}
+      - {id: llm/lora-parameter-and-memory-arithmetic, title: "LoRA parameter and memory arithmetic", tier: A}
+      - {id: llm/adapters-bitfit-and-prefix-tuning, title: "Adapters, BitFit and prefix tuning", tier: B}
+      - {id: llm/comparing-low-rank-subspaces, title: "Comparing low-rank subspaces", tier: C}
+      - {id: llm/bradley-terry-reward-models, title: "Bradley-Terry reward models", tier: A}
+      - {id: llm/direct-preference-optimization-dpo, title: "Direct preference optimization (DPO)", tier: A}
+      - {id: llm/ipo-kto-orpo-and-simpo, title: "IPO, KTO, ORPO and SimPO", tier: B}
+      - {id: llm/best-of-k-and-reward-ranked-fine-tuning, title: "Best-of-K and reward-ranked fine-tuning", tier: B}
+      - {id: llm/constitutional-ai-critique-and-revision, title: "Constitutional AI critique and revision", tier: B}
+      - {id: llm/kl-penalties-and-ptx-in-rlhf, title: "KL penalties and PTX in RLHF", tier: B}
+      - {id: llm/group-relative-advantages, title: "Group-relative advantages", tier: B}
+      - {id: llm/process-rewards-and-step-wise-search, title: "Process rewards and step-wise search", tier: B}
+      - {id: llm/pass-k-and-majority-voting, title: "pass@k and majority voting", tier: A}
+      - {id: llm/turn-level-belief-evidence-agentopsd, title: "Turn-level belief evidence (AgentOPSD)", tier: C}
+      - {id: llm/turn-level-credit-assignment-agentopsd, title: "Turn-level credit assignment (AgentOPSD)", tier: C}
+      - {id: llm/measuring-insight-strength-and-update-footprint, title: "Measuring insight strength and update footprint", tier: C}
+      - {id: llm/on-policy-distillation, title: "On-policy distillation", tier: C}
+      - {id: llm/llm-as-judge-and-agreement-with-humans, title: "LLM-as-judge and agreement with humans", tier: A}
+      - {id: llm/elo-ratings-for-model-comparison, title: "Elo ratings for model comparison", tier: B}
+      - {id: llm/bleu-rouge-and-meteor, title: "BLEU, ROUGE and METEOR", tier: B}
+      - {id: llm/word2vec-skip-gram-with-negative-sampling, title: "Word2Vec skip-gram with negative sampling", tier: B}
+      - {id: llm/text-embedding-models-from-decoders, title: "Text embedding models from decoders", tier: B}
+      - {id: llm/false-negatives-hard-negatives-and-logq, title: "False negatives, hard negatives and logQ", tier: B}
+      - {id: llm/spread-out-regularizer, title: "Spread-out regularizer", tier: C}
+      - {id: llm/matryoshka-and-compressed-embeddings, title: "Matryoshka and compressed embeddings", tier: B}
+      - {id: llm/model-soups-and-task-arithmetic, title: "Model soups and task arithmetic", tier: C}
+      - {id: llm/embedding-benchmark-scoring-mteb, title: "Embedding benchmark scoring (MTEB)", tier: B}
+      - {id: llm/retrieval-augmented-generation-pipeline, title: "Retrieval-augmented generation pipeline", tier: A}
+      - {id: llm/visual-token-budgets, title: "Visual token budgets", tier: C}
+      - {id: llm/fusing-vision-tokens-into-a-language-model, title: "Fusing vision tokens into a language model", tier: B}
+      - {id: llm/residual-stream-and-direct-logit-attribution, title: "Residual stream and direct logit attribution", tier: B}
+      - {id: llm/logit-lens-and-tuned-lens, title: "Logit lens and tuned lens", tier: C}
+      - {id: llm/attention-pattern-scores-and-induction, title: "Attention pattern scores and induction", tier: B}
+      - {id: llm/qk-ov-circuits-and-head-composition, title: "QK/OV circuits and head composition", tier: C}
+      - {id: llm/linear-probes-on-hidden-states, title: "Linear probes on hidden states", tier: B}
+      - {id: llm/activation-and-path-patching, title: "Activation and path patching", tier: C}
+      - {id: llm/ablations-and-circuit-evaluation, title: "Ablations and circuit evaluation", tier: C}
+      - {id: llm/gradient-attributions-and-attribution-patching, title: "Gradient attributions and attribution patching", tier: C}
+      - {id: llm/superposition-and-toy-models, title: "Superposition and toy models", tier: C}
+      - {id: llm/sparse-autoencoders, title: "Sparse autoencoders", tier: B}
+      - {id: llm/steering-vectors, title: "Steering vectors", tier: B}
+      - {id: llm/ewc-si-and-lwf-regularizers, title: "EWC, SI and LwF regularizers", tier: C}
+      - {id: llm/parameter-masks-against-forgetting, title: "Parameter masks against forgetting", tier: C}
+      - {id: llm/loss-of-plasticity-and-continual-backprop, title: "Loss of plasticity and continual backprop", tier: C}
+      - {id: llm/class-incremental-classifier-heads, title: "Class-incremental classifier heads", tier: C}
+      - {id: llm/looped-transformers-with-shared-blocks, title: "Looped transformers with shared blocks", tier: C}
+      - {id: llm/what-looping-saves-and-costs, title: "What looping saves and costs", tier: C}
+      - {id: llm/adaptive-depth-halting-and-recursion-routing, title: "Adaptive depth: halting and recursion routing", tier: C}
+      - {id: llm/belief-states-and-sufficiency-checks, title: "Belief states and sufficiency checks", tier: C}
+      - {id: llm/next-latent-prediction-nextlat, title: "Next-latent prediction (NextLat)", tier: C}
+      - {id: llm/manifold-constrained-hyper-connections, title: "Manifold-constrained hyper-connections", tier: C}
+      - {id: llm/metadata-residualization-mdn, title: "Metadata residualization (MDN)", tier: C}
+      - {id: llm/ppo-for-language-models, title: "PPO for language models", tier: B}
+      - {id: llm/grpo-and-its-variants, title: "GRPO and its variants", tier: A}
+      - {id: llm/learning-from-insights-rltl-dr, title: "Learning from insights (RLTL;DR)", tier: C}
+      - {id: llm/distributed-rl-rollout-dispatch, title: "Distributed RL rollout dispatch", tier: C}
+      - {id: llm/self-speculative-decoding-from-latents, title: "Self-speculative decoding from latents", tier: C}
+      - {id: llm/near-duplicate-removal, title: "Near-duplicate removal", tier: B}
+      - {id: llm/benchmark-contamination-checks, title: "Benchmark contamination checks", tier: B}
+      - {id: llm/constraint-propagation-and-backtracking, title: "Constraint propagation and backtracking", tier: C}
+      - {id: llm/lattice-deduction-transformer, title: "Lattice deduction transformer", tier: C}
+      - {id: llm/rotary-position-embeddings-rope, title: "Rotary position embeddings (RoPE)", tier: A}
+      - {id: llm/partial-rope-and-nope-layers, title: "Partial RoPE and NoPE layers", tier: C}
+      - {id: llm/rope-context-extension-ntk-llama-3-yarn, title: "RoPE context extension (NTK, Llama 3, YaRN)", tier: B}
+      - {id: llm/replay-buffers-and-a-gem, title: "Replay buffers and A-GEM", tier: C}
+      - {id: llm/continual-pretraining-re-warm-re-decay-replay, title: "Continual pretraining: re-warm, re-decay, replay", tier: B}
+  - code: gen
+    order: 4
+    title: "Generative Modeling: Diffusion and World Models"
+    origin: deepml
+    topic_count: 28
+    topics:
+      - {id: gen/diffusion-noise-schedules, title: "Diffusion noise schedules", tier: B}
+      - {id: gen/kinematic-vehicle-model-and-closed-loop-tests, title: "Kinematic vehicle model and closed-loop tests", tier: C}
+      - {id: gen/forward-noising, title: "Forward noising", tier: B}
+      - {id: gen/the-denoising-objective, title: "The denoising objective", tier: B}
+      - {id: gen/ddpm-posterior-and-per-step-kl, title: "DDPM posterior and per-step KL", tier: B}
+      - {id: gen/ddpm-reverse-sampling, title: "DDPM reverse sampling", tier: B}
+      - {id: gen/timestep-and-condition-embeddings, title: "Timestep and condition embeddings", tier: B}
+      - {id: gen/ddim-sampling, title: "DDIM sampling", tier: B}
+      - {id: gen/classifier-free-guidance, title: "Classifier-free guidance", tier: B}
+      - {id: gen/denoising-score-matching, title: "Denoising score matching", tier: B}
+      - {id: gen/langevin-dynamics, title: "Langevin dynamics", tier: B}
+      - {id: gen/reverse-sde-and-probability-flow-ode, title: "Reverse SDE and probability-flow ODE", tier: B}
+      - {id: gen/higher-order-diffusion-samplers, title: "Higher-order diffusion samplers", tier: C}
+      - {id: gen/latent-diffusion, title: "Latent diffusion", tier: B}
+      - {id: gen/conditional-flow-matching, title: "Conditional flow matching", tier: B}
+      - {id: gen/rectified-flow-sampling-and-reflow, title: "Rectified flow sampling and reflow", tier: B}
+      - {id: gen/factorized-space-time-attention, title: "Factorized space-time attention", tier: C}
+      - {id: gen/autoregressive-chunked-video-diffusion, title: "Autoregressive chunked video diffusion", tier: C}
+      - {id: gen/spatiotemporal-video-tokenizers, title: "Spatiotemporal video tokenizers", tier: C}
+      - {id: gen/masked-token-generation-maskgit, title: "Masked token generation (MaskGIT)", tier: B}
+      - {id: gen/latent-action-models, title: "Latent action models", tier: C}
+      - {id: gen/latent-to-real-action-mapping, title: "Latent-to-real action mapping", tier: C}
+      - {id: gen/action-conditioned-world-models, title: "Action-conditioned world models", tier: C}
+      - {id: gen/latent-prediction-with-stop-gradient-jepa, title: "Latent prediction with stop-gradient (JEPA)", tier: B}
+      - {id: gen/uncertainty-aware-trajectory-losses, title: "Uncertainty-aware trajectory losses", tier: C}
+      - {id: gen/video-dataset-curation, title: "Video dataset curation", tier: C}
+      - {id: gen/behaviour-cloning, title: "Behaviour cloning", tier: B}
+      - {id: gen/camera-poses-and-depth-reprojection, title: "Camera poses and depth reprojection", tier: C}
+  - code: rl
+    order: 5
+    title: "Reinforcement Learning (Sutton and Barto)"
+    origin: deepml
+    topic_count: 66
+    topics:
+      - {id: rl/action-value-estimates, title: "Action-value estimates", tier: A}
+      - {id: rl/minimax-and-alpha-beta-search, title: "Minimax and alpha-beta search", tier: B}
+      - {id: rl/gym-spaces, title: "Gym spaces", tier: B}
+      - {id: rl/environment-api-wrappers, title: "Environment API wrappers", tier: B}
+      - {id: rl/multi-agent-environment-adapters, title: "Multi-agent environment adapters", tier: C}
+      - {id: rl/profiling-rl-throughput, title: "Profiling RL throughput", tier: C}
+      - {id: rl/rl-experiment-tracking-and-configs, title: "RL experiment tracking and configs", tier: C}
+      - {id: rl/epsilon-greedy-exploration, title: "Epsilon-greedy exploration", tier: A}
+      - {id: rl/upper-confidence-bound, title: "Upper confidence bound", tier: B}
+      - {id: rl/gradient-bandits, title: "Gradient bandits", tier: B}
+      - {id: rl/thompson-sampling, title: "Thompson sampling", tier: B}
+      - {id: rl/mdps-and-discounted-returns, title: "MDPs and discounted returns", tier: A}
+      - {id: rl/bellman-expectation-equations, title: "Bellman expectation equations", tier: B}
+      - {id: rl/iterative-policy-evaluation, title: "Iterative policy evaluation", tier: B}
+      - {id: rl/greedy-policy-improvement, title: "Greedy policy improvement", tier: B}
+      - {id: rl/policy-iteration, title: "Policy iteration", tier: B}
+      - {id: rl/value-iteration, title: "Value iteration", tier: B}
+      - {id: rl/monte-carlo-prediction, title: "Monte Carlo prediction", tier: B}
+      - {id: rl/monte-carlo-control, title: "Monte Carlo control", tier: B}
+      - {id: rl/off-policy-importance-sampling, title: "Off-policy importance sampling", tier: B}
+      - {id: rl/td-0-prediction, title: "TD(0) prediction", tier: B}
+      - {id: rl/batch-td-vs-batch-monte-carlo, title: "Batch TD vs batch Monte Carlo", tier: C}
+      - {id: rl/sarsa-and-expected-sarsa, title: "Sarsa and expected Sarsa", tier: B}
+      - {id: rl/q-learning, title: "Q-learning", tier: A}
+      - {id: rl/double-q-learning, title: "Double Q-learning", tier: B}
+      - {id: rl/afterstate-value-functions, title: "Afterstate value functions", tier: C}
+      - {id: rl/n-step-td-and-n-step-sarsa, title: "n-step TD and n-step Sarsa", tier: B}
+      - {id: rl/off-policy-n-step-with-importance-sampling, title: "Off-policy n-step with importance sampling", tier: C}
+      - {id: rl/tree-backup-q-sigma-and-retrace, title: "Tree backup, Q(sigma) and Retrace", tier: C}
+      - {id: rl/the-lambda-return, title: "The lambda-return", tier: B}
+      - {id: rl/eligibility-traces-and-td-lambda, title: "Eligibility traces and TD(lambda)", tier: B}
+      - {id: rl/sarsa-lambda-and-q-lambda, title: "Sarsa(lambda) and Q(lambda)", tier: C}
+      - {id: rl/semi-gradient-value-approximation, title: "Semi-gradient value approximation", tier: B}
+      - {id: rl/coarse-coding-rbf-and-fourier-features, title: "Coarse coding, RBF and Fourier features", tier: C}
+      - {id: rl/tile-coding, title: "Tile coding", tier: C}
+      - {id: rl/kanerva-coding, title: "Kanerva coding", tier: C}
+      - {id: rl/semi-gradient-sarsa-control, title: "Semi-gradient Sarsa control", tier: B}
+      - {id: rl/td-lambda-with-linear-function-approximation, title: "TD(lambda) with linear function approximation", tier: C}
+      - {id: rl/least-squares-td-and-fitted-value-iteration, title: "Least-squares TD and fitted value iteration", tier: C}
+      - {id: rl/the-deadly-triad, title: "The deadly triad", tier: B}
+      - {id: rl/gradient-td-and-bellman-error-methods, title: "Gradient-TD and Bellman-error methods", tier: C}
+      - {id: rl/average-reward-control, title: "Average-reward control", tier: C}
+      - {id: rl/dyna-q, title: "Dyna-Q", tier: B}
+      - {id: rl/dyna-q-in-changing-environments, title: "Dyna-Q+ in changing environments", tier: C}
+      - {id: rl/expected-vs-sample-updates, title: "Expected vs sample updates", tier: C}
+      - {id: rl/reinforce, title: "REINFORCE", tier: A}
+      - {id: rl/reinforce-with-baseline, title: "REINFORCE with baseline", tier: B}
+      - {id: rl/actor-critic, title: "Actor-critic", tier: B}
+      - {id: rl/natural-and-trust-region-policy-gradients, title: "Natural and trust-region policy gradients", tier: B}
+      - {id: rl/replay-buffers-and-target-networks, title: "Replay buffers and target networks", tier: B}
+      - {id: rl/deep-q-networks, title: "Deep Q-networks", tier: B}
+      - {id: rl/distributional-rl-c51, title: "Distributional RL (C51)", tier: C}
+      - {id: rl/general-value-functions-and-successor-features, title: "General value functions and successor features", tier: C}
+      - {id: rl/semi-mdp-returns-and-q-learning, title: "Semi-MDP returns and Q-learning", tier: C}
+      - {id: rl/options, title: "Options", tier: C}
+      - {id: rl/search-with-a-learned-value-function, title: "Search with a learned value function", tier: C}
+      - {id: rl/self-play-td-learning-td-gammon, title: "Self-play TD learning (TD-Gammon)", tier: C}
+      - {id: rl/monte-carlo-tree-search, title: "Monte Carlo tree search", tier: B}
+      - {id: rl/alphazero-self-play, title: "AlphaZero self-play", tier: C}
+      - {id: rl/td-learning-for-job-shop-scheduling, title: "TD learning for job-shop scheduling", tier: C}
+      - {id: rl/designing-and-testing-environments, title: "Designing and testing environments", tier: C}
+      - {id: rl/domain-randomization, title: "Domain randomization", tier: C}
+      - {id: rl/prioritized-sweeping, title: "Prioritized sweeping", tier: C}
+      - {id: rl/go-rules-captures-and-scoring, title: "Go rules: captures and scoring", tier: C}
+      - {id: rl/vectorized-environments, title: "Vectorized environments", tier: B}
+      - {id: rl/shared-memory-transport-for-environments, title: "Shared-memory transport for environments", tier: C}
+  - code: gnn
+    order: 6
+    title: "Graph Neural Networks"
+    origin: deepml
+    topic_count: 11
+    topics:
+      - {id: gnn/graph-adjacency-matrices, title: "Graph adjacency matrices", tier: B}
+      - {id: gnn/random-walks-and-pagerank, title: "Random walks and PageRank", tier: B}
+      - {id: gnn/graph-laplacian-eigenvectors, title: "Graph Laplacian eigenvectors", tier: B}
+      - {id: gnn/gcn-layer, title: "GCN layer", tier: B}
+      - {id: gnn/message-passing-with-scatter-and-readout, title: "Message passing with scatter and readout", tier: B}
+      - {id: gnn/graphsage-and-graph-attention-layers, title: "GraphSAGE and graph attention layers", tier: B}
+      - {id: gnn/over-smoothing, title: "Over-smoothing", tier: B}
+      - {id: gnn/chebyshev-spectral-graph-filters, title: "Chebyshev spectral graph filters", tier: C}
+      - {id: gnn/shallow-node-embeddings, title: "Shallow node embeddings", tier: B}
+      - {id: gnn/link-prediction, title: "Link prediction", tier: B}
+      - {id: gnn/weisfeiler-lehman-expressivity, title: "Weisfeiler-Lehman expressivity", tier: C}
+  - code: inf
+    order: 7
+    title: "Inference Engineering"
+    origin: deepml
+    topic_count: 46
+    topics:
+      - {id: inf/ttft-itl-and-throughput, title: "TTFT, ITL and throughput", tier: A}
+      - {id: inf/floating-point-formats, title: "Floating-point formats", tier: A}
+      - {id: inf/absmax-and-zero-point-int8-quantization, title: "Absmax and zero-point int8 quantization", tier: A}
+      - {id: inf/log-mel-features-and-voice-activity, title: "Log-mel features and voice activity", tier: C}
+      - {id: inf/tail-latency-and-goodput, title: "Tail latency and goodput", tier: B}
+      - {id: inf/arithmetic-intensity-and-the-roofline, title: "Arithmetic intensity and the roofline", tier: A}
+      - {id: inf/prefill-vs-decode-bottlenecks, title: "Prefill vs decode bottlenecks", tier: A}
+      - {id: inf/kv-cache-size-arithmetic, title: "KV-cache size arithmetic", tier: A}
+      - {id: inf/gpu-memory-and-capacity-sizing, title: "GPU memory and capacity sizing", tier: A}
+      - {id: inf/cost-per-token-and-break-even, title: "Cost per token and break-even", tier: A}
+      - {id: inf/kernel-fusion-savings, title: "Kernel fusion savings", tier: B}
+      - {id: inf/paged-kv-cache, title: "Paged KV cache", tier: A}
+      - {id: inf/copy-on-write-kv-block-sharing, title: "Copy-on-write KV block sharing", tier: C}
+      - {id: inf/continuous-batching, title: "Continuous batching", tier: A}
+      - {id: inf/chunked-prefill-scheduling, title: "Chunked prefill scheduling", tier: B}
+      - {id: inf/load-balanced-request-routing, title: "Load-balanced request routing", tier: B}
+      - {id: inf/kv-cache-store-capacity-and-erasure-coding, title: "KV-cache store capacity and erasure coding", tier: C}
+      - {id: inf/speculative-decoding-speedup-math, title: "Speculative decoding speedup math", tier: A}
+      - {id: inf/speculative-draft-and-verify, title: "Speculative draft-and-verify", tier: B}
+      - {id: inf/drafters-eagle-heads-and-n-gram-lookup, title: "Drafters: EAGLE heads and n-gram lookup", tier: C}
+      - {id: inf/tree-and-variable-length-verification, title: "Tree and variable-length verification", tier: C}
+      - {id: inf/hiding-host-overhead, title: "Hiding host overhead", tier: C}
+      - {id: inf/split-k-decode-attention, title: "Split-K decode attention", tier: C}
+      - {id: inf/per-channel-row-wise-and-block-wise-scales, title: "Per-channel, row-wise and block-wise scales", tier: B}
+      - {id: inf/4-bit-formats-int4-nf4-and-mxfp4, title: "4-bit formats: INT4, NF4 and MXFP4", tier: B}
+      - {id: inf/measuring-quantization-quality, title: "Measuring quantization quality", tier: B}
+      - {id: inf/fake-quantization-and-the-ste, title: "Fake quantization and the STE", tier: B}
+      - {id: inf/gptq-and-smoothquant, title: "GPTQ and SmoothQuant", tier: B}
+      - {id: inf/quantized-kv-cache, title: "Quantized KV cache", tier: B}
+      - {id: inf/tensor-parallelism-and-all-reduce-cost, title: "Tensor parallelism and all-reduce cost", tier: B}
+      - {id: inf/expert-parallelism-and-load-balancing, title: "Expert parallelism and load balancing", tier: C}
+      - {id: inf/context-parallelism-with-ring-attention, title: "Context parallelism with ring attention", tier: C}
+      - {id: inf/prefill-decode-disaggregation, title: "Prefill-decode disaggregation", tier: B}
+      - {id: inf/batched-multi-lora-serving, title: "Batched multi-LoRA serving", tier: B}
+      - {id: inf/autoscaling-and-cold-starts, title: "Autoscaling and cold starts", tier: B}
+      - {id: inf/service-health-sla-and-canary-checks, title: "Service health, SLA and canary checks", tier: B}
+      - {id: inf/data-quality-and-drift-detection, title: "Data quality and drift detection", tier: A}
+      - {id: inf/asr-serving-arithmetic, title: "ASR serving arithmetic", tier: C}
+      - {id: inf/streaming-tts-and-speech-to-speech-budgets, title: "Streaming TTS and speech-to-speech budgets", tier: C}
+      - {id: inf/constrained-and-streamed-output, title: "Constrained and streamed output", tier: B}
+      - {id: inf/verifiable-inference, title: "Verifiable inference", tier: C}
+      - {id: inf/batch-invariance, title: "Batch invariance", tier: C}
+      - {id: inf/kv-cache-eviction-preemption-and-offload, title: "KV-cache eviction, preemption and offload", tier: B}
+      - {id: inf/prefix-caching, title: "Prefix caching", tier: B}
+      - {id: inf/sliding-window-kv-state-and-bounded-replay, title: "Sliding-window KV state and bounded replay", tier: C}
+      - {id: inf/ml-pipeline-dags, title: "ML pipeline DAGs", tier: B}
+  - code: gpu
+    order: 8
+    title: "GPU Programming: CUDA and Triton"
+    origin: deepml
+    topic_count: 11
+    topics:
+      - {id: gpu/cuda-thread-indexing, title: "CUDA thread indexing", tier: B}
+      - {id: gpu/parallel-reduction-and-warp-shuffles, title: "Parallel reduction and warp shuffles", tier: B}
+      - {id: gpu/shared-memory-tiling, title: "Shared-memory tiling", tier: B}
+      - {id: gpu/fused-row-kernels-in-cuda, title: "Fused row kernels in CUDA", tier: C}
+      - {id: gpu/bitonic-sort, title: "Bitonic sort", tier: C}
+      - {id: gpu/csr-sparse-matrix-vector-multiply, title: "CSR sparse matrix-vector multiply", tier: C}
+      - {id: gpu/attention-kernels-in-cuda, title: "Attention kernels in CUDA", tier: C}
+      - {id: gpu/triton-programs-blocks-and-masks, title: "Triton programs, blocks and masks", tier: C}
+      - {id: gpu/row-reductions-in-triton, title: "Row reductions in Triton", tier: C}
+      - {id: gpu/blocked-matmul-in-triton, title: "Blocked matmul in Triton", tier: C}
+      - {id: gpu/prefix-scan-and-stream-compaction, title: "Prefix scan and stream compaction", tier: C}
+  - code: mlc
+    order: 9
+    title: "ML Compilers"
+    origin: deepml
+    topic_count: 10
+    topics:
+      - {id: mlc/tensor-ir-graphs, title: "Tensor IR graphs", tier: C}
+      - {id: mlc/pattern-matching-graph-rewrites, title: "Pattern-matching graph rewrites", tier: C}
+      - {id: mlc/symbolic-index-math, title: "Symbolic index math", tier: C}
+      - {id: mlc/views-strides-and-masks, title: "Views, strides and masks", tier: C}
+      - {id: mlc/matmul-and-conv-from-movement-ops, title: "Matmul and conv from movement ops", tier: C}
+      - {id: mlc/kernel-splitting-and-fusion, title: "Kernel splitting and fusion", tier: C}
+      - {id: mlc/autodiff-over-a-graph-ir, title: "Autodiff over a graph IR", tier: C}
+      - {id: mlc/loop-nest-codegen-for-reductions, title: "Loop-nest codegen for reductions", tier: C}
+      - {id: mlc/loop-tiling-and-register-blocking, title: "Loop tiling and register blocking", tier: C}
+      - {id: mlc/mapping-loops-to-the-cuda-grid, title: "Mapping loops to the CUDA grid", tier: C}
+  - code: safe
+    order: 10
+    title: "AI Safety and Governance"
+    origin: deepml
+    topic_count: 6
+    topics:
+      - {id: safe/goodharts-law-and-proxy-over-optimization, title: "Goodhart's law and proxy over-optimization", tier: B}
+      - {id: safe/differential-privacy-and-dp-sgd, title: "Differential privacy and DP-SGD", tier: B}
+      - {id: safe/split-conformal-prediction, title: "Split conformal prediction", tier: A}
+      - {id: safe/fairness-gaps, title: "Fairness gaps", tier: B}
+      - {id: safe/behavioural-eval-rates-and-judge-agreement, title: "Behavioural eval rates and judge agreement", tier: B}
+      - {id: safe/training-compute-accounting-and-capability-gates, title: "Training-compute accounting and capability gates", tier: C}
+  - code: sql
+    order: 11
+    title: "Toolbox: SQL and pandas"
+    origin: deepml
+    topic_count: 15
+    topics:
+      - {id: sql/sql-select-filter-and-sort, title: "SQL select, filter and sort", tier: A}
+      - {id: sql/pandas-groupby-aggregate-and-transform, title: "pandas groupby, aggregate and transform", tier: A}
+      - {id: sql/sql-group-by-and-having, title: "SQL GROUP BY and HAVING", tier: A}
+      - {id: sql/sql-joins-and-unions, title: "SQL joins and unions", tier: A}
+      - {id: sql/sql-subqueries-and-ctes, title: "SQL subqueries and CTEs", tier: A}
+      - {id: sql/sql-conditional-aggregation, title: "SQL conditional aggregation", tier: A}
+      - {id: sql/sql-date-handling, title: "SQL date handling", tier: A}
+      - {id: sql/sql-ranking-window-functions, title: "SQL ranking window functions", tier: A}
+      - {id: sql/sql-top-n-and-latest-row-per-group, title: "SQL top-N and latest row per group", tier: A}
+      - {id: sql/sql-lag-and-lead, title: "SQL LAG and LEAD", tier: A}
+      - {id: sql/sql-running-totals-and-frames, title: "SQL running totals and frames", tier: A}
+      - {id: sql/sql-first-and-last-activity-per-user, title: "SQL first and last activity per user", tier: A}
+      - {id: sql/sql-streaks-gaps-and-islands, title: "SQL streaks (gaps and islands)", tier: A}
+      - {id: sql/sql-cohort-retention, title: "SQL cohort retention", tier: A}
+      - {id: sql/pandas-merge-and-reshape, title: "pandas merge and reshape", tier: A}
+  - code: algo
+    order: 12
+    title: "Toolbox: Algorithms and Data Structures"
+    origin: deepml
+    topic_count: 19
+    topics:
+      - {id: algo/hash-maps-and-sets, title: "Hash maps and sets", tier: A}
+      - {id: algo/two-pointers-and-sliding-windows, title: "Two pointers and sliding windows", tier: A}
+      - {id: algo/binary-search, title: "Binary search", tier: A}
+      - {id: algo/stacks-and-queues, title: "Stacks and queues", tier: A}
+      - {id: algo/heaps-and-priority-queues, title: "Heaps and priority queues", tier: A}
+      - {id: algo/linked-lists, title: "Linked lists", tier: B}
+      - {id: algo/binary-tree-recursion-and-traversal, title: "Binary tree recursion and traversal", tier: A}
+      - {id: algo/union-find, title: "Union-find", tier: B}
+      - {id: algo/sort-then-sweep, title: "Sort, then sweep", tier: A}
+      - {id: algo/dynamic-programming, title: "Dynamic programming", tier: A}
+      - {id: algo/backtracking, title: "Backtracking", tier: B}
+      - {id: algo/concurrency-and-message-passing, title: "Concurrency and message passing", tier: B}
+      - {id: algo/prefix-sums, title: "Prefix sums", tier: A}
+      - {id: algo/lru-cache, title: "LRU cache", tier: A}
+      - {id: algo/trie, title: "Trie", tier: B}
+      - {id: algo/bfs-and-dfs-on-graphs-and-grids, title: "BFS and DFS on graphs and grids", tier: A}
+      - {id: algo/topological-sort, title: "Topological sort", tier: A}
+      - {id: algo/stateful-stores-with-snapshots-and-recovery, title: "Stateful stores with snapshots and recovery", tier: C}
+      - {id: algo/resource-ledgers, title: "Resource ledgers", tier: C}
+  - code: robo
+    order: 13
+    title: "Toolbox: Robotics and Control"
+    origin: deepml
+    topic_count: 2
+    topics:
+      - {id: robo/planar-arm-kinematics, title: "Planar arm kinematics", tier: C}
+      - {id: robo/kalman-filter, title: "Kalman filter", tier: B}
+  - code: math
+    order: 14
+    title: "Toolbox: Math Drills"
+    origin: deepml
+    topic_count: 10
+    topics:
+      - {id: math/reservoir-sampling, title: "Reservoir sampling", tier: A}
+      - {id: math/rotations-and-rigid-transforms, title: "Rotations and rigid transforms", tier: C}
+      - {id: math/determinants-and-trace, title: "Determinants and trace", tier: A}
+      - {id: math/column-space-null-space-and-independence, title: "Column space, null space and independence", tier: B}
+      - {id: math/inverse-transform-sampling, title: "Inverse-transform sampling", tier: A}
+      - {id: math/building-generators-by-rejection, title: "Building generators by rejection", tier: B}
+      - {id: math/monte-carlo-simulation, title: "Monte Carlo simulation", tier: A}
+      - {id: math/expected-waiting-times-and-renewal, title: "Expected waiting times and renewal", tier: B}
+      - {id: math/distances-between-distributions, title: "Distances between distributions", tier: B}
+      - {id: math/newsvendor-critical-fractile, title: "Newsvendor critical fractile", tier: B}
+  # Local track (origin: local), not part of the deep-ml outline: ML system design and case
+  # interviews. Tier B, so the core path (tier A) is unchanged. ids are stable forever.
+  - code: sys
+    order: 15
+    title: "ML System Design & Cases"
+    origin: local
+    topic_count: 7
+    topics:
+      - {id: sys/rass-case-framework, title: "RASS case framework", tier: B, kind: case}
+      - {id: sys/churn-prediction-case, title: "Churn prediction system", tier: B, kind: case}
+      - {id: sys/fraud-detection-case, title: "Fraud detection system", tier: B, kind: case}
+      - {id: sys/predictive-maintenance-case, title: "Predictive maintenance system", tier: B, kind: case}
+      - {id: sys/recommendation-system-case, title: "Recommendation system", tier: B, kind: case}
+      - {id: sys/logistics-optimization-case, title: "Logistics optimization system", tier: B, kind: case}
+      - {id: sys/rag-system-design-case, title: "RAG system design", tier: B, kind: case}

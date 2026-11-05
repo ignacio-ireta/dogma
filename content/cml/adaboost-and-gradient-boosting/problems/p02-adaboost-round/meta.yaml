@@ -1,0 +1,14 @@
+# Problem metadata (CONTENT_SPEC §6.2).
+id: cml/adaboost-and-gradient-boosting/p02-adaboost-round
+version: 3                      # bump when tests, tolerances or the contract change
+title: One round of discrete AdaBoost
+language: python                # python | sql
+runtime: py-numpy               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: adaboost_round           # the function or class name the learner implements
+difficulty: medium              # easy | medium | hard
+minutes: 25
+core: false                     # p01 is the core problem: exactly one per topic
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [sklearn, scipy]  # each must be named in problem.md Constraints
+timeout_s: 30
+status: reviewed

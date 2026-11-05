@@ -1,0 +1,18 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: dl/position-wise-feed-forward-block
+title: "Position-wise feed-forward block"
+tier: A
+requires: [dl/dense-layer-forward-pass, dl/smooth-activations-tanh-gelu-swish]
+aliases: [FFN, MLP block, expansion factor, SwiGLU, gated linear unit, GLU]
+objectives:
+  - "Implement the two-layer feed-forward block with the exact GELU and check it against a reference"
+  - "Implement the gated SwiGLU variant and explain its 2/3 width adjustment for equal parameters"
+  - "Explain why the block acts on each position independently, and what that means for attention"
+minutes: {lesson: 12, practice: 24, min_viable: 12}
+interview_angle: "Say the block is per-position, expands by about 4x, and carries most of a Transformer's parameters; name the gated variant and what the 2/3 width keeps fixed."
+sources:
+  - "paper: Vaswani, Shazeer, Parmar et al. 2017, Attention Is All You Need (arXiv:1706.03762), section 3.3"
+  - "library: AI-ML/12-Frontiers/Vaswani Attention Is All You Need 2017.md"
+  - "paper: Hendrycks and Gimpel 2016, Gaussian Error Linear Units (GELUs) (arXiv:1606.08415)"
+  - "paper: Shazeer 2020, GLU Variants Improve Transformer (arXiv:2002.05202)"
+status: reviewed

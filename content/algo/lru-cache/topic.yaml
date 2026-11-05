@@ -1,0 +1,14 @@
+id: algo/lru-cache
+title: "LRU cache"
+tier: A
+requires: [algo/hash-maps-and-sets]
+aliases: [LRU, least recently used, cache eviction, doubly linked list, recency list, sentinel node, move to end]
+objectives:
+  - Implement get and put in O(1) expected time with a hash map and a doubly linked recency list
+  - Refresh recency on a get hit and on a put of an existing key, and evict the least recently used entry first
+  - Decide when collections.OrderedDict is an acceptable answer, and what the interviewer should hear from you when it is not
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: Name the two structures and their jobs, the sentinel nodes, and the four cases of put before writing any pointer code.
+sources:
+  - "book: Cormen et al., Introduction to Algorithms (3rd ed.), ch. 10 (linked lists, sentinels) and ch. 11 (hash tables)"
+status: reviewed

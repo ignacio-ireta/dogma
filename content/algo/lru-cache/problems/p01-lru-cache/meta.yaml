@@ -1,0 +1,13 @@
+id: algo/lru-cache/p01-lru-cache
+version: 2                      # bump when tests, tolerances or the contract change
+title: LRU cache
+language: python
+runtime: py-stdlib
+entry: LRUCache
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: stored values and lengths are compared as they are
+banned_imports: [collections, functools, collections.OrderedDict]
+timeout_s: 60
+status: reviewed

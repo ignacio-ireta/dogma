@@ -1,0 +1,24 @@
+cards:
+  - id: sql/sql-running-totals-and-frames#1
+    type: qa
+    front: What frame does an OVER clause use when it has ORDER BY and no frame?
+    back: RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW.
+  - id: sql/sql-running-totals-and-frames#2
+    type: qa
+    front: Why do tied rows share one running total under the default frame?
+    back: A RANGE frame ending at CURRENT ROW includes all peers, including peers later in the order.
+  - id: sql/sql-running-totals-and-frames#3
+    type: qa
+    front: What does ROWS BETWEEN 6 PRECEDING AND CURRENT ROW count?
+    back: The current row and the six rows before it in the order, regardless of their values.
+  - id: sql/sql-running-totals-and-frames#4
+    type: qa
+    front: When do ROWS and RANGE give the same running total?
+    back: When no two rows share the same order value, so every row is its own peer group.
+  - id: sql/sql-running-totals-and-frames#5
+    type: qa
+    front: Why can a seven-row moving average cover more than seven days?
+    back: ROWS counts rows present in the data, so missing days widen the calendar span.
+  - id: sql/sql-running-totals-and-frames#6
+    type: cloze
+    text: "A running total over tied timestamps needs a {{c1::unique tiebreaker}} in ORDER BY, so every row has its own position."

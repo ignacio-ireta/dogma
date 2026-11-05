@@ -1,0 +1,17 @@
+id: llm/grpo-and-its-variants
+title: "GRPO and its variants"
+tier: A
+requires: ['llm/direct-preference-optimization-dpo', 'rl/reinforce']
+aliases: [GRPO, group relative policy optimization, group-relative advantage, group normalisation, clipped ratio, KL estimator, k3, DeepSeekMath, no value model, rollout group]
+objectives:
+  - Compute group-relative advantages from G rewards per prompt, stating the population standard deviation convention and returning zeros for an all-equal group
+  - Implement the per-token clipped surrogate with a KL penalty to the reference, averaged over masked response tokens, and match it to an independent reference
+  - Explain why GRPO needs no value model, which KL estimator it uses, and which normalisation choices differ between GRPO variants
+minutes: {lesson: 12, practice: 30, min_viable: 15}
+interview_angle: "Start with the group: G samples per prompt, advantage equals reward minus group mean over group standard deviation, and no critic. Then say what the clip and the KL term do, and which all-equal groups give no gradient."
+sources:
+  - "corpus: library-papers/2501.12948.pdf p.15"
+  - "library: AI-ML/13-Scaling-and-Alignment/DeepSeek-AI — DeepSeek-R1 Reasoning via RL 2025.md"
+  - "paper: Shao et al. 2024, DeepSeekMath (introduces GRPO); not in the corpus, cited here as the source R1 attributes GRPO to"
+  - "paper: Schulman 2020, Approximating KL divergence (blog note), the k3 estimator; cited in the R1 paper, not in the corpus"
+status: reviewed

@@ -1,0 +1,21 @@
+cards:
+- id: dl/xavier-and-he-initialization#1
+  type: qa
+  front: What variance does Xavier target in this topic?
+  back: 2 / (fan_in + fan_out).
+- id: dl/xavier-and-he-initialization#2
+  type: qa
+  front: What is the Xavier-uniform bound?
+  back: sqrt(6 / (fan_in + fan_out)).
+- id: dl/xavier-and-he-initialization#3
+  type: qa
+  front: What standard deviation does He-normal use here?
+  back: sqrt(2 / fan_in).
+- id: dl/xavier-and-he-initialization#4
+  type: qa
+  front: Must one sampled matrix have exactly the target variance?
+  back: No; the target describes its sampling distribution.
+- id: dl/xavier-and-he-initialization#5
+  type: qa
+  front: Why initialize independent units differently?
+  back: Identical units can receive identical updates and retain symmetry.

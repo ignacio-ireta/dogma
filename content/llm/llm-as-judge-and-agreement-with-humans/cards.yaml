@@ -1,0 +1,25 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+cards:
+  - id: llm/llm-as-judge-and-agreement-with-humans#1
+    type: qa
+    front: What is Cohen's kappa?
+    back: "(p_o - p_e) / (1 - p_e): agreement above chance, scaled by the most possible above chance."
+  - id: llm/llm-as-judge-and-agreement-with-humans#2
+    type: qa
+    front: How is expected agreement p_e computed?
+    back: "The sum over labels of the two raters' marginal frequencies multiplied together."
+  - id: llm/llm-as-judge-and-agreement-with-humans#3
+    type: qa
+    front: When is kappa undefined?
+    back: "When p_e = 1, meaning both raters used one identical label for every item."
+  - id: llm/llm-as-judge-and-agreement-with-humans#4
+    type: cloze
+    text: "Skewed labels can give high raw agreement and low kappa because {{c1::expected agreement from the label frequencies is already high}}."
+  - id: llm/llm-as-judge-and-agreement-with-humans#5
+    type: qa
+    front: How do you score a pairwise item judged in both orders?
+    back: "1 if X wins both orders, 0 if Y wins both, and 0.5 otherwise."
+  - id: llm/llm-as-judge-and-agreement-with-humans#6
+    type: qa
+    front: What is position bias in a pairwise judge?
+    back: "A preference for one slot, often the first, that does not come from the answers themselves."

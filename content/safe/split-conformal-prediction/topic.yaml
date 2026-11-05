@@ -1,0 +1,17 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: safe/split-conformal-prediction
+title: "Split conformal prediction"
+tier: A
+requires: [cml/sampling-distributions-standard-errors-and-cis, cml/regression-metrics-and-robust-losses]
+aliases: [conformal prediction, prediction intervals, distribution-free intervals, calibration set, conformal set, marginal coverage, finite-sample quantile]
+objectives:
+  - "Build split conformal prediction intervals for regression from absolute calibration residuals, using the rank ceil((n+1)(1-alpha)) and the infinite interval when that rank exceeds n"
+  - "Build conformal prediction sets for classification from the calibration scores 1 - p(true class)"
+  - "Explain marginal coverage, why exchangeability is needed, and how the calibration size changes the width"
+minutes: {lesson: 12, practice: 25, min_viable: 12}
+interview_angle: "Say what is guaranteed (marginal coverage of at least 1 - alpha under exchangeability), what is not (conditional coverage per input), and that the calibration size sets how tight the threshold can be."
+sources:
+  - "book: Vovk, Gammerman and Shafer 2005, Algorithmic Learning in a Random World; general topic source, not in the corpus"
+  - "paper: Angelopoulos and Bates 2021, A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification (arXiv:2107.07511); general topic source"
+  - "source: library-refresh/01-Mathematics/06-Probability-and-Statistics/2022-2026 -- Angelopoulos et al -- Conformal Prediction and the Limits of Coverage -- Study Note.md"
+status: reviewed

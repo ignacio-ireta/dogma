@@ -1,0 +1,13 @@
+id: cml/gaussian-mixtures-and-em/p01-gmm-em-full-covariance
+version: 3
+title: Gaussian mixture EM with full covariances
+language: python
+runtime: py-numpy
+entry: gmm_em
+difficulty: hard
+minutes: 45
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-7}
+banned_imports: [sklearn]
+timeout_s: 30
+status: reviewed

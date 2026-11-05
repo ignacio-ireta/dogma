@@ -1,0 +1,801 @@
+rider_id,home_district,avg_deliveries_per_day,avg_rating,vehicle_type,active_hours_per_week,months_active
+R-0001,Centro,8,3.54,Motorcycle,55.3,7
+R-0002,Del Valle,7,4.47,Car,23.7,6
+R-0003,Centro,5,3.59,Motorcycle,36.2,10
+R-0004,Roma/Condesa,14,4.43,Motorcycle,38.3,8
+R-0005,Santa Fe,5,4.21,Bicycle,26.4,7
+R-0006,Del Valle,6,4.49,Motorcycle,30.4,5
+R-0007,Tlalpan,11,3.63,Motorcycle,31.0,9
+R-0008,Tlalpan,13,4.0,Bicycle,25.7,8
+R-0009,Coyoacán,9,4.35,Motorcycle,23.4,11
+R-0010,Del Valle,6,4.81,Motorcycle,37.2,6
+R-0011,Santa Fe,5,4.41,Bicycle,52.9,3
+R-0012,Polanco,10,3.75,Bicycle,32.4,5
+R-0013,Roma/Condesa,11,4.04,Motorcycle,35.8,8
+R-0014,Tlalpan,11,3.57,Motorcycle,27.3,11
+R-0015,Coyoacán,6,4.35,Bicycle,48.1,10
+R-0016,Del Valle,17,3.76,Bicycle,41.8,8
+R-0017,Coyoacán,6,4.5,Motorcycle,33.5,11
+R-0018,Nápoles,12,4.67,Bicycle,47.8,10
+R-0019,Del Valle,7,3.6,Car,37.4,12
+R-0020,Polanco,11,3.57,Motorcycle,28.3,4
+R-0021,Santa Fe,12,4.48,Motorcycle,41.8,7
+R-0022,Santa Fe,8,4.84,Car,27.5,10
+R-0023,Polanco,8,4.99,Car,40.7,8
+R-0024,Nápoles,8,3.56,Motorcycle,56.5,5
+R-0025,Centro,16,4.77,Bicycle,25.1,6
+R-0026,Roma/Condesa,13,4.65,Motorcycle,35.2,12
+R-0027,Roma/Condesa,4,3.5,Motorcycle,50.3,7
+R-0028,Roma/Condesa,3,4.47,Motorcycle,31.0,9
+R-0029,Centro,6,4.52,Car,36.4,11
+R-0030,Del Valle,10,3.61,Bicycle,32.6,10
+R-0031,Polanco,14,4.06,Bicycle,35.6,7
+R-0032,Tlalpan,6,4.42,Bicycle,29.4,8
+R-0033,Tlalpan,9,3.96,Bicycle,29.9,8
+R-0034,Polanco,10,4.33,Motorcycle,23.9,6
+R-0035,Coyoacán,8,3.84,Motorcycle,47.5,4
+R-0036,Roma/Condesa,10,4.47,Car,17.0,8
+R-0037,Tlalpan,12,3.78,Car,24.7,11
+R-0038,Santa Fe,7,3.85,Bicycle,36.3,7
+R-0039,Centro,5,4.59,Motorcycle,28.1,13
+R-0040,Roma/Condesa,6,3.69,Motorcycle,52.6,7
+R-0041,Coyoacán,7,4.26,Car,29.9,7
+R-0042,Del Valle,2,4.66,Motorcycle,38.4,12
+R-0043,Nápoles,4,4.64,Motorcycle,34.5,11
+R-0044,Del Valle,19,4.27,Motorcycle,32.2,10
+R-0045,Tlalpan,15,4.69,Motorcycle,18.2,7
+R-0046,Roma/Condesa,11,4.1,Car,34.2,10
+R-0047,Coyoacán,5,4.94,Bicycle,32.0,11
+R-0048,Roma/Condesa,7,4.2,Motorcycle,51.0,4
+R-0049,Roma/Condesa,15,4.97,Motorcycle,39.5,7
+R-0050,Nápoles,8,4.74,Bicycle,7.2,9
+R-0051,Nápoles,4,3.5,Bicycle,32.6,9
+R-0052,Coyoacán,4,3.96,Motorcycle,34.3,4
+R-0053,Coyoacán,10,3.97,Car,49.4,3
+R-0054,Tlalpan,5,3.77,Motorcycle,21.9,4
+R-0055,Santa Fe,10,3.95,Motorcycle,22.0,10
+R-0056,Coyoacán,2,4.07,Bicycle,34.2,3
+R-0057,Polanco,8,4.64,Motorcycle,29.0,10
+R-0058,Centro,7,4.91,Motorcycle,31.7,5
+R-0059,Coyoacán,8,4.35,Bicycle,47.6,14
+R-0060,Roma/Condesa,10,4.89,Motorcycle,34.0,8
+R-0061,Centro,7,4.61,Motorcycle,22.7,5
+R-0062,Del Valle,5,4.67,Motorcycle,27.2,14
+R-0063,Coyoacán,13,4.88,Motorcycle,16.4,5
+R-0064,Nápoles,5,4.0,Bicycle,15.4,6
+R-0065,Roma/Condesa,7,3.94,Motorcycle,20.6,10
+R-0066,Centro,12,4.57,Motorcycle,24.4,5
+R-0067,Del Valle,6,3.92,Bicycle,51.8,12
+R-0068,Del Valle,10,4.27,Motorcycle,25.7,10
+R-0069,Centro,12,3.98,Motorcycle,36.6,10
+R-0070,Nápoles,6,3.92,Motorcycle,36.8,8
+R-0071,Del Valle,10,3.98,Bicycle,32.3,7
+R-0072,Centro,5,4.96,Bicycle,27.5,5
+R-0073,Nápoles,11,4.76,Bicycle,33.6,7
+R-0074,Nápoles,5,4.5,Motorcycle,27.7,5
+R-0075,Roma/Condesa,17,3.83,Bicycle,39.9,7
+R-0076,Nápoles,15,3.94,Motorcycle,20.7,9
+R-0077,Roma/Condesa,5,4.9,Motorcycle,35.2,9
+R-0078,Roma/Condesa,3,4.28,Bicycle,41.8,7
+R-0079,Centro,3,3.59,Car,41.5,4
+R-0080,Del Valle,8,4.62,Motorcycle,37.3,11
+R-0081,Coyoacán,5,3.92,Motorcycle,30.9,9
+R-0082,Roma/Condesa,2,3.7,Motorcycle,57.8,7
+R-0083,Polanco,10,4.6,Bicycle,27.5,5
+R-0084,Roma/Condesa,15,3.83,Motorcycle,31.4,12
+R-0085,Tlalpan,13,4.76,Motorcycle,49.7,8
+R-0086,Tlalpan,6,4.6,Bicycle,30.6,6
+R-0087,Nápoles,12,4.94,Motorcycle,13.4,9
+R-0088,Polanco,9,4.62,Bicycle,16.8,7
+R-0089,Coyoacán,5,4.04,Bicycle,42.5,8
+R-0090,Centro,6,4.77,Motorcycle,23.1,10
+R-0091,Centro,12,4.02,Bicycle,28.5,9
+R-0092,Roma/Condesa,10,4.13,Bicycle,44.7,8
+R-0093,Centro,9,4.14,Car,36.1,4
+R-0094,Centro,11,3.59,Bicycle,34.5,8
+R-0095,Coyoacán,11,4.82,Bicycle,25.3,12
+R-0096,Coyoacán,9,3.92,Car,41.0,10
+R-0097,Tlalpan,5,3.99,Motorcycle,40.1,11
+R-0098,Polanco,9,4.02,Motorcycle,44.5,9
+R-0099,Polanco,6,4.69,Bicycle,31.9,8
+R-0100,Coyoacán,8,4.56,Motorcycle,22.9,6
+R-0101,Tlalpan,13,4.86,Bicycle,29.0,7
+R-0102,Del Valle,12,4.11,Bicycle,38.0,15
+R-0103,Tlalpan,9,4.44,Bicycle,27.6,14
+R-0104,Centro,9,4.57,Motorcycle,30.1,10
+R-0105,Nápoles,8,3.9,Motorcycle,37.6,8
+R-0106,Roma/Condesa,11,4.52,Car,41.5,5
+R-0107,Roma/Condesa,6,4.72,Motorcycle,48.8,6
+R-0108,Nápoles,11,4.4,Motorcycle,37.5,11
+R-0109,Nápoles,8,4.77,Motorcycle,19.1,5
+R-0110,Coyoacán,9,4.01,Motorcycle,44.3,4
+R-0111,Santa Fe,6,4.44,Motorcycle,36.9,5
+R-0112,Tlalpan,6,3.7,Bicycle,44.4,7
+R-0113,Del Valle,9,3.88,Motorcycle,43.0,5
+R-0114,Tlalpan,4,4.83,Motorcycle,54.6,6
+R-0115,Polanco,6,3.92,Motorcycle,39.2,3
+R-0116,Nápoles,9,4.8,Motorcycle,28.7,7
+R-0117,Nápoles,6,4.05,Motorcycle,27.6,7
+R-0118,Centro,9,4.73,Bicycle,18.8,8
+R-0119,Centro,7,4.25,Bicycle,31.3,6
+R-0120,Del Valle,7,4.93,Motorcycle,50.1,10
+R-0121,Centro,4,3.67,Motorcycle,22.8,4
+R-0122,Polanco,6,4.3,Bicycle,60.0,9
+R-0123,Del Valle,7,3.54,Motorcycle,38.7,4
+R-0124,Centro,9,4.76,Motorcycle,34.5,4
+R-0125,Polanco,5,3.86,Motorcycle,45.3,10
+R-0126,Centro,9,4.72,Motorcycle,23.3,6
+R-0127,Tlalpan,14,4.58,Car,20.8,10
+R-0128,Nápoles,7,4.07,Bicycle,42.6,9
+R-0129,Nápoles,10,4.85,Motorcycle,35.8,9
+R-0130,Polanco,12,3.58,Motorcycle,48.5,8
+R-0131,Centro,12,3.56,Motorcycle,44.3,6
+R-0132,Del Valle,11,3.8,Motorcycle,30.0,6
+R-0133,Roma/Condesa,12,3.94,Motorcycle,42.7,8
+R-0134,Nápoles,3,4.09,Car,34.4,5
+R-0135,Del Valle,9,4.95,Car,34.8,10
+R-0136,Centro,7,3.64,Bicycle,40.6,3
+R-0137,Tlalpan,10,4.99,Bicycle,54.1,6
+R-0138,Nápoles,15,4.43,Bicycle,27.0,9
+R-0139,Tlalpan,4,4.12,Bicycle,26.9,7
+R-0140,Nápoles,6,3.61,Motorcycle,37.7,15
+R-0141,Del Valle,9,3.64,Motorcycle,37.0,6
+R-0142,Centro,7,4.9,Bicycle,32.7,12
+R-0143,Roma/Condesa,13,4.17,Motorcycle,38.8,5
+R-0144,Polanco,13,4.32,Motorcycle,48.5,7
+R-0145,Polanco,11,4.21,Motorcycle,41.0,6
+R-0146,Santa Fe,6,3.83,Bicycle,43.7,6
+R-0147,Tlalpan,7,4.87,Bicycle,26.9,11
+R-0148,Coyoacán,6,4.6,Car,19.2,8
+R-0149,Nápoles,8,4.63,Motorcycle,45.7,10
+R-0150,Santa Fe,7,3.74,Motorcycle,31.0,11
+R-0151,Coyoacán,10,3.84,Motorcycle,28.0,8
+R-0152,Tlalpan,5,4.75,Motorcycle,30.3,5
+R-0153,Nápoles,5,4.7,Motorcycle,25.0,7
+R-0154,Nápoles,3,4.22,Motorcycle,28.1,11
+R-0155,Polanco,7,4.11,Car,27.6,6
+R-0156,Centro,3,4.44,Motorcycle,31.8,8
+R-0157,Tlalpan,10,3.73,Motorcycle,25.0,10
+R-0158,Roma/Condesa,11,3.61,Motorcycle,58.0,9
+R-0159,Nápoles,10,4.17,Car,32.4,17
+R-0160,Coyoacán,10,3.74,Motorcycle,45.1,7
+R-0161,Tlalpan,12,3.67,Motorcycle,23.8,14
+R-0162,Polanco,7,3.92,Motorcycle,28.1,6
+R-0163,Santa Fe,9,4.32,Motorcycle,30.5,7
+R-0164,Coyoacán,11,3.64,Motorcycle,28.3,5
+R-0165,Centro,9,4.21,Car,38.5,11
+R-0166,Nápoles,8,4.21,Motorcycle,37.1,7
+R-0167,Del Valle,9,3.84,Car,22.9,5
+R-0168,Centro,8,4.3,Motorcycle,43.4,7
+R-0169,Tlalpan,10,3.62,Motorcycle,29.8,7
+R-0170,Tlalpan,6,4.17,Motorcycle,37.7,10
+R-0171,Nápoles,12,4.53,Motorcycle,44.9,8
+R-0172,Coyoacán,4,4.64,Motorcycle,52.2,12
+R-0173,Santa Fe,5,3.54,Bicycle,38.5,7
+R-0174,Coyoacán,13,4.64,Bicycle,22.1,8
+R-0175,Nápoles,10,4.85,Motorcycle,29.7,5
+R-0176,Roma/Condesa,5,3.79,Bicycle,25.7,5
+R-0177,Polanco,10,4.22,Motorcycle,34.3,12
+R-0178,Roma/Condesa,6,4.58,Car,33.2,7
+R-0179,Tlalpan,8,4.19,Motorcycle,46.2,6
+R-0180,Coyoacán,6,4.96,Motorcycle,7.0,6
+R-0181,Nápoles,11,5.0,Car,33.6,5
+R-0182,Tlalpan,9,4.37,Motorcycle,28.9,5
+R-0183,Roma/Condesa,7,3.74,Motorcycle,29.3,6
+R-0184,Roma/Condesa,11,4.4,Car,30.2,4
+R-0185,Coyoacán,7,4.7,Bicycle,48.2,12
+R-0186,Roma/Condesa,13,4.68,Bicycle,43.6,6
+R-0187,Santa Fe,10,4.21,Bicycle,32.0,7
+R-0188,Del Valle,14,4.85,Bicycle,26.5,11
+R-0189,Centro,7,4.02,Car,42.9,17
+R-0190,Centro,8,4.16,Bicycle,18.2,10
+R-0191,Tlalpan,7,3.72,Bicycle,36.2,9
+R-0192,Del Valle,8,4.48,Motorcycle,35.3,7
+R-0193,Del Valle,11,4.38,Motorcycle,37.9,7
+R-0194,Tlalpan,4,4.15,Motorcycle,38.9,5
+R-0195,Del Valle,9,4.97,Motorcycle,32.3,4
+R-0196,Tlalpan,5,4.16,Motorcycle,29.5,9
+R-0197,Nápoles,9,4.05,Motorcycle,44.3,4
+R-0198,Santa Fe,10,4.02,Bicycle,23.2,7
+R-0199,Nápoles,11,3.89,Motorcycle,38.3,7
+R-0200,Nápoles,2,4.3,Car,19.7,13
+R-0201,Polanco,5,3.5,Motorcycle,45.6,12
+R-0202,Roma/Condesa,9,3.81,Bicycle,56.0,9
+R-0203,Nápoles,3,3.89,Motorcycle,24.9,6
+R-0204,Del Valle,5,4.27,Motorcycle,36.0,16
+R-0205,Santa Fe,10,4.75,Bicycle,53.2,9
+R-0206,Roma/Condesa,7,3.67,Motorcycle,36.0,10
+R-0207,Del Valle,11,3.78,Bicycle,38.6,7
+R-0208,Nápoles,14,4.43,Bicycle,46.1,6
+R-0209,Roma/Condesa,14,3.93,Motorcycle,36.1,11
+R-0210,Centro,8,4.28,Bicycle,16.4,10
+R-0211,Coyoacán,7,4.87,Bicycle,43.3,8
+R-0212,Roma/Condesa,9,4.46,Bicycle,51.3,5
+R-0213,Nápoles,8,4.63,Bicycle,34.5,9
+R-0214,Nápoles,6,4.61,Motorcycle,18.5,11
+R-0215,Nápoles,10,4.64,Bicycle,26.7,10
+R-0216,Coyoacán,5,4.97,Motorcycle,46.5,8
+R-0217,Centro,8,3.8,Motorcycle,23.0,13
+R-0218,Roma/Condesa,9,4.14,Motorcycle,15.4,8
+R-0219,Del Valle,14,3.81,Motorcycle,59.8,6
+R-0220,Nápoles,8,4.75,Bicycle,35.7,5
+R-0221,Polanco,5,3.91,Motorcycle,43.6,7
+R-0222,Del Valle,5,3.65,Bicycle,43.8,9
+R-0223,Tlalpan,8,4.93,Motorcycle,47.0,12
+R-0224,Polanco,5,4.56,Motorcycle,28.6,4
+R-0225,Nápoles,9,3.78,Car,29.1,12
+R-0226,Polanco,8,4.5,Bicycle,28.3,7
+R-0227,Nápoles,5,4.16,Motorcycle,26.3,7
+R-0228,Tlalpan,11,3.6,Motorcycle,32.0,9
+R-0229,Del Valle,8,3.79,Bicycle,34.3,7
+R-0230,Del Valle,12,4.4,Bicycle,32.9,9
+R-0231,Polanco,5,4.85,Motorcycle,26.4,6
+R-0232,Tlalpan,7,4.6,Car,31.2,4
+R-0233,Roma/Condesa,7,4.45,Car,28.0,5
+R-0234,Centro,10,4.2,Bicycle,49.9,8
+R-0235,Roma/Condesa,14,4.28,Car,47.9,8
+R-0236,Centro,15,3.56,Motorcycle,27.4,8
+R-0237,Tlalpan,7,4.33,Motorcycle,24.7,7
+R-0238,Centro,9,3.68,Bicycle,27.8,3
+R-0239,Tlalpan,11,4.97,Bicycle,17.1,8
+R-0240,Nápoles,9,4.04,Motorcycle,34.6,4
+R-0241,Del Valle,8,4.18,Motorcycle,32.4,7
+R-0242,Centro,10,4.72,Bicycle,23.0,9
+R-0243,Nápoles,8,4.23,Bicycle,16.9,10
+R-0244,Del Valle,8,4.0,Motorcycle,9.9,10
+R-0245,Del Valle,7,3.72,Motorcycle,41.4,8
+R-0246,Del Valle,10,4.35,Motorcycle,46.3,9
+R-0247,Del Valle,8,4.93,Car,35.6,6
+R-0248,Coyoacán,12,4.55,Bicycle,33.4,10
+R-0249,Roma/Condesa,3,3.83,Motorcycle,27.6,10
+R-0250,Nápoles,7,4.44,Bicycle,56.6,12
+R-0251,Polanco,12,3.91,Motorcycle,31.8,11
+R-0252,Santa Fe,6,4.34,Motorcycle,33.6,13
+R-0253,Tlalpan,7,4.81,Bicycle,38.5,6
+R-0254,Nápoles,7,3.98,Bicycle,57.4,11
+R-0255,Nápoles,9,4.97,Bicycle,60.0,6
+R-0256,Del Valle,10,4.18,Car,28.6,5
+R-0257,Del Valle,11,3.78,Motorcycle,43.5,7
+R-0258,Roma/Condesa,8,3.73,Car,32.0,9
+R-0259,Del Valle,14,3.82,Motorcycle,38.9,8
+R-0260,Del Valle,5,4.2,Car,25.8,3
+R-0261,Del Valle,10,4.2,Bicycle,33.1,7
+R-0262,Nápoles,8,4.16,Motorcycle,23.7,10
+R-0263,Tlalpan,5,4.87,Motorcycle,31.5,7
+R-0264,Coyoacán,5,4.15,Bicycle,30.6,12
+R-0265,Coyoacán,8,3.77,Bicycle,40.7,7
+R-0266,Tlalpan,6,3.57,Car,43.7,5
+R-0267,Nápoles,11,4.78,Motorcycle,42.0,6
+R-0268,Roma/Condesa,6,4.63,Bicycle,31.2,6
+R-0269,Tlalpan,5,4.36,Motorcycle,22.1,9
+R-0270,Coyoacán,6,3.78,Car,31.4,10
+R-0271,Santa Fe,5,4.35,Bicycle,16.8,15
+R-0272,Tlalpan,4,3.98,Motorcycle,35.5,10
+R-0273,Del Valle,4,4.07,Bicycle,30.8,8
+R-0274,Centro,6,4.08,Bicycle,38.1,12
+R-0275,Tlalpan,8,4.76,Motorcycle,38.3,10
+R-0276,Nápoles,12,4.61,Bicycle,37.2,8
+R-0277,Tlalpan,7,3.52,Motorcycle,25.0,8
+R-0278,Coyoacán,11,4.29,Motorcycle,20.6,6
+R-0279,Roma/Condesa,8,4.7,Motorcycle,32.4,8
+R-0280,Del Valle,7,3.54,Bicycle,32.4,6
+R-0281,Centro,9,3.53,Motorcycle,34.7,7
+R-0282,Roma/Condesa,10,4.6,Bicycle,27.4,9
+R-0283,Coyoacán,10,3.86,Motorcycle,33.3,9
+R-0284,Coyoacán,7,3.57,Motorcycle,14.3,6
+R-0285,Santa Fe,8,4.52,Motorcycle,32.7,9
+R-0286,Nápoles,4,4.39,Bicycle,42.7,9
+R-0287,Nápoles,6,3.6,Motorcycle,51.7,12
+R-0288,Centro,7,4.31,Motorcycle,34.5,12
+R-0289,Tlalpan,7,4.81,Bicycle,30.4,4
+R-0290,Del Valle,12,3.69,Bicycle,38.1,3
+R-0291,Centro,8,3.64,Car,38.0,8
+R-0292,Tlalpan,7,3.81,Bicycle,28.8,8
+R-0293,Coyoacán,5,4.93,Motorcycle,37.7,7
+R-0294,Coyoacán,7,4.17,Motorcycle,19.2,6
+R-0295,Del Valle,5,4.93,Bicycle,17.1,11
+R-0296,Centro,6,4.58,Bicycle,31.2,9
+R-0297,Centro,16,4.3,Motorcycle,15.8,12
+R-0298,Del Valle,7,4.44,Motorcycle,22.5,9
+R-0299,Coyoacán,7,4.98,Motorcycle,31.7,10
+R-0300,Roma/Condesa,8,3.61,Motorcycle,40.0,4
+R-0301,Tlalpan,12,3.91,Motorcycle,34.6,7
+R-0302,Coyoacán,9,4.96,Bicycle,49.1,5
+R-0303,Santa Fe,7,4.4,Bicycle,26.8,6
+R-0304,Santa Fe,10,4.4,Bicycle,10.5,5
+R-0305,Tlalpan,11,4.48,Motorcycle,42.3,18
+R-0306,Polanco,7,4.89,Car,34.5,7
+R-0307,Nápoles,8,4.75,Motorcycle,32.7,6
+R-0308,Nápoles,6,4.05,Motorcycle,55.0,8
+R-0309,Polanco,13,3.61,Motorcycle,20.9,3
+R-0310,Santa Fe,11,4.78,Motorcycle,38.0,7
+R-0311,Roma/Condesa,9,3.58,Motorcycle,42.9,10
+R-0312,Polanco,4,4.63,Motorcycle,40.2,6
+R-0313,Roma/Condesa,9,4.8,Bicycle,26.2,7
+R-0314,Nápoles,3,3.99,Bicycle,45.5,6
+R-0315,Del Valle,8,3.54,Car,32.9,2
+R-0316,Del Valle,7,4.63,Car,34.6,12
+R-0317,Centro,7,3.57,Motorcycle,25.7,8
+R-0318,Centro,13,4.84,Motorcycle,26.1,9
+R-0319,Coyoacán,6,3.59,Car,32.5,4
+R-0320,Del Valle,8,4.74,Motorcycle,34.9,14
+R-0321,Centro,3,4.21,Car,31.3,5
+R-0322,Coyoacán,10,4.9,Bicycle,23.4,7
+R-0323,Del Valle,8,4.73,Motorcycle,26.2,10
+R-0324,Roma/Condesa,4,3.73,Car,29.7,11
+R-0325,Del Valle,7,4.28,Motorcycle,25.8,4
+R-0326,Nápoles,13,4.52,Motorcycle,8.4,8
+R-0327,Centro,8,4.1,Bicycle,27.2,8
+R-0328,Polanco,10,4.69,Bicycle,36.8,8
+R-0329,Polanco,8,3.88,Motorcycle,49.7,9
+R-0330,Roma/Condesa,4,3.75,Bicycle,40.0,4
+R-0331,Del Valle,12,4.1,Motorcycle,30.1,11
+R-0332,Centro,6,4.41,Motorcycle,32.2,10
+R-0333,Polanco,6,4.92,Bicycle,25.5,7
+R-0334,Centro,7,3.72,Motorcycle,26.3,8
+R-0335,Del Valle,10,4.43,Bicycle,35.0,12
+R-0336,Centro,9,3.78,Motorcycle,22.6,7
+R-0337,Nápoles,9,3.89,Bicycle,45.9,11
+R-0338,Coyoacán,7,4.33,Car,21.5,11
+R-0339,Tlalpan,12,4.09,Motorcycle,35.8,4
+R-0340,Coyoacán,11,4.39,Motorcycle,36.8,7
+R-0341,Centro,7,4.84,Motorcycle,35.0,14
+R-0342,Centro,5,4.34,Motorcycle,34.3,6
+R-0343,Roma/Condesa,9,3.69,Motorcycle,15.4,6
+R-0344,Centro,10,4.26,Motorcycle,39.9,8
+R-0345,Tlalpan,11,4.01,Motorcycle,49.0,7
+R-0346,Centro,11,4.79,Bicycle,25.0,8
+R-0347,Roma/Condesa,14,4.28,Motorcycle,33.1,9
+R-0348,Tlalpan,7,3.8,Motorcycle,49.1,12
+R-0349,Coyoacán,11,3.62,Car,34.1,7
+R-0350,Roma/Condesa,7,4.58,Car,44.6,6
+R-0351,Coyoacán,5,4.06,Bicycle,27.8,6
+R-0352,Roma/Condesa,7,4.85,Bicycle,43.9,9
+R-0353,Nápoles,7,4.27,Motorcycle,32.3,10
+R-0354,Centro,12,4.49,Motorcycle,43.8,5
+R-0355,Santa Fe,5,3.72,Bicycle,47.5,8
+R-0356,Coyoacán,14,4.94,Motorcycle,44.1,10
+R-0357,Roma/Condesa,6,4.6,Car,34.0,10
+R-0358,Tlalpan,11,4.26,Motorcycle,26.5,11
+R-0359,Del Valle,11,3.58,Motorcycle,34.1,7
+R-0360,Centro,11,4.75,Motorcycle,36.8,4
+R-0361,Polanco,9,3.66,Bicycle,28.2,9
+R-0362,Roma/Condesa,5,3.63,Motorcycle,19.3,10
+R-0363,Nápoles,11,4.43,Motorcycle,25.5,11
+R-0364,Del Valle,8,4.41,Bicycle,27.4,8
+R-0365,Polanco,7,4.71,Motorcycle,41.1,7
+R-0366,Roma/Condesa,6,4.43,Motorcycle,33.0,8
+R-0367,Tlalpan,8,4.8,Bicycle,29.1,15
+R-0368,Santa Fe,9,3.93,Motorcycle,54.3,11
+R-0369,Coyoacán,8,4.01,Motorcycle,33.1,6
+R-0370,Roma/Condesa,7,4.16,Motorcycle,32.1,13
+R-0371,Santa Fe,6,4.41,Motorcycle,24.0,8
+R-0372,Tlalpan,4,3.56,Bicycle,52.6,8
+R-0373,Del Valle,7,3.66,Bicycle,28.9,10
+R-0374,Centro,11,4.08,Car,25.7,7
+R-0375,Roma/Condesa,8,4.15,Bicycle,28.3,11
+R-0376,Coyoacán,3,4.41,Bicycle,25.5,9
+R-0377,Santa Fe,6,4.85,Bicycle,34.3,6
+R-0378,Tlalpan,8,3.55,Car,41.3,10
+R-0379,Centro,7,3.74,Bicycle,27.0,7
+R-0380,Tlalpan,10,4.51,Motorcycle,20.2,7
+R-0381,Tlalpan,5,4.83,Motorcycle,24.1,10
+R-0382,Coyoacán,7,3.52,Motorcycle,30.4,13
+R-0383,Nápoles,8,3.64,Motorcycle,27.6,7
+R-0384,Centro,9,4.32,Bicycle,33.6,12
+R-0385,Tlalpan,7,4.23,Motorcycle,41.3,8
+R-0386,Roma/Condesa,10,4.63,Bicycle,16.4,6
+R-0387,Nápoles,8,4.45,Motorcycle,27.8,13
+R-0388,Polanco,14,4.67,Car,43.1,7
+R-0389,Tlalpan,7,3.74,Bicycle,32.1,7
+R-0390,Tlalpan,11,4.44,Car,31.5,7
+R-0391,Centro,7,4.22,Motorcycle,53.8,9
+R-0392,Roma/Condesa,11,3.99,Bicycle,26.7,9
+R-0393,Tlalpan,6,3.67,Car,33.7,10
+R-0394,Coyoacán,9,4.47,Bicycle,32.9,11
+R-0395,Del Valle,10,3.75,Motorcycle,30.9,6
+R-0396,Centro,6,4.94,Car,26.0,7
+R-0397,Roma/Condesa,12,3.97,Bicycle,34.9,9
+R-0398,Del Valle,7,3.61,Motorcycle,36.7,8
+R-0399,Centro,12,3.84,Motorcycle,56.6,17
+R-0400,Nápoles,5,3.68,Motorcycle,32.5,9
+R-0401,Coyoacán,5,4.02,Motorcycle,24.7,4
+R-0402,Centro,9,4.77,Bicycle,52.5,14
+R-0403,Santa Fe,8,3.59,Car,25.3,5
+R-0404,Del Valle,8,4.37,Motorcycle,40.6,10
+R-0405,Nápoles,5,3.53,Motorcycle,30.4,8
+R-0406,Santa Fe,9,4.63,Bicycle,43.4,8
+R-0407,Santa Fe,7,4.05,Bicycle,27.4,3
+R-0408,Nápoles,4,4.0,Motorcycle,38.5,13
+R-0409,Tlalpan,4,4.99,Motorcycle,23.8,8
+R-0410,Polanco,8,3.89,Bicycle,6.5,10
+R-0411,Tlalpan,5,4.76,Car,33.3,12
+R-0412,Santa Fe,5,4.29,Bicycle,25.6,4
+R-0413,Roma/Condesa,8,3.5,Motorcycle,20.7,8
+R-0414,Nápoles,5,4.04,Motorcycle,27.3,12
+R-0415,Del Valle,7,4.43,Motorcycle,44.5,10
+R-0416,Del Valle,11,3.66,Motorcycle,34.1,9
+R-0417,Tlalpan,4,3.7,Car,46.8,5
+R-0418,Nápoles,6,4.7,Motorcycle,21.7,7
+R-0419,Tlalpan,9,3.82,Motorcycle,37.4,6
+R-0420,Santa Fe,8,4.77,Motorcycle,28.7,5
+R-0421,Centro,6,4.54,Motorcycle,10.3,17
+R-0422,Santa Fe,15,3.64,Bicycle,5.0,10
+R-0423,Nápoles,2,3.55,Motorcycle,38.5,3
+R-0424,Santa Fe,5,4.05,Motorcycle,39.4,7
+R-0425,Tlalpan,4,4.69,Motorcycle,27.7,10
+R-0426,Centro,13,4.58,Motorcycle,5.0,12
+R-0427,Centro,8,3.92,Motorcycle,41.2,9
+R-0428,Coyoacán,6,4.87,Motorcycle,34.2,5
+R-0429,Centro,6,4.08,Bicycle,37.8,8
+R-0430,Del Valle,1,3.83,Bicycle,40.1,5
+R-0431,Centro,14,4.04,Bicycle,36.6,14
+R-0432,Centro,9,4.36,Motorcycle,45.5,6
+R-0433,Nápoles,9,3.82,Motorcycle,36.2,8
+R-0434,Roma/Condesa,8,3.5,Motorcycle,44.5,10
+R-0435,Santa Fe,10,3.72,Motorcycle,28.7,7
+R-0436,Centro,8,4.49,Bicycle,35.9,10
+R-0437,Roma/Condesa,4,4.35,Motorcycle,43.3,6
+R-0438,Santa Fe,8,4.24,Motorcycle,32.8,5
+R-0439,Polanco,10,3.78,Motorcycle,48.9,4
+R-0440,Tlalpan,1,4.48,Car,37.1,11
+R-0441,Nápoles,10,4.29,Motorcycle,33.7,7
+R-0442,Roma/Condesa,8,3.62,Motorcycle,26.0,7
+R-0443,Roma/Condesa,10,3.87,Bicycle,44.0,8
+R-0444,Tlalpan,8,3.65,Bicycle,33.0,4
+R-0445,Tlalpan,13,4.77,Bicycle,39.0,5
+R-0446,Polanco,7,4.42,Bicycle,31.3,6
+R-0447,Polanco,6,4.51,Car,22.0,5
+R-0448,Del Valle,7,4.57,Car,30.2,11
+R-0449,Nápoles,7,4.62,Motorcycle,30.0,11
+R-0450,Polanco,9,3.85,Motorcycle,42.7,8
+R-0451,Tlalpan,6,4.97,Motorcycle,22.6,10
+R-0452,Polanco,11,4.94,Motorcycle,21.1,5
+R-0453,Nápoles,5,4.55,Bicycle,31.5,6
+R-0454,Tlalpan,8,4.86,Motorcycle,35.9,7
+R-0455,Roma/Condesa,8,4.39,Car,45.5,7
+R-0456,Coyoacán,5,4.42,Motorcycle,26.2,10
+R-0457,Del Valle,7,4.66,Car,49.8,5
+R-0458,Tlalpan,9,3.8,Motorcycle,31.4,11
+R-0459,Santa Fe,11,4.73,Motorcycle,37.2,6
+R-0460,Roma/Condesa,5,4.72,Motorcycle,33.5,5
+R-0461,Coyoacán,7,3.69,Bicycle,33.2,11
+R-0462,Del Valle,4,3.96,Bicycle,36.8,6
+R-0463,Santa Fe,6,4.96,Car,40.1,16
+R-0464,Nápoles,8,3.92,Bicycle,28.1,6
+R-0465,Coyoacán,8,4.67,Bicycle,25.5,10
+R-0466,Del Valle,5,4.02,Car,37.2,10
+R-0467,Roma/Condesa,10,4.92,Motorcycle,21.7,6
+R-0468,Roma/Condesa,7,3.53,Bicycle,42.7,7
+R-0469,Tlalpan,6,4.63,Motorcycle,43.0,4
+R-0470,Nápoles,14,4.24,Motorcycle,14.1,10
+R-0471,Roma/Condesa,9,4.71,Bicycle,51.6,7
+R-0472,Coyoacán,6,3.51,Bicycle,39.7,7
+R-0473,Polanco,5,3.79,Bicycle,20.5,7
+R-0474,Coyoacán,10,4.64,Motorcycle,37.9,7
+R-0475,Santa Fe,11,4.47,Motorcycle,20.4,2
+R-0476,Del Valle,11,4.07,Motorcycle,38.2,15
+R-0477,Coyoacán,8,4.62,Bicycle,33.9,9
+R-0478,Coyoacán,7,3.88,Bicycle,26.8,11
+R-0479,Centro,4,4.94,Motorcycle,28.0,6
+R-0480,Coyoacán,6,4.94,Car,39.6,5
+R-0481,Nápoles,7,4.26,Bicycle,34.8,7
+R-0482,Santa Fe,9,4.77,Motorcycle,45.2,7
+R-0483,Del Valle,9,4.25,Motorcycle,37.7,8
+R-0484,Tlalpan,7,3.54,Bicycle,13.2,7
+R-0485,Santa Fe,10,3.53,Car,8.1,14
+R-0486,Tlalpan,4,4.63,Motorcycle,25.4,8
+R-0487,Nápoles,4,3.64,Motorcycle,24.6,9
+R-0488,Centro,8,4.94,Motorcycle,19.2,7
+R-0489,Nápoles,10,4.1,Bicycle,42.3,7
+R-0490,Polanco,3,4.13,Motorcycle,43.1,10
+R-0491,Centro,6,3.79,Bicycle,44.5,12
+R-0492,Tlalpan,14,4.57,Motorcycle,12.6,7
+R-0493,Nápoles,12,4.8,Bicycle,36.9,12
+R-0494,Tlalpan,5,3.97,Bicycle,25.5,8
+R-0495,Santa Fe,3,4.7,Motorcycle,43.3,11
+R-0496,Roma/Condesa,8,4.82,Bicycle,38.4,6
+R-0497,Polanco,7,4.01,Motorcycle,20.7,13
+R-0498,Santa Fe,4,3.73,Motorcycle,41.6,10
+R-0499,Nápoles,5,4.74,Bicycle,24.7,6
+R-0500,Roma/Condesa,8,3.79,Motorcycle,25.5,8
+R-0501,Polanco,10,4.08,Motorcycle,28.1,7
+R-0502,Santa Fe,7,4.09,Motorcycle,36.7,8
+R-0503,Centro,10,4.42,Car,35.1,11
+R-0504,Del Valle,7,4.45,Bicycle,36.7,9
+R-0505,Tlalpan,6,3.99,Bicycle,44.4,2
+R-0506,Coyoacán,9,4.34,Motorcycle,15.8,7
+R-0507,Santa Fe,7,4.36,Motorcycle,46.0,11
+R-0508,Tlalpan,6,3.65,Motorcycle,18.7,10
+R-0509,Del Valle,6,3.66,Bicycle,10.0,6
+R-0510,Roma/Condesa,9,4.77,Motorcycle,43.1,8
+R-0511,Centro,3,4.68,Bicycle,37.1,13
+R-0512,Del Valle,1,4.82,Car,48.0,5
+R-0513,Del Valle,6,3.6,Motorcycle,46.8,11
+R-0514,Tlalpan,8,3.88,Bicycle,23.9,6
+R-0515,Tlalpan,11,4.75,Bicycle,45.7,14
+R-0516,Polanco,3,4.91,Motorcycle,35.1,6
+R-0517,Centro,7,3.93,Motorcycle,20.3,10
+R-0518,Tlalpan,10,4.71,Bicycle,20.2,5
+R-0519,Nápoles,15,4.34,Motorcycle,41.2,3
+R-0520,Centro,13,4.3,Motorcycle,31.2,9
+R-0521,Nápoles,11,4.15,Car,47.4,15
+R-0522,Coyoacán,9,3.77,Bicycle,37.3,9
+R-0523,Nápoles,10,4.55,Bicycle,17.9,9
+R-0524,Centro,9,4.71,Bicycle,34.4,9
+R-0525,Tlalpan,11,4.82,Car,41.9,9
+R-0526,Tlalpan,5,3.57,Motorcycle,35.7,6
+R-0527,Santa Fe,8,4.25,Car,20.7,6
+R-0528,Tlalpan,8,4.34,Motorcycle,37.3,4
+R-0529,Tlalpan,6,4.13,Bicycle,18.8,6
+R-0530,Coyoacán,8,4.72,Bicycle,41.6,7
+R-0531,Nápoles,13,4.32,Motorcycle,43.5,9
+R-0532,Del Valle,8,3.91,Bicycle,56.7,8
+R-0533,Nápoles,5,4.62,Bicycle,35.2,5
+R-0534,Polanco,7,3.64,Motorcycle,9.5,10
+R-0535,Tlalpan,7,4.24,Motorcycle,29.6,9
+R-0536,Tlalpan,11,4.7,Car,33.8,7
+R-0537,Centro,9,4.4,Bicycle,42.2,4
+R-0538,Nápoles,5,4.14,Car,20.1,7
+R-0539,Tlalpan,7,4.24,Bicycle,15.7,12
+R-0540,Del Valle,9,3.6,Bicycle,40.5,14
+R-0541,Nápoles,12,4.67,Motorcycle,29.8,6
+R-0542,Polanco,12,4.4,Motorcycle,29.0,10
+R-0543,Del Valle,12,4.92,Motorcycle,20.7,9
+R-0544,Santa Fe,10,4.65,Car,53.2,4
+R-0545,Polanco,10,4.68,Motorcycle,39.3,7
+R-0546,Roma/Condesa,7,3.81,Motorcycle,28.6,8
+R-0547,Polanco,8,4.06,Motorcycle,42.0,6
+R-0548,Tlalpan,6,3.56,Car,23.5,10
+R-0549,Tlalpan,16,4.78,Bicycle,31.1,8
+R-0550,Nápoles,9,3.96,Motorcycle,21.1,3
+R-0551,Roma/Condesa,6,4.34,Motorcycle,56.4,10
+R-0552,Centro,7,4.02,Bicycle,17.6,7
+R-0553,Centro,10,4.64,Motorcycle,25.7,9
+R-0554,Del Valle,10,4.13,Car,24.8,9
+R-0555,Roma/Condesa,13,4.05,Bicycle,36.5,6
+R-0556,Roma/Condesa,3,4.37,Motorcycle,39.3,7
+R-0557,Coyoacán,6,4.2,Bicycle,48.3,15
+R-0558,Del Valle,6,4.69,Motorcycle,38.6,9
+R-0559,Del Valle,6,3.87,Car,23.3,8
+R-0560,Nápoles,3,4.87,Motorcycle,30.5,7
+R-0561,Roma/Condesa,6,3.7,Car,16.6,5
+R-0562,Polanco,8,3.61,Bicycle,34.4,12
+R-0563,Centro,6,4.58,Motorcycle,20.3,9
+R-0564,Polanco,12,3.96,Motorcycle,36.8,12
+R-0565,Centro,9,4.6,Bicycle,41.5,8
+R-0566,Tlalpan,4,4.16,Motorcycle,29.9,10
+R-0567,Coyoacán,8,3.97,Motorcycle,35.9,8
+R-0568,Nápoles,9,4.76,Bicycle,34.7,8
+R-0569,Coyoacán,7,4.81,Bicycle,33.1,7
+R-0570,Coyoacán,12,3.74,Motorcycle,22.9,10
+R-0571,Nápoles,5,3.68,Bicycle,15.9,8
+R-0572,Tlalpan,5,4.52,Motorcycle,37.9,6
+R-0573,Del Valle,6,4.76,Bicycle,21.3,7
+R-0574,Roma/Condesa,8,4.7,Bicycle,18.4,8
+R-0575,Tlalpan,14,4.36,Motorcycle,26.1,8
+R-0576,Del Valle,10,4.84,Bicycle,13.6,11
+R-0577,Tlalpan,8,4.81,Motorcycle,40.0,6
+R-0578,Roma/Condesa,9,3.91,Motorcycle,42.9,10
+R-0579,Coyoacán,8,4.41,Motorcycle,46.4,6
+R-0580,Tlalpan,5,3.69,Motorcycle,38.2,8
+R-0581,Polanco,12,3.9,Motorcycle,34.2,12
+R-0582,Santa Fe,8,4.73,Motorcycle,42.2,8
+R-0583,Nápoles,6,4.95,Motorcycle,34.1,10
+R-0584,Coyoacán,5,3.56,Car,42.5,9
+R-0585,Santa Fe,12,4.44,Motorcycle,45.4,10
+R-0586,Santa Fe,4,4.06,Bicycle,30.1,8
+R-0587,Del Valle,6,4.6,Motorcycle,26.4,11
+R-0588,Tlalpan,4,4.07,Bicycle,37.4,7
+R-0589,Nápoles,7,4.55,Motorcycle,22.1,7
+R-0590,Coyoacán,9,4.78,Bicycle,34.6,10
+R-0591,Centro,6,4.16,Motorcycle,35.4,9
+R-0592,Santa Fe,12,4.21,Bicycle,35.0,9
+R-0593,Santa Fe,11,4.64,Motorcycle,46.3,7
+R-0594,Centro,4,4.53,Motorcycle,45.7,11
+R-0595,Roma/Condesa,3,4.76,Motorcycle,55.3,8
+R-0596,Roma/Condesa,4,4.96,Bicycle,29.4,5
+R-0597,Del Valle,9,4.43,Motorcycle,14.0,8
+R-0598,Nápoles,13,3.92,Bicycle,36.8,11
+R-0599,Centro,6,4.37,Motorcycle,37.4,5
+R-0600,Tlalpan,7,4.17,Motorcycle,37.1,4
+R-0601,Santa Fe,12,3.87,Bicycle,45.1,8
+R-0602,Tlalpan,10,3.87,Bicycle,29.7,12
+R-0603,Centro,13,3.99,Motorcycle,26.4,8
+R-0604,Roma/Condesa,10,4.8,Motorcycle,24.7,11
+R-0605,Centro,12,4.36,Motorcycle,22.6,6
+R-0606,Roma/Condesa,7,4.22,Motorcycle,16.9,8
+R-0607,Del Valle,7,3.99,Bicycle,22.0,9
+R-0608,Nápoles,4,4.95,Car,48.5,4
+R-0609,Tlalpan,6,4.75,Bicycle,34.4,11
+R-0610,Del Valle,14,4.75,Bicycle,40.7,4
+R-0611,Centro,6,4.0,Bicycle,32.0,5
+R-0612,Polanco,5,4.2,Motorcycle,24.8,9
+R-0613,Tlalpan,10,4.85,Bicycle,21.0,5
+R-0614,Nápoles,9,4.55,Bicycle,36.9,7
+R-0615,Nápoles,9,4.17,Motorcycle,38.2,9
+R-0616,Nápoles,7,4.64,Car,33.4,9
+R-0617,Roma/Condesa,14,3.72,Bicycle,40.4,8
+R-0618,Santa Fe,9,3.53,Bicycle,32.6,4
+R-0619,Del Valle,7,4.75,Motorcycle,33.1,5
+R-0620,Nápoles,8,3.79,Motorcycle,26.4,8
+R-0621,Nápoles,9,4.65,Motorcycle,28.1,4
+R-0622,Polanco,6,4.11,Car,26.6,7
+R-0623,Nápoles,6,4.74,Bicycle,34.8,10
+R-0624,Del Valle,8,4.47,Car,24.8,5
+R-0625,Centro,6,3.53,Bicycle,43.4,6
+R-0626,Centro,13,4.02,Bicycle,29.3,9
+R-0627,Del Valle,8,4.93,Motorcycle,29.6,8
+R-0628,Nápoles,10,4.13,Car,34.9,8
+R-0629,Coyoacán,8,4.17,Bicycle,53.1,5
+R-0630,Roma/Condesa,6,4.42,Motorcycle,23.3,7
+R-0631,Polanco,7,4.28,Bicycle,30.1,6
+R-0632,Roma/Condesa,10,4.08,Car,50.3,5
+R-0633,Del Valle,5,4.05,Bicycle,56.4,4
+R-0634,Centro,5,4.75,Motorcycle,28.3,5
+R-0635,Roma/Condesa,9,3.61,Bicycle,29.2,8
+R-0636,Nápoles,8,3.77,Motorcycle,20.5,9
+R-0637,Nápoles,10,4.73,Motorcycle,34.0,7
+R-0638,Centro,10,4.74,Car,20.4,8
+R-0639,Del Valle,2,3.76,Motorcycle,32.8,5
+R-0640,Tlalpan,10,4.7,Motorcycle,35.0,9
+R-0641,Del Valle,8,4.94,Motorcycle,30.3,5
+R-0642,Coyoacán,13,4.82,Bicycle,31.1,8
+R-0643,Del Valle,13,4.02,Bicycle,18.5,5
+R-0644,Coyoacán,5,4.71,Motorcycle,33.2,7
+R-0645,Coyoacán,10,3.53,Motorcycle,32.5,10
+R-0646,Del Valle,6,4.17,Bicycle,33.4,7
+R-0647,Nápoles,7,3.94,Bicycle,32.9,7
+R-0648,Roma/Condesa,12,4.29,Motorcycle,33.4,7
+R-0649,Roma/Condesa,8,4.05,Bicycle,33.8,8
+R-0650,Polanco,7,3.76,Bicycle,51.1,5
+R-0651,Tlalpan,8,3.56,Bicycle,36.2,9
+R-0652,Centro,5,4.14,Bicycle,17.0,9
+R-0653,Tlalpan,5,4.13,Car,25.0,9
+R-0654,Del Valle,7,3.94,Bicycle,41.9,8
+R-0655,Centro,12,4.1,Motorcycle,29.1,7
+R-0656,Roma/Condesa,11,3.7,Motorcycle,30.0,9
+R-0657,Santa Fe,6,4.03,Motorcycle,51.3,6
+R-0658,Nápoles,10,3.87,Bicycle,27.2,5
+R-0659,Tlalpan,7,4.77,Motorcycle,21.3,4
+R-0660,Del Valle,12,3.95,Bicycle,32.6,9
+R-0661,Roma/Condesa,7,3.53,Motorcycle,16.4,8
+R-0662,Nápoles,10,4.94,Motorcycle,51.4,8
+R-0663,Polanco,17,3.9,Motorcycle,50.1,11
+R-0664,Roma/Condesa,7,4.68,Motorcycle,48.9,3
+R-0665,Polanco,9,4.96,Car,18.8,6
+R-0666,Tlalpan,14,4.23,Bicycle,31.7,11
+R-0667,Polanco,3,4.07,Motorcycle,32.9,7
+R-0668,Roma/Condesa,4,3.76,Bicycle,21.4,4
+R-0669,Tlalpan,5,3.84,Motorcycle,30.6,9
+R-0670,Polanco,11,4.79,Bicycle,34.3,3
+R-0671,Del Valle,5,3.59,Motorcycle,38.8,7
+R-0672,Del Valle,4,3.77,Motorcycle,42.0,8
+R-0673,Tlalpan,9,3.78,Motorcycle,30.5,7
+R-0674,Centro,9,3.63,Car,40.9,6
+R-0675,Roma/Condesa,11,4.61,Car,26.5,13
+R-0676,Del Valle,9,3.59,Motorcycle,29.6,5
+R-0677,Centro,7,4.7,Motorcycle,34.0,16
+R-0678,Del Valle,7,4.82,Motorcycle,30.7,8
+R-0679,Roma/Condesa,9,3.97,Motorcycle,30.2,7
+R-0680,Nápoles,9,3.84,Motorcycle,31.8,10
+R-0681,Roma/Condesa,12,4.02,Bicycle,25.2,7
+R-0682,Del Valle,8,3.95,Motorcycle,17.1,9
+R-0683,Roma/Condesa,8,4.29,Motorcycle,27.3,5
+R-0684,Centro,4,4.27,Motorcycle,46.3,8
+R-0685,Centro,11,4.23,Bicycle,17.8,10
+R-0686,Roma/Condesa,10,4.04,Motorcycle,10.3,7
+R-0687,Roma/Condesa,6,4.33,Car,25.1,7
+R-0688,Centro,4,3.72,Motorcycle,23.8,5
+R-0689,Centro,11,4.45,Car,44.3,8
+R-0690,Roma/Condesa,11,4.62,Motorcycle,49.2,4
+R-0691,Coyoacán,7,3.65,Motorcycle,22.7,6
+R-0692,Santa Fe,11,3.75,Motorcycle,31.9,9
+R-0693,Coyoacán,10,4.98,Car,15.3,9
+R-0694,Roma/Condesa,13,4.06,Bicycle,27.0,6
+R-0695,Nápoles,14,4.67,Motorcycle,43.2,8
+R-0696,Nápoles,6,4.77,Bicycle,33.3,5
+R-0697,Del Valle,10,4.31,Motorcycle,40.7,8
+R-0698,Roma/Condesa,5,3.81,Car,38.6,9
+R-0699,Santa Fe,8,3.55,Car,21.2,7
+R-0700,Coyoacán,9,4.57,Car,5.0,7
+R-0701,Santa Fe,6,4.33,Car,44.0,4
+R-0702,Tlalpan,4,3.58,Motorcycle,29.5,6
+R-0703,Del Valle,10,4.65,Bicycle,34.9,9
+R-0704,Centro,12,4.07,Car,37.7,6
+R-0705,Coyoacán,10,4.93,Bicycle,44.6,10
+R-0706,Centro,10,3.8,Bicycle,44.5,8
+R-0707,Nápoles,10,4.4,Bicycle,35.8,17
+R-0708,Nápoles,9,4.6,Car,40.5,10
+R-0709,Nápoles,7,3.7,Bicycle,34.5,8
+R-0710,Coyoacán,8,3.9,Bicycle,24.0,8
+R-0711,Nápoles,7,3.79,Motorcycle,56.2,8
+R-0712,Roma/Condesa,4,4.39,Bicycle,28.7,8
+R-0713,Del Valle,6,3.52,Bicycle,40.7,8
+R-0714,Centro,9,4.11,Bicycle,37.0,7
+R-0715,Del Valle,11,4.34,Motorcycle,34.3,13
+R-0716,Centro,4,4.63,Bicycle,42.6,8
+R-0717,Tlalpan,13,3.64,Motorcycle,38.8,6
+R-0718,Roma/Condesa,9,4.18,Bicycle,29.9,4
+R-0719,Roma/Condesa,8,4.57,Motorcycle,27.3,12
+R-0720,Roma/Condesa,12,4.14,Motorcycle,29.8,9
+R-0721,Nápoles,12,3.78,Bicycle,25.5,15
+R-0722,Centro,8,3.8,Car,39.9,8
+R-0723,Coyoacán,10,3.96,Motorcycle,27.6,7
+R-0724,Nápoles,7,3.96,Motorcycle,35.6,5
+R-0725,Del Valle,8,4.12,Motorcycle,29.8,6
+R-0726,Polanco,7,4.82,Car,28.8,7
+R-0727,Roma/Condesa,5,4.12,Motorcycle,32.5,7
+R-0728,Del Valle,10,4.67,Bicycle,33.1,5
+R-0729,Nápoles,8,3.79,Bicycle,22.2,9
+R-0730,Coyoacán,11,4.82,Motorcycle,22.5,7
+R-0731,Santa Fe,7,4.54,Bicycle,28.4,8
+R-0732,Centro,7,4.55,Motorcycle,42.1,7
+R-0733,Centro,8,3.56,Motorcycle,28.4,7
+R-0734,Del Valle,9,4.5,Motorcycle,48.4,8
+R-0735,Roma/Condesa,4,3.54,Bicycle,18.4,6
+R-0736,Nápoles,9,4.26,Motorcycle,32.3,9
+R-0737,Centro,17,4.04,Motorcycle,31.7,13
+R-0738,Nápoles,7,3.94,Bicycle,28.1,7
+R-0739,Tlalpan,8,4.35,Motorcycle,18.9,9
+R-0740,Centro,11,4.44,Bicycle,21.3,10
+R-0741,Polanco,9,5.0,Motorcycle,14.3,12
+R-0742,Coyoacán,4,3.57,Bicycle,34.5,12
+R-0743,Nápoles,13,3.62,Bicycle,15.3,9
+R-0744,Del Valle,10,3.54,Motorcycle,32.7,3
+R-0745,Centro,6,4.25,Bicycle,31.8,3
+R-0746,Nápoles,5,3.53,Motorcycle,34.7,7
+R-0747,Del Valle,8,4.15,Motorcycle,42.2,5
+R-0748,Santa Fe,9,4.81,Motorcycle,39.7,8
+R-0749,Del Valle,5,4.99,Motorcycle,31.6,11
+R-0750,Nápoles,8,4.77,Motorcycle,37.8,17
+R-0751,Del Valle,6,4.07,Bicycle,47.8,10
+R-0752,Coyoacán,4,4.19,Motorcycle,37.0,6
+R-0753,Tlalpan,7,3.73,Motorcycle,46.6,6
+R-0754,Del Valle,11,3.78,Motorcycle,40.1,8
+R-0755,Centro,7,4.79,Motorcycle,34.9,11
+R-0756,Tlalpan,10,3.53,Motorcycle,43.3,10
+R-0757,Coyoacán,10,4.99,Car,21.3,9
+R-0758,Del Valle,8,3.98,Car,31.9,4
+R-0759,Santa Fe,4,4.16,Bicycle,48.7,4
+R-0760,Polanco,8,3.81,Motorcycle,22.1,8
+R-0761,Polanco,4,3.67,Motorcycle,20.7,6
+R-0762,Del Valle,6,4.39,Motorcycle,23.2,7
+R-0763,Centro,8,4.66,Motorcycle,43.6,5
+R-0764,Roma/Condesa,5,3.96,Motorcycle,50.6,8
+R-0765,Centro,11,4.82,Motorcycle,51.3,10
+R-0766,Nápoles,7,4.65,Bicycle,39.7,5
+R-0767,Del Valle,11,3.57,Motorcycle,29.9,9
+R-0768,Centro,6,4.38,Car,47.8,8
+R-0769,Tlalpan,3,4.05,Bicycle,41.1,10
+R-0770,Tlalpan,12,4.69,Bicycle,35.4,6
+R-0771,Polanco,10,3.76,Bicycle,24.5,8
+R-0772,Roma/Condesa,9,4.27,Bicycle,34.7,6
+R-0773,Tlalpan,7,4.4,Bicycle,31.0,13
+R-0774,Centro,8,4.95,Motorcycle,30.8,11
+R-0775,Del Valle,9,4.73,Bicycle,16.5,12
+R-0776,Tlalpan,14,4.08,Motorcycle,21.8,13
+R-0777,Coyoacán,7,3.59,Bicycle,24.7,13
+R-0778,Coyoacán,8,4.69,Motorcycle,33.0,4
+R-0779,Polanco,7,4.12,Motorcycle,29.7,4
+R-0780,Polanco,4,3.61,Car,42.9,5
+R-0781,Del Valle,7,4.38,Motorcycle,35.6,8
+R-0782,Coyoacán,14,4.18,Bicycle,37.8,6
+R-0783,Polanco,8,4.06,Motorcycle,25.8,9
+R-0784,Tlalpan,6,3.79,Motorcycle,37.9,13
+R-0785,Roma/Condesa,8,4.16,Motorcycle,39.7,4
+R-0786,Del Valle,12,4.95,Bicycle,42.8,14
+R-0787,Nápoles,6,4.9,Motorcycle,34.0,5
+R-0788,Roma/Condesa,7,4.26,Motorcycle,39.0,5
+R-0789,Tlalpan,7,4.95,Car,34.6,5
+R-0790,Polanco,11,4.64,Car,35.4,12
+R-0791,Roma/Condesa,8,4.73,Motorcycle,29.8,11
+R-0792,Del Valle,10,3.94,Bicycle,37.7,7
+R-0793,Centro,11,4.47,Car,15.3,8
+R-0794,Polanco,13,3.71,Bicycle,35.0,6
+R-0795,Coyoacán,2,4.14,Bicycle,28.4,7
+R-0796,Tlalpan,2,4.68,Bicycle,36.1,8
+R-0797,Polanco,9,4.75,Car,50.5,5
+R-0798,Polanco,11,3.94,Bicycle,37.4,14
+R-0799,Nápoles,5,4.15,Bicycle,17.9,7
+R-0800,Tlalpan,11,4.65,Motorcycle,35.9,8

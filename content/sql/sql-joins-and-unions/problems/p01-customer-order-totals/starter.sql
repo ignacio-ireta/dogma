@@ -1,0 +1,23 @@
+-- Problem: customer order totals, including customers with no orders.
+--
+-- Tables:
+--   customers
+--     customer_id    BIGINT
+--     customer_name  VARCHAR
+--     is_current     BOOLEAN   -- one row per version; exactly one TRUE row per customer_id
+--   orders
+--     order_id       BIGINT
+--     customer_id    BIGINT
+--     order_date     DATE
+--     amount         DOUBLE    -- never NULL
+--
+-- For every current customer, return:
+--   customer_id, customer_name   the current version's id and name
+--   order_count                  number of orders (0 when a customer has none)
+--   total_amount                 sum of their order amounts (0.0 when none, never NULL)
+-- Only orders of customers that exist in the customers table count.
+-- Order by total_amount descending, then customer_id ascending.
+--
+-- Replace the line below with your query.
+
+SELECT 1;

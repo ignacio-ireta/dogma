@@ -1,0 +1,15 @@
+id: dl/adam
+title: "Adam"
+tier: A
+requires: ['dl/sgd-with-momentum']
+aliases: [adaptive moments, first moment, second moment, bias correction, AMSGrad, per-coordinate step size]
+objectives:
+  - Implement the Adam update with bias-corrected moments and a step counter that starts at zero, and match torch.optim.Adam over many steps
+  - Explain why eps sits after the square root and bias correction, and what the effective per-coordinate step bound is
+  - Implement AMSGrad as a running maximum of the second moment and explain what it changes
+minutes: {lesson: 12, practice: 30, min_viable: 15}
+interview_angle: "Write the Adam update, say what each moment remembers, and explain why the step size is roughly the learning rate regardless of gradient scale."
+sources:
+  - "paper: Kingma and Ba 2015, Adam: A Method for Stochastic Optimization (arXiv:1412.6980), sections 2 and 3"
+  - "library: AI-ML/03-Optimization/Kingma Ba Adam 2015.md"
+status: reviewed

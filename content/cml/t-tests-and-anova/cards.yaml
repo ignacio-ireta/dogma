@@ -1,0 +1,32 @@
+cards:
+  - id: cml/t-tests-and-anova#1
+    type: qa
+    front: What is the default two-sample t-test when the spreads of the two groups may differ?
+    back: Welch's t-test, with the Welch–Satterthwaite degrees of freedom.
+  - id: cml/t-tests-and-anova#2
+    type: qa
+    front: What is the Welch–Satterthwaite degrees of freedom formula?
+    back: "ν = (va + vb)² / (va²/(na − 1) + vb²/(nb − 1)), with va = sa²/na and vb = sb²/nb."
+  - id: cml/t-tests-and-anova#4
+    type: qa
+    front: When should you use a paired t-test instead of a two-sample test?
+    back: When the same unit is measured twice or units are matched. Test the differences with n − 1 degrees of freedom.
+  - id: cml/t-tests-and-anova#5
+    type: cloze
+    text: "In one-way ANOVA, SST = {{c1::SSB + SSW}}, the between-group plus within-group sums of squares."
+  - id: cml/t-tests-and-anova#9
+    type: qa
+    front: What is the F statistic of a one-way ANOVA, and what are its degrees of freedom?
+    back: "F = MSB / MSW, with MSB = SSB / (k − 1) and MSW = SSW / (N − k). Under the null, F follows F(k − 1, N − k)."
+  - id: cml/t-tests-and-anova#6
+    type: qa
+    front: With two groups, what is the relationship between the ANOVA F statistic and the pooled t statistic?
+    back: F = t², so the two tests give the same p-value.
+  - id: cml/t-tests-and-anova#7
+    type: qa
+    front: What does a significant one-way ANOVA tell you?
+    back: At least one group mean differs. It does not say which, so follow up with corrected pairwise comparisons.
+  - id: cml/t-tests-and-anova#8
+    type: qa
+    front: Why compute an upper-tail F p-value with the survival function rather than 1 minus the CDF?
+    back: For small p-values 1 minus the CDF rounds to zero in floating point. The survival function keeps the tail accurate.

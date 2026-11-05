@@ -1,0 +1,26 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: llm/direct-preference-optimization-dpo#1
+    type: qa
+    front: What is the implicit reward of a response in DPO?
+    back: beta * (log pi_theta(y|x) - log pi_ref(y|x)), the scaled log-ratio of policy to reference.
+  - id: llm/direct-preference-optimization-dpo#2
+    type: qa
+    front: What is the DPO loss for one pair, in terms of the implicit rewards?
+    back: -log(sigmoid(r_chosen - r_rejected)), the Bradley-Terry loss on the implicit rewards.
+  - id: llm/direct-preference-optimization-dpo#3
+    type: cloze
+    text: "A sequence log-probability sums token log-probs over {{c1::response positions only}}, with prompt tokens masked out."
+  - id: llm/direct-preference-optimization-dpo#4
+    type: qa
+    front: Why does DPO not need a separate reward model during training?
+    back: The optimal KL-regularised policy implies a reward that is a log-ratio to the reference plus a prompt-only term, and that term cancels inside each pair.
+  - id: llm/direct-preference-optimization-dpo#5
+    type: qa
+    front: What does a larger beta do to the policy's anchor to the reference?
+    back: It strengthens the KL-style anchor, so the policy stays closer to the reference.
+  - id: llm/direct-preference-optimization-dpo#6
+    type: qa
+    front: What is the loss when the policy equals the reference?
+    back: log 2, because both implicit rewards are zero and the margin is zero.

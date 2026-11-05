@@ -1,0 +1,28 @@
+cards:
+  - id: cml/descriptive-statistics#1
+    type: qa
+    front: Why is the sample mean the constant that minimises the sum of squared deviations?
+    back: "Σ(xᵢ − c)² has derivative −2Σ(xᵢ − c). Setting it to zero gives c = x̄."
+  - id: cml/descriptive-statistics#2
+    type: qa
+    front: Why divide the sum of squared deviations by n − 1 for the sample variance?
+    back: The sample mean uses up one degree of freedom, so the deviations sum to zero. Dividing by n − 1 makes the estimate unbiased for σ².
+  - id: cml/descriptive-statistics#3
+    type: qa
+    front: Which common location statistic has a 50% breakdown point, and what does that mean?
+    back: The median. Up to half the sample can be moved to any value without moving the median beyond the original data range.
+  - id: cml/descriptive-statistics#4
+    type: qa
+    front: What does the IQR measure, and why is it robust to outliers?
+    back: IQR = Q3 − Q1, the spread of the middle half of the data. It depends only on the values at the two quartile positions, so extreme values in the tails do not move it.
+  - id: cml/descriptive-statistics#5
+    type: cloze
+    text: "NumPy's np.var defaults to ddof = {{c1::0}}, while pandas' Series.var defaults to ddof = 1."
+  - id: cml/descriptive-statistics#6
+    type: qa
+    front: Why is E[x²] − E[x]² an unstable way to compute the variance?
+    back: When the values are large compared with their spread, the two terms are nearly equal and their difference loses most of its digits (catastrophic cancellation). Welford's update avoids the subtraction.
+  - id: cml/descriptive-statistics#7
+    type: qa
+    front: In NumPy's default linear quantile, at what position is the q-quantile of n sorted values?
+    back: "h = q(n − 1), counted from 0. The quantile interpolates between the values at ⌊h⌋ and ⌊h⌋ + 1."

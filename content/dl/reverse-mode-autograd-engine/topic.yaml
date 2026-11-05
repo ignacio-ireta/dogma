@@ -1,0 +1,13 @@
+id: dl/reverse-mode-autograd-engine
+title: "Reverse-mode autograd engine"
+tier: A
+requires: ['dl/backprop-through-a-chain-of-scalars']
+aliases: ['from scratch', 'reverse mode autograd engine']
+objectives:
+  - Implement a scalar reverse-mode graph with shared-node accumulation
+  - Explain reverse topological traversal and repeat-backward lifecycle
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: Explain the data flow, derive one local rule, and diagnose a reproducibility or gradient bug.
+sources:
+  - "book: Goodfellow, Bengio and Courville, Deep Learning, chapter 6.5"
+status: reviewed

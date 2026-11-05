@@ -1,0 +1,13 @@
+id: dl/training-an-mlp-from-scratch
+title: "Training an MLP from scratch"
+tier: A
+requires: ['dl/backprop-through-a-dense-layer', 'dl/smooth-activations-tanh-gelu-swish', 'dl/xavier-and-he-initialization']
+aliases: ['from scratch', 'training an mlp from scratch']
+objectives:
+  - Implement reproducible two-layer regression with simultaneous SGD
+  - Check all parameter gradients and interpret loss checkpoints
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: Explain the data flow, derive one local rule, and diagnose a reproducibility or gradient bug.
+sources:
+  - "book: Goodfellow, Bengio and Courville, Deep Learning, chapters 6 and 8"
+status: reviewed

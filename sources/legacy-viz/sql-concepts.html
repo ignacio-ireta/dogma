@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL Concepts</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --border: #2a2d3a;
+  --text: #e0e0e6;
+  --muted: #8888a0;
+  --accent: #6c8aff;
+  --red: #ff6b8a;
+  --teal: #4ecdc4;
+  --yellow: #ffe66d;
+  --purple: #a78bfa;
+  --orange: #f97316;
+  --green: #4ade80;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+nav { display:flex; gap:.5rem; padding:1rem 2rem; background:var(--surface); border-bottom:1px solid var(--border); flex-wrap:wrap; }
+nav a { color:var(--muted); text-decoration:none; padding:.4rem .8rem; border-radius:8px; font-size:.85rem; transition:color .2s,background .2s; }
+nav a:hover { color:var(--text); background:rgba(108,138,255,.1); }
+nav a.active { color:var(--accent); background:rgba(108,138,255,.15); }
+
+header {
+  text-align: center;
+  padding: 3rem 1rem 2rem;
+  border-bottom: 1px solid var(--border);
+}
+header h1 { font-size:2.4rem; font-weight:700; letter-spacing:-0.03em; margin-bottom:0.5rem; }
+header p { color:var(--muted); font-size:1.05rem; max-width:600px; margin:0 auto; }
+
+.container { max-width:1100px; margin:0 auto; padding:2rem 1.5rem 4rem; }
+
+section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+section h2 { font-size:1.5rem; font-weight:600; margin-bottom:0.3rem; }
+section .subtitle { color:var(--muted); font-size:0.92rem; margin-bottom:1.5rem; }
+
+table.data-table { width:100%; border-collapse:collapse; font-family:'SF Mono',Monaco,'Fira Code',monospace; font-size:.82rem; }
+table.data-table th { background:rgba(108,138,255,.15); color:var(--accent); padding:.5rem .75rem; text-align:left; border-bottom:2px solid var(--border); white-space:nowrap; }
+table.data-table td { padding:.5rem .75rem; border-bottom:1px solid var(--border); }
+table.data-table tr:hover { background:rgba(108,138,255,.05); }
+table.data-table tr.highlight-green td { background:rgba(78,205,196,.12); }
+table.data-table tr.highlight-orange td { background:rgba(249,115,22,.12); }
+table.data-table tr.highlight-red td { background:rgba(255,107,138,.12); }
+table.data-table tr.highlight-yellow td { background:rgba(255,230,109,.12); }
+table.data-table tr.highlight-purple td { background:rgba(167,139,250,.12); }
+
+.sql-block {
+  background: #12141c;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  font-family: 'SF Mono', Monaco, 'Fira Code', monospace;
+  font-size: .82rem;
+  line-height: 1.7;
+  overflow-x: auto;
+  white-space: pre;
+  margin: .75rem 0;
+}
+
+.sql-kw { color: var(--accent); font-weight: 600; }
+.sql-str { color: var(--green); }
+.sql-num { color: var(--orange); }
+.sql-fn { color: var(--purple); }
+.sql-comment { color: var(--muted); font-style: italic; }
+.sql-col { color: var(--text); }
+
+.tabs {
+  display: flex; gap: .4rem; margin-bottom: 1rem; flex-wrap: wrap;
+}
+.tab-btn {
+  padding: .45rem 1rem; border-radius: 8px; border: 1px solid var(--border);
+  background: transparent; color: var(--muted); cursor: pointer; font-size: .82rem;
+  font-family: inherit; transition: all .2s;
+}
+.tab-btn:hover { color: var(--text); border-color: var(--accent); }
+.tab-btn.active { color: var(--accent); background: rgba(108,138,255,.15); border-color: var(--accent); }
+
+.btn {
+  padding: .5rem 1.2rem; border-radius: 8px; border: 1px solid var(--accent);
+  background: rgba(108,138,255,.15); color: var(--accent); cursor: pointer;
+  font-size: .85rem; font-family: inherit; font-weight: 500; transition: all .2s;
+}
+.btn:hover { background: rgba(108,138,255,.25); }
+.btn:disabled { opacity:.4; cursor:default; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+@media(max-width:700px) { .two-col { grid-template-columns:1fr; } }
+
+.label { font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:.5rem; font-weight:600; }
+
+.mnemonic {
+  background: rgba(108,138,255,.08);
+  border: 1px solid rgba(108,138,255,.2);
+  border-radius: 10px;
+  padding: .75rem 1rem;
+  margin: .75rem 0;
+  font-size: .88rem;
+  color: var(--accent);
+}
+.mnemonic strong { color: var(--yellow); }
+
+.step-indicator {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(108,138,255,.15); color: var(--accent);
+  font-size: .75rem; font-weight: 700; margin-right: .5rem; flex-shrink:0;
+}
+.step-indicator.active { background: var(--accent); color: #fff; }
+
+.exec-step {
+  display: flex; align-items: center; padding: .5rem .75rem;
+  border-radius: 8px; cursor: pointer; transition: background .2s; margin-bottom:.3rem;
+}
+.exec-step:hover { background: rgba(108,138,255,.08); }
+.exec-step.active { background: rgba(108,138,255,.12); }
+.exec-step .clause-name { font-weight: 600; font-size: .88rem; }
+.exec-step .clause-desc { font-size: .78rem; color: var(--muted); margin-left: .5rem; }
+
+.venn-container { display:flex; justify-content:center; align-items:center; padding:1.5rem 0; }
+
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
+.flip-card {
+  background: #12141c; border: 1px solid var(--border); border-radius: 10px;
+  padding: 1.25rem; cursor: pointer; transition: all .2s; min-height: 100px;
+  display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+}
+.flip-card:hover { border-color: var(--accent); }
+.flip-card .question { font-weight: 600; font-size: .9rem; }
+.flip-card .answer { display: none; font-size: .85rem; color: var(--teal); margin-top: .5rem; }
+.flip-card.revealed .answer { display: block; }
+.flip-card .hint { font-size: .72rem; color: var(--muted); margin-top: .5rem; }
+.flip-card.revealed .hint { display: none; }
+
+select, input[type="text"] {
+  background: #12141c; border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); padding: .45rem .75rem; font-family: inherit; font-size: .85rem;
+}
+select:focus, input[type="text"]:focus { outline: none; border-color: var(--accent); }
+
+.checkbox-group { display: flex; gap: .75rem; flex-wrap: wrap; margin: .5rem 0; }
+.checkbox-group label { display:flex; align-items:center; gap:.35rem; font-size:.85rem; color:var(--muted); cursor:pointer; }
+.checkbox-group input { accent-color: var(--accent); }
+
+.group-color-0 td { border-left: 3px solid var(--accent) !important; }
+.group-color-1 td { border-left: 3px solid var(--teal) !important; }
+.group-color-2 td { border-left: 3px solid var(--orange) !important; }
+.group-color-3 td { border-left: 3px solid var(--purple) !important; }
+.group-color-4 td { border-left: 3px solid var(--red) !important; }
+
+.window-highlight { outline: 2px solid var(--accent); outline-offset: -1px; border-radius: 4px; }
+.window-highlight-b { outline: 2px solid var(--teal); outline-offset: -1px; border-radius: 4px; }
+.window-highlight-c { outline: 2px solid var(--orange); outline-offset: -1px; border-radius: 4px; }
+
+.result-col { color: var(--yellow); font-weight: 600; }
+
+.inline-code {
+  background: rgba(108,138,255,.1); padding: .15rem .4rem; border-radius: 4px;
+  font-family: 'SF Mono', Monaco, monospace; font-size: .82rem; color: var(--accent);
+}
+
+.coalesce-demo { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin: .75rem 0; }
+.coalesce-val {
+  padding: .4rem .8rem; border-radius: 6px; font-family: monospace; font-size: .85rem;
+  border: 1px solid var(--border);
+}
+.coalesce-null { color: var(--red); text-decoration: line-through; opacity: .6; }
+.coalesce-hit { color: var(--green); border-color: var(--green); background: rgba(74,222,128,.1); }
+.coalesce-arrow { color: var(--muted); font-size: 1.1rem; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="ml-metrics.html">ML Metrics</a>
+  <a href="ml-concepts.html">ML Concepts</a>
+  <a href="probability-stats.html">Probability &amp; Stats</a>
+  <a href="model-selection.html">Model Selection</a>
+  <a href="sql-concepts.html" class="active">SQL Concepts</a>
+  <a href="data-wrangling.html">Pandas &amp; sklearn</a>
+  <a href="case-frameworks.html">Case Frameworks</a>
+</nav>
+
+<header>
+  <h1>SQL Concepts</h1>
+  <p>Interactive guide to SQL patterns every data scientist needs.</p>
+</header>
+
+<div class="container">
+
+<!-- ====== SECTION 1: Query Execution Order ====== -->
+<section id="sec-exec-order">
+  <h2>Query Execution Order</h2>
+  <div class="subtitle">SQL doesn't execute in the order you write it. Understanding this prevents most common mistakes.</div>
+
+  <div class="mnemonic">Mnemonic: "<strong>F</strong>unny <strong>W</strong>hales <strong>G</strong>o <strong>H</strong>unting <strong>S</strong>lowly <strong>O</strong>n <strong>L</strong>and" &mdash; FROM, WHERE, GROUP BY, HAVING, SELECT, ORDER BY, LIMIT</div>
+
+  <div class="two-col" style="margin-top:1.25rem;">
+    <div>
+      <div class="label">Write Order</div>
+      <div class="sql-block" id="exec-sql-block"><!--filled by JS--></div>
+    </div>
+    <div>
+      <div class="label">Execution Order</div>
+      <div id="exec-steps"><!--filled by JS--></div>
+    </div>
+  </div>
+
+  <div style="margin-top:1.25rem; display:flex; gap:.75rem; align-items:center; flex-wrap:wrap;">
+    <button class="btn" id="exec-play-btn" onclick="execAutoPlay()">Auto-Play Steps</button>
+    <button class="btn" id="exec-reset-btn" onclick="execReset()">Reset</button>
+    <span style="font-size:.82rem; color:var(--muted);" id="exec-status">Click a step or press Auto-Play</span>
+  </div>
+
+  <div style="margin-top:1.25rem;">
+    <div class="label">Intermediate Result</div>
+    <div id="exec-result" style="min-height:60px;">
+      <p style="color:var(--muted); font-size:.85rem;">Select an execution step to see the intermediate data.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SECTION 2: JOIN Types ====== -->
+<section id="sec-joins">
+  <h2>JOIN Types Visualizer</h2>
+  <div class="subtitle">See exactly which rows survive each type of JOIN.</div>
+
+  <div class="two-col" style="margin-bottom:1rem;">
+    <div>
+      <div class="label">customers</div>
+      <table class="data-table" id="join-tbl-customers">
+        <tr><th>id</th><th>name</th><th>region</th></tr>
+        <tr><td>1</td><td>Alice</td><td>North</td></tr>
+        <tr><td>2</td><td>Bob</td><td>South</td></tr>
+        <tr><td>3</td><td>Carol</td><td>East</td></tr>
+        <tr><td>4</td><td>Dave</td><td>West</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="label">orders</div>
+      <table class="data-table" id="join-tbl-orders">
+        <tr><th>order_id</th><th>customer_id</th><th>amount</th></tr>
+        <tr><td>101</td><td>1</td><td>250</td></tr>
+        <tr><td>102</td><td>1</td><td>180</td></tr>
+        <tr><td>103</td><td>2</td><td>90</td></tr>
+        <tr><td>104</td><td>5</td><td>300</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="tabs" id="join-tabs">
+    <button class="tab-btn active" onclick="showJoin('inner')">INNER JOIN</button>
+    <button class="tab-btn" onclick="showJoin('left')">LEFT JOIN</button>
+    <button class="tab-btn" onclick="showJoin('right')">RIGHT JOIN</button>
+    <button class="tab-btn" onclick="showJoin('full')">FULL OUTER JOIN</button>
+  </div>
+
+  <div style="display:flex; gap:2rem; align-items:flex-start; flex-wrap:wrap;">
+    <div class="venn-container">
+      <svg id="join-venn" width="280" height="200" viewBox="0 0 280 200"></svg>
+    </div>
+    <div style="flex:1; min-width:300px;">
+      <div class="sql-block" id="join-sql"></div>
+      <div id="join-result" style="margin-top:.75rem;"></div>
+      <div id="join-pattern" style="margin-top:.75rem;"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SECTION 3: GROUP BY & Aggregation ====== -->
+<section id="sec-groupby">
+  <h2>GROUP BY &amp; Aggregation</h2>
+  <div class="subtitle">Watch how rows collapse into groups and aggregate functions compute summaries.</div>
+
+  <div style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap; margin-bottom:1rem;">
+    <div>
+      <span class="label" style="margin-bottom:0;">Group by</span>
+      <select id="groupby-col" onchange="updateGroupBy()">
+        <option value="region">region</option>
+        <option value="category">category</option>
+      </select>
+    </div>
+    <div>
+      <span class="label" style="margin-bottom:0;">Aggregates</span>
+      <div class="checkbox-group">
+        <label><input type="checkbox" checked onchange="updateGroupBy()" data-agg="COUNT"> COUNT</label>
+        <label><input type="checkbox" checked onchange="updateGroupBy()" data-agg="SUM"> SUM</label>
+        <label><input type="checkbox" onchange="updateGroupBy()" data-agg="AVG"> AVG</label>
+        <label><input type="checkbox" onchange="updateGroupBy()" data-agg="MIN"> MIN</label>
+        <label><input type="checkbox" onchange="updateGroupBy()" data-agg="MAX"> MAX</label>
+      </div>
+    </div>
+    <div>
+      <span class="label" style="margin-bottom:0;">HAVING</span>
+      <input type="text" id="groupby-having" placeholder='e.g. COUNT(*) > 2' style="width:160px;" oninput="updateGroupBy()">
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div class="label">Raw Data (color-coded by group)</div>
+      <table class="data-table" id="groupby-raw"></table>
+    </div>
+    <div>
+      <div class="label">Aggregated Result</div>
+      <table class="data-table" id="groupby-result"></table>
+    </div>
+  </div>
+
+  <div style="margin-top:1rem;">
+    <div class="label">Generated SQL</div>
+    <div class="sql-block" id="groupby-sql"></div>
+  </div>
+</section>
+
+<!-- ====== SECTION 4: Window Functions ====== -->
+<section id="sec-window">
+  <h2>Window Functions</h2>
+  <div class="subtitle">Compute values across related rows without collapsing them. The most powerful (and most tested) SQL feature.</div>
+
+  <div class="tabs" id="window-tabs">
+    <button class="tab-btn active" onclick="showWindow('row_number')">ROW_NUMBER()</button>
+    <button class="tab-btn" onclick="showWindow('rank')">RANK() / DENSE_RANK()</button>
+    <button class="tab-btn" onclick="showWindow('lag_lead')">LAG() / LEAD()</button>
+    <button class="tab-btn" onclick="showWindow('running')">Running SUM()</button>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div class="label">Data with Window Result</div>
+      <div id="window-table-container"></div>
+    </div>
+    <div>
+      <div class="label">SQL Query</div>
+      <div class="sql-block" id="window-sql"></div>
+      <div id="window-explanation" style="margin-top:.75rem; font-size:.85rem; color:var(--muted);"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SECTION 5: Subqueries & CTEs ====== -->
+<section id="sec-cte">
+  <h2>Subqueries &amp; CTEs</h2>
+  <div class="subtitle">Two ways to compose queries. Same result, different readability.</div>
+
+  <div style="margin-bottom:1rem;">
+    <div class="tabs" id="cte-tabs">
+      <button class="tab-btn active" onclick="showCTE('simple')">Simple Example</button>
+      <button class="tab-btn" onclick="showCTE('multi')">Multi-CTE Example</button>
+    </div>
+  </div>
+
+  <div id="cte-content"></div>
+</section>
+
+<!-- ====== SECTION 6: NULL Handling ====== -->
+<section id="sec-null">
+  <h2>NULL Handling</h2>
+  <div class="subtitle">NULL is not a value &mdash; it's the absence of a value. This causes many subtle bugs.</div>
+
+  <div style="margin-bottom:1.25rem;">
+    <div class="label">Quiz: What does each expression return? (Click to reveal)</div>
+    <div class="card-grid" id="null-quiz"></div>
+  </div>
+
+  <div class="two-col" style="margin-bottom:1.25rem;">
+    <div>
+      <div class="label">Sample Table with NULLs</div>
+      <table class="data-table" id="null-table">
+        <tr><th>id</th><th>name</th><th>bonus</th><th>department</th></tr>
+        <tr><td>1</td><td>Alice</td><td>500</td><td>Engineering</td></tr>
+        <tr><td>2</td><td>Bob</td><td class="null-val">NULL</td><td>Engineering</td></tr>
+        <tr><td>3</td><td>Carol</td><td>300</td><td class="null-val">NULL</td></tr>
+        <tr><td>4</td><td>Dave</td><td class="null-val">NULL</td><td>Marketing</td></tr>
+        <tr><td>5</td><td>Eve</td><td>700</td><td>Marketing</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="label">Aggregation Results with NULLs</div>
+      <div id="null-agg-results"></div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:1.25rem;">
+    <div class="label">COALESCE Demo</div>
+    <div class="sql-block"><span class="sql-kw">SELECT</span> name, <span class="sql-fn">COALESCE</span>(bonus, <span class="sql-num">0</span>) <span class="sql-kw">AS</span> bonus_safe <span class="sql-kw">FROM</span> employees;</div>
+    <div id="coalesce-demo" style="margin-top:.75rem;"></div>
+  </div>
+
+  <div>
+    <div class="label">IS NULL vs = NULL</div>
+    <div class="two-col">
+      <div>
+        <div class="sql-block"><span class="sql-kw">SELECT</span> * <span class="sql-kw">FROM</span> employees
+<span class="sql-kw">WHERE</span> bonus <span class="sql-kw">IS NULL</span>;</div>
+        <p style="font-size:.85rem; color:var(--green); margin-top:.5rem;">Returns rows 2, 4 (Bob, Dave) &mdash; correct way to check for NULL</p>
+      </div>
+      <div>
+        <div class="sql-block"><span class="sql-kw">SELECT</span> * <span class="sql-kw">FROM</span> employees
+<span class="sql-kw">WHERE</span> bonus = <span class="sql-kw">NULL</span>;</div>
+        <p style="font-size:.85rem; color:var(--red); margin-top:.5rem;">Returns <strong>no rows!</strong> &mdash; NULL = NULL evaluates to NULL (falsy)</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- container -->
+
+<script>
+// ============================================================
+// SECTION 1: Query Execution Order
+// ============================================================
+(function() {
+  const writeOrder = [
+    { clause: 'SELECT', code: 'SELECT region, COUNT(*) as customer_count, AVG(amount) as avg_order' },
+    { clause: 'FROM/JOIN', code: 'FROM orders\nJOIN customers ON orders.customer_id = customers.customer_id' },
+    { clause: 'WHERE', code: 'WHERE amount > 10' },
+    { clause: 'GROUP BY', code: 'GROUP BY region' },
+    { clause: 'HAVING', code: 'HAVING COUNT(*) > 5' },
+    { clause: 'ORDER BY', code: 'ORDER BY avg_order DESC' },
+    { clause: 'LIMIT', code: 'LIMIT 3' },
+  ];
+
+  const execOrder = [
+    { clause: 'FROM / JOIN', writeIdx: 1, desc: 'Load and combine tables',
+      explanation: 'First, the database loads the orders table and joins it with customers on customer_id. This creates the full combined dataset.',
+      table: { cols: ['customer_id','name','region','order_id','amount'], rows: [
+        [1,'Alice','North',101,250],[1,'Alice','North',102,180],[1,'Alice','North',103,120],
+        [2,'Bob','South',104,90],[2,'Bob','South',105,45],[2,'Bob','South',106,200],
+        [3,'Carol','East',107,300],[3,'Carol','East',108,15],[3,'Carol','East',109,8],
+        [4,'Dave','West',110,75],[4,'Dave','West',111,60],
+        [5,'Eve','North',112,500],[5,'Eve','North',113,220],[5,'Eve','North',114,50],
+        [6,'Frank','South',115,180],[6,'Frank','South',116,90],[6,'Frank','South',117,110],
+      ]}},
+    { clause: 'WHERE', writeIdx: 2, desc: 'Filter rows',
+      explanation: 'WHERE amount > 10 removes any rows where amount is 10 or less. Row (Carol, 8) is eliminated.',
+      table: { cols: ['customer_id','name','region','order_id','amount'], rows: [
+        [1,'Alice','North',101,250],[1,'Alice','North',102,180],[1,'Alice','North',103,120],
+        [2,'Bob','South',104,90],[2,'Bob','South',105,45],[2,'Bob','South',106,200],
+        [3,'Carol','East',107,300],[3,'Carol','East',108,15],
+        [4,'Dave','West',110,75],[4,'Dave','West',111,60],
+        [5,'Eve','North',112,500],[5,'Eve','North',113,220],[5,'Eve','North',114,50],
+        [6,'Frank','South',115,180],[6,'Frank','South',116,90],[6,'Frank','South',117,110],
+      ]}},
+    { clause: 'GROUP BY', writeIdx: 3, desc: 'Create groups',
+      explanation: 'Rows are grouped by region. North has 6 rows, South has 6 rows, East has 2, West has 2.',
+      table: { cols: ['region','(rows in group)'], rows: [
+        ['North','6 rows: Alice(250,180,120), Eve(500,220,50)'],
+        ['South','6 rows: Bob(90,45,200), Frank(180,90,110)'],
+        ['East','2 rows: Carol(300,15)'],
+        ['West','2 rows: Dave(75,60)'],
+      ]}},
+    { clause: 'HAVING', writeIdx: 4, desc: 'Filter groups',
+      explanation: 'HAVING COUNT(*) > 5 keeps only groups with more than 5 rows. East (2) and West (2) are eliminated.',
+      table: { cols: ['region','count','remaining rows'], rows: [
+        ['North',6,'Kept'],
+        ['South',6,'Kept'],
+      ]}},
+    { clause: 'SELECT', writeIdx: 0, desc: 'Compute columns',
+      explanation: 'Now SELECT computes the requested columns: region, COUNT(*) as customer_count, and AVG(amount) as avg_order.',
+      table: { cols: ['region','customer_count','avg_order'], rows: [
+        ['North',6,220.00],
+        ['South',6,119.17],
+      ]}},
+    { clause: 'ORDER BY', writeIdx: 5, desc: 'Sort results',
+      explanation: 'ORDER BY avg_order DESC sorts by average order amount, highest first.',
+      table: { cols: ['region','customer_count','avg_order'], rows: [
+        ['North',6,220.00],
+        ['South',6,119.17],
+      ]}},
+    { clause: 'LIMIT', writeIdx: 6, desc: 'Cap result set',
+      explanation: 'LIMIT 3 returns at most 3 rows. We only have 2, so all are returned.',
+      table: { cols: ['region','customer_count','avg_order'], rows: [
+        ['North',6,220.00],
+        ['South',6,119.17],
+      ]}},
+  ];
+
+  // Build write-order SQL block
+  const sqlBlock = document.getElementById('exec-sql-block');
+  const lines = [
+    '<span class="sql-kw">SELECT</span> region, <span class="sql-fn">COUNT</span>(*) <span class="sql-kw">AS</span> customer_count, <span class="sql-fn">AVG</span>(amount) <span class="sql-kw">AS</span> avg_order',
+    '<span class="sql-kw">FROM</span> orders',
+    '<span class="sql-kw">JOIN</span> customers <span class="sql-kw">ON</span> orders.customer_id = customers.customer_id',
+    '<span class="sql-kw">WHERE</span> amount > <span class="sql-num">10</span>',
+    '<span class="sql-kw">GROUP BY</span> region',
+    '<span class="sql-kw">HAVING</span> <span class="sql-fn">COUNT</span>(*) > <span class="sql-num">5</span>',
+    '<span class="sql-kw">ORDER BY</span> avg_order <span class="sql-kw">DESC</span>',
+    '<span class="sql-kw">LIMIT</span> <span class="sql-num">3</span>;',
+  ];
+  const writeLineMap = [0, [1,2], 3, 4, 5, 6, 7]; // maps writeIdx to line indices
+  sqlBlock.innerHTML = lines.map((l,i) => `<div class="sql-line" data-line="${i}">${l}</div>`).join('\n');
+
+  // Build execution steps
+  const stepsEl = document.getElementById('exec-steps');
+  execOrder.forEach((s, i) => {
+    const d = document.createElement('div');
+    d.className = 'exec-step';
+    d.innerHTML = `<span class="step-indicator">${i+1}</span><span class="clause-name">${s.clause}</span><span class="clause-desc">${s.desc}</span>`;
+    d.onclick = () => execShowStep(i);
+    stepsEl.appendChild(d);
+  });
+
+  window.execShowStep = function(idx) {
+    // Highlight step
+    document.querySelectorAll('#exec-steps .exec-step').forEach((el,i) => {
+      el.classList.toggle('active', i === idx);
+      el.querySelector('.step-indicator').classList.toggle('active', i <= idx);
+    });
+    // Highlight SQL lines
+    document.querySelectorAll('.sql-line').forEach(el => el.style.background = '');
+    const wi = execOrder[idx].writeIdx;
+    const lineIdxs = Array.isArray(writeLineMap[wi]) ? writeLineMap[wi] : [writeLineMap[wi]];
+    lineIdxs.forEach(li => {
+      const el = document.querySelector(`.sql-line[data-line="${li}"]`);
+      if(el) el.style.background = 'rgba(108,138,255,.15)';
+    });
+    // Show result
+    const s = execOrder[idx];
+    let html = `<p style="font-size:.85rem; margin-bottom:.75rem;">${s.explanation}</p>`;
+    html += '<table class="data-table"><tr>' + s.table.cols.map(c => `<th>${c}</th>`).join('') + '</tr>';
+    s.table.rows.forEach(r => {
+      html += '<tr>' + r.map(v => `<td>${v}</td>`).join('') + '</tr>';
+    });
+    html += '</table>';
+    document.getElementById('exec-result').innerHTML = html;
+    document.getElementById('exec-status').textContent = `Step ${idx+1}/7: ${s.clause}`;
+  };
+
+  let autoTimer = null;
+  window.execAutoPlay = function() {
+    execReset();
+    let step = 0;
+    document.getElementById('exec-play-btn').disabled = true;
+    autoTimer = setInterval(() => {
+      if(step >= execOrder.length) { clearInterval(autoTimer); document.getElementById('exec-play-btn').disabled = false; return; }
+      execShowStep(step++);
+    }, 1500);
+  };
+
+  window.execReset = function() {
+    if(autoTimer) clearInterval(autoTimer);
+    document.getElementById('exec-play-btn').disabled = false;
+    document.querySelectorAll('#exec-steps .exec-step').forEach(el => {
+      el.classList.remove('active');
+      el.querySelector('.step-indicator').classList.remove('active');
+    });
+    document.querySelectorAll('.sql-line').forEach(el => el.style.background = '');
+    document.getElementById('exec-result').innerHTML = '<p style="color:var(--muted); font-size:.85rem;">Select an execution step to see the intermediate data.</p>';
+    document.getElementById('exec-status').textContent = 'Click a step or press Auto-Play';
+  };
+})();
+
+// ============================================================
+// SECTION 2: JOIN Types
+// ============================================================
+(function() {
+  const customers = [{id:1,name:'Alice',region:'North'},{id:2,name:'Bob',region:'South'},{id:3,name:'Carol',region:'East'},{id:4,name:'Dave',region:'West'}];
+  const orders = [{order_id:101,customer_id:1,amount:250},{order_id:102,customer_id:1,amount:180},{order_id:103,customer_id:2,amount:90},{order_id:104,customer_id:5,amount:300}];
+
+  function joinData(type) {
+    let rows = [];
+    if(type==='inner') {
+      orders.forEach(o => { const c = customers.find(c=>c.id===o.customer_id); if(c) rows.push({...c,...o,match:true}); });
+    } else if(type==='left') {
+      customers.forEach(c => {
+        const matched = orders.filter(o=>o.customer_id===c.id);
+        if(matched.length) matched.forEach(o => rows.push({...c,...o,match:true}));
+        else rows.push({...c,order_id:null,customer_id:c.id,amount:null,match:false});
+      });
+    } else if(type==='right') {
+      orders.forEach(o => {
+        const c = customers.find(c=>c.id===o.customer_id);
+        if(c) rows.push({...c,...o,match:true});
+        else rows.push({id:null,name:null,region:null,...o,match:false});
+      });
+    } else { // full
+      const used = new Set();
+      customers.forEach(c => {
+        const matched = orders.filter(o=>o.customer_id===c.id);
+        if(matched.length) matched.forEach(o => { rows.push({...c,...o,match:true}); used.add(o.order_id); });
+        else rows.push({...c,order_id:null,customer_id:c.id,amount:null,match:false});
+      });
+      orders.forEach(o => { if(!used.has(o.order_id) && !customers.find(c=>c.id===o.customer_id)) rows.push({id:null,name:null,region:null,...o,match:false}); });
+    }
+    return rows;
+  }
+
+  function drawVenn(type) {
+    const svg = document.getElementById('join-venn');
+    const leftFill = 'rgba(108,138,255,.08)', rightFill = 'rgba(78,205,196,.08)';
+    const activeFill = 'rgba(108,138,255,.3)', activeRight = 'rgba(78,205,196,.3)', overlapFill = 'rgba(167,139,250,.3)';
+    let leftO=leftFill, rightO=rightFill, midO=overlapFill;
+    let leftA=.3, rightA=.3, midA=1;
+    if(type==='inner') { leftA=.2; rightA=.2; }
+    else if(type==='left') { leftA=1; rightA=.2; leftO=activeFill; }
+    else if(type==='right') { leftA=.2; rightA=1; rightO=activeRight; }
+    else { leftA=1; rightA=1; leftO=activeFill; rightO=activeRight; }
+
+    svg.innerHTML = `
+      <circle cx="110" cy="100" r="80" fill="${leftO}" stroke="var(--accent)" stroke-width="2" opacity="${leftA}"/>
+      <circle cx="170" cy="100" r="80" fill="${rightO}" stroke="var(--teal)" stroke-width="2" opacity="${rightA}"/>
+      <text x="70" y="105" fill="var(--accent)" font-size="12" font-weight="600" text-anchor="middle">customers</text>
+      <text x="210" y="105" fill="var(--teal)" font-size="12" font-weight="600" text-anchor="middle">orders</text>
+      <text x="140" y="100" fill="var(--purple)" font-size="11" font-weight="600" text-anchor="middle" opacity="${midA}">match</text>
+    `;
+  }
+
+  const sqlMap = {
+    inner: `<span class="sql-kw">SELECT</span> *\n<span class="sql-kw">FROM</span> customers c\n<span class="sql-kw">INNER JOIN</span> orders o\n  <span class="sql-kw">ON</span> c.id = o.customer_id;`,
+    left:  `<span class="sql-kw">SELECT</span> *\n<span class="sql-kw">FROM</span> customers c\n<span class="sql-kw">LEFT JOIN</span> orders o\n  <span class="sql-kw">ON</span> c.id = o.customer_id;`,
+    right: `<span class="sql-kw">SELECT</span> *\n<span class="sql-kw">FROM</span> customers c\n<span class="sql-kw">RIGHT JOIN</span> orders o\n  <span class="sql-kw">ON</span> c.id = o.customer_id;`,
+    full:  `<span class="sql-kw">SELECT</span> *\n<span class="sql-kw">FROM</span> customers c\n<span class="sql-kw">FULL OUTER JOIN</span> orders o\n  <span class="sql-kw">ON</span> c.id = o.customer_id;`,
+  };
+
+  window.showJoin = function(type) {
+    document.querySelectorAll('#join-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`#join-tabs .tab-btn:nth-child(${['inner','left','right','full'].indexOf(type)+1})`).classList.add('active');
+    drawVenn(type);
+    document.getElementById('join-sql').innerHTML = sqlMap[type];
+    const rows = joinData(type);
+    let html = '<table class="data-table"><tr><th>id</th><th>name</th><th>region</th><th>order_id</th><th>customer_id</th><th>amount</th></tr>';
+    rows.forEach(r => {
+      const cls = r.match ? 'highlight-green' : 'highlight-orange';
+      const fmt = v => v === null ? '<span style="color:var(--red);">NULL</span>' : v;
+      html += `<tr class="${cls}"><td>${fmt(r.id)}</td><td>${fmt(r.name)}</td><td>${fmt(r.region)}</td><td>${fmt(r.order_id)}</td><td>${fmt(r.customer_id)}</td><td>${fmt(r.amount)}</td></tr>`;
+    });
+    html += '</table>';
+    html += '<div style="margin-top:.5rem; font-size:.78rem; color:var(--muted);"><span style="color:var(--teal);">Green</span> = matched rows &nbsp; <span style="color:var(--orange);">Orange</span> = NULL-filled (no match)</div>';
+    document.getElementById('join-result').innerHTML = html;
+
+    // Pattern highlight
+    if(type === 'left') {
+      document.getElementById('join-pattern').innerHTML = `
+        <div class="mnemonic" style="margin-top:.5rem;">
+          <strong>Pattern:</strong> LEFT JOIN + WHERE o.order_id IS NULL &rarr; find customers with <em>no</em> orders (Carol, Dave)
+        </div>`;
+    } else {
+      document.getElementById('join-pattern').innerHTML = '';
+    }
+  };
+  showJoin('inner');
+})();
+
+// ============================================================
+// SECTION 3: GROUP BY & Aggregation
+// ============================================================
+(function() {
+  const raw = [
+    {customer_id:1,region:'North',amount:250,category:'Electronics'},
+    {customer_id:2,region:'South',amount:90,category:'Books'},
+    {customer_id:3,region:'North',amount:180,category:'Electronics'},
+    {customer_id:4,region:'East',amount:300,category:'Clothing'},
+    {customer_id:5,region:'South',amount:45,category:'Books'},
+    {customer_id:6,region:'North',amount:120,category:'Clothing'},
+    {customer_id:7,region:'East',amount:200,category:'Electronics'},
+    {customer_id:8,region:'South',amount:75,category:'Books'},
+    {customer_id:9,region:'North',amount:400,category:'Electronics'},
+    {customer_id:10,region:'East',amount:60,category:'Clothing'},
+  ];
+  const colors = ['group-color-0','group-color-1','group-color-2','group-color-3','group-color-4'];
+
+  window.updateGroupBy = function() {
+    const col = document.getElementById('groupby-col').value;
+    const aggs = [];
+    document.querySelectorAll('#sec-groupby [data-agg]').forEach(cb => { if(cb.checked) aggs.push(cb.dataset.agg); });
+    const havingStr = document.getElementById('groupby-having').value.trim();
+
+    // Find groups
+    const groupMap = {};
+    raw.forEach(r => {
+      const key = r[col];
+      if(!groupMap[key]) groupMap[key] = [];
+      groupMap[key].push(r);
+    });
+    const groupKeys = Object.keys(groupMap);
+
+    // Raw table
+    let rawHtml = '<tr><th>customer_id</th><th>region</th><th>amount</th><th>category</th></tr>';
+    raw.forEach(r => {
+      const gi = groupKeys.indexOf(r[col]);
+      rawHtml += `<tr class="${colors[gi % colors.length]}"><td>${r.customer_id}</td><td>${r.region}</td><td>${r.amount}</td><td>${r.category}</td></tr>`;
+    });
+    document.getElementById('groupby-raw').innerHTML = rawHtml;
+
+    // Aggregate
+    let results = groupKeys.map(key => {
+      const rows = groupMap[key];
+      const amounts = rows.map(r=>r.amount);
+      const res = { key, count: rows.length, sum: amounts.reduce((a,b)=>a+b,0) };
+      res.avg = (res.sum / res.count).toFixed(1);
+      res.min = Math.min(...amounts);
+      res.max = Math.max(...amounts);
+      return res;
+    });
+
+    // Apply HAVING
+    if(havingStr) {
+      results = results.filter(r => {
+        try {
+          const expr = havingStr
+            .replace(/COUNT\(\*\)/gi, r.count)
+            .replace(/SUM\(amount\)/gi, r.sum)
+            .replace(/AVG\(amount\)/gi, r.avg)
+            .replace(/MIN\(amount\)/gi, r.min)
+            .replace(/MAX\(amount\)/gi, r.max);
+          return eval(expr);
+        } catch(e) { return true; }
+      });
+    }
+
+    // Result table
+    let resCols = [col];
+    if(aggs.includes('COUNT')) resCols.push('COUNT(*)');
+    if(aggs.includes('SUM')) resCols.push('SUM(amount)');
+    if(aggs.includes('AVG')) resCols.push('AVG(amount)');
+    if(aggs.includes('MIN')) resCols.push('MIN(amount)');
+    if(aggs.includes('MAX')) resCols.push('MAX(amount)');
+
+    let resHtml = '<tr>' + resCols.map(c=>`<th>${c}</th>`).join('') + '</tr>';
+    results.forEach(r => {
+      let cells = [r.key];
+      if(aggs.includes('COUNT')) cells.push(r.count);
+      if(aggs.includes('SUM')) cells.push(r.sum);
+      if(aggs.includes('AVG')) cells.push(r.avg);
+      if(aggs.includes('MIN')) cells.push(r.min);
+      if(aggs.includes('MAX')) cells.push(r.max);
+      const gi = groupKeys.indexOf(r.key);
+      resHtml += `<tr class="${colors[gi % colors.length]}">${cells.map(c=>`<td>${c}</td>`).join('')}</tr>`;
+    });
+    document.getElementById('groupby-result').innerHTML = resHtml;
+
+    // SQL
+    let selectParts = [col];
+    if(aggs.includes('COUNT')) selectParts.push('<span class="sql-fn">COUNT</span>(*) <span class="sql-kw">AS</span> cnt');
+    if(aggs.includes('SUM')) selectParts.push('<span class="sql-fn">SUM</span>(amount) <span class="sql-kw">AS</span> total');
+    if(aggs.includes('AVG')) selectParts.push('<span class="sql-fn">AVG</span>(amount) <span class="sql-kw">AS</span> avg_amt');
+    if(aggs.includes('MIN')) selectParts.push('<span class="sql-fn">MIN</span>(amount) <span class="sql-kw">AS</span> min_amt');
+    if(aggs.includes('MAX')) selectParts.push('<span class="sql-fn">MAX</span>(amount) <span class="sql-kw">AS</span> max_amt');
+    let sql = `<span class="sql-kw">SELECT</span> ${selectParts.join(',\n       ')}\n<span class="sql-kw">FROM</span> sales\n<span class="sql-kw">GROUP BY</span> ${col}`;
+    if(havingStr) sql += `\n<span class="sql-kw">HAVING</span> ${havingStr}`;
+    sql += ';';
+    document.getElementById('groupby-sql').innerHTML = sql;
+  };
+  updateGroupBy();
+})();
+
+// ============================================================
+// SECTION 4: Window Functions
+// ============================================================
+(function() {
+  const data = [
+    {name:'Alice',department:'Engineering',salary:95000},
+    {name:'Bob',department:'Engineering',salary:85000},
+    {name:'Carol',department:'Engineering',salary:85000},
+    {name:'Dave',department:'Marketing',salary:75000},
+    {name:'Eve',department:'Marketing',salary:90000},
+    {name:'Frank',department:'Sales',salary:70000},
+    {name:'Grace',department:'Sales',salary:80000},
+    {name:'Henry',department:'Sales',salary:80000},
+  ];
+
+  const deptColors = {Engineering:'var(--accent)',Marketing:'var(--teal)',Sales:'var(--orange)'};
+
+  function partitionBorder(dept) { return `border-left:3px solid ${deptColors[dept]}`; }
+
+  window.showWindow = function(type) {
+    document.querySelectorAll('#window-tabs .tab-btn').forEach(b=>b.classList.remove('active'));
+    const idx = ['row_number','rank','lag_lead','running'].indexOf(type);
+    document.querySelectorAll('#window-tabs .tab-btn')[idx].classList.add('active');
+
+    // Sort data by department then salary desc for window functions
+    const sorted = [...data].sort((a,b) => a.department.localeCompare(b.department) || b.salary - a.salary);
+
+    let extraCols = [];
+    let extraData = [];
+    let sql = '';
+    let explanation = '';
+
+    if(type === 'row_number') {
+      extraCols = ['row_number'];
+      let partCount = {};
+      sorted.forEach(r => {
+        partCount[r.department] = (partCount[r.department]||0) + 1;
+        extraData.push(partCount[r.department]);
+      });
+      sql = `<span class="sql-kw">SELECT</span> name, department, salary,\n       <span class="sql-fn">ROW_NUMBER</span>() <span class="sql-kw">OVER</span> (\n         <span class="sql-kw">PARTITION BY</span> department\n         <span class="sql-kw">ORDER BY</span> salary <span class="sql-kw">DESC</span>\n       ) <span class="sql-kw">AS</span> row_number\n<span class="sql-kw">FROM</span> employees;`;
+      explanation = 'ROW_NUMBER() assigns a unique sequential integer within each partition. Even when salaries tie (Bob & Carol both 85k), they get different row numbers (2, 3). The order of ties is non-deterministic.';
+    } else if(type === 'rank') {
+      extraCols = ['rank','dense_rank'];
+      let partSalaries = {};
+      sorted.forEach(r => {
+        if(!partSalaries[r.department]) partSalaries[r.department] = { items:[], seen:{} };
+        partSalaries[r.department].items.push(r.salary);
+      });
+      let partIdx = {};
+      sorted.forEach(r => {
+        const d = r.department;
+        if(!partIdx[d]) partIdx[d] = { pos:0, denseRank:0, lastSal:null };
+        const p = partIdx[d];
+        p.pos++;
+        if(r.salary !== p.lastSal) { p.rankVal = p.pos; p.denseRank++; p.lastSal = r.salary; }
+        extraData.push([p.rankVal, p.denseRank]);
+      });
+      sql = `<span class="sql-kw">SELECT</span> name, department, salary,\n       <span class="sql-fn">RANK</span>() <span class="sql-kw">OVER</span> (... <span class="sql-kw">ORDER BY</span> salary <span class="sql-kw">DESC</span>) <span class="sql-kw">AS</span> rank,\n       <span class="sql-fn">DENSE_RANK</span>() <span class="sql-kw">OVER</span> (... <span class="sql-kw">ORDER BY</span> salary <span class="sql-kw">DESC</span>) <span class="sql-kw">AS</span> dense_rank\n<span class="sql-kw">FROM</span> employees;`;
+      explanation = 'RANK() skips numbers after ties (1, 2, 2, 4). DENSE_RANK() does not skip (1, 2, 2, 3). Notice the difference in Engineering: Bob and Carol tie at 85k.';
+    } else if(type === 'lag_lead') {
+      extraCols = ['lag(salary)','lead(salary)'];
+      sorted.forEach((r,i) => {
+        const prev = (i > 0 && sorted[i-1].department === r.department) ? sorted[i-1].salary : null;
+        const next = (i < sorted.length-1 && sorted[i+1].department === r.department) ? sorted[i+1].salary : null;
+        extraData.push([prev, next]);
+      });
+      sql = `<span class="sql-kw">SELECT</span> name, department, salary,\n       <span class="sql-fn">LAG</span>(salary) <span class="sql-kw">OVER</span> (\n         <span class="sql-kw">PARTITION BY</span> department <span class="sql-kw">ORDER BY</span> salary <span class="sql-kw">DESC</span>\n       ) <span class="sql-kw">AS</span> prev_salary,\n       <span class="sql-fn">LEAD</span>(salary) <span class="sql-kw">OVER</span> (\n         <span class="sql-kw">PARTITION BY</span> department <span class="sql-kw">ORDER BY</span> salary <span class="sql-kw">DESC</span>\n       ) <span class="sql-kw">AS</span> next_salary\n<span class="sql-kw">FROM</span> employees;`;
+      explanation = 'LAG() looks at the previous row within the partition. LEAD() looks at the next row. NULL appears at partition boundaries. Useful for computing differences between consecutive rows.';
+    } else { // running
+      extraCols = ['running_total'];
+      let partSum = {};
+      sorted.forEach(r => {
+        partSum[r.department] = (partSum[r.department]||0) + r.salary;
+        extraData.push(partSum[r.department]);
+      });
+      sql = `<span class="sql-kw">SELECT</span> name, department, salary,\n       <span class="sql-fn">SUM</span>(salary) <span class="sql-kw">OVER</span> (\n         <span class="sql-kw">PARTITION BY</span> department\n         <span class="sql-kw">ORDER BY</span> salary <span class="sql-kw">DESC</span>\n         <span class="sql-kw">ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</span>\n       ) <span class="sql-kw">AS</span> running_total\n<span class="sql-kw">FROM</span> employees;`;
+      explanation = 'SUM() OVER with ORDER BY creates a cumulative sum. Each row shows the total of all salaries up to and including the current row within its partition.';
+    }
+
+    // Build table
+    let html = '<table class="data-table"><tr><th>name</th><th>department</th><th>salary</th>';
+    extraCols.forEach(c => html += `<th style="color:var(--yellow);">${c}</th>`);
+    html += '</tr>';
+    sorted.forEach((r,i) => {
+      html += `<tr style="${partitionBorder(r.department)}"><td>${r.name}</td><td style="color:${deptColors[r.department]}">${r.department}</td><td>${r.salary.toLocaleString()}</td>`;
+      if(type === 'row_number' || type === 'running') {
+        const v = type === 'running' ? extraData[i].toLocaleString() : extraData[i];
+        html += `<td class="result-col">${v}</td>`;
+      } else if(type === 'rank') {
+        html += `<td class="result-col">${extraData[i][0]}</td><td class="result-col">${extraData[i][1]}</td>`;
+      } else {
+        const fmt = v => v === null ? '<span style="color:var(--red);">NULL</span>' : v.toLocaleString();
+        html += `<td class="result-col">${fmt(extraData[i][0])}</td><td class="result-col">${fmt(extraData[i][1])}</td>`;
+      }
+      html += '</tr>';
+    });
+    html += '</table>';
+    html += '<div style="margin-top:.5rem; font-size:.75rem; color:var(--muted);">Left border color = partition (department)</div>';
+    document.getElementById('window-table-container').innerHTML = html;
+    document.getElementById('window-sql').innerHTML = sql;
+    document.getElementById('window-explanation').textContent = explanation;
+  };
+  showWindow('row_number');
+})();
+
+// ============================================================
+// SECTION 5: Subqueries & CTEs
+// ============================================================
+(function() {
+  const examples = {
+    simple: {
+      problem: 'Find customers who spend more than the average order amount.',
+      subquery: `<span class="sql-kw">SELECT</span> name, amount
+<span class="sql-kw">FROM</span> orders o
+<span class="sql-kw">JOIN</span> customers c <span class="sql-kw">ON</span> o.customer_id = c.id
+<span class="sql-kw">WHERE</span> amount > (
+    <span class="sql-comment">-- Inner query: runs first</span>
+    <span class="sql-kw">SELECT</span> <span class="sql-fn">AVG</span>(amount)
+    <span class="sql-kw">FROM</span> orders
+);`,
+      cte: `<span class="sql-comment">-- CTE: named subquery, runs first</span>
+<span class="sql-kw">WITH</span> avg_order <span class="sql-kw">AS</span> (
+    <span class="sql-kw">SELECT</span> <span class="sql-fn">AVG</span>(amount) <span class="sql-kw">AS</span> avg_amt
+    <span class="sql-kw">FROM</span> orders
+)
+<span class="sql-kw">SELECT</span> name, amount
+<span class="sql-kw">FROM</span> orders o
+<span class="sql-kw">JOIN</span> customers c <span class="sql-kw">ON</span> o.customer_id = c.id
+<span class="sql-kw">CROSS JOIN</span> avg_order
+<span class="sql-kw">WHERE</span> amount > avg_amt;`,
+      steps: [
+        { label: 'Step 1: Inner query computes AVG', result: 'AVG(amount) = 205.00' },
+        { label: 'Step 2: Outer query filters rows where amount > 205', result: 'Alice (250), Carol (300), Eve (500)' },
+      ],
+      note: 'Same performance. CTEs are just named subqueries that improve readability, especially when reused.',
+    },
+    multi: {
+      problem: 'Find the top department by average salary, and list employees in it who earn above that department average.',
+      subquery: `<span class="sql-kw">SELECT</span> name, salary
+<span class="sql-kw">FROM</span> employees
+<span class="sql-kw">WHERE</span> department = (
+    <span class="sql-kw">SELECT</span> department <span class="sql-kw">FROM</span> employees
+    <span class="sql-kw">GROUP BY</span> department
+    <span class="sql-kw">ORDER BY</span> <span class="sql-fn">AVG</span>(salary) <span class="sql-kw">DESC</span>
+    <span class="sql-kw">LIMIT</span> <span class="sql-num">1</span>
+) <span class="sql-kw">AND</span> salary > (
+    <span class="sql-kw">SELECT</span> <span class="sql-fn">AVG</span>(salary) <span class="sql-kw">FROM</span> employees
+    <span class="sql-kw">WHERE</span> department = (
+        <span class="sql-kw">SELECT</span> department <span class="sql-kw">FROM</span> employees
+        <span class="sql-kw">GROUP BY</span> department
+        <span class="sql-kw">ORDER BY</span> <span class="sql-fn">AVG</span>(salary) <span class="sql-kw">DESC</span>
+        <span class="sql-kw">LIMIT</span> <span class="sql-num">1</span>
+    )
+);
+<span class="sql-comment">-- Duplicated subquery! Hard to read.</span>`,
+      cte: `<span class="sql-kw">WITH</span> dept_avg <span class="sql-kw">AS</span> (
+    <span class="sql-kw">SELECT</span> department,
+           <span class="sql-fn">AVG</span>(salary) <span class="sql-kw">AS</span> avg_sal
+    <span class="sql-kw">FROM</span> employees
+    <span class="sql-kw">GROUP BY</span> department
+),
+top_dept <span class="sql-kw">AS</span> (
+    <span class="sql-kw">SELECT</span> department, avg_sal
+    <span class="sql-kw">FROM</span> dept_avg
+    <span class="sql-kw">ORDER BY</span> avg_sal <span class="sql-kw">DESC</span>
+    <span class="sql-kw">LIMIT</span> <span class="sql-num">1</span>
+)
+<span class="sql-kw">SELECT</span> e.name, e.salary
+<span class="sql-kw">FROM</span> employees e
+<span class="sql-kw">JOIN</span> top_dept t <span class="sql-kw">ON</span> e.department = t.department
+<span class="sql-kw">WHERE</span> e.salary > t.avg_sal;
+<span class="sql-comment">-- Clean! Each CTE has a clear name and purpose.</span>`,
+      steps: [
+        { label: 'Step 1: dept_avg computes per-department averages', result: 'Engineering: 88.3k, Marketing: 82.5k, Sales: 76.7k' },
+        { label: 'Step 2: top_dept picks the highest', result: 'Engineering (avg 88.3k)' },
+        { label: 'Step 3: Final query filters above-average employees', result: 'Alice (95k) - only one above 88.3k' },
+      ],
+      note: 'With multiple CTEs, each references the previous one. Much cleaner than deeply nested subqueries.',
+    },
+  };
+
+  window.showCTE = function(type) {
+    document.querySelectorAll('#cte-tabs .tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('#cte-tabs .tab-btn')[type==='simple'?0:1].classList.add('active');
+    const ex = examples[type];
+    let html = `<p style="font-size:.9rem; margin-bottom:1rem;"><strong>Problem:</strong> ${ex.problem}</p>`;
+    html += '<div class="two-col">';
+    html += `<div><div class="label">Subquery Approach</div><div class="sql-block">${ex.subquery}</div></div>`;
+    html += `<div><div class="label">CTE Approach</div><div class="sql-block">${ex.cte}</div></div>`;
+    html += '</div>';
+    html += `<div style="margin-top:1rem;"><div class="label">Execution Steps</div>`;
+    html += `<button class="btn" style="margin-bottom:.75rem;" onclick="runCTESteps('${type}')">Run Step-by-Step</button>`;
+    html += `<div id="cte-steps-${type}"></div>`;
+    html += `</div>`;
+    html += `<div class="mnemonic" style="margin-top:.75rem;">${ex.note}</div>`;
+    document.getElementById('cte-content').innerHTML = html;
+  };
+
+  window.runCTESteps = function(type) {
+    const ex = examples[type];
+    const container = document.getElementById(`cte-steps-${type}`);
+    container.innerHTML = '';
+    ex.steps.forEach((s,i) => {
+      setTimeout(() => {
+        const d = document.createElement('div');
+        d.style.cssText = 'padding:.6rem .85rem; margin-bottom:.5rem; background:rgba(108,138,255,.06); border-radius:8px; border-left:3px solid var(--accent); opacity:0; transition:opacity .4s;';
+        d.innerHTML = `<div style="font-weight:600; font-size:.85rem; margin-bottom:.25rem;">${s.label}</div><div style="font-size:.82rem; color:var(--teal);">${s.result}</div>`;
+        container.appendChild(d);
+        requestAnimationFrame(() => d.style.opacity = '1');
+      }, (i+1) * 800);
+    });
+  };
+
+  showCTE('simple');
+})();
+
+// ============================================================
+// SECTION 6: NULL Handling
+// ============================================================
+(function() {
+  const quizItems = [
+    { q: 'NULL = NULL', a: 'NULL (falsy!) — not TRUE', note:'Use IS NULL instead' },
+    { q: 'NULL != NULL', a: 'NULL (falsy!) — not TRUE', note:'Nothing equals or not-equals NULL' },
+    { q: 'NULL + 5', a: 'NULL — any arithmetic with NULL returns NULL', note:'NULL propagates' },
+    { q: 'NULL AND TRUE', a: 'NULL — three-valued logic', note:'Only NULL AND FALSE = FALSE' },
+    { q: 'NULL OR TRUE', a: 'TRUE — OR only needs one TRUE', note:'But NULL OR FALSE = NULL' },
+    { q: 'COUNT(*) vs COUNT(col)', a: 'COUNT(*) counts all rows; COUNT(col) skips NULLs', note:'Very common interview question' },
+  ];
+
+  const quizEl = document.getElementById('null-quiz');
+  quizItems.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'flip-card';
+    card.innerHTML = `<div class="question"><span class="inline-code">${item.q}</span></div><div class="answer">${item.a}</div><div class="hint">Click to reveal</div>`;
+    card.onclick = () => card.classList.toggle('revealed');
+    quizEl.appendChild(card);
+  });
+
+  // Aggregation results
+  const aggHtml = `
+    <table class="data-table">
+      <tr><th>Expression</th><th>Result</th><th>Why</th></tr>
+      <tr><td><span class="inline-code">COUNT(*)</span></td><td class="result-col">5</td><td>Counts all rows</td></tr>
+      <tr><td><span class="inline-code">COUNT(bonus)</span></td><td class="result-col">3</td><td>Skips NULL bonuses (Bob, Dave)</td></tr>
+      <tr><td><span class="inline-code">SUM(bonus)</span></td><td class="result-col">1500</td><td>500 + 300 + 700. NULLs ignored.</td></tr>
+      <tr><td><span class="inline-code">AVG(bonus)</span></td><td class="result-col">500</td><td>1500 / 3 (not / 5!). NULLs excluded from count too.</td></tr>
+      <tr><td><span class="inline-code">MIN(bonus)</span></td><td class="result-col">300</td><td>NULLs ignored</td></tr>
+    </table>
+    <div class="mnemonic" style="margin-top:.75rem;">
+      <strong>Key insight:</strong> AVG(bonus) = 500, not 300. Because AVG divides by COUNT(bonus)=3, not COUNT(*)=5. If you want NULLs treated as 0, use AVG(COALESCE(bonus, 0)).
+    </div>
+  `;
+  document.getElementById('null-agg-results').innerHTML = aggHtml;
+
+  // COALESCE demo
+  const employees = [
+    {name:'Alice',bonus:500},{name:'Bob',bonus:null},{name:'Carol',bonus:300},{name:'Dave',bonus:null},{name:'Eve',bonus:700}
+  ];
+  let coalHtml = '<table class="data-table"><tr><th>name</th><th>bonus</th><th>COALESCE(bonus, 0)</th></tr>';
+  employees.forEach(e => {
+    const original = e.bonus === null ? '<span style="color:var(--red);">NULL</span>' : e.bonus;
+    const coalesced = e.bonus === null ? `<span style="color:var(--green); font-weight:600;">0</span>` : e.bonus;
+    const arrow = e.bonus === null ? ' &larr; filled!' : '';
+    coalHtml += `<tr><td>${e.name}</td><td>${original}</td><td>${coalesced}<span style="color:var(--green); font-size:.75rem;">${arrow}</span></td></tr>`;
+  });
+  coalHtml += '</table>';
+  document.getElementById('coalesce-demo').innerHTML = coalHtml;
+
+  // Style NULL values in the sample table
+  document.querySelectorAll('.null-val').forEach(el => {
+    el.style.color = 'var(--red)';
+    el.style.fontStyle = 'italic';
+  });
+})();
+</script>
+</body>
+</html>

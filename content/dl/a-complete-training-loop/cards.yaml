@@ -1,0 +1,22 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: dl/a-complete-training-loop#1
+    type: qa
+    front: "How many shuffle draws does the reproducible contract use per epoch?"
+    back: "One: a single torch.randperm from one seeded generator."
+  - id: dl/a-complete-training-loop#2
+    type: qa
+    front: "Why weight the batch losses by batch size in the epoch's train loss?"
+    back: "So the partial last batch counts for its own rows, and the mean matches the loss over all n rows."
+  - id: dl/a-complete-training-loop#3
+    type: cloze
+    text: "Validation loss is measured with model.{{c1::eval()}} under torch.no_grad()."
+  - id: dl/a-complete-training-loop#4
+    type: qa
+    front: "Which validation loss ties does the best-state rule keep?"
+    back: "The earlier epoch: the checkpoint updates only on a strict improvement."
+  - id: dl/a-complete-training-loop#5
+    type: qa
+    front: "What does a range(0, n - b + 1, b) batch loop do wrong?"
+    back: "It silently drops the partial last batch."

@@ -1,0 +1,32 @@
+cards:
+  - id: cml/a-b-test-design-and-analysis#1
+    type: qa
+    front: What must be fixed before an A/B test starts?
+    back: The primary metric, the unit of randomisation, the minimum detectable effect, the per-arm sample size, the duration and the analysis plan.
+  - id: cml/a-b-test-design-and-analysis#2
+    type: qa
+    front: In the two-proportion sample size formula, which variance is used under the null hypothesis?
+    back: The pooled variance, computed from the pooled rate p̄ = (p1 + p2) / 2.
+  - id: cml/a-b-test-design-and-analysis#3
+    type: cloze
+    text: "Halving the minimum detectable effect multiplies the required sample size per arm by about {{c1::4}}, because n scales with 1 / MDE²."
+  - id: cml/a-b-test-design-and-analysis#4
+    type: qa
+    front: What is peeking, and why does it inflate false positives?
+    back: Checking the p-value repeatedly and stopping at the first p < 0.05. Each look is another chance to cross the threshold by chance.
+  - id: cml/a-b-test-design-and-analysis#5
+    type: qa
+    front: What is sample ratio mismatch?
+    back: The observed assignment counts differ from the planned split by more than chance allows. It signals a bug in assignment or logging, so the outcome comparison is unreliable.
+  - id: cml/a-b-test-design-and-analysis#6
+    type: qa
+    front: Why is a novelty effect a concern for an A/B test that runs one or two weeks?
+    back: Users may react to the change only because it is new, so the early lift can fade. Check the effect over time before reading the long-run result.
+  - id: cml/a-b-test-design-and-analysis#7
+    type: qa
+    front: With a very large sample, why can a tiny lift be statistically significant but not worth shipping?
+    back: The standard error shrinks with n, so a negligible difference clears the threshold. Compare the confidence interval with the minimum effect worth acting on.
+  - id: cml/a-b-test-design-and-analysis#8
+    type: qa
+    front: Why should the test duration cover whole weeks?
+    back: Traffic has weekday and weekend patterns. Whole weeks give every arm the same mix of days, so the comparison is not confounded by the calendar.

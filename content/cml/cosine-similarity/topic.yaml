@@ -1,0 +1,17 @@
+id: cml/cosine-similarity
+title: Cosine similarity
+tier: A
+requires: [cml/vector-operations, cml/vector-and-matrix-norms]
+aliases: [cosine distance, angular similarity, normalised dot product, pairwise similarity, Pearson correlation]
+objectives:
+  - Compute cosine similarity for every pair of rows in two matrices, stating the convention for zero-norm rows
+  - Explain why normalising rows and taking a dot product gives cosine, and when magnitude should be kept
+  - Relate cosine to Euclidean distance for unit vectors and to Pearson correlation for centred data
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  Standard in retrieval and embedding interviews: "cosine or Euclidean, and why?" A good answer
+  shows that magnitude is often noise, and that normalising turns the cheap dot product into cosine.
+sources:
+  - "book: Deisenroth, Faisal & Ong, Mathematics for Machine Learning, §3.4 (angles and orthogonality)"
+  - "book: Strang, Introduction to Linear Algebra (5th ed.), chapter 1 (lengths and dot products)"
+status: reviewed

@@ -1,0 +1,14 @@
+id: dl/tensors-in-pytorch-and-tinygrad/p02-patchify-images-row-major
+version: 2                      # bump when tests, tolerances or the contract change
+title: Patchify images in row-major order
+language: python                # python | sql
+runtime: py-torch               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: patchify                 # the function or class name the learner implements
+difficulty: medium
+minutes: 20
+core: false                     # variant; p01 is the core problem
+# Patches are copies of input values, so the comparison must be exact: no tolerance at all.
+tolerance: {atol: 0.0, rtol: 0.0}
+banned_imports: [torch.nn, torch.nn.functional.unfold]  # bans F.unfold and Tensor.unfold alike
+timeout_s: 30
+status: reviewed

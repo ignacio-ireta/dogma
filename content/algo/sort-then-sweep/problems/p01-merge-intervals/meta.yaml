@@ -1,0 +1,13 @@
+id: algo/sort-then-sweep/p01-merge-intervals
+version: 2                      # bump when tests, tolerances or the contract change
+title: Merge overlapping intervals
+language: python
+runtime: py-stdlib
+entry: merge_intervals
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: integer endpoints
+banned_imports: []
+timeout_s: 30
+status: reviewed

@@ -1,0 +1,32 @@
+cards:
+  - id: cml/normal-equation#1
+    type: qa
+    front: What are the normal equations for least squares with design matrix A and target y?
+    back: "AᵀA β = Aᵀy. Their solution minimises ‖y − Aβ‖²."
+  - id: cml/normal-equation#2
+    type: qa
+    front: Why is the residual r = y − Aβ̂ orthogonal to every column of A at the least-squares fit?
+    back: The gradient of ‖y − Aβ‖² is −2Aᵀ(y − Aβ). Setting it to zero gives Aᵀr = 0, so each column of A has zero dot product with r.
+  - id: cml/normal-equation#3
+    type: qa
+    front: When is the least-squares solution unique?
+    back: When A has full column rank, that is, its columns are linearly independent. Then AᵀA is invertible.
+  - id: cml/normal-equation#4
+    type: qa
+    front: What does the hat matrix H = A(AᵀA)⁻¹Aᵀ do?
+    back: It projects y onto the column space of A, giving the fitted values ŷ = Hy. H is symmetric and idempotent (H² = H).
+  - id: cml/normal-equation#5
+    type: cloze
+    text: "In the 2-norm, κ(AᵀA) = {{c1::κ(A)²}}, so solving the normal equations loses roughly twice as many digits as the design itself."
+  - id: cml/normal-equation#6
+    type: qa
+    front: Why does one-hot encoding plus an intercept column make the design rank deficient?
+    back: The one-hot columns of a categorical feature sum to the intercept column. This is the dummy-variable trap. Drop one level, or regularise.
+  - id: cml/normal-equation#7
+    type: qa
+    front: Why check the rank of the design before solving the normal equations?
+    back: A rank-deficient AᵀA has no unique solution. np.linalg.solve may raise LinAlgError or return arbitrary coefficients without any error.
+  - id: cml/normal-equation#8
+    type: qa
+    front: Do the normal equations always have a solution?
+    back: Yes. Aᵀy always lies in the range of AᵀA, so the normal equations are consistent.

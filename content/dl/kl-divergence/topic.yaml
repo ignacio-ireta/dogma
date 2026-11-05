@@ -1,0 +1,15 @@
+id: dl/kl-divergence
+title: "KL divergence"
+tier: A
+requires: ['cml/entropy-and-mutual-information', 'cml/cross-entropy', 'cml/softmax']
+aliases: ['relative entropy', 'information divergence', 'forward KL', 'reverse KL', 'KL from logits']
+objectives:
+  - Implement KL divergence between batches of categorical distributions from logits, with the zero rules
+  - Explain forward versus reverse KL and how KL relates to cross-entropy
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: State the direction and the zero rules first, then derive KL as cross-entropy minus entropy.
+sources:
+  - "paper: Kullback and Leibler 1951, On Information and Sufficiency (Annals of Mathematical Statistics 22(1))"
+  - "paper: Kingma and Welling 2013, Auto-Encoding Variational Bayes (arXiv:1312.6114)"
+  - "library: Mathematics/09-Information-Theory/Kullback-Leibler - Information Divergence 1951.md"
+status: reviewed

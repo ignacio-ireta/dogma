@@ -1,0 +1,18 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: llm/rotary-position-embeddings-rope
+title: "Rotary position embeddings (RoPE)"
+tier: A
+requires: [dl/positional-encodings, dl/multi-head-attention]
+aliases: [RoPE, rotary embedding, half-split RoPE, rotate_half, interleaved RoPE, position interpolation, KV cache offset]
+objectives:
+  - "Apply half-split RoPE to queries and keys only, with positions starting at a cache offset"
+  - "Convert between the half-split and interleaved-pair layouts with one fixed permutation"
+  - "Explain linear position interpolation and what scaling the positions does to the angles"
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: "Say that RoPE rotates q and k inside each head, so the score sees only the offset, then name the layout, the cache offset and the scaling trade-off."
+sources:
+  - "paper: Su, Lu, Pan, Murtadha, Wen and Liu 2021, RoFormer: Enhanced Transformer with Rotary Position Embedding (arXiv:2104.09864)"
+  - "corpus: library-papers/2302.13971.pdf.md (LLaMA, section 2.2, rotary embeddings)"
+  - "library: AI-ML/13-Scaling-and-Alignment/Touvron et al. — LLaMA 2023.md"
+  - "paper: Chen et al. 2023, Extending Context Window of Large Language Models via Positional Interpolation (arXiv:2306.15595)"
+status: reviewed

@@ -1,0 +1,29 @@
+cards:
+  - id: dl/sgd-with-momentum#1
+    type: qa
+    front: What does the momentum buffer v hold?
+    back: An exponential moving sum of past gradients, v_t = mu * v_{t-1} + g_t.
+  - id: dl/sgd-with-momentum#2
+    type: qa
+    front: What is the PyTorch first-step buffer when momentum is set and dampening is 0?
+    back: v_1 = g_1, the raw gradient, not (1 - momentum) * g_1.
+  - id: dl/sgd-with-momentum#3
+    type: qa
+    front: Where does the learning rate enter the PyTorch momentum update?
+    back: Only in the parameter update, p = p - lr * v. The buffer carries no learning rate.
+  - id: dl/sgd-with-momentum#4
+    type: qa
+    front: Why do the PyTorch form and the lr-in-buffer form agree only for a constant learning rate?
+    back: The lr-in-buffer form stores lr inside the buffer, so its buffer is lr times PyTorch's buffer; a changing lr scales old and new contributions differently.
+  - id: dl/sgd-with-momentum#5
+    type: qa
+    front: What is the steady-state step for a constant gradient g with momentum mu?
+    back: The buffer tends to g / (1 - mu), so the effective step is lr * g / (1 - mu).
+  - id: dl/sgd-with-momentum#6
+    type: qa
+    front: In Nesterov momentum with the PyTorch convention, what is the update direction?
+    back: g + mu * v_t, a look-ahead along the new buffer.
+  - id: dl/sgd-with-momentum#7
+    type: qa
+    front: Where does coupled weight decay enter the momentum update?
+    back: Added to the gradient before the buffer, g + lambda * theta, so momentum smooths the penalty too.

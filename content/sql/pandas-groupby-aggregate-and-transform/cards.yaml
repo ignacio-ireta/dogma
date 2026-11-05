@@ -1,0 +1,28 @@
+cards:
+  - id: sql/pandas-groupby-aggregate-and-transform#1
+    type: qa
+    front: "What is the difference between groupby().agg() and groupby().transform() in the shape of the result?"
+    back: "agg returns one row per group, indexed by the group keys. transform returns one value per input row, with the input's index."
+  - id: sql/pandas-groupby-aggregate-and-transform#2
+    type: qa
+    front: "What does groupby('customer_id').cumcount() return, and what do you add to get a 1-based sequence?"
+    back: "An int64 count per row inside its group, starting at 0 in row order. Add 1 to get a 1-based sequence."
+  - id: sql/pandas-groupby-aggregate-and-transform#3
+    type: qa
+    front: "What dtype does Series.rank(method='first') return for whole-number values?"
+    back: "float64, not int64. Cast it or use cumcount() + 1 when the result must be an integer."
+  - id: sql/pandas-groupby-aggregate-and-transform#4
+    type: qa
+    front: "What does groupby(key)[col].shift() give for the first row of each group?"
+    back: "NaN (NaT for datetime columns). Shift works within the group, not across the whole column."
+  - id: sql/pandas-groupby-aggregate-and-transform#5
+    type: qa
+    front: "With the default dropna=True, what does transform('sum') return for a row whose group key is NaN?"
+    back: "NaN. The default drops NaN keys from the groups, so no group exists for that row."
+  - id: sql/pandas-groupby-aggregate-and-transform#6
+    type: qa
+    front: "Does groupby(..., sort=False) change the order of rows inside each group?"
+    back: "No. sort controls the order of the group keys in the result. Rows inside a group keep their input order either way."
+  - id: sql/pandas-groupby-aggregate-and-transform#7
+    type: cloze
+    text: "A Series of timedeltas gives .dt.days as float64 when a NaT is present, but as {{c1::int64}} for an empty frame, so cast it explicitly."

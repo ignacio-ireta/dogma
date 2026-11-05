@@ -1,0 +1,14 @@
+id: cml/tf-idf-and-bm25/p02-bm25-scores
+version: 2                      # bump when tests, tolerances or the contract change
+title: BM25 scores for a query
+language: python
+runtime: py-numpy
+entry: bm25_scores
+difficulty: medium
+minutes: 25
+core: false
+# Scores are sums of products of logarithms and ratios: 1e-9 is far above rounding noise.
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [sklearn]       # no library ranker: the learner writes the formula
+timeout_s: 30
+status: reviewed

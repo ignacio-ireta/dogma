@@ -1,0 +1,13 @@
+id: cml/cross-entropy/p01-cross-entropy-from-logits
+version: 3
+title: Cross-entropy from logits
+language: python
+runtime: py-numpy
+entry: cross_entropy_from_logits
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [scipy, sklearn, torch]
+timeout_s: 30
+status: reviewed

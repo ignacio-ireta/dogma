@@ -1,0 +1,17 @@
+id: algo/two-pointers-and-sliding-windows
+title: Two pointers and sliding windows
+tier: A
+requires: [algo/hash-maps-and-sets]
+aliases: [sliding window, two pointers, window, subarray, substring, contiguous, monotone, amortized O(n), at most k distinct]
+objectives:
+  - Solve longest-window problems with one left and one right pointer that only move forward, in O(n) time
+  - Write the shrink step as a while loop, and state the invariant that makes each recorded window valid
+  - Explain why non-negative values are required for the shrink step, and give a counterexample when they are negative
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "Longest subarray whose sum is at most k" and "longest substring with at most k distinct characters"
+  are common screen questions. The interviewer checks whether you name the window and its monotone rule
+  before writing code, whether the shrink is a while, and whether you ask if the values can be negative.
+sources:
+  - "book: Cormen et al., Introduction to Algorithms (3rd ed.), chapter on amortized analysis (the O(n) pointer-movement argument)"
+status: reviewed

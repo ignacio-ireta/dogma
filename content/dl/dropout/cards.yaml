@@ -1,0 +1,21 @@
+cards:
+- id: dl/dropout#1
+  type: qa
+  front: What is the inverted dropout training multiplier?
+  back: A Bernoulli keep indicator divided by the keep probability.
+- id: dl/dropout#2
+  type: qa
+  front: What multiplier does inverted dropout use in evaluation?
+  back: One, so no activation rescaling is needed.
+- id: dl/dropout#3
+  type: qa
+  front: Which mask does backward use?
+  back: The same realized multiplier used in forward.
+- id: dl/dropout#4
+  type: qa
+  front: Why hold the seed fixed in dropout finite differences?
+  back: Both perturbations must evaluate the same sampled function.
+- id: dl/dropout#5
+  type: qa
+  front: Must each dropout batch retain exactly the keep fraction?
+  back: No. Independent Bernoulli trials have a random retained count.

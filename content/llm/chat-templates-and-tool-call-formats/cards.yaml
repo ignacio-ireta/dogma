@@ -1,0 +1,26 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: llm/chat-templates-and-tool-call-formats#1
+    type: qa
+    front: What are the four parts of a chat template?
+    back: "Roles, reserved special tokens that open and close messages, turn-order rules, and the generation prompt."
+  - id: llm/chat-templates-and-tool-call-formats#2
+    type: cloze
+    text: "With add_generation_prompt set, the rendered string ends with the open marker of the {{c1::next assistant turn}}."
+  - id: llm/chat-templates-and-tool-call-formats#3
+    type: qa
+    front: Why does a mismatched chat template hurt quality without raising an error?
+    back: "The model reads text it was not trained on, and the output still looks like ordinary text."
+  - id: llm/chat-templates-and-tool-call-formats#4
+    type: qa
+    front: What may come directly before a tool message in this topic's template rules?
+    back: "An assistant message (the call) or another tool message. A user message may not come directly before a tool message."
+  - id: llm/chat-templates-and-tool-call-formats#5
+    type: qa
+    front: Why must a schema check reject a boolean in an integer slot?
+    back: "bool is a subclass of int in Python, so a naive isinstance check accepts True as an integer."
+  - id: llm/chat-templates-and-tool-call-formats#6
+    type: qa
+    front: Why reject duplicate keys in a tool-call JSON object?
+    back: "Most parsers keep the last duplicate silently, so the call the parser sees may not be the one the model wrote."

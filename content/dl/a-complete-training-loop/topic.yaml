@@ -1,0 +1,19 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: dl/a-complete-training-loop
+title: "A complete training loop"
+tier: A
+requires: [dl/one-training-step, cml/shuffling-splitting-and-batching-data, cml/over-and-underfitting-early-stopping]
+aliases: [training loop, epochs, mini-batches, seeded shuffle, eval mode, best checkpoint, fit]
+objectives:
+  - Write a training loop with per-epoch shuffling from a seeded generator, including the partial last batch
+  - Log train loss weighted by batch size and validation loss measured in eval mode without gradients
+  - Restore the best-validation state and say which tie rule the contract uses
+minutes: {lesson: 12, practice: 30, min_viable: 15}
+interview_angle: >-
+  "Walk me through a training loop, and how would you make two runs comparable?" The answer names the
+  epoch and batch structure, the weighted logging, the eval mode and the seed.
+sources:
+  - "library: AI-ML/03-Optimization/Robbins Monro Stochastic Approximation 1951.md"
+  - "book: Goodfellow, Bengio and Courville, Deep Learning, ch. 8 (optimization: mini-batch algorithms)"
+  - "book: Goodfellow, Bengio and Courville, Deep Learning, ch. 7 (regularization: early stopping)"
+status: reviewed

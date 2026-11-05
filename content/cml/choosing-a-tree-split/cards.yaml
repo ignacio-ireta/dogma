@@ -1,0 +1,28 @@
+cards:
+  - id: cml/choosing-a-tree-split#1
+    type: qa
+    front: "What is the Gini impurity of a node?"
+    back: "G = 1 - sum of p_k squared over the classes. It is 0 for a pure node and largest when the classes are balanced."
+  - id: cml/choosing-a-tree-split#2
+    type: qa
+    front: "Write the impurity decrease of a split."
+    back: "I(parent) - (n_L / n) I(left) - (n_R / n) I(right). The child weights are essential."
+  - id: cml/choosing-a-tree-split#3
+    type: cloze
+    text: "Candidate thresholds are {{c1::midpoints between consecutive distinct sorted values}}, so equal values never give a split."
+  - id: cml/choosing-a-tree-split#4
+    type: qa
+    front: "Why is the best numeric threshold found in O(n log n)?"
+    back: "For a fixed number of classes, one sort plus running class counts makes sorting dominate. A full prefix-count table also costs O(n C) time and space for C classes."
+  - id: cml/choosing-a-tree-split#5
+    type: qa
+    front: "What is the regression split criterion in terms of child means?"
+    back: "The SSE decrease equals (n_L n_R / n)(mean_L - mean_R) squared. A regression split maximises the gap between child means."
+  - id: cml/choosing-a-tree-split#6
+    type: qa
+    front: "Why can a greedy first split miss an XOR interaction?"
+    back: "Every single split has zero impurity decrease at the root, so no split looks useful. The interaction needs depth two."
+  - id: cml/choosing-a-tree-split#7
+    type: qa
+    front: "How can a categorical feature with many categories be split for a binary target under Gini?"
+    back: "Order the categories by the positive-class proportion, then scan the orderings like a numeric feature (Breiman et al., 1984)."

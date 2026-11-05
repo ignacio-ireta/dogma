@@ -1,0 +1,17 @@
+id: cml/lagrange-multipliers
+title: Lagrange multipliers
+tier: B
+requires: [cml/partial-derivatives-and-gradients, cml/hessians-definiteness-and-critical-points, cml/matrix-inverse-and-rank]
+aliases: [Lagrangian, KKT conditions, equality constraints, shadow price, dual variable, constrained optimisation, stationary point]
+objectives:
+  - Write the KKT system for a quadratic minimised subject to linear equality constraints, and solve it with NumPy to get the multipliers
+  - Distinguish a constrained stationary point from a constrained minimum, and say when convexity makes them the same
+  - Interpret the multiplier as the sensitivity of the optimal value to the constraint level, and check it by finite differences
+minutes: {lesson: 12, practice: 30, min_viable: 15}
+interview_angle: >-
+  "How do you minimise f subject to a constraint, and what does the multiplier mean?" A strong answer states the sign convention, the sensitivity meaning, and that a KKT point is only a candidate without convexity.
+sources:
+  - "book: Boyd & Vandenberghe, Convex Optimization, ch. 5 (duality, KKT conditions and sensitivity)"
+  - "book: Deisenroth, Faisal & Ong, Mathematics for Machine Learning, ch. 7 (constrained optimization and Lagrange multipliers)"
+  - "source: library-refresh/01-Mathematics/08-Optimization/2004 -- Boyd and Vandenberghe -- Convexity, Duality and KKT Certificates -- Study Note.md"
+status: reviewed

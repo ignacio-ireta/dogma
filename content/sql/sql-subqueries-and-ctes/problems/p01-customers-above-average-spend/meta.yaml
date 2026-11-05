@@ -1,0 +1,16 @@
+id: sql/sql-subqueries-and-ctes/p01-customers-above-average-spend
+version: 2                      # bump when tests, tolerances or the contract change
+title: Customers above the average completed spend
+language: sql
+runtime: sql-duckdb
+entry: query
+difficulty: medium
+minutes: 25
+core: true
+# Totals and averages are compared with a relative tolerance of 1e-9 and an absolute one of 1e-6.
+# Amounts are multiples of 0.25, which are exact in binary floating point, so a total that equals
+# the average is decided the same way by every summation order.
+tolerance: {atol: 1.0e-6, rtol: 1.0e-9}
+banned_imports: []              # SQL problems: nothing to ban at the module level
+timeout_s: 30
+status: reviewed

@@ -1,0 +1,15 @@
+id: dl/adamw-decoupled-weight-decay
+title: "AdamW decoupled weight decay"
+tier: A
+requires: ['dl/adam', 'cml/ridge-regression-and-weight-decay']
+aliases: [decoupled weight decay, AdamW, L2 regularisation, weight decay, parameter groups, no-decay parameters]
+objectives:
+  - Implement the AdamW step with decoupled decay and match torch.optim.AdamW, and show that it differs from Adam with L2 decay
+  - Explain why L2 in the gradient is normalised by the adaptive scale while decoupled decay is not
+  - Build AdamW parameter groups that exclude biases and 1-D norm gains from decay
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: "Explain why Adam with weight_decay is not the regularisation you think it is, and say which parameters you would exclude from decay in a transformer."
+sources:
+  - "paper: Loshchilov and Hutter 2019, Decoupled Weight Decay Regularization (arXiv:1711.05101), section 2"
+  - "library: AI-ML/03-Optimization/Loshchilov AdamW 2019.md"
+status: reviewed

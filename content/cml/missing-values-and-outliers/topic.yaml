@@ -1,0 +1,19 @@
+id: cml/missing-values-and-outliers
+title: Missing values and outliers
+tier: A
+requires: [cml/descriptive-statistics, cml/shuffling-splitting-and-batching-data]
+aliases: [imputation, missing indicator, MCAR, MAR, MNAR, outlier, modified z-score, MAD, winsorize]
+objectives:
+  - Impute numeric gaps from training-visible statistics and record missingness with indicator columns
+  - Flag outliers with the median and the median absolute deviation, and state the zero-MAD convention
+  - Classify missingness as MCAR, MAR or MNAR, and say which choice of imputation or deletion each one allows
+minutes: {lesson: 12, practice: 30, min_viable: 15}
+interview_angle: >-
+  "What do you do with missing values and outliers?" A strong answer asks why the values are missing
+  before choosing a fill, keeps an indicator, fits the fill inside each training fold, and decides
+  whether an outlier is an error or a real extreme.
+sources:
+  - "book: Little & Rubin, Statistical Analysis with Missing Data, the chapter on missing-data mechanisms"
+  - "book: Iglewicz & Hoaglin 1993, How to Detect and Handle Outliers (modified z-score)"
+  - "book: Kuhn & Johnson, Applied Predictive Modeling, chapter 3 (data pre-processing, missing values and outliers)"
+status: reviewed

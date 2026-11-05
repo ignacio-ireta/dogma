@@ -1,0 +1,29 @@
+# Seven cards, one fact each (CONTENT_SPEC section 4).
+cards:
+  - id: sys/rag-system-design-case#1
+    type: qa
+    front: What are the two failure points in a document-answering system?
+    back: Retrieval, where the gold passage never reaches the prompt, and generation, where the passage is there but the answer is wrong or unsupported.
+  - id: sys/rag-system-design-case#2
+    type: qa
+    front: Why measure recall@5 of the gold passage before generation accuracy?
+    back: Generation can only be correct when the gold passage is among the packed chunks.
+  - id: sys/rag-system-design-case#3
+    type: cloze
+    text: "A nightly-synced permission copy can serve a revoked page for up to {{c1::24 hours}}."
+  - id: sys/rag-system-design-case#4
+    type: qa
+    front: Why filter by permission before generation, not after?
+    back: Restricted text in the prompt can be quoted, and a check on the answer comes too late.
+  - id: sys/rag-system-design-case#5
+    type: qa
+    front: What is the 95 percent interval half-width for accuracy 0.80 on 400 questions?
+    back: About 4 points, which is 1.96 times the square root of 0.8 times 0.2 over 400.
+  - id: sys/rag-system-design-case#6
+    type: qa
+    front: What must the index store for each document version?
+    back: A status and an effective date, so retrieval can exclude superseded versions.
+  - id: sys/rag-system-design-case#7
+    type: qa
+    front: Why compare two systems with a paired test on one evaluation set?
+    back: Both systems answer the same questions, so question difficulty cancels out of the comparison.

@@ -1,0 +1,17 @@
+id: algo/hash-maps-and-sets
+title: Hash maps and sets
+tier: A
+requires: []
+aliases: [hash table, dictionary, dict, hash set, counting, frequency count, top-k, membership test, Counter]
+objectives:
+  - Count and group items in one pass with a hash map, using the get-or-default idiom
+  - Use a set for average constant-time membership tests, and explain why a list scan is O(n)
+  - Choose between sorting and a heap for top-k, and state the cost of each
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "Find the k most frequent items" is a standard warm-up. The interviewer wants the counting pass,
+  a justified choice between sort and heap, and the tie-breaking rule stated out loud.
+sources:
+  - "book: Cormen et al., Introduction to Algorithms (3rd ed.), ch. 11 (hash tables)"
+  - "book: Cormen et al., Introduction to Algorithms (3rd ed.), ch. 6 (heapsort and priority queues)"
+status: reviewed

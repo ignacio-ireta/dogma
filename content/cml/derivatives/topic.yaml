@@ -1,0 +1,17 @@
+id: cml/derivatives
+title: Derivatives
+tier: A
+requires: []
+aliases: [difference quotient, finite differences, slope, tangent line, numerical differentiation, central difference, forward difference]
+objectives:
+  - Estimate a derivative with forward and central differences, and state the error order of each
+  - Choose a finite-difference step by balancing truncation error against round-off error
+  - Explain why a derivative is the best local linear approximation, and where it fails at kinks
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  Rarely asked as pure theory, but it is the basis of gradient checking, the standard way to debug
+  backprop. Expect the step-size trade-off and why central beats forward.
+sources:
+  - "book: Deisenroth, Faisal & Ong, Mathematics for Machine Learning, chapter 5 (vector calculus), univariate differentiation"
+  - "book: Burden & Faires, Numerical Analysis, chapter on numerical differentiation"
+status: reviewed

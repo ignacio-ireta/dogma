@@ -1,0 +1,16 @@
+id: sql/sql-cohort-retention/p01-cohort-retention-by-month
+version: 1                      # bump when tests, tolerances or the contract change
+title: Monthly cohort retention table
+language: sql
+runtime: sql-duckdb
+entry: query
+difficulty: medium
+minutes: 20
+core: true
+# rate is ROUND(x, 4): the grader accepts either rounding of a fifth-decimal tie, so it compares the
+# rate with a tolerance of half a unit in the fourth decimal (5e-5) plus a small margin for DOUBLE error.
+# An unrounded rate also fails: the test requires a multiple of 1e-4, so the atol alone is not enough.
+tolerance: {atol: 5.0e-5, rtol: 0.0}
+banned_imports: []
+timeout_s: 30
+status: reviewed

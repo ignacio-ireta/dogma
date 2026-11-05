@@ -1,0 +1,32 @@
+cards:
+  - id: cml/sampling-distributions-standard-errors-and-cis#1
+    type: qa
+    front: What is the standard error of the sample mean for n independent observations with standard deviation σ?
+    back: σ / √n. It is the standard deviation of the sampling distribution of x̄, not of the data.
+  - id: cml/sampling-distributions-standard-errors-and-cis#2
+    type: qa
+    front: For normal data with unknown σ, what distribution does (x̄ − μ) / (s / √n) follow?
+    back: Student's t distribution with n − 1 degrees of freedom.
+  - id: cml/sampling-distributions-standard-errors-and-cis#3
+    type: qa
+    front: What does a 95% confidence interval guarantee?
+    back: The procedure covers the true parameter in 95% of repeated samples. It does not give a 95% probability for one computed interval.
+  - id: cml/sampling-distributions-standard-errors-and-cis#4
+    type: cloze
+    text: "To halve the standard error of the mean you must multiply n by {{c1::4}}."
+  - id: cml/sampling-distributions-standard-errors-and-cis#5
+    type: qa
+    front: Why divide the sum of squared deviations by n − 1 when estimating σ²?
+    back: The sum has expectation (n − 1)σ², so dividing by n − 1 gives an unbiased estimate of σ². Dividing by n biases it low.
+  - id: cml/sampling-distributions-standard-errors-and-cis#6
+    type: qa
+    front: Why does a z-based 95% interval under-cover at n = 5?
+    back: With 4 degrees of freedom the 97.5% t quantile is 2.776, not 1.960. Using z gives about 88% coverage on normal data.
+  - id: cml/sampling-distributions-standard-errors-and-cis#7
+    type: qa
+    front: Why does a 99% interval have a larger half-width than a 95% interval from the same data?
+    back: The t quantile at 99.5% is larger than the one at 97.5%, so the margin t × s / √n grows.
+  - id: cml/sampling-distributions-standard-errors-and-cis#8
+    type: qa
+    front: Why does the t interval undercover for small, skewed samples?
+    back: The sample mean keeps the skew of the data at small n, so the symmetric t interval misses the true mean too often. For exponential data at n = 5 coverage is about 88%.

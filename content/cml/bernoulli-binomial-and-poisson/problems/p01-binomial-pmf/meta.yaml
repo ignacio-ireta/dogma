@@ -1,0 +1,15 @@
+id: cml/bernoulli-binomial-and-poisson/p01-binomial-pmf
+version: 3
+title: Binomial probability mass function
+language: python
+runtime: py-numpy
+entry: binomial_pmf
+difficulty: medium
+minutes: 25
+core: true
+# rtol 1e-7, not the usual 1e-9: lgamma(10^6) is about 1.3e7, so the log-binomial coefficient
+# loses about 7 digits. The measured error of a correct log-space pmf is near 2e-9 (see the lesson).
+tolerance: {atol: 1.0e-14, rtol: 1.0e-7}
+banned_imports: [scipy]
+timeout_s: 30
+status: reviewed

@@ -1,0 +1,21 @@
+id: cml/leakage-and-walk-forward-validation
+title: Leakage and walk-forward validation
+tier: A
+requires: [cml/k-fold-cross-validation]
+aliases: [data leakage, target leakage, train test contamination, temporal leakage, walk-forward validation, time series cross-validation, expanding window, rolling window, target encoding, purged validation, label latency]
+objectives:
+  - Implement walk-forward splits with an explicit gap, expanding or rolling windows, and the rule that no test row precedes a training row
+  - Implement a leakage-safe target encoding that uses only earlier rows, and show that its encoding ignores the row's own target
+  - Name the leakage types (target, contamination, temporal, preprocessing, duplicate entities) and the check that exposes each
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "Your model's score jumped after one feature was added. What do you check?" and "How do you validate a model
+  that predicts next week's demand?" The strong answer names the leakage type, the test that exposes it, and
+  the split that matches how the model will be used.
+sources:
+  - "paper: Kaufman, Rosset, Perlich & Stitelman 2012, Leakage in data mining: formulation, detection, and avoidance (ACM TKDD)"
+  - "paper: Ambroise & McLachlan 2002, Selection bias in gene extraction on the basis of microarray gene-expression data (PNAS)"
+  - "book: Hyndman & Athanasopoulos, Forecasting: Principles and Practice, chapter on evaluating forecast accuracy (time series cross-validation)"
+  - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter 7 (model assessment and selection)"
+  - "source: library-refresh/01-Mathematics/06-Probability-and-Statistics/2020 -- Hernán and Robins -- Identification Before Estimation -- Study Note.md"
+status: reviewed

@@ -1,0 +1,71 @@
+/* The calendar and start-over sections on the Progress page. Reuses the page's own classes. */
+.calendar,
+.start-over {
+  display: grid;
+  gap: 0.75rem;
+  margin-block: 1.5rem;
+}
+
+.calendar__week {
+  font-weight: 600;
+}
+
+.calendar__actions,
+.calendar__goto {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.calendar__goto select {
+  min-height: 44px;
+}
+
+.calendar__preview {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid currentColor;
+  border-radius: 0.5rem;
+}
+
+/* Two aligned columns (label, before → after); one column on narrow screens. */
+.calendar__changes {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 1rem;
+  margin: 0;
+}
+
+.calendar__changes > div {
+  display: contents;
+}
+
+.calendar__changes dt {
+  font-weight: 600;
+}
+
+@media (max-width: 30rem) {
+  .calendar__changes {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar__changes dd {
+    margin-bottom: 0.25rem;
+  }
+}
+
+.calendar__changes dd {
+  margin: 0;
+}
+
+.start-over__field {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.start-over__field input {
+  min-height: 44px;
+  max-width: 100%;
+}

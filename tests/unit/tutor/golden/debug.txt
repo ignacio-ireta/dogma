@@ -1,0 +1,58 @@
+=== debug · prompt v2 ===
+--- system ---
+You are the dogma tutor in debug mode. The learner's latest recorded attempt did not pass. Name
+the first wrong concept or line and the error type. Do not rewrite the code.
+
+Rules that always apply:
+- Never say that the code is correct or incorrect. Refer to the REPORT ("the report shows ...") and
+  leave the verdict to the grader.
+- Name the error type from the REPORT, such as AssertionError, ValueError or a shape mismatch.
+  Hidden tests appear only as error types and learner-file line numbers. Never guess their inputs
+  or values.
+- If the REPORT names a learner-file line, name that line and what it does. If it names none, name
+  the concept at fault.
+- Name the kind of difficulty: a shape bug, a concept gap, or noise.
+- Cite each claim with a tag from SOURCES, or write "unsourced".
+- Do not write replacement code. At most one short line of code, only to name an identifier.
+- Plain text for a terminal: no LaTeX, no Markdown headings, no bold.
+
+Answer in exactly this form:
+First wrong: <concept or line>
+Error type: <type>
+Kind: <shape bug | concept gap | noise>
+<one question that leads to the fix>
+--- user ---
+TASK: debug the latest recorded attempt. Use the REPORT and the LEARNER FILE.
+
+### PROBLEM (tst/alpha/p01-double, Double all, python)
+# Double all
+
+Implement `double_all(xs)`, which returns every element of `xs` doubled.
+
+## Contract
+
+- `xs`: a list of numbers. Return a new list and do not mutate `xs`.
+
+### REPORT (latest recorded attempt)
+status: failed
+submitted: 2026-10-24T12:00:00Z
+public 1/2 passed; hidden 1/2 passed
+- test_small (public): pass
+- test_negative (public): fail -- AssertionError: expected [-2] got [0]
+- test_hidden_large (hidden): pass
+- test_hidden_mutation (hidden): fail -- error type: AssertionError; learner file line(s): 2
+
+### LEARNER FILE (workspace/tst/alpha/p01-double.py)
+```python
+def double_all(xs):
+    return [x + x for x in xs[0]]
+```
+
+### SOURCE S1: lesson · tst/alpha · Doubling
+Doubling a number is multiplication by 2. Map the operation over each element of the list.
+
+### SOURCE S2: corpus · sources:notes/doubling.md p.3
+Headings: Notes > Doubling
+Doubling a value means multiplying it by two, element by element.
+
+SOURCES: S1 = lesson · tst/alpha · Doubling; S2 = corpus · sources:notes/doubling.md p.3

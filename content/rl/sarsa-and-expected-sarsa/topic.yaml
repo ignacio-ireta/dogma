@@ -1,0 +1,21 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+# Sources: the repository has NO Sutton & Barto primary text (the design spec keeps this gap
+# explicit). The update rules, the epsilon-greedy weights, the reductions to Q-learning and the
+# uniform mean, and the variance decomposition were checked numerically: hand-computed fixtures in
+# the problem's tests and exact-rational checks outside the repository. They were not checked
+# against the book's text. The Robbins-Monro note is the stochastic-approximation reference.
+id: rl/sarsa-and-expected-sarsa
+title: "Sarsa and expected Sarsa"
+tier: B
+requires: ['rl/q-learning', 'rl/epsilon-greedy-exploration']
+aliases: [on-policy TD control, Sarsa target, expected Sarsa, policy-weighted target, next action, on-policy vs off-policy, variance of TD target, SARSA]
+objectives:
+  - Implement the Sarsa update with the action taken next, and the expected Sarsa update with epsilon-greedy policy weights, both without mutating the table
+  - Verify both targets on hand-computed fixtures, including a tie among greedy actions and a terminal next state
+  - Explain how expected Sarsa relates to Sarsa (variance) and to Q-learning (epsilon = 0 gives the max target), and state the on-policy condition for convergence with appropriate caution
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: Explain what the next-state term averages over in Sarsa, expected Sarsa and Q-learning, why expected Sarsa has lower target variance, and when Sarsa is the safer learner.
+sources:
+  - "book: Sutton & Barto, Reinforcement Learning: An Introduction (2nd ed.), chapter on temporal-difference learning (Sarsa, expected Sarsa)"
+  - "library: Mathematics/11-Optimization-Theory/Robbins-Monro - Stochastic Approximation 1951.md"
+status: reviewed

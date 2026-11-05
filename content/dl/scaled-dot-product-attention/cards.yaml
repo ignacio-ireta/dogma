@@ -1,0 +1,24 @@
+cards:
+  - id: dl/scaled-dot-product-attention#1
+    type: qa
+    front: What are the shapes of Q, K, V and the attention weights for L queries, S keys, d_k, d_v?
+    back: Q is (L, d_k), K is (S, d_k), V is (S, d_v), and the weights are (L, S), each row summing to 1.
+  - id: dl/scaled-dot-product-attention#2
+    type: qa
+    front: Why divide the scores by sqrt(d_k)?
+    back: For unit-variance independent components, q.k has variance d_k; dividing by sqrt(d_k) restores unit variance so the softmax does not saturate.
+  - id: dl/scaled-dot-product-attention#3
+    type: qa
+    front: Why does subtracting the row maximum leave the softmax unchanged?
+    back: The same constant cancels in the numerator and denominator, and choosing the maximum keeps every exponent at most 0.
+  - id: dl/scaled-dot-product-attention#4
+    type: qa
+    front: Which axis does the attention softmax normalise over?
+    back: The key axis, the last axis of the (L, S) scores, so each query row is a distribution over keys.
+  - id: dl/scaled-dot-product-attention#5
+    type: cloze
+    text: "A boolean attention mask with True = may attend removes a pair by setting its score to {{c1::minus infinity before the softmax}}."
+  - id: dl/scaled-dot-product-attention#6
+    type: qa
+    front: What goes wrong for a query row with no allowed keys?
+    back: Its maximum is -inf, so z - max is NaN; a naive softmax returns NaN. The p01 contract returns zero weights and output for that row.

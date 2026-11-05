@@ -1,0 +1,12 @@
+version: 1
+source: test fixture (not the real outline)
+tracks:
+  - code: tst
+    order: 1
+    title: "Test track"
+    origin: deepml
+    topic_count: 3
+    topics:
+      - {id: tst/alpha, title: "Alpha topic", tier: A}
+      - {id: tst/beta, title: "Beta topic", tier: B}
+      - {id: tst/gamma, title: "Gamma topic", tier: A}

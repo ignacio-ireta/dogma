@@ -1,0 +1,20 @@
+cards:
+  - id: llm/negative-log-likelihood-and-perplexity#1
+    type: qa
+    front: What is the NLL of one scored token from logits z and target y?
+    back: LSE(z) - z_y, where LSE(z) = log sum over v of exp(z_v). This is -log softmax(z)_y.
+  - id: llm/negative-log-likelihood-and-perplexity#2
+    type: qa
+    front: What is the denominator of the mean NLL in a padded batch?
+    back: The number of non-ignored tokens. Not B times T, and not B.
+  - id: llm/negative-log-likelihood-and-perplexity#3
+    type: qa
+    front: How is perplexity defined from the mean NLL in nats?
+    back: PPL = exp(mean NLL). In bits, PPL = 2 raised to the mean bits per token.
+  - id: llm/negative-log-likelihood-and-perplexity#4
+    type: qa
+    front: How do you compute log-sum-exp without overflow?
+    back: Subtract the row maximum m before exponentiating, then add m back to the log of the sum.
+  - id: llm/negative-log-likelihood-and-perplexity#5
+    type: cloze
+    text: "A uniform guess over V tokens has perplexity {{c1::V}}."

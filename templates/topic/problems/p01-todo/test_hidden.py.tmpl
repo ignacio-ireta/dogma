@@ -1,0 +1,24 @@
+# Hidden tests: at least five. Include an oracle comparison on seeded random inputs where a library
+# implementation exists. Name each test after the behaviour it checks; the name is what learners
+# see. Messages name the kind of mistake, never the values (CONTENT_SPEC §6.4).
+from submission import todo_entry
+
+
+def test_todo_hidden_matches_reference_on_random_inputs():
+    todo_entry()  # TODO: compare with an independent implementation on np.random.default_rng(0)
+
+
+def test_todo_hidden_empty_or_degenerate_input():
+    todo_entry()  # TODO: the degenerate case, and what it must do
+
+
+def test_todo_hidden_large_magnitudes_are_stable():
+    todo_entry()  # TODO: inputs near the float64 limits
+
+
+def test_todo_hidden_small_magnitudes_are_stable():
+    todo_entry()  # TODO: inputs near zero or underflow
+
+
+def test_todo_hidden_inputs_are_not_mutated():
+    todo_entry()  # TODO: check the arguments are unchanged after the call

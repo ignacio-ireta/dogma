@@ -1,0 +1,17 @@
+id: cml/cross-entropy
+title: Cross-entropy
+tier: A
+requires: [cml/softmax, cml/entropy-and-mutual-information, cml/maximum-likelihood-and-map]
+aliases: [log loss, negative log-likelihood, categorical cross-entropy, binary cross-entropy, KL divergence, label smoothing, logits loss]
+objectives:
+  - Implement the categorical cross-entropy from logits, with its gradient softmax minus one-hot, divided by n
+  - Implement the binary cross-entropy from a logit with the stable form, exact at extreme logits
+  - Decompose cross-entropy as entropy plus KL divergence, and explain label smoothing as a change of target
+minutes: {lesson: 12, practice: 35, min_viable: 20}
+interview_angle: >-
+  Expect the gradient prediction-minus-target, why the loss is computed from logits, the entropy and KL split,
+  and why a sigmoid with binary cross-entropy has no vanishing factor.
+sources:
+  - "book: Goodfellow, Bengio & Courville, Deep Learning, chapter on numerical computation"
+  - "book: Murphy, Probabilistic Machine Learning: An Introduction, chapter on logistic regression"
+status: reviewed

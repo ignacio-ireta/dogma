@@ -1,0 +1,24 @@
+cards:
+  - id: llm/bpe-encode-and-decode#1
+    type: qa
+    front: Which merge does BPE encoding apply first when several are available?
+    back: The one with the lowest rank, which is the earliest learned.
+  - id: llm/bpe-encode-and-decode#2
+    type: qa
+    front: How is BPE encoding different from greedy longest-match?
+    back: Longest-match ignores the merge order, so its split can differ from the one training learned.
+  - id: llm/bpe-encode-and-decode#3
+    type: qa
+    front: Why must the encoder loop repeat after each merge?
+    back: A merge can create a symbol that forms a new, possibly lower-rank pair with a neighbour.
+  - id: llm/bpe-encode-and-decode#4
+    type: qa
+    front: What does decoding concatenate and then remove?
+    back: It concatenates the tokens and removes the trailing end-of-word marker.
+  - id: llm/bpe-encode-and-decode#5
+    type: qa
+    front: Why decode byte-level BPE on the whole byte sequence rather than per token?
+    back: A token can end in the middle of a multi-byte UTF-8 character, so per-token decoding fails.
+  - id: llm/bpe-encode-and-decode#6
+    type: cloze
+    text: "Within one step, every occurrence of the chosen pair is merged {{c1::left to right}} without overlaps."

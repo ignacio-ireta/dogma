@@ -1,0 +1,19 @@
+id: dl/relu-family-activations/p01-relu-forward-and-gradient
+version: 2
+title: ReLU-family forward and local gradient
+language: python
+runtime: py-numpy
+entry: relu_family
+difficulty: medium
+minutes: 20
+core: true
+tolerance:
+  atol: 1.0e-09
+  rtol: 1.0e-09
+banned_imports:
+- torch
+- jax
+- scipy
+- sklearn
+timeout_s: 30
+status: reviewed

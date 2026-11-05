@@ -1,0 +1,14 @@
+id: cml/feature-scaling
+title: Feature scaling
+tier: A
+requires: [cml/descriptive-statistics, cml/shuffling-splitting-and-batching-data]
+aliases: [standardization, z-score, standard scaler, normalization]
+objectives:
+  - Fit per-feature means and population scales on training rows only
+  - Transform held-out rows without changing fitted statistics
+  - Explain how units affect distances, gradient descent and regularization
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: Explain why a scaler is part of the fitted model and where leakage occurs.
+sources:
+  - "book: James et al., An Introduction to Statistical Learning, linear model selection and regularization"
+status: reviewed

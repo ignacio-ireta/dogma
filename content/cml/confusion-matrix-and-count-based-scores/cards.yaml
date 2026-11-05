@@ -1,0 +1,28 @@
+cards:
+  - id: cml/confusion-matrix-and-count-based-scores#1
+    type: qa
+    front: "In a confusion matrix with rows as true labels, what does entry [i, j] count?"
+    back: "The samples whose true label is i and whose predicted label is j."
+  - id: cml/confusion-matrix-and-count-based-scores#2
+    type: qa
+    front: "What is precision, and what question does it answer?"
+    back: "TP / (TP + FP). Of the samples predicted positive, the share that really are positive."
+  - id: cml/confusion-matrix-and-count-based-scores#3
+    type: qa
+    front: "What is recall (sensitivity)?"
+    back: "TP / (TP + FN). Of the actual positives, the share that the model flags."
+  - id: cml/confusion-matrix-and-count-based-scores#4
+    type: cloze
+    text: "Specificity is {{c1::TN / (TN + FP)}}, the recall of the negative class."
+  - id: cml/confusion-matrix-and-count-based-scores#5
+    type: qa
+    front: "Why does accuracy mislead under heavy class imbalance?"
+    back: "It is dominated by the majority class, so a model that always predicts the majority scores the majority share."
+  - id: cml/confusion-matrix-and-count-based-scores#6
+    type: qa
+    front: "What value does the MCC give a constant predictor?"
+    back: "0, by convention: one of its four marginal sums is 0, so the denominator is 0."
+  - id: cml/confusion-matrix-and-count-based-scores#7
+    type: qa
+    front: "How does this course report a ratio whose denominator is zero?"
+    back: "As 0.0, the scikit-learn convention zero_division=0. Never NaN."

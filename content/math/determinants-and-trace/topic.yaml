@@ -1,0 +1,18 @@
+id: math/determinants-and-trace
+title: Determinants and trace
+tier: A
+requires: [cml/matrix-inverse-and-rank]
+aliases: [signed volume, cofactor expansion, LU determinant, log-determinant, slogdet, sum of eigenvalues, product of eigenvalues]
+objectives:
+  - Compute a determinant by elimination with partial pivoting, tracking the sign of each row swap, and handle the 0x0 case
+  - Use the determinant and trace identities (product, transpose, row swap, triangular, eigenvalues) to check results
+  - Explain the determinant as signed volume, and why log-determinants are used in practice
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  Rarely a coding question. Interviewers ask what a determinant means, why a zero determinant
+  signals singularity, why cofactor expansion is never used in code, and where the log-determinant
+  appears (Gaussian likelihoods).
+sources:
+  - "book: Strang, Introduction to Linear Algebra (5th ed.), ch. 5 (determinants)"
+  - "book: Deisenroth, Faisal & Ong, Mathematics for Machine Learning, §4.1 (determinant and trace)"
+status: reviewed

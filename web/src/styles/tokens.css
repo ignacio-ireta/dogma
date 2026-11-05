@@ -1,0 +1,106 @@
+/*
+ * Design tokens: the only place colour literals live (ENGINEERING_STANDARDS §5.8 and §7).
+ * Semantic colours are used everywhere, and colour is never the only signal (every use carries an
+ * icon or a word): blue = inputs and the learner's own file, orange = latent, pending or unsaved,
+ * green = fitted, passed or saved, red = error, failed or residual.
+ */
+:root {
+  color-scheme: light;
+
+  --color-bg: #f8f7fb;
+  --color-surface: #ffffff;
+  --color-surface-2: #f0edf7;
+  --color-border: #d2d0df;
+  --color-border-soft: #e6e3ef;
+  --color-control-border: #7a7e94;
+  --color-text: #242b43;
+  --color-text-muted: #575d73;
+  --color-link: #2e54ae;
+  --color-sidebar: #f0edf9;
+  --color-hero: #eee8fa;
+  --color-hero-line: #bca7e4;
+  --color-accent: #5d38a6;
+  --color-on-accent: #ffffff;
+  --color-white: #ffffff;
+  --color-transparent: transparent;
+
+  /* Memphis decoration is separate from learning and feedback states. */
+  --color-outline: #35344d;
+  --color-action: #29314e;
+  --color-coral: #fa715f;
+  --color-coral-soft: #ffe5df;
+  --color-violet: #8654dd;
+  --color-violet-soft: #eee4ff;
+  --color-cobalt: #335ed1;
+  --color-cobalt-soft: #e7edff;
+  --color-mint-soft: #e2f3ec;
+  --color-art-umber: #b96649;
+  --color-art-peach: #f4b8a4;
+  --shadow-card: 0 2px 8px rgb(36 43 67 / 0.04);
+  --shadow-hover: 0 5px 18px rgb(36 43 67 / 0.09);
+  --shadow-float: 0 12px 36px rgb(36 43 67 / 0.16);
+  --shadow-playful: 4px 4px 0 var(--color-outline);
+  --shadow-action: 3px 3px 0 var(--color-violet);
+
+  --color-input: #2e54ae;
+  --color-input-soft: #eaf0ff;
+  --color-latent: #8a4b1b;
+  --color-latent-soft: #fff0e2;
+  --color-fitted: #22684b;
+  --color-fitted-soft: #e5f4ec;
+  --color-error: #b33248;
+  --color-error-soft: #ffedf0;
+
+  --code-bg: #fcfcff;
+  --code-text: #242b43;
+  --code-gutter-bg: #f1f2f8;
+  --code-gutter-text: #586078;
+  --code-active-line: #f1f0f9;
+  --code-selection: #e1e7fc;
+  --code-caret: #2e54ae;
+  --code-size: 0.875rem;
+  --syntax-keyword: #7341a5;
+  --syntax-string: #22684b;
+  --syntax-number: #8a4b1b;
+  --syntax-comment: #62697a;
+  --syntax-function: #2e54ae;
+  --syntax-type: #266a75;
+  --syntax-operator: #50576c;
+
+  --focus-ring: 3px solid var(--color-input);
+
+  --font-sans: OpenDyslexic, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-reading: "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, Menlo, monospace;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --radius: 10px;
+  --radius-lg: 18px;
+  --text-sm: 0.8125rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: clamp(1.75rem, 3vw, 2.5rem);
+  --transition: 160ms ease-out;
+  --max-width: 94rem;
+}
+
+/* biome-ignore-start lint/complexity/noImportantStyles: Accessibility overrides must beat bundled editor animations. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* biome-ignore-end lint/complexity/noImportantStyles: End reduced-motion overrides. */

@@ -1,0 +1,29 @@
+# Seven cards, one fact each (CONTENT_SPEC section 4).
+cards:
+  - id: sys/recommendation-system-case#1
+    type: qa
+    front: Why does an item that was never shown look irrelevant in offline logs?
+    back: It has no logged click or purchase, so an offline metric counts it as a non-event.
+  - id: sys/recommendation-system-case#2
+    type: qa
+    front: What does a uniform shuffle of the top 10 slots estimate?
+    back: The attention curve by slot, because shuffling removes the link between an item's appeal and its position.
+  - id: sys/recommendation-system-case#3
+    type: cloze
+    text: "A position-corrected click rate is the organic click rate divided by {{c1::the slot's examination factor}}."
+  - id: sys/recommendation-system-case#4
+    type: qa
+    front: Why give every candidate model the same tuning budget?
+    back: A model that wins with more trials may have won on budget, not on design.
+  - id: sys/recommendation-system-case#5
+    type: qa
+    front: Why is a higher NDCG not yet a launch decision?
+    back: NDCG measures ranking quality. The decision also needs the purchase value of the lift against its serving cost.
+  - id: sys/recommendation-system-case#6
+    type: qa
+    front: Which impression share is the early warning for a popularity feedback loop?
+    back: The share of impressions going to the top 1 percent of listings, which rises as the loop tightens.
+  - id: sys/recommendation-system-case#7
+    type: qa
+    front: What count falls alongside that share in a popularity feedback loop?
+    back: The number of listings that sell at least once in a week.

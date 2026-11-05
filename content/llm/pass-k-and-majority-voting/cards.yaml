@@ -1,0 +1,25 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+cards:
+  - id: llm/pass-k-and-majority-voting#1
+    type: qa
+    front: What does the unbiased pass@k estimator draw from?
+    back: "k attempts without replacement from the n samples generated."
+  - id: llm/pass-k-and-majority-voting#2
+    type: qa
+    front: What is pass@k when n - c is less than k?
+    back: "Exactly 1, because every k-subset must contain a passing sample."
+  - id: llm/pass-k-and-majority-voting#3
+    type: cloze
+    text: "The naive estimator 1 - (1 - c/n)^k is biased because it {{c1::plugs an estimate into a power}} instead of drawing without replacement."
+  - id: llm/pass-k-and-majority-voting#4
+    type: qa
+    front: What is pass@1 under the unbiased estimator?
+    back: "c / n."
+  - id: llm/pass-k-and-majority-voting#5
+    type: qa
+    front: Why compute the pass@k ratio as a product of k factors?
+    back: "It avoids building huge binomial coefficients that overflow floats for large n."
+  - id: llm/pass-k-and-majority-voting#6
+    type: qa
+    front: What must a majority vote settle in advance?
+    back: "The normalisation of answers and the tie rule, such as earliest first occurrence."

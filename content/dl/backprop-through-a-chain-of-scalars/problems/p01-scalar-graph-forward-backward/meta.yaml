@@ -1,0 +1,18 @@
+id: dl/backprop-through-a-chain-of-scalars/p01-scalar-graph-forward-backward
+version: 3
+title: Forward and backward through a scalar graph
+language: python
+runtime: py-stdlib
+entry: forward_backward
+difficulty: medium
+minutes: 25
+core: true
+tolerance:
+  atol: 1.0e-09
+  rtol: 1.0e-09
+banned_imports:
+- numpy
+- torch
+- jax
+timeout_s: 30
+status: reviewed

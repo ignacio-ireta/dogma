@@ -1,0 +1,32 @@
+cards:
+  - id: cml/principal-component-analysis#1
+    type: qa
+    front: What does the first principal axis maximise?
+    back: The variance of the projected, centred data, Var(X̃w), over unit vectors w.
+  - id: cml/principal-component-analysis#2
+    type: qa
+    front: Which SVD factor holds the principal axes of the centred data?
+    back: The right singular vectors, the columns of V (the rows of Vᵀ).
+  - id: cml/principal-component-analysis#3
+    type: cloze
+    text: "The explained variance of axis i is {{c1::s_i² / (n − 1)}}, where s_i is the i-th singular value of the centred data."
+  - id: cml/principal-component-analysis#4
+    type: qa
+    front: Why centre the data before PCA?
+    back: Centring measures spread around the mean. Otherwise PCA maximises second moments about the origin, so the mean can dominate.
+  - id: cml/principal-component-analysis#5
+    type: qa
+    front: What does standardising the columns change?
+    back: PCA then runs on the correlation matrix, so every variable has unit variance and units no longer decide the axes.
+  - id: cml/principal-component-analysis#6
+    type: qa
+    front: Why does flipping an axis's sign leave its explained variance unchanged?
+    back: Its scores flip with it, and sample variance is a mean of squared deviations, so the sign cancels.
+  - id: cml/principal-component-analysis#7
+    type: qa
+    front: What does whitening PCA scores do?
+    back: For axes with positive variance, dividing scores by the axis standard deviation gives unit variance. Zero-variance axes cannot be whitened this way.
+  - id: cml/principal-component-analysis#8
+    type: qa
+    front: What does the 95% rule mean?
+    back: Keep the smallest k whose cumulative explained-variance ratio reaches 0.95. It is a convention, not a theorem.

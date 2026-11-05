@@ -1,0 +1,32 @@
+cards:
+  - id: cml/gradient-descent#1
+    type: qa
+    front: What is the gradient descent update, and what does each symbol mean?
+    back: "x_{k+1} = x_k − η ∇f(x_k). η is the learning rate (step length); ∇f is the gradient, which points uphill, so the step goes against it."
+  - id: cml/gradient-descent#2
+    type: qa
+    front: For f(x) = ½ xᵀAx − bᵀx with A symmetric positive definite, what is the gradient and where is the minimiser?
+    back: "∇f(x) = Ax − b. The minimiser solves Ax = b, so x* = A⁻¹b."
+  - id: cml/gradient-descent#3
+    type: cloze
+    text: "On a quadratic with largest curvature λ_max, a fixed learning rate converges only if 0 < η < {{c1::2/λ_max}}."
+  - id: cml/gradient-descent#4
+    type: qa
+    front: What is the best fixed step for a quadratic, and what rate does it give?
+    back: "η* = 2/(λ_max + λ_min), which minimises the worst factor |1 − ηλ| over the eigenvalues."
+  - id: cml/gradient-descent#5
+    type: qa
+    front: Why does a large condition number make gradient descent slow?
+    back: The shallowest direction shrinks its error by only about 1 − η·λ_min per step, and the step size is capped by λ_max, so the step count grows roughly in proportion to κ.
+  - id: cml/gradient-descent#6
+    type: qa
+    front: If the stopping rule is ‖∇f(x)‖ ≤ tol, why does it matter whether you test before or after the update when you count steps?
+    back: Test before stepping. If the test passes at x_k, exactly k updates have been applied; testing after the update reports one extra step.
+  - id: cml/gradient-descent#7
+    type: qa
+    front: Why is a fixed gradient-norm tolerance a weak stopping rule?
+    back: The gradient scales with f. Multiplying f by 1000 multiplies the gradient by 1000, so the same point can fail the test. A relative test, ‖∇f(x_k)‖ ≤ ε‖∇f(x_0)‖, removes the scale.
+  - id: cml/gradient-descent#8
+    type: qa
+    front: "What per-step contraction does the best fixed step give on a quadratic?"
+    back: "ρ = (κ − 1)/(κ + 1), where κ = λ_max/λ_min is the condition number."

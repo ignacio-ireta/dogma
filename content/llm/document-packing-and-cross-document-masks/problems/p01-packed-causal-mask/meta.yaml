@@ -1,0 +1,13 @@
+id: llm/document-packing-and-cross-document-masks/p01-packed-causal-mask
+version: 3
+title: "Packed causal mask"
+language: python
+runtime: py-numpy
+entry: packed_causal_mask
+difficulty: medium
+minutes: 20
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [numpy.tri, numpy.tril]
+timeout_s: 30
+status: reviewed

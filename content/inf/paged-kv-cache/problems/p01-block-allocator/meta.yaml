@@ -1,0 +1,14 @@
+id: inf/paged-kv-cache/p01-block-allocator
+version: 1                      # bump when tests, tolerances or the contract change
+title: "Paged KV-cache block allocator"
+language: python                # python | sql
+runtime: py-stdlib              # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: BlockAllocator           # the function or class name the learner implements
+difficulty: medium
+minutes: 25
+core: true                      # p01 is the core problem: exactly one per topic
+# Integer bookkeeping only: no tolerance applies. Declared as zero for the record.
+tolerance: {atol: 0.0, rtol: 0.0}
+banned_imports: [numpy, torch]  # array libraries would hide the allocation rules
+timeout_s: 30
+status: reviewed

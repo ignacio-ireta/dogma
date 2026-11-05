@@ -1,0 +1,13 @@
+id: dl/dropout
+title: "Dropout"
+tier: A
+requires: ['dl/backprop-through-a-dense-layer']
+aliases: ['from scratch', 'dropout']
+objectives:
+  - Implement seeded inverted dropout forward and backward
+  - Explain expected activation scaling and training versus evaluation behavior
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: Explain the data flow, derive one local rule, and diagnose a reproducibility or gradient bug.
+sources:
+  - "paper: Srivastava et al. 2014, Dropout: A Simple Way to Prevent Neural Networks from Overfitting (JMLR 15, 1929-1958)"
+status: reviewed

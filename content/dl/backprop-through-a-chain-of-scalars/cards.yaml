@@ -1,0 +1,21 @@
+cards:
+- id: dl/backprop-through-a-chain-of-scalars#1
+  type: qa
+  front: What does an adjoint of node v mean?
+  back: The derivative of the final scalar loss with respect to v.
+- id: dl/backprop-through-a-chain-of-scalars#2
+  type: qa
+  front: How does a node pass an upstream gradient backward?
+  back: Multiply it by the local derivative for each input edge.
+- id: dl/backprop-through-a-chain-of-scalars#3
+  type: qa
+  front: How do multiple uses contribute to one input gradient?
+  back: Their gradient contributions add.
+- id: dl/backprop-through-a-chain-of-scalars#4
+  type: qa
+  front: What adjoint starts a scalar loss backward pass?
+  back: dL/dL = 1.
+- id: dl/backprop-through-a-chain-of-scalars#5
+  type: qa
+  front: What is the central-difference gradient estimate?
+  back: (L(x+h) - L(x-h)) / (2h), with other inputs fixed.

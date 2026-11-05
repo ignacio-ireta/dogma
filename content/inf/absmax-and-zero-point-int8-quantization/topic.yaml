@@ -1,0 +1,15 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: inf/absmax-and-zero-point-int8-quantization
+title: "Absmax and zero-point int8 quantization"
+tier: A
+requires: ['inf/floating-point-formats']
+aliases: [int8 quantization, absmax, symmetric quantization, zero point, asymmetric quantization, per-channel scale, dequantization, affine quantization, outliers]
+objectives:
+  - "Quantize a tensor to int8 with a symmetric absmax scale (127 steps per side), per tensor or per channel, and round half to even"
+  - "Quantize with an asymmetric zero point over [-128, 127], keeping 0.0 exact and the range containing zero"
+  - "State the dequantization error bound scale / 2, and explain why one outlier forces per-channel scales"
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: "Explain why int8 weights use per-channel symmetric scales, why activations after ReLU can use an asymmetric zero point, and how an outlier breaks a per-tensor scale."
+sources:
+  - "paper: Jacob et al. 2018, Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference (arXiv:1712.05877); general topic source, not quoted"
+status: reviewed

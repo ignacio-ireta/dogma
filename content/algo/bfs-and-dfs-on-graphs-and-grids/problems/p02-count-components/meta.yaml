@@ -1,0 +1,13 @@
+id: algo/bfs-and-dfs-on-graphs-and-grids/p02-count-components
+version: 3                      # bump when tests, tolerances or the contract change
+title: Count connected components in a grid
+language: python
+runtime: py-stdlib
+entry: count_components
+difficulty: medium
+minutes: 20
+core: false
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: integer counts
+banned_imports: [sys]
+timeout_s: 30
+status: reviewed

@@ -1,0 +1,22 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: sql/sql-first-and-last-activity-per-user#1
+    type: qa
+    front: Why does MAX(event_time) alone not give the last event's type?
+    back: It returns a value, not the row. The type lives in the same row, so it needs an arg function or a rank.
+  - id: sql/sql-first-and-last-activity-per-user#2
+    type: qa
+    front: Why does joining back on MIN or MAX timestamp give duplicate rows?
+    back: Every event sharing that timestamp matches the join, so a tied user gets one row per tied event.
+  - id: sql/sql-first-and-last-activity-per-user#3
+    type: qa
+    front: What is the default frame of a window with ORDER BY?
+    back: RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW, which includes the current row's peers.
+  - id: sql/sql-first-and-last-activity-per-user#4
+    type: cloze
+    text: "Make arg_min deterministic on ties by packing the tie-breaker into its key, for example {{c1::struct_pack(t := event_time, id := event_id)}}."
+  - id: sql/sql-first-and-last-activity-per-user#5
+    type: qa
+    front: Which way does the tie-break go for a user's last event?
+    back: The largest event_id among events sharing the latest timestamp.

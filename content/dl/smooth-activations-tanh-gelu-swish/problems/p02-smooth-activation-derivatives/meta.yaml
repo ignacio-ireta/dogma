@@ -1,0 +1,19 @@
+id: dl/smooth-activations-tanh-gelu-swish/p02-smooth-activation-derivatives
+version: 1
+title: Smooth activation local derivatives
+language: python
+runtime: py-numpy
+entry: smooth_derivatives
+difficulty: medium
+minutes: 20
+core: false
+tolerance:
+  atol: 1.0e-09
+  rtol: 1.0e-09
+banned_imports:
+- torch
+- jax
+- scipy
+- sklearn
+timeout_s: 30
+status: reviewed

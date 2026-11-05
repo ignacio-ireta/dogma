@@ -1,0 +1,125 @@
+# Mock interview rubric, version 1. Imported from sources/interview-prep/mock-interviews/
+# SCORING_RUBRIC.md and paraphrased (not copied): 30 items in six parts, each scored 1-4.
+#
+# Rubrics are data. Editing a rubric never rewrites history: every stored score records the
+# rubric id and version it was given under. A change in wording or anchors becomes version 2.
+id: mock
+version: 1
+kind: mock
+title: Mock interview scoring
+scale:
+  low: 1
+  high: 4
+  anchors:
+    1: Did not demonstrate it.
+    2: Attempted it, but weakly.
+    3: Solid. Meets the bar for the role.
+    4: Exceptional. A real interviewer would take note.
+parts:
+  - id: coding
+    title: Live coding
+    minutes: "10-15"
+    maximum: 24
+    items:
+      - id: coding.narration
+        text: Explained the approach while writing the code.
+      - id: coding.code-quality
+        text: Names and structure make the code clean and easy to read.
+      - id: coding.correctness
+        text: The output is right for the stated task.
+      - id: coding.speed
+        text: Reached a working result in time, or made steady visible progress.
+      - id: coding.edge-cases
+        text: Handled missing values, mixed types and duplicates.
+      - id: coding.help-seeking
+        text: Asked a clarifying question when stuck, rather than going silent.
+  - id: reframe
+    title: Case, reframe
+    minutes: "2"
+    maximum: 16
+    items:
+      - id: reframe.summary
+        text: Summarised the problem in their own words, not by repeating the prompt.
+      - id: reframe.question
+        text: Restated the problem as a clear question about an action and a customer.
+      - id: reframe.metric
+        text: Proposed a success metric or KPI.
+      - id: reframe.transition
+        text: Signposted the move to the approach with a short transition phrase.
+  - id: ask
+    title: Case, questions
+    minutes: "4"
+    maximum: 16
+    items:
+      - id: ask.business
+        text: Asked about the current process, competitors and the value at stake.
+      - id: ask.technical
+        text: Asked about the data, class balance and the need for interpretability.
+      - id: ask.use-answers
+        text: Used the answers in the approach that followed, rather than asking for show.
+      - id: ask.focused
+        text: Kept the questions few, relevant and in scope.
+  - id: structure
+    title: Case, structure
+    minutes: "12"
+    maximum: 28
+    items:
+      - id: structure.hypothesis
+        text: Stated a hypothesis before diving into the solution.
+      - id: structure.approach
+        text: Laid out the approach in a clear, complete order.
+      - id: structure.model-choice
+        text: Named a model and justified it against the alternatives.
+      - id: structure.depth
+        text: Went into technical detail when challenged.
+      - id: structure.assumptions
+        text: Made assumptions explicit, with numbers rather than adjectives.
+      - id: structure.business-link
+        text: Connected each technical choice back to the business problem.
+      - id: structure.twist
+        text: Handled new information introduced mid-case calmly and usefully.
+  - id: synthesize
+    title: Case, synthesis
+    minutes: "3"
+    maximum: 16
+    items:
+      - id: synthesize.recommendation
+        text: Gave a crisp recommendation rather than a ramble.
+      - id: synthesize.impact
+        text: Quantified the expected impact in revenue, cost or percentage.
+      - id: synthesize.implementation
+        text: Covered how it would be delivered, with a timeline and key steps.
+      - id: synthesize.callback
+        text: Tied the recommendation back to the question from the reframe.
+  - id: communication
+    title: Overall communication
+    minutes: "throughout"
+    maximum: 20
+    items:
+      - id: communication.think-aloud
+        text: Thought out loud throughout, with no long silences.
+      - id: communication.drive
+        text: Drove the case rather than waiting for the interviewer to lead.
+      - id: communication.tone
+        text: Sounded conversational rather than rehearsed or robotic.
+      - id: communication.challenge
+        text: Stayed composed and open when challenged.
+      - id: communication.self-correct
+        text: Noticed going off track and corrected course unprompted.
+bands:
+  - label: Early stage
+    low: 0
+    high: 49
+    text: Focus on the reframe-structure-synthesis habit and on justifying one model.
+  - label: Needs more practice
+    low: 50
+    high: 69
+    text: Find the weakest part and drill it on its own before the next full mock.
+  - label: Solid foundation
+    low: 70
+    high: 89
+    text: Good base. Work on the specific parts that scored lowest.
+  - label: Strong
+    low: 90
+    high: 120
+    text: Close to ready for a real interview. Keep the habit under time pressure.

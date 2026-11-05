@@ -1,0 +1,13 @@
+id: cml/a-b-test-design-and-analysis/p01-sample-size-two-proportions
+version: 3
+title: Sample size for two proportions
+language: python
+runtime: py-data
+entry: sample_size_two_proportions
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [statsmodels]
+timeout_s: 30
+status: reviewed

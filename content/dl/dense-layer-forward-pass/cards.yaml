@@ -1,0 +1,17 @@
+cards:
+- id: dl/dense-layer-forward-pass#1
+  type: qa
+  front: What is the weight shape in this topic?
+  back: '(d_in, d_out): inputs index rows and outputs index columns.'
+- id: dl/dense-layer-forward-pass#2
+  type: qa
+  front: Which axis does X @ W sum over?
+  back: The shared input-feature axis d_in.
+- id: dl/dense-layer-forward-pass#3
+  type: qa
+  front: How many bias entries does a dense layer have?
+  back: 'One per output unit: d_out.'
+- id: dl/dense-layer-forward-pass#4
+  type: qa
+  front: What does a zero-feature dense layer return?
+  back: The bias repeated for every batch row.

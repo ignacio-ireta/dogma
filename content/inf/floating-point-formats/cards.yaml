@@ -1,0 +1,28 @@
+cards:
+  - id: inf/floating-point-formats#1
+    type: qa
+    front: "How many bits are in fp16, bf16 and fp32, and how are they split between exponent and mantissa?"
+    back: "fp16: 1 sign, 5 exponent, 10 mantissa. bf16: 1 sign, 8 exponent, 7 mantissa. fp32: 1 sign, 8 exponent, 23 mantissa."
+  - id: inf/floating-point-formats#2
+    type: qa
+    front: What is the value of a subnormal number, and how does it differ from a normal one?
+    back: "Subnormal (exponent field 0): (M / 2**m) * 2**(1 - bias), with no implicit leading 1. Normal: (1 + M / 2**m) * 2**(E - bias)."
+  - id: inf/floating-point-formats#3
+    type: cloze
+    text: "Machine epsilon of a format with m mantissa bits is {{c1::2**-m}}. For bf16 it is 2**-7 = 0.0078125."
+  - id: inf/floating-point-formats#4
+    type: qa
+    front: Why does bf16 keep the fp32 range, and what does it give up?
+    back: "It keeps the 8-bit exponent of fp32, so the range is the same. It keeps only 7 mantissa bits instead of 23, so each rounding costs about 0.4 percent."
+  - id: inf/floating-point-formats#5
+    type: qa
+    front: "What is the largest finite fp16 value and why is it not 2**16?"
+    back: "65504 = (2 - 2**-10) * 2**15. The all-ones exponent is reserved for infinity and NaN, so 2**16 is not finite."
+  - id: inf/floating-point-formats#6
+    type: qa
+    front: What is special about E4M3 compared with IEEE-style formats?
+    back: "It has no infinity. Only the two patterns with all exponent bits and all mantissa bits set (one per sign bit) are NaN, so its largest finite value is 448."
+  - id: inf/floating-point-formats#7
+    type: qa
+    front: "How does round-to-nearest-even break a tie between 1 and 1 + 2**-7 in bf16?"
+    back: "It picks the neighbour whose mantissa's last bit is 0, which is 1, so 1 + 2**-8 rounds to 1."

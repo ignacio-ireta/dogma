@@ -1,0 +1,14 @@
+id: algo/heaps-and-priority-queues/p02-running-median
+version: 2                      # bump when tests, tolerances or the contract change
+title: Running median with two heaps
+language: python
+runtime: py-stdlib
+entry: running_median
+difficulty: medium
+minutes: 25
+core: false
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+# The point is the two-heap structure: no library median, and no sorted-list insertion.
+banned_imports: [statistics, bisect]
+timeout_s: 30
+status: reviewed

@@ -1,0 +1,19 @@
+id: cml/adaboost-and-gradient-boosting
+title: AdaBoost and gradient boosting
+tier: A
+requires: [cml/choosing-a-tree-split, cml/gradient-descent]
+aliases: [boosting, gradient boosting machine, GBM, AdaBoost, stagewise additive model, exponential loss, shrinkage, learning rate, early stopping, weak learner, decision stump]
+objectives:
+  - Implement gradient boosting with depth-one regression stumps for squared error, with a shrinkage learning rate and an exact tie rule
+  - "Implement one round of discrete AdaBoost: the vote alpha, the reweighting, and the rejection rules at error one half and at zero error"
+  - Explain boosting as stagewise additive modelling, where each weak learner fits the negative gradient of the loss at the current model
+  - "Explain the trade-off between learning rate and number of rounds, early stopping, and why exponential loss is sensitive to outliers"
+minutes: {lesson: 12, practice: 40, min_viable: 20}
+interview_angle: >-
+  Expect boosting as stagewise fitting of negative gradients, residuals for squared error, the AdaBoost weight update and its exponential loss, shrinkage with early stopping, and the outlier sensitivity of AdaBoost.
+sources:
+  - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter 10 (boosting and additive trees)"
+  - "paper: Friedman 2001, Greedy function approximation: a gradient boosting machine (Annals of Statistics 29(5)); sections 2-3, read from an OCR conversion"
+  - "paper: Freund & Schapire 1997, A decision-theoretic generalization of on-line learning and an application to boosting (JCSS 55(1)); cited from memory, not in the corpus"
+  - "library: AI-ML/05-Classification/Friedman Gradient Boosting 2001.md"
+status: reviewed

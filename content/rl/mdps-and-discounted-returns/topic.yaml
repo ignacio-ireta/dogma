@@ -1,0 +1,14 @@
+id: rl/mdps-and-discounted-returns
+title: "MDPs and discounted returns"
+tier: A
+requires: ['cml/expectation-and-variance', 'cml/matrix-inverse-and-rank']
+aliases: ['Markov decision process', 'discounted return', 'discount factor', 'value function', 'Bellman expectation equation', 'policy evaluation', 'episodic task']
+objectives:
+  - Compute the discounted return G_t for every step of an episode with a reverse accumulation, validating the discount factor
+  - Implement iterative policy evaluation for a small tabular MDP and check it against the linear-system solution
+  - Explain the difference between episodic and continuing tasks and why gamma below 1 makes the infinite sum finite
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: Say what the agent, the reward and the return are, then explain the Bellman expectation equation as a linear system before anyone asks about algorithms.
+sources:
+  - "book: Sutton and Barto, Reinforcement Learning: An Introduction (2nd ed.), ch. 3 (finite MDPs, returns, value functions) and ch. 4.1 (policy evaluation)"
+status: reviewed

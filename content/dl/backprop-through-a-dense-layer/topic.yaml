@@ -1,0 +1,13 @@
+id: dl/backprop-through-a-dense-layer
+title: "Backprop through a dense layer"
+tier: A
+requires: ['dl/dense-layer-forward-pass', 'dl/backprop-through-a-chain-of-scalars']
+aliases: ['vector Jacobian product', 'backpropagation']
+objectives:
+  - Implement input, weight, and bias vector-Jacobian products
+  - Distinguish sum and mean loss reduction and verify every gradient numerically
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: Explain the data flow, derive one local rule, and diagnose a reproducibility or gradient bug.
+sources:
+  - "book: Goodfellow, Bengio and Courville, Deep Learning, chapter 6.5"
+status: reviewed

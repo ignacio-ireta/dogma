@@ -1,0 +1,15 @@
+id: cml/lasso-and-elastic-net/p01-lasso-coordinate-descent
+version: 4
+title: Lasso by coordinate descent
+language: python
+runtime: py-numpy
+entry: lasso_cd
+difficulty: medium
+minutes: 30
+core: true
+# Oracle: sklearn.linear_model.Lasso(fit_intercept=False), same objective (1/(2n))||y-Xw||^2 + alpha||w||_1,
+# and the KKT conditions. The random cases agree with sklearn to about 1e-12 at tight tolerance.
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [sklearn, scipy, numpy.linalg]
+timeout_s: 30
+status: reviewed

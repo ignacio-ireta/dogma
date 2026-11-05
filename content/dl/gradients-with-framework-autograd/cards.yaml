@@ -1,0 +1,30 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: dl/gradients-with-framework-autograd#1
+    type: qa
+    front: "Which tensors record a grad_fn?"
+    back: "Results of operations on a tracked tensor, computed with grad mode on."
+  - id: dl/gradients-with-framework-autograd#2
+    type: qa
+    front: "Does backward() replace or add to .grad?"
+    back: "It adds. Clear .grad before each new backward pass."
+  - id: dl/gradients-with-framework-autograd#3
+    type: cloze
+    text: "A non-leaf tensor keeps its gradient only after {{c1::retain_grad()}} is called."
+  - id: dl/gradients-with-framework-autograd#4
+    type: qa
+    front: "What does torch.autograd.grad change in the caller's state?"
+    back: "Nothing in .grad. It returns the gradients as a tuple."
+  - id: dl/gradients-with-framework-autograd#5
+    type: qa
+    front: "What does backward(gradient=v) compute for a non-scalar output?"
+    back: "The vector-Jacobian product v^T J, added into the leaves' .grad."
+  - id: dl/gradients-with-framework-autograd#6
+    type: qa
+    front: "Why use x + (round(x) - x).detach() as a straight-through quantizer?"
+    back: "The forward value is round(x), and the gradient w.r.t. x is the identity because the difference is detached."
+  - id: dl/gradients-with-framework-autograd#7
+    type: qa
+    front: "For a scalar loss with many parameters, why is reverse mode the usual choice over forward mode?"
+    back: "One backward pass gives the derivative with respect to every parameter. Forward mode computes one directional derivative Jv per pass, so it needs one pass per parameter direction."

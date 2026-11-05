@@ -1,0 +1,20 @@
+cards:
+  - id: dl/infonce-contrastive-loss#1
+    type: qa
+    front: What are the positives and negatives for anchor i in an in-batch InfoNCE loss?
+    back: The positive is b_i (its pair). The negatives are the other N - 1 items b_j in the same batch.
+  - id: dl/infonce-contrastive-loss#2
+    type: qa
+    front: What is the chance-level InfoNCE loss for a batch of N pairs?
+    back: log N. It is reached when all similarities are equal, so each softmax is uniform over N candidates.
+  - id: dl/infonce-contrastive-loss#3
+    type: qa
+    front: How is the symmetric InfoNCE loss formed?
+    back: The average of the cross-entropy over rows (image to text) and over columns (text to image), with the diagonal as labels.
+  - id: dl/infonce-contrastive-loss#4
+    type: qa
+    front: What does a smaller temperature do to the similarity logits?
+    back: It multiplies them by a larger factor (logits = cosine / tau), so the softmax is sharper and the log-sum-exp needs to be computed stably.
+  - id: dl/infonce-contrastive-loss#5
+    type: cloze
+    text: "In an N-pair batch each anchor has {{c1::N - 1}} in-batch negatives."

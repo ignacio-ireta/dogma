@@ -1,0 +1,15 @@
+id: llm/retrieval-augmented-generation-pipeline
+title: "Retrieval-augmented generation pipeline"
+tier: A
+requires: [cml/cosine-similarity, cml/tf-idf-and-bm25]
+aliases: [RAG, chunking, overlapping windows, dense retrieval, top-k retrieval, hybrid search, context packing, cited context]
+objectives:
+  - "Chunk a document into overlapping word windows with an explicit step and stop rule"
+  - "Rank chunks by cosine similarity with deterministic ties, and pack a cited prompt under a word budget"
+  - "Explain how chunk size, overlap and hybrid scoring change recall@k, and name the failure modes that break answers"
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: "Walk the pipeline in order, measure recall@k before you judge answers, and name where it breaks: chunk boundaries, stale index, budget loss, invented citations, and position effects that you measure rather than assume."
+sources:
+  - "library: AI-ML/12-Frontiers/Lewis Retrieval-Augmented Generation 2020.md"
+  - "paper: Lewis et al. 2020, Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (arXiv:2005.11401); no claim in the lesson depends on its text"
+status: reviewed

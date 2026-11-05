@@ -1,0 +1,14 @@
+id: inf/absmax-and-zero-point-int8-quantization/p01-absmax-quantize
+version: 3                      # bump when tests, tolerances or the contract change
+title: "Symmetric absmax int8 quantization"
+language: python                # python | sql
+runtime: py-numpy               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: absmax_quantize          # the function or class name the learner implements
+difficulty: medium
+minutes: 25
+core: true                      # p01 is the core problem: exactly one per topic
+# Scales are computed by one division, so 1e-9 is tight for float64. Codes are compared exactly.
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [torch]         # torch.quantize_per_tensor and fake-quant modules do the whole job
+timeout_s: 30
+status: reviewed

@@ -1,0 +1,13 @@
+id: llm/scaling-laws-and-compute-budgets/p02-fit-power-law-log-log
+version: 2                      # bump when tests, tolerances or the contract change
+title: Fit a power law by log-log least squares
+language: python                # python | sql
+runtime: py-numpy               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: fit_power_law            # the function or class name the learner implements
+difficulty: medium
+minutes: 25
+core: false                     # p01 is the core problem; this one goes deeper
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [numpy.polyfit, numpy.linalg, scipy, sklearn, statsmodels]
+timeout_s: 30
+status: reviewed

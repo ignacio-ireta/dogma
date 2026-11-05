@@ -1,0 +1,17 @@
+id: cml/confusion-matrix-and-count-based-scores
+title: Confusion matrix and count-based scores
+tier: A
+requires: [cml/probability-basics]
+aliases: [confusion matrix, true positive, false positive, accuracy, precision, recall, sensitivity, specificity, MCC, Matthews correlation]
+objectives:
+  - Build a 2 x 2 confusion matrix from labels, with rows as true labels and columns as predicted labels
+  - Compute accuracy, precision, recall, specificity and MCC from the four counts, and say which denominator each one uses
+  - Explain why accuracy misleads under class imbalance, and choose a balanced score for the decision you actually face
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "The model is 99% accurate. Is it good?" A strong answer asks for the base rate, names the all-majority baseline,
+  and reports recall and precision for the positive class, or MCC as one balanced number.
+sources:
+  - "paper: Matthews 1975, Comparison of the predicted and observed secondary structure of T4 phage lysozyme (Biochimica et Biophysica Acta)"
+  - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter 7 (model assessment)"
+status: reviewed

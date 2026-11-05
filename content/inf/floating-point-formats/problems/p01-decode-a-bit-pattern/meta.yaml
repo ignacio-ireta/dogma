@@ -1,0 +1,15 @@
+id: inf/floating-point-formats/p01-decode-a-bit-pattern
+version: 2                      # bump when tests, tolerances or the contract change
+title: "Decode a floating-point bit pattern"
+language: python                # python | sql
+runtime: py-numpy               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: decode_float_bits        # the function or class name the learner implements
+difficulty: medium
+minutes: 20
+core: true                      # p01 is the core problem: exactly one per topic
+# Decoding is exact: every finite value is a dyadic rational that float64 holds exactly, so no
+# tolerance is used. The tests compare with == and check the sign of zero.
+tolerance: {atol: 0.0, rtol: 0.0}
+banned_imports: [numpy, struct]   # numpy and struct would decode the bits for you; in problem.md
+timeout_s: 30
+status: reviewed

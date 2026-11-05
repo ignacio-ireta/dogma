@@ -1,0 +1,16 @@
+id: sql/sql-conditional-aggregation/p01-channel-conversion-and-device-revenue
+version: 2                      # bump when tests, tolerances or the contract change
+title: Channel conversion and device revenue
+language: sql
+runtime: sql-duckdb
+entry: query
+difficulty: medium
+minutes: 20
+core: true
+# The conversion rate must have at most 4 decimals and lie within half of one 4-decimal step of
+# the exact fraction, so either rounding direction on an exact half is accepted. Revenue sums are
+# of 2-decimal amounts, so 1e-6 only absorbs summation order.
+tolerance: {atol: 5.0e-5, rtol: 1.0e-9}
+banned_imports: []              # SQL problems: nothing to ban at the module level
+timeout_s: 30
+status: reviewed

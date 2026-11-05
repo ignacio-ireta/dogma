@@ -1,0 +1,19 @@
+id: sql/sql-date-handling
+title: SQL date handling
+tier: A
+requires: [sql/sql-subqueries-and-ctes]
+aliases: [dates, timestamps, date_trunc, interval, half-open interval, calendar table, generate_series, month boundary, date difference, ISO week, DATE vs TIMESTAMP]
+objectives:
+  - Choose DATE or TIMESTAMP for a column, and say which date operations return days, intervals or dates
+  - Assign each event to a period with a half-open test (at or after the start, before the next start), not BETWEEN
+  - Fill empty periods from a calendar table with a LEFT JOIN, so a period with no events still returns a row
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "Monthly active users for every month, including months with no activity" and "days between a user's
+  first two events" are common screen questions. The interviewer checks the type of each date, the boundary
+  rule (is the next month's first instant counted?), whether the calendar is the left side of the join, and
+  whether a difference counts calendar days or elapsed time.
+sources:
+  - "book: Molinaro, SQL Cookbook, chapter on date arithmetic"
+  - "book: Kimball and Ross, The Data Warehouse Toolkit (3rd ed.), the date dimension (calendar table)"
+status: reviewed

@@ -1,0 +1,28 @@
+cards:
+  - id: cml/lagrange-multipliers#1
+    type: qa
+    front: "For minimising f(x) subject to Ax = b, what is the Lagrangian in this course's convention?"
+    back: "L(x, λ) = f(x) − λ'(Ax − b). The minus sign makes λ the sensitivity of the optimal value to b."
+  - id: cml/lagrange-multipliers#2
+    type: qa
+    front: What two conditions does a constrained stationary point satisfy for an equality-constrained problem?
+    back: "Stationarity ∇f(x) = A'λ and feasibility Ax = b. Together they are the KKT conditions."
+  - id: cml/lagrange-multipliers#3
+    type: cloze
+    text: "With the optimal value p*(b), the derivative ∂p*/∂b equals {{c1::λ}} in this course's convention."
+  - id: cml/lagrange-multipliers#4
+    type: qa
+    front: Why is the KKT matrix nonsingular when Q is positive definite and A has full row rank?
+    back: "With Q positive definite, Ax = 0 and Qx = A'v force x = 0, then A'v = 0 forces v = 0, because the rows of A are independent."
+  - id: cml/lagrange-multipliers#5
+    type: qa
+    front: Is every KKT point of a nonconvex problem a minimum?
+    back: "No. Minimising xy on x² + y² = 2 gives four KKT points, and two of them are maxima."
+  - id: cml/lagrange-multipliers#6
+    type: qa
+    front: What happens to the multipliers when the rows of A are dependent?
+    back: They are not unique, and the KKT matrix is singular.
+  - id: cml/lagrange-multipliers#7
+    type: qa
+    front: How does Boyd and Vandenberghe's multiplier ν relate to λ in this course?
+    back: "ν = −λ, because they write the Lagrangian with + ν'(Ax − b)."

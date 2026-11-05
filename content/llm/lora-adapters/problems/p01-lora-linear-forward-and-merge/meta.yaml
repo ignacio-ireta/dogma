@@ -1,0 +1,13 @@
+id: llm/lora-adapters/p01-lora-linear-forward-and-merge
+version: 2                       # bump when tests, tolerances or the contract change
+title: LoRA linear layer, forward pass and merge
+language: python                 # python | sql
+runtime: py-torch                # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: lora_linear               # the function or class name the learner implements
+difficulty: medium
+minutes: 25
+core: true                       # p01 is the core problem: exactly one per topic
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}  # float64 agreement; the float32 dtype test in test_hidden.py uses its own 1e-5 bound
+banned_imports: [torch.nn]       # covers nn.Linear, nn.functional.linear and nn.Parameter; in problem.md
+timeout_s: 30
+status: reviewed

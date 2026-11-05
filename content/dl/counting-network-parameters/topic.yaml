@@ -1,0 +1,20 @@
+id: dl/counting-network-parameters
+title: Counting network parameters
+tier: A
+requires:
+- dl/dense-layer-forward-pass
+aliases:
+- parameter budget
+- dense parameter count
+- model size
+objectives:
+- Compute exact per-layer and total counts for dense chains without allocating matrices
+- Distinguish stored parameters from batch activations and optimizer memory
+minutes:
+  lesson: 12
+  practice: 20
+  min_viable: 15
+interview_angle: Turn layer shapes into an auditable parameter and memory budget.
+sources:
+- 'book: Goodfellow, Bengio and Courville, Deep Learning, sections 6.1–6.2'
+status: reviewed

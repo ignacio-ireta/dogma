@@ -1,0 +1,16 @@
+id: sql/sql-ranking-window-functions
+title: SQL ranking window functions
+tier: A
+requires: [sql/sql-group-by-and-having, sql/sql-subqueries-and-ctes]
+aliases: [window functions, ROW_NUMBER, RANK, DENSE_RANK, PARTITION BY, OVER, top-N per group, QUALIFY, ranking, NULLS LAST, tie-break, peers, deduplicate, latest row per group]
+objectives:
+  - Choose ROW_NUMBER, RANK or DENSE_RANK by what the task must do with ties, and write the ORDER BY that makes the choice explicit
+  - Write a window with PARTITION BY and ORDER BY, and state where NULL values sort
+  - Keep the top N rows of each group, including ties, by filtering a window in a subquery or with QUALIFY
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "Top two products per category" and "latest order per customer" are standard screens. The interviewer checks how ties
+  are handled, where NULLs sort, and whether the window is filtered in the right place.
+sources:
+  - "book: Molinaro & de Graaf, SQL Cookbook (2nd ed.), §11.9 Ranking Results and appendix A Window Function Refresher"
+status: reviewed

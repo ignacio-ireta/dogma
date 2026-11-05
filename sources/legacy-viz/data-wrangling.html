@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pandas & sklearn — Study Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --border: #2a2d3a;
+    --text: #e0e0e6;
+    --muted: #8888a0;
+    --accent: #6c8aff;
+    --pink: #ff6b8a;
+    --teal: #4ecdc4;
+    --yellow: #ffe66d;
+    --purple: #a78bfa;
+    --orange: #f97316;
+    --green: #4ade80;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+nav { display:flex; gap:.5rem; padding:1rem 2rem; background:var(--surface); border-bottom:1px solid var(--border); flex-wrap:wrap; }
+nav a { color:var(--muted); text-decoration:none; padding:.4rem .8rem; border-radius:8px; font-size:.85rem; transition:color .2s,background .2s; }
+nav a:hover { color:var(--text); background:rgba(108,138,255,.1); }
+nav a.active { color:var(--accent); background:rgba(108,138,255,.15); }
+
+header { text-align:center; padding:3rem 2rem 1rem; }
+header h1 { font-size:2.2rem; font-weight:700; background:linear-gradient(135deg,var(--accent),var(--purple)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+header p { color:var(--muted); font-size:1.05rem; margin-top:.5rem; }
+
+section { max-width:900px; margin:2rem auto; padding:2rem; background:var(--surface); border:1px solid var(--border); border-radius:16px; }
+h2 { font-size:1.5rem; margin-bottom:1rem; }
+h3 { font-size:1.1rem; margin:1rem 0 .5rem; color:var(--accent); }
+
+table.df { width:100%; border-collapse:collapse; font-family:'SF Mono',Monaco,'Courier New',monospace; font-size:.82rem; }
+table.df th { background:rgba(108,138,255,.12); color:var(--accent); padding:.4rem .6rem; text-align:left; border-bottom:2px solid var(--border); font-weight:600; cursor:pointer; user-select:none; }
+table.df th:hover { background:rgba(108,138,255,.22); }
+table.df td { padding:.4rem .6rem; border-bottom:1px solid var(--border); }
+table.df tr:hover { background:rgba(108,138,255,.05); }
+table.df tr.selected { background:rgba(108,138,255,.15); }
+table.df tr.filtered-out { opacity:.25; }
+table.df tr.match { background:rgba(78,205,196,.1); }
+table.df td.index-cell { color:var(--accent); font-weight:600; }
+table.df td.null-val { color:var(--orange); font-style:italic; }
+table.df td.merge-match { background:rgba(78,205,196,.12); }
+table.df td.merge-null { background:rgba(249,115,22,.12); color:var(--orange); }
+
+.code-block { background:#12141c; border:1px solid var(--border); border-radius:10px; padding:1rem; margin:.75rem 0; font-family:'SF Mono',Monaco,'Courier New',monospace; font-size:.82rem; line-height:1.7; overflow-x:auto; position:relative; }
+.code-block .label { position:absolute; top:.4rem; right:.6rem; font-size:.65rem; color:var(--muted); font-family:'Inter',sans-serif; text-transform:uppercase; letter-spacing:.05em; }
+.kw { color:var(--accent); }
+.str { color:var(--green); }
+.num { color:var(--orange); }
+.fn { color:var(--yellow); }
+.cm { color:var(--muted); font-style:italic; }
+.var { color:var(--text); }
+.op { color:var(--pink); }
+
+.controls { display:flex; gap:.75rem; flex-wrap:wrap; align-items:center; margin:1rem 0; }
+.controls label { font-size:.85rem; color:var(--muted); }
+select, input[type="text"], input[type="number"] {
+    background:#12141c; color:var(--text); border:1px solid var(--border); border-radius:8px;
+    padding:.4rem .7rem; font-size:.85rem; font-family:'Inter',sans-serif; outline:none;
+}
+select:focus, input:focus { border-color:var(--accent); }
+button {
+    background:rgba(108,138,255,.15); color:var(--accent); border:1px solid rgba(108,138,255,.3);
+    border-radius:8px; padding:.4rem 1rem; font-size:.85rem; cursor:pointer; font-family:'Inter',sans-serif;
+    transition:background .2s;
+}
+button:hover { background:rgba(108,138,255,.25); }
+button.active { background:rgba(108,138,255,.3); border-color:var(--accent); }
+button.danger { color:var(--pink); background:rgba(255,107,138,.1); border-color:rgba(255,107,138,.3); }
+button.danger:hover { background:rgba(255,107,138,.2); }
+
+.tabs { display:flex; gap:.25rem; margin:1rem 0 .5rem; }
+.tab { padding:.4rem 1rem; border-radius:8px 8px 0 0; font-size:.82rem; cursor:pointer; color:var(--muted); background:transparent; border:1px solid transparent; border-bottom:none; transition:all .2s; }
+.tab:hover { color:var(--text); }
+.tab.active { color:var(--accent); background:rgba(108,138,255,.1); border-color:var(--border); }
+
+.info-panel { background:#12141c; border:1px solid var(--border); border-radius:10px; padding:1rem; margin:.75rem 0; font-size:.85rem; }
+.info-panel .stat { display:flex; justify-content:space-between; padding:.25rem 0; border-bottom:1px solid var(--border); }
+.info-panel .stat:last-child { border-bottom:none; }
+.info-panel .stat-label { color:var(--muted); }
+.info-panel .stat-value { color:var(--accent); font-family:'SF Mono',Monaco,monospace; }
+
+.badge { display:inline-block; padding:.15rem .5rem; border-radius:6px; font-size:.72rem; font-weight:600; }
+.badge-int { background:rgba(108,138,255,.15); color:var(--accent); }
+.badge-float { background:rgba(78,205,196,.15); color:var(--teal); }
+.badge-str { background:rgba(78,205,196,.15); color:var(--green); }
+.badge-bool { background:rgba(255,107,138,.15); color:var(--pink); }
+
+.anatomy-labels { display:flex; gap:1rem; flex-wrap:wrap; margin:1rem 0; }
+.anatomy-label { padding:.4rem .8rem; border-radius:8px; font-size:.8rem; border:1px solid var(--border); }
+
+.groupby-container { display:flex; gap:1rem; flex-wrap:wrap; }
+.group-bucket { flex:1; min-width:200px; background:#12141c; border:1px solid var(--border); border-radius:10px; padding:.75rem; }
+.group-bucket h4 { font-size:.85rem; margin-bottom:.5rem; }
+.group-bucket .result { font-size:1.2rem; font-weight:700; margin-top:.5rem; }
+
+.merge-visual { display:grid; grid-template-columns:1fr auto 1fr; gap:1rem; align-items:start; margin:1rem 0; }
+.merge-arrow { display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:var(--accent); padding-top:2rem; }
+
+.pipeline-flow { display:flex; gap:0; align-items:center; margin:1.5rem 0; flex-wrap:wrap; justify-content:center; }
+.pipeline-step { background:#12141c; border:2px solid var(--border); border-radius:12px; padding:.6rem 1rem; font-size:.82rem; cursor:pointer; transition:all .3s; text-align:center; min-width:100px; }
+.pipeline-step:hover, .pipeline-step.active { border-color:var(--accent); background:rgba(108,138,255,.08); }
+.pipeline-arrow { color:var(--muted); font-size:1.2rem; padding:0 .25rem; }
+.pipeline-detail { background:#12141c; border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-top:1rem; display:none; }
+.pipeline-detail.visible { display:block; }
+
+.cards-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:1rem; }
+.card { background:#12141c; border:1px solid var(--border); border-radius:12px; padding:1rem; cursor:pointer; transition:all .3s; }
+.card:hover { border-color:var(--accent); transform:translateY(-2px); }
+.card h4 { font-size:.9rem; color:var(--accent); margin-bottom:.5rem; }
+.card .card-code { font-family:'SF Mono',Monaco,monospace; font-size:.78rem; color:var(--teal); margin:.5rem 0; }
+.card .card-detail { display:none; margin-top:.75rem; padding-top:.75rem; border-top:1px solid var(--border); font-size:.82rem; color:var(--muted); }
+.card.expanded .card-detail { display:block; }
+
+.warning { background:rgba(249,115,22,.08); border:1px solid rgba(249,115,22,.3); border-radius:8px; padding:.75rem 1rem; font-size:.85rem; color:var(--orange); margin:.75rem 0; }
+.warning::before { content:"WARNING: "; font-weight:700; }
+
+.cv-fold { display:flex; gap:2px; margin:.5rem 0; align-items:center; }
+.cv-fold .fold-block { height:24px; flex:1; border-radius:4px; background:rgba(108,138,255,.2); }
+.cv-fold .fold-block.val { background:rgba(255,107,138,.3); border:1px solid rgba(255,107,138,.5); }
+.cv-fold .fold-label { font-size:.72rem; color:var(--muted); width:50px; text-align:right; margin-right:.5rem; }
+
+.mini-table { font-family:'SF Mono',Monaco,monospace; font-size:.75rem; margin:.5rem 0; }
+.mini-table td, .mini-table th { padding:.2rem .4rem; border-bottom:1px solid var(--border); }
+.mini-table th { color:var(--accent); font-weight:600; }
+
+.number-line { position:relative; height:60px; margin:1rem 0; background:#12141c; border-radius:8px; border:1px solid var(--border); overflow:hidden; }
+.number-line .axis { position:absolute; bottom:20px; left:5%; right:5%; height:2px; background:var(--border); }
+.number-line .tick { position:absolute; bottom:16px; width:1px; height:10px; background:var(--muted); }
+.number-line .tick-label { position:absolute; bottom:2px; font-size:.65rem; color:var(--muted); transform:translateX(-50%); }
+.number-line .point { position:absolute; bottom:24px; width:8px; height:8px; border-radius:50%; transform:translate(-50%,50%); transition:left .8s ease; }
+
+.filter-row { display:flex; gap:.5rem; align-items:center; margin:.5rem 0; flex-wrap:wrap; }
+.filter-row select, .filter-row input { min-width:100px; }
+
+.anim-row { transition: transform .5s ease, opacity .5s ease; }
+
+@media(max-width:600px) {
+    section { margin:1rem; padding:1rem; }
+    .merge-visual { grid-template-columns:1fr; }
+    .pipeline-flow { flex-direction:column; }
+    .pipeline-arrow { transform:rotate(90deg); }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="ml-metrics.html">ML Metrics</a>
+  <a href="ml-concepts.html">ML Concepts</a>
+  <a href="probability-stats.html">Probability &amp; Stats</a>
+  <a href="model-selection.html">Model Selection</a>
+  <a href="sql-concepts.html">SQL Concepts</a>
+  <a href="data-wrangling.html" class="active">Pandas &amp; sklearn</a>
+  <a href="case-frameworks.html">Case Frameworks</a>
+</nav>
+
+<header>
+  <h1>Pandas &amp; sklearn</h1>
+  <p>Interactive guide to data wrangling and the ML pipeline.</p>
+</header>
+
+<!-- ============ SECTION 1: DataFrame Anatomy ============ -->
+<section id="sec-anatomy">
+  <h2>1. DataFrame Anatomy</h2>
+  <p style="color:var(--muted);margin-bottom:1rem;">Click a <strong>column header</strong> for stats or a <strong>row</strong> for access syntax.</p>
+
+  <div class="anatomy-labels">
+    <div class="anatomy-label"><strong>shape:</strong> <span style="color:var(--accent)">(8, 6)</span></div>
+    <div class="anatomy-label"><strong>index:</strong> <span style="color:var(--accent)">RangeIndex(0..7)</span></div>
+    <div class="anatomy-label"><strong>columns:</strong> <span style="color:var(--accent)">['customer_id','region','revenue','tenure_months','support_tickets','churned']</span></div>
+  </div>
+
+  <div style="overflow-x:auto">
+    <table class="df" id="anatomy-table"><thead><tr></tr></thead><tbody></tbody></table>
+  </div>
+
+  <div id="anatomy-col-info" class="info-panel" style="display:none"></div>
+  <div id="anatomy-row-info" class="info-panel" style="display:none"></div>
+
+  <div class="tabs" id="anatomy-view-tabs">
+    <div class="tab active" data-view="full">.head(8)</div>
+    <div class="tab" data-view="head">.head()</div>
+    <div class="tab" data-view="tail">.tail()</div>
+    <div class="tab" data-view="describe">.describe()</div>
+    <div class="tab" data-view="info">.info()</div>
+  </div>
+  <div class="code-block" id="anatomy-code"><span class="label">pandas</span><span class="var">df</span>.<span class="fn">head</span>(<span class="num">8</span>)</div>
+  <div id="anatomy-view-output" style="overflow-x:auto"></div>
+</section>
+
+<!-- ============ SECTION 2: Filtering & Selection ============ -->
+<section id="sec-filter">
+  <h2>2. Filtering &amp; Selection</h2>
+  <p style="color:var(--muted);margin-bottom:1rem;">Build filters interactively. Matching rows stay highlighted; filtered rows grey out.</p>
+
+  <div id="filter-rows-container"></div>
+  <div style="display:flex;gap:.5rem;margin:.75rem 0;flex-wrap:wrap;">
+    <button onclick="addFilter()">+ Add Filter</button>
+    <button onclick="applyFilters()">Apply Filters</button>
+    <button class="danger" onclick="clearFilters()">Clear All</button>
+  </div>
+  <div id="filter-combiner" style="display:none;margin:.5rem 0;">
+    <label style="font-size:.85rem;color:var(--muted);">Combine with: </label>
+    <button id="combiner-and" class="active" onclick="setCombiner('and')">AND (&amp;)</button>
+    <button id="combiner-or" onclick="setCombiner('or')">OR (|)</button>
+  </div>
+
+  <div style="overflow-x:auto">
+    <table class="df" id="filter-table"><thead><tr></tr></thead><tbody></tbody></table>
+  </div>
+  <div class="code-block" id="filter-code"><span class="label">pandas</span><span class="cm"># Build a filter above</span></div>
+
+  <h3>Selection Syntax Comparison</h3>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:.75rem;">
+    <div class="info-panel">
+      <div style="color:var(--accent);font-weight:600;margin-bottom:.4rem;">.loc[] — Label-based</div>
+      <div class="code-block" style="margin:0"><span class="var">df</span>.<span class="fn">loc</span>[<span class="num">0</span>:<span class="num">3</span>, <span class="str">'revenue'</span>:<span class="str">'churned'</span>]</div>
+    </div>
+    <div class="info-panel">
+      <div style="color:var(--teal);font-weight:600;margin-bottom:.4rem;">.iloc[] — Integer-based</div>
+      <div class="code-block" style="margin:0"><span class="var">df</span>.<span class="fn">iloc</span>[<span class="num">0</span>:<span class="num">3</span>, <span class="num">2</span>:<span class="num">5</span>]</div>
+    </div>
+    <div class="info-panel">
+      <div style="color:var(--pink);font-weight:600;margin-bottom:.4rem;">Boolean Indexing</div>
+      <div class="code-block" style="margin:0"><span class="var">df</span>[<span class="var">df</span>[<span class="str">'revenue'</span>] <span class="op">></span> <span class="num">5000</span>]</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 3: GroupBy ============ -->
+<section id="sec-groupby">
+  <h2>3. GroupBy Visualized</h2>
+  <p style="color:var(--muted);margin-bottom:1rem;">The Split-Apply-Combine pattern. Watch rows split into groups, aggregation applied, and results combined.</p>
+
+  <div class="controls">
+    <label>Group by:</label>
+    <select id="gb-col" onchange="updateGroupBy()">
+      <option value="region">region</option>
+      <option value="churned">churned</option>
+    </select>
+    <label>Value column:</label>
+    <select id="gb-val" onchange="updateGroupBy()">
+      <option value="revenue">revenue</option>
+      <option value="tenure_months">tenure_months</option>
+      <option value="support_tickets">support_tickets</option>
+    </select>
+  </div>
+  <div class="controls">
+    <label>Aggregations:</label>
+    <label><input type="checkbox" checked value="count" onchange="updateGroupBy()"> count</label>
+    <label><input type="checkbox" checked value="sum" onchange="updateGroupBy()"> sum</label>
+    <label><input type="checkbox" checked value="mean" onchange="updateGroupBy()"> mean</label>
+    <label><input type="checkbox" value="min" onchange="updateGroupBy()"> min</label>
+    <label><input type="checkbox" value="max" onchange="updateGroupBy()"> max</label>
+    <button onclick="animateGroupBy()" style="margin-left:auto;">Animate</button>
+  </div>
+
+  <div id="gb-step-label" style="font-weight:600;color:var(--accent);margin:.75rem 0;">Step 1: Split</div>
+  <div id="gb-visual" class="groupby-container"></div>
+  <div id="gb-result" style="overflow-x:auto;margin-top:1rem;"></div>
+  <div class="code-block" id="gb-code"><span class="label">pandas</span></div>
+</section>
+
+<!-- ============ SECTION 4: Merge / Join ============ -->
+<section id="sec-merge">
+  <h2>4. Merge / Join Operations</h2>
+  <p style="color:var(--muted);margin-bottom:1rem;">See how different join types affect the result. Lines connect matching keys.</p>
+
+  <div class="tabs" id="merge-tabs">
+    <div class="tab active" data-how="inner" onclick="setMerge('inner')">INNER</div>
+    <div class="tab" data-how="left" onclick="setMerge('left')">LEFT</div>
+    <div class="tab" data-how="right" onclick="setMerge('right')">RIGHT</div>
+    <div class="tab" data-how="outer" onclick="setMerge('outer')">OUTER</div>
+  </div>
+
+  <div class="merge-visual">
+    <div>
+      <h3 style="font-size:.9rem;">customers</h3>
+      <table class="df" id="merge-left-table"><thead><tr><th>customer_id</th><th>name</th><th>region</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="merge-arrow">
+      <svg width="40" height="40" viewBox="0 0 40 40"><path d="M5 20h25m-8-8 8 8-8 8" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+    <div>
+      <h3 style="font-size:.9rem;">orders</h3>
+      <table class="df" id="merge-right-table"><thead><tr><th>order_id</th><th>customer_id</th><th>amount</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+
+  <h3 style="font-size:.9rem;margin-top:1rem;">Result <span id="merge-count" style="color:var(--muted);font-weight:400;"></span></h3>
+  <div style="overflow-x:auto">
+    <table class="df" id="merge-result-table"><thead><tr></tr></thead><tbody></tbody></table>
+  </div>
+  <div class="code-block" id="merge-code"><span class="label">pandas</span></div>
+</section>
+
+<!-- ============ SECTION 5: Pivot Tables ============ -->
+<section id="sec-pivot">
+  <h2>5. Pivot Tables</h2>
+  <p style="color:var(--muted);margin-bottom:1rem;">Build a pivot table interactively. The result updates live.</p>
+
+  <div class="controls">
+    <label>index:</label>
+    <select id="pv-index" onchange="updatePivot()">
+      <option value="region">region</option>
+      <option value="category">category</option>
+    </select>
+    <label>columns:</label>
+    <select id="pv-columns" onchange="updatePivot()">
+      <option value="category">category</option>
+      <option value="region">region</option>
+    </select>
+    <label>values:</label>
+    <select id="pv-values" onchange="updatePivot()">
+      <option value="revenue">revenue</option>
+      <option value="quantity">quantity</option>
+    </select>
+    <label>aggfunc:</label>
+    <select id="pv-agg" onchange="updatePivot()">
+      <option value="sum">sum</option>
+      <option value="mean">mean</option>
+      <option value="count">count</option>
+      <option value="min">min</option>
+      <option value="max">max</option>
+    </select>
+  </div>
+  <div class="controls">
+    <label><input type="checkbox" id="pv-margins" onchange="updatePivot()"> margins=True (show totals)</label>
+  </div>
+
+  <h3 style="font-size:.9rem;">Source Data</h3>
+  <div style="overflow-x:auto">
+    <table class="df" id="pivot-source"><thead><tr></tr></thead><tbody></tbody></table>
+  </div>
+
+  <h3 style="font-size:.9rem;margin-top:1rem;">Pivot Result</h3>
+  <div style="overflow-x:auto">
+    <table class="df" id="pivot-result"><thead><tr></tr></thead><tbody></tbody></table>
+  </div>
+  <div class="code-block" id="pivot-code"><span class="label">pandas</span></div>
+</section>
+
+<!-- ============ SECTION 6: sklearn Pipeline ============ -->
+<section id="sec-pipeline">
+  <h2>6. The sklearn Pipeline</h2>
+  <p style="color:var(--muted);margin-bottom:1rem;">Click each step to explore. The universal sklearn pattern flows left to right.</p>
+
+  <div class="pipeline-flow">
+    <div class="pipeline-step" data-step="split" onclick="showPipeStep('split')">Raw Data<br><small style="color:var(--muted)">Train/Test Split</small></div>
+    <div class="pipeline-arrow">&rarr;</div>
+    <div class="pipeline-step" data-step="preprocess" onclick="showPipeStep('preprocess')">Preprocessing<br><small style="color:var(--muted)">Scale / Encode</small></div>
+    <div class="pipeline-arrow">&rarr;</div>
+    <div class="pipeline-step" data-step="model" onclick="showPipeStep('model')">Model<br><small style="color:var(--muted)">fit &amp; predict</small></div>
+    <div class="pipeline-arrow">&rarr;</div>
+    <div class="pipeline-step" data-step="eval" onclick="showPipeStep('eval')">Evaluation<br><small style="color:var(--muted)">Metrics</small></div>
+    <div class="pipeline-arrow">&rarr;</div>
+    <div class="pipeline-step" data-step="cv" onclick="showPipeStep('cv')">Cross-Val<br><small style="color:var(--muted)">Pipeline</small></div>
+  </div>
+
+  <div class="pipeline-detail" id="pipe-split">
+    <h3>Train/Test Split</h3>
+    <p style="color:var(--muted);font-size:.85rem;">Data is randomly partitioned. The test set is held out for unbiased evaluation.</p>
+    <div id="split-visual" style="display:flex;gap:1rem;margin:1rem 0;flex-wrap:wrap;"></div>
+    <button onclick="animateSplit()">Shuffle &amp; Split</button>
+    <div class="code-block">
+<span class="kw">from</span> <span class="var">sklearn.model_selection</span> <span class="kw">import</span> <span class="fn">train_test_split</span>
+
+<span class="var">X_train</span>, <span class="var">X_test</span>, <span class="var">y_train</span>, <span class="var">y_test</span> <span class="op">=</span> <span class="fn">train_test_split</span>(
+    <span class="var">X</span>, <span class="var">y</span>, <span class="var">test_size</span><span class="op">=</span><span class="num">0.2</span>, <span class="var">random_state</span><span class="op">=</span><span class="num">42</span>
+)</div>
+    <div class="warning">Never fit or tune on test data. The test set must remain unseen until final evaluation.</div>
+  </div>
+
+  <div class="pipeline-detail" id="pipe-preprocess">
+    <h3>Preprocessing</h3>
+    <div class="tabs">
+      <div class="tab active" onclick="showScaler('standard')">StandardScaler</div>
+      <div class="tab" onclick="showScaler('minmax')">MinMaxScaler</div>
+    </div>
+    <div id="scaler-visual">
+      <div id="scaler-standard">
+        <p style="color:var(--muted);font-size:.85rem;margin:.5rem 0;">Transforms features to have mean=0 and std=1.</p>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+          <div style="flex:1;min-width:250px;">
+            <div style="font-size:.8rem;color:var(--muted);margin-bottom:.25rem;">Before scaling:</div>
+            <div class="number-line" id="nl-before-std"></div>
+          </div>
+          <div style="flex:1;min-width:250px;">
+            <div style="font-size:.8rem;color:var(--muted);margin-bottom:.25rem;">After StandardScaler:</div>
+            <div class="number-line" id="nl-after-std"></div>
+          </div>
+        </div>
+        <div class="code-block">
+<span class="kw">from</span> <span class="var">sklearn.preprocessing</span> <span class="kw">import</span> <span class="fn">StandardScaler</span>
+
+<span class="var">scaler</span> <span class="op">=</span> <span class="fn">StandardScaler</span>()
+<span class="var">X_train_scaled</span> <span class="op">=</span> <span class="var">scaler</span>.<span class="fn">fit_transform</span>(<span class="var">X_train</span>)  <span class="cm"># fit + transform</span>
+<span class="var">X_test_scaled</span> <span class="op">=</span> <span class="var">scaler</span>.<span class="fn">transform</span>(<span class="var">X_test</span>)        <span class="cm"># transform ONLY</span></div>
+      </div>
+      <div id="scaler-minmax" style="display:none;">
+        <p style="color:var(--muted);font-size:.85rem;margin:.5rem 0;">Maps features to the [0, 1] range.</p>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+          <div style="flex:1;min-width:250px;">
+            <div style="font-size:.8rem;color:var(--muted);margin-bottom:.25rem;">Before scaling:</div>
+            <div class="number-line" id="nl-before-mm"></div>
+          </div>
+          <div style="flex:1;min-width:250px;">
+            <div style="font-size:.8rem;color:var(--muted);margin-bottom:.25rem;">After MinMaxScaler:</div>
+            <div class="number-line" id="nl-after-mm"></div>
+          </div>
+        </div>
+        <div class="code-block">
+<span class="kw">from</span> <span class="var">sklearn.preprocessing</span> <span class="kw">import</span> <span class="fn">MinMaxScaler</span>
+
+<span class="var">scaler</span> <span class="op">=</span> <span class="fn">MinMaxScaler</span>()
+<span class="var">X_train_scaled</span> <span class="op">=</span> <span class="var">scaler</span>.<span class="fn">fit_transform</span>(<span class="var">X_train</span>)  <span class="cm"># fit + transform</span>
+<span class="var">X_test_scaled</span> <span class="op">=</span> <span class="var">scaler</span>.<span class="fn">transform</span>(<span class="var">X_test</span>)        <span class="cm"># transform ONLY</span></div>
+      </div>
+    </div>
+    <div class="warning">Always use fit_transform on TRAIN data and transform only on TEST data. Fitting on test data causes data leakage.</div>
+  </div>
+
+  <div class="pipeline-detail" id="pipe-model">
+    <h3>Model — Universal sklearn API</h3>
+    <div class="controls">
+      <label>Model:</label>
+      <select id="model-select" onchange="updateModelCode()">
+        <option value="lr">LogisticRegression</option>
+        <option value="rf">RandomForestClassifier</option>
+        <option value="gb">GradientBoostingClassifier</option>
+      </select>
+    </div>
+    <div class="code-block" id="model-code"></div>
+    <p style="color:var(--muted);font-size:.85rem;margin-top:.5rem;">Every sklearn estimator follows the same pattern: <strong>instantiate &rarr; fit &rarr; predict</strong>.</p>
+  </div>
+
+  <div class="pipeline-detail" id="pipe-eval">
+    <h3>Evaluation Metrics</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:.75rem;">
+      <div class="info-panel">
+        <div style="color:var(--accent);font-weight:600;margin-bottom:.5rem;">accuracy_score</div>
+        <div style="font-size:.82rem;color:var(--muted);margin-bottom:.5rem;">Fraction of correct predictions.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:.5rem;">
+          <div style="background:rgba(78,205,196,.2);padding:.3rem;border-radius:4px;text-align:center;font-size:.75rem;">TP</div>
+          <div style="background:rgba(255,107,138,.15);padding:.3rem;border-radius:4px;text-align:center;font-size:.75rem;">FP</div>
+          <div style="background:rgba(255,107,138,.15);padding:.3rem;border-radius:4px;text-align:center;font-size:.75rem;">FN</div>
+          <div style="background:rgba(78,205,196,.2);padding:.3rem;border-radius:4px;text-align:center;font-size:.75rem;">TN</div>
+        </div>
+        <div class="code-block" style="margin:0;font-size:.75rem"><span class="fn">accuracy_score</span>(<span class="var">y_test</span>, <span class="var">y_pred</span>)</div>
+      </div>
+      <div class="info-panel">
+        <div style="color:var(--teal);font-weight:600;margin-bottom:.5rem;">classification_report</div>
+        <div style="font-size:.82rem;color:var(--muted);margin-bottom:.5rem;">Precision, recall, F1 per class.</div>
+        <table class="mini-table" style="width:100%;margin-bottom:.5rem;">
+          <tr><th></th><th>prec</th><th>rec</th><th>f1</th></tr>
+          <tr><td style="color:var(--muted)">0</td><td>0.85</td><td>0.90</td><td>0.87</td></tr>
+          <tr><td style="color:var(--muted)">1</td><td>0.80</td><td>0.72</td><td>0.76</td></tr>
+        </table>
+        <div class="code-block" style="margin:0;font-size:.75rem"><span class="fn">classification_report</span>(<span class="var">y_test</span>, <span class="var">y_pred</span>)</div>
+      </div>
+      <div class="info-panel">
+        <div style="color:var(--pink);font-weight:600;margin-bottom:.5rem;">confusion_matrix</div>
+        <div style="font-size:.82rem;color:var(--muted);margin-bottom:.5rem;">Actual vs predicted counts.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:.5rem;">
+          <div style="background:rgba(78,205,196,.25);padding:.5rem;border-radius:4px;text-align:center;font-weight:700;">45</div>
+          <div style="background:rgba(255,107,138,.15);padding:.5rem;border-radius:4px;text-align:center;">5</div>
+          <div style="background:rgba(255,107,138,.15);padding:.5rem;border-radius:4px;text-align:center;">8</div>
+          <div style="background:rgba(78,205,196,.25);padding:.5rem;border-radius:4px;text-align:center;font-weight:700;">42</div>
+        </div>
+        <div class="code-block" style="margin:0;font-size:.75rem"><span class="fn">confusion_matrix</span>(<span class="var">y_test</span>, <span class="var">y_pred</span>)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pipeline-detail" id="pipe-cv">
+    <h3>Cross-Validation with Pipeline</h3>
+    <p style="color:var(--muted);font-size:.85rem;">Each fold takes a turn as the validation set. The pipeline ensures no data leakage.</p>
+    <div id="cv-folds" style="margin:1rem 0;"></div>
+    <div style="display:flex;gap:1rem;margin:.5rem 0;font-size:.8rem;">
+      <div><span style="display:inline-block;width:14px;height:14px;background:rgba(108,138,255,.2);border-radius:3px;vertical-align:middle;margin-right:.3rem;"></span>Train</div>
+      <div><span style="display:inline-block;width:14px;height:14px;background:rgba(255,107,138,.3);border:1px solid rgba(255,107,138,.5);border-radius:3px;vertical-align:middle;margin-right:.3rem;"></span>Validation</div>
+    </div>
+    <div class="code-block">
+<span class="kw">from</span> <span class="var">sklearn.pipeline</span> <span class="kw">import</span> <span class="fn">Pipeline</span>
+<span class="kw">from</span> <span class="var">sklearn.model_selection</span> <span class="kw">import</span> <span class="fn">cross_val_score</span>
+
+<span class="var">pipe</span> <span class="op">=</span> <span class="fn">Pipeline</span>([
+    (<span class="str">'scaler'</span>, <span class="fn">StandardScaler</span>()),
+    (<span class="str">'clf'</span>, <span class="fn">RandomForestClassifier</span>())
+])
+
+<span class="var">scores</span> <span class="op">=</span> <span class="fn">cross_val_score</span>(<span class="var">pipe</span>, <span class="var">X</span>, <span class="var">y</span>, <span class="var">cv</span><span class="op">=</span><span class="num">5</span>)
+<span class="fn">print</span>(<span class="str">f"Mean accuracy: </span><span class="var">{scores.mean():.3f}</span><span class="str"> +/- </span><span class="var">{scores.std():.3f}</span><span class="str">"</span>)</div>
+  </div>
+</section>
+
+<!-- ============ SECTION 7: Common Patterns ============ -->
+<section id="sec-patterns">
+  <h2>7. Common Pandas Patterns</h2>
+  <p style="color:var(--muted);margin-bottom:1rem;">Click any card to expand the explanation and see before/after data.</p>
+  <div class="cards-grid" id="patterns-grid"></div>
+</section>
+
+<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;">Data Scientist Interview Prep</div>
+
+<script>
+// ============================
+// DATA
+// ============================
+const DF = [
+  {customer_id:1001, region:'North', revenue:12500, tenure_months:36, support_tickets:2, churned:false},
+  {customer_id:1002, region:'South', revenue:8200, tenure_months:12, support_tickets:5, churned:true},
+  {customer_id:1003, region:'East',  revenue:15800, tenure_months:48, support_tickets:1, churned:false},
+  {customer_id:1004, region:'West',  revenue:6100, tenure_months:6,  support_tickets:8, churned:true},
+  {customer_id:1005, region:'North', revenue:9400, tenure_months:24, support_tickets:3, churned:false},
+  {customer_id:1006, region:'South', revenue:11200, tenure_months:30, support_tickets:null, churned:false},
+  {customer_id:1007, region:'East',  revenue:7300, tenure_months:18, support_tickets:6, churned:true},
+  {customer_id:1008, region:'West',  revenue:14000, tenure_months:42, support_tickets:2, churned:false},
+];
+const COLS = ['customer_id','region','revenue','tenure_months','support_tickets','churned'];
+const DTYPES = {customer_id:'int64', region:'object', revenue:'int64', tenure_months:'int64', support_tickets:'float64', churned:'bool'};
+
+const CUSTOMERS = [
+  {customer_id:1, name:'Alice', region:'North'},
+  {customer_id:2, name:'Bob', region:'South'},
+  {customer_id:3, name:'Carol', region:'East'},
+  {customer_id:4, name:'Dave', region:'West'},
+];
+const ORDERS = [
+  {order_id:101, customer_id:1, amount:250},
+  {order_id:102, customer_id:1, amount:180},
+  {order_id:103, customer_id:2, amount:90},
+  {order_id:104, customer_id:5, amount:300},
+];
+
+const PIVOT_DATA = [
+  {region:'North', category:'Electronics', revenue:4500, quantity:12},
+  {region:'North', category:'Clothing', revenue:2200, quantity:35},
+  {region:'North', category:'Food', revenue:1800, quantity:60},
+  {region:'South', category:'Electronics', revenue:3800, quantity:10},
+  {region:'South', category:'Clothing', revenue:3100, quantity:42},
+  {region:'South', category:'Food', revenue:2500, quantity:75},
+  {region:'East',  category:'Electronics', revenue:5200, quantity:15},
+  {region:'East',  category:'Clothing', revenue:1900, quantity:28},
+  {region:'East',  category:'Food', revenue:2100, quantity:55},
+  {region:'West',  category:'Electronics', revenue:4100, quantity:11},
+  {region:'West',  category:'Clothing', revenue:2800, quantity:38},
+  {region:'West',  category:'Food', revenue:1500, quantity:45},
+];
+
+const GROUP_COLORS = {
+  'North':'var(--accent)', 'South':'var(--pink)', 'East':'var(--teal)', 'West':'var(--yellow)',
+  'true':'var(--pink)', 'false':'var(--teal)'
+};
+
+// ============================
+// UTILITY
+// ============================
+function h(tag, attrs, ...children) {
+  const el = document.createElement(tag);
+  if (attrs) Object.entries(attrs).forEach(([k,v]) => {
+    if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (k === 'html') el.innerHTML = v;
+    else if (k === 'cls') el.className = v;
+    else el.setAttribute(k, v);
+  });
+  children.flat().forEach(c => { if (c != null) el.append(typeof c === 'string' ? document.createTextNode(c) : c); });
+  return el;
+}
+
+function fmtVal(v) {
+  if (v === null || v === undefined) return '<span class="null-val">NaN</span>';
+  if (typeof v === 'boolean') return v ? 'True' : 'False';
+  if (typeof v === 'number') return v.toLocaleString();
+  return String(v);
+}
+
+function dtypeBadge(col) {
+  const d = DTYPES[col];
+  const cls = d.includes('int')||d.includes('float')?'badge-int': d==='bool'?'badge-bool':'badge-str';
+  return `<span class="badge ${cls}">${d}</span>`;
+}
+
+function buildTable(container, cols, rows, opts={}) {
+  const tbl = typeof container === 'string' ? document.getElementById(container) : container;
+  const thead = tbl.querySelector('thead tr') || tbl.querySelector('thead');
+  const tbody = tbl.querySelector('tbody');
+  thead.innerHTML = (opts.showIndex !== false ? '<th>#</th>' : '') + cols.map(c => `<th>${c}</th>`).join('');
+  tbody.innerHTML = rows.map((r, i) => {
+    const cls = opts.rowClass ? opts.rowClass(r, i) : '';
+    return `<tr class="${cls}" ${opts.rowClick ? `onclick="(${opts.rowClick.toString()})(${i})"` : ''}>` +
+      (opts.showIndex !== false ? `<td class="index-cell">${opts.indexStart != null ? opts.indexStart + i : i}</td>` : '') +
+      cols.map(c => {
+        const v = r[c];
+        const cellCls = opts.cellClass ? opts.cellClass(c, v, r) : '';
+        return `<td class="${cellCls}">${fmtVal(v)}</td>`;
+      }).join('') + '</tr>';
+  }).join('');
+}
+
+// ============================
+// 1. DATAFRAME ANATOMY
+// ============================
+let selectedCol = null, selectedRow = null, currentView = 'full';
+
+function renderAnatomyTable(data, view) {
+  const tbl = document.getElementById('anatomy-table');
+  const thead = tbl.querySelector('thead tr');
+  const tbody = tbl.querySelector('tbody');
+
+  thead.innerHTML = '<th>#</th>' + COLS.map(c =>
+    `<th onclick="selectCol('${c}')" style="${selectedCol===c?'background:rgba(108,138,255,.25)':''}">${c} ${dtypeBadge(c)}</th>`
+  ).join('');
+
+  tbody.innerHTML = data.map((r, i) =>
+    `<tr class="${selectedRow===i?'selected':''}" onclick="selectRow(${i})">` +
+    `<td class="index-cell">${i}</td>` +
+    COLS.map(c => `<td>${fmtVal(r[c])}</td>`).join('') + '</tr>'
+  ).join('');
+}
+
+function selectCol(col) {
+  selectedCol = selectedCol === col ? null : col;
+  selectedRow = null;
+  renderAnatomyTable(getViewData(), currentView);
+  const panel = document.getElementById('anatomy-col-info');
+  document.getElementById('anatomy-row-info').style.display = 'none';
+  if (!selectedCol) { panel.style.display = 'none'; return; }
+  const vals = DF.map(r => r[col]).filter(v => v !== null && v !== undefined);
+  const nulls = DF.length - vals.length;
+  const unique = [...new Set(vals)].length;
+  let stats = `<div class="stat"><span class="stat-label">dtype</span><span class="stat-value">${DTYPES[col]}</span></div>`;
+  stats += `<div class="stat"><span class="stat-label">nunique</span><span class="stat-value">${unique}</span></div>`;
+  stats += `<div class="stat"><span class="stat-label">null count</span><span class="stat-value">${nulls}</span></div>`;
+  if (typeof vals[0] === 'number') {
+    const sorted = [...vals].sort((a,b)=>a-b);
+    const sum = vals.reduce((a,b)=>a+b,0);
+    const mean = sum/vals.length;
+    stats += `<div class="stat"><span class="stat-label">mean</span><span class="stat-value">${mean.toFixed(2)}</span></div>`;
+    stats += `<div class="stat"><span class="stat-label">min</span><span class="stat-value">${sorted[0]}</span></div>`;
+    stats += `<div class="stat"><span class="stat-label">max</span><span class="stat-value">${sorted[sorted.length-1]}</span></div>`;
+    const std = Math.sqrt(vals.map(v=>(v-mean)**2).reduce((a,b)=>a+b,0)/vals.length);
+    stats += `<div class="stat"><span class="stat-label">std</span><span class="stat-value">${std.toFixed(2)}</span></div>`;
+  }
+  panel.innerHTML = `<div style="font-weight:600;color:var(--accent);margin-bottom:.5rem;">Column: ${col}</div>` + stats;
+  panel.style.display = 'block';
+}
+
+function selectRow(i) {
+  selectedRow = selectedRow === i ? null : i;
+  selectedCol = null;
+  renderAnatomyTable(getViewData(), currentView);
+  const panel = document.getElementById('anatomy-row-info');
+  document.getElementById('anatomy-col-info').style.display = 'none';
+  if (selectedRow === null) { panel.style.display = 'none'; return; }
+  panel.innerHTML = `<div style="font-weight:600;color:var(--accent);margin-bottom:.5rem;">Row ${i}</div>` +
+    `<div class="stat"><span class="stat-label">.iloc[${i}]</span><span class="stat-value">df.iloc[${i}]</span></div>` +
+    `<div class="stat"><span class="stat-label">.loc[${i}]</span><span class="stat-value">df.loc[${i}]</span></div>` +
+    `<div class="stat"><span class="stat-label">.loc[${i}, 'revenue']</span><span class="stat-value">${DF[i].revenue}</span></div>` +
+    `<div class="stat"><span class="stat-label">.iloc[${i}, 2]</span><span class="stat-value">${DF[i].revenue}</span></div>`;
+  panel.style.display = 'block';
+}
+
+function getViewData() {
+  if (currentView === 'head') return DF.slice(0, 5);
+  if (currentView === 'tail') return DF.slice(-5);
+  return DF;
+}
+
+document.getElementById('anatomy-view-tabs').addEventListener('click', e => {
+  if (!e.target.classList.contains('tab')) return;
+  document.querySelectorAll('#anatomy-view-tabs .tab').forEach(t => t.classList.remove('active'));
+  e.target.classList.add('active');
+  currentView = e.target.dataset.view;
+  const codeEl = document.getElementById('anatomy-code');
+  const output = document.getElementById('anatomy-view-output');
+  selectedCol = null; selectedRow = null;
+  document.getElementById('anatomy-col-info').style.display = 'none';
+  document.getElementById('anatomy-row-info').style.display = 'none';
+
+  if (currentView === 'describe') {
+    codeEl.innerHTML = `<span class="label">pandas</span><span class="var">df</span>.<span class="fn">describe</span>()`;
+    const numCols = COLS.filter(c => DTYPES[c].includes('int') || DTYPES[c].includes('float'));
+    const stats = {};
+    numCols.forEach(c => {
+      const vals = DF.map(r => r[c]).filter(v => v !== null);
+      const n = vals.length;
+      const sum = vals.reduce((a,b)=>a+b,0);
+      const mean = sum/n;
+      const sorted = [...vals].sort((a,b)=>a-b);
+      const std = Math.sqrt(vals.map(v=>(v-mean)**2).reduce((a,b)=>a+b,0)/(n-1));
+      stats[c] = { count:n, mean:mean.toFixed(2), std:std.toFixed(2), min:sorted[0], '25%':sorted[Math.floor(n*.25)], '50%':sorted[Math.floor(n*.5)], '75%':sorted[Math.floor(n*.75)], max:sorted[n-1] };
+    });
+    const statRows = ['count','mean','std','min','25%','50%','75%','max'];
+    let html = '<table class="df"><thead><tr><th></th>' + numCols.map(c=>`<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+    statRows.forEach(s => { html += `<tr><td class="index-cell">${s}</td>` + numCols.map(c=>`<td>${stats[c][s]}</td>`).join('') + '</tr>'; });
+    html += '</tbody></table>';
+    output.innerHTML = html;
+    document.getElementById('anatomy-table').style.display = 'none';
+  } else if (currentView === 'info') {
+    codeEl.innerHTML = `<span class="label">pandas</span><span class="var">df</span>.<span class="fn">info</span>()`;
+    let html = '<div class="info-panel" style="font-family:\'SF Mono\',Monaco,monospace;font-size:.8rem;line-height:1.8;">';
+    html += `&lt;class 'pandas.core.frame.DataFrame'&gt;<br>RangeIndex: 8 entries, 0 to 7<br>Data columns (total 6 columns):<br>`;
+    COLS.forEach((c,i) => {
+      const nonNull = DF.filter(r => r[c] !== null).length;
+      html += ` #${i} &nbsp; ${c.padEnd(20,' ').replace(/ /g,'&nbsp;')} ${nonNull} non-null &nbsp; ${DTYPES[c]}<br>`;
+    });
+    html += `dtypes: bool(1), float64(1), int64(3), object(1)<br>memory usage: ~0.5 KB</div>`;
+    output.innerHTML = html;
+    document.getElementById('anatomy-table').style.display = 'none';
+  } else {
+    output.innerHTML = '';
+    document.getElementById('anatomy-table').style.display = '';
+    const viewData = getViewData();
+    codeEl.innerHTML = `<span class="label">pandas</span><span class="var">df</span>.<span class="fn">${currentView === 'tail' ? 'tail' : 'head'}</span>(${currentView === 'full' ? '8' : ''})`;
+    renderAnatomyTable(viewData, currentView);
+  }
+});
+
+renderAnatomyTable(DF, 'full');
+
+// ============================
+// 2. FILTERING & SELECTION
+// ============================
+let filters = [];
+let combiner = 'and';
+
+function addFilter() {
+  filters.push({ col: 'revenue', op: '>', val: '5000' });
+  renderFilters();
+  if (filters.length > 1) document.getElementById('filter-combiner').style.display = 'block';
+}
+
+function removeFilter(i) {
+  filters.splice(i, 1);
+  if (filters.length <= 1) document.getElementById('filter-combiner').style.display = 'none';
+  renderFilters();
+  applyFilters();
+}
+
+function setCombiner(c) {
+  combiner = c;
+  document.getElementById('combiner-and').classList.toggle('active', c==='and');
+  document.getElementById('combiner-or').classList.toggle('active', c==='or');
+  applyFilters();
+}
+
+function renderFilters() {
+  const container = document.getElementById('filter-rows-container');
+  container.innerHTML = '';
+  filters.forEach((f, i) => {
+    const row = document.createElement('div');
+    row.className = 'filter-row';
+    row.innerHTML = `
+      <select onchange="filters[${i}].col=this.value">${COLS.map(c=>`<option value="${c}" ${f.col===c?'selected':''}>${c}</option>`).join('')}</select>
+      <select onchange="filters[${i}].op=this.value">
+        ${['>','<','==','!=','.isin()','.isna()'].map(o=>`<option value="${o}" ${f.op===o?'selected':''}>${o}</option>`).join('')}
+      </select>
+      <input type="text" value="${f.val}" onchange="filters[${i}].val=this.value" placeholder="value" ${f.op==='.isna()'?'disabled':''}>
+      <button class="danger" onclick="removeFilter(${i})" style="padding:.3rem .6rem;">x</button>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function evalFilter(row, f) {
+  const v = row[f.col];
+  if (f.op === '.isna()') return v === null || v === undefined;
+  let cmpVal = f.val;
+  if (typeof v === 'number') cmpVal = Number(cmpVal);
+  if (typeof v === 'boolean') cmpVal = cmpVal === 'true' || cmpVal === 'True';
+  if (f.op === '.isin()') {
+    const items = f.val.split(',').map(s => s.trim().replace(/['"]/g,''));
+    return items.some(item => {
+      if (typeof v === 'number') return v === Number(item);
+      return String(v) === item;
+    });
+  }
+  switch(f.op) {
+    case '>': return v > cmpVal;
+    case '<': return v < cmpVal;
+    case '==': return v == cmpVal;
+    case '!=': return v != cmpVal;
+  }
+  return true;
+}
+
+function applyFilters() {
+  if (filters.length === 0) {
+    renderFilterTable(DF.map(()=>true));
+    document.getElementById('filter-code').innerHTML = '<span class="label">pandas</span><span class="cm"># No filters applied</span>';
+    return;
+  }
+  const mask = DF.map(row => {
+    if (combiner === 'and') return filters.every(f => evalFilter(row, f));
+    return filters.some(f => evalFilter(row, f));
+  });
+  renderFilterTable(mask);
+
+  // Build code
+  const parts = filters.map(f => {
+    if (f.op === '.isna()') return `<span class="var">df</span>[<span class="str">'${f.col}'</span>].<span class="fn">isna</span>()`;
+    if (f.op === '.isin()') return `<span class="var">df</span>[<span class="str">'${f.col}'</span>].<span class="fn">isin</span>([${f.val}])`;
+    const vStr = typeof DF[0][f.col] === 'number' ? `<span class="num">${f.val}</span>` :
+      (typeof DF[0][f.col] === 'boolean' ? `<span class="kw">${f.val}</span>` : `<span class="str">'${f.val}'</span>`);
+    return `<span class="var">df</span>[<span class="str">'${f.col}'</span>] <span class="op">${f.op.replace('<','&lt;').replace('>','&gt;')}</span> ${vStr}`;
+  });
+  const joiner = combiner === 'and' ? ' <span class="op">&amp;</span> ' : ' <span class="op">|</span> ';
+  const cond = parts.length === 1 ? parts[0] : parts.map(p => `(${p})`).join(joiner);
+  document.getElementById('filter-code').innerHTML = `<span class="label">pandas</span><span class="var">df</span>[${cond}]`;
+}
+
+function renderFilterTable(mask) {
+  const tbl = document.getElementById('filter-table');
+  const thead = tbl.querySelector('thead tr');
+  const tbody = tbl.querySelector('tbody');
+  thead.innerHTML = '<th>#</th>' + COLS.map(c => `<th>${c}</th>`).join('');
+  tbody.innerHTML = DF.map((r, i) => {
+    const cls = mask[i] ? 'match' : 'filtered-out';
+    return `<tr class="${cls}"><td class="index-cell">${i}</td>` + COLS.map(c => `<td>${fmtVal(r[c])}</td>`).join('') + '</tr>';
+  }).join('');
+}
+
+function clearFilters() {
+  filters = [];
+  document.getElementById('filter-combiner').style.display = 'none';
+  renderFilters();
+  applyFilters();
+}
+
+// Init filter section
+addFilter();
+renderFilterTable(DF.map(()=>true));
+
+// ============================
+// 3. GROUPBY
+// ============================
+function getCheckedAggs() {
+  return [...document.querySelectorAll('#sec-groupby input[type=checkbox]:checked')].map(cb => cb.value);
+}
+
+function updateGroupBy() {
+  const col = document.getElementById('gb-col').value;
+  const valCol = document.getElementById('gb-val').value;
+  const aggs = getCheckedAggs();
+  const groups = {};
+  DF.forEach(r => {
+    const key = String(r[col]);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  });
+
+  const visual = document.getElementById('gb-visual');
+  visual.innerHTML = '';
+  Object.entries(groups).forEach(([key, rows]) => {
+    const bucket = document.createElement('div');
+    bucket.className = 'group-bucket';
+    const color = GROUP_COLORS[key] || 'var(--accent)';
+    let html = `<h4 style="color:${color}">${col} = ${key}</h4>`;
+    html += `<div style="font-size:.78rem;color:var(--muted);margin-bottom:.5rem;">${rows.length} rows</div>`;
+    const vals = rows.map(r => r[valCol]).filter(v => v !== null);
+    aggs.forEach(agg => {
+      let result;
+      switch(agg) {
+        case 'count': result = vals.length; break;
+        case 'sum': result = vals.reduce((a,b)=>a+b,0); break;
+        case 'mean': result = (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2); break;
+        case 'min': result = Math.min(...vals); break;
+        case 'max': result = Math.max(...vals); break;
+      }
+      html += `<div class="stat"><span class="stat-label">${agg}</span><span class="stat-value">${typeof result === 'number' ? result.toLocaleString() : result}</span></div>`;
+    });
+    bucket.innerHTML = html;
+    visual.appendChild(bucket);
+  });
+
+  // Result table
+  const resultDiv = document.getElementById('gb-result');
+  const keys = Object.keys(groups);
+  let tHtml = '<table class="df"><thead><tr><th>' + col + '</th>';
+  aggs.forEach(a => { tHtml += `<th>${a}</th>`; });
+  tHtml += '</tr></thead><tbody>';
+  keys.forEach(key => {
+    const vals = groups[key].map(r => r[valCol]).filter(v => v !== null);
+    tHtml += `<tr><td class="index-cell">${key}</td>`;
+    aggs.forEach(a => {
+      let v;
+      switch(a) {
+        case 'count': v = vals.length; break;
+        case 'sum': v = vals.reduce((s,x)=>s+x,0); break;
+        case 'mean': v = (vals.reduce((s,x)=>s+x,0)/vals.length).toFixed(2); break;
+        case 'min': v = Math.min(...vals); break;
+        case 'max': v = Math.max(...vals); break;
+      }
+      tHtml += `<td>${typeof v==='number'?v.toLocaleString():v}</td>`;
+    });
+    tHtml += '</tr>';
+  });
+  tHtml += '</tbody></table>';
+  resultDiv.innerHTML = tHtml;
+
+  // Code
+  const codeEl = document.getElementById('gb-code');
+  if (aggs.length === 1) {
+    codeEl.innerHTML = `<span class="label">pandas</span><span class="var">df</span>.<span class="fn">groupby</span>(<span class="str">'${col}'</span>)[<span class="str">'${valCol}'</span>].<span class="fn">${aggs[0]}</span>()`;
+  } else {
+    codeEl.innerHTML = `<span class="label">pandas</span><span class="var">df</span>.<span class="fn">groupby</span>(<span class="str">'${col}'</span>)[<span class="str">'${valCol}'</span>].<span class="fn">agg</span>([${aggs.map(a=>`<span class="str">'${a}'</span>`).join(', ')}])`;
+  }
+}
+
+function animateGroupBy() {
+  const label = document.getElementById('gb-step-label');
+  const steps = ['Step 1: Split', 'Step 2: Apply', 'Step 3: Combine'];
+  const colors = ['var(--accent)', 'var(--teal)', 'var(--green)'];
+  let step = 0;
+  const buckets = document.querySelectorAll('.group-bucket');
+  buckets.forEach(b => { b.style.opacity = '0'; b.style.transform = 'translateY(20px)'; b.style.transition = 'all .5s ease'; });
+
+  function next() {
+    label.textContent = steps[step];
+    label.style.color = colors[step];
+    if (step === 0) {
+      buckets.forEach((b, i) => {
+        setTimeout(() => { b.style.opacity = '1'; b.style.transform = 'translateY(0)'; }, i * 200);
+      });
+    } else if (step === 1) {
+      buckets.forEach(b => {
+        const stats = b.querySelectorAll('.stat-value');
+        stats.forEach(s => { s.style.color = 'var(--yellow)'; s.style.transition = 'color .3s'; });
+        setTimeout(() => stats.forEach(s => s.style.color = ''), 800);
+      });
+    } else if (step === 2) {
+      const resultTbl = document.getElementById('gb-result');
+      resultTbl.style.opacity = '0';
+      resultTbl.style.transition = 'opacity .5s';
+      setTimeout(() => { resultTbl.style.opacity = '1'; }, 100);
+    }
+    step++;
+    if (step < 3) setTimeout(next, 1200);
+  }
+  next();
+}
+
+updateGroupBy();
+
+// ============================
+// 4. MERGE
+// ============================
+function renderMergeSource() {
+  const lt = document.getElementById('merge-left-table').querySelector('tbody');
+  lt.innerHTML = CUSTOMERS.map(r => `<tr><td class="index-cell">${r.customer_id}</td><td>${r.name}</td><td>${r.region}</td></tr>`).join('');
+  const rt = document.getElementById('merge-right-table').querySelector('tbody');
+  rt.innerHTML = ORDERS.map(r => `<tr><td>${r.order_id}</td><td class="index-cell">${r.customer_id}</td><td>${r.amount}</td></tr>`).join('');
+}
+
+function setMerge(how) {
+  document.querySelectorAll('#merge-tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.how === how));
+  const result = [];
+  const leftIds = new Set(CUSTOMERS.map(c=>c.customer_id));
+  const rightIds = new Set(ORDERS.map(o=>o.customer_id));
+
+  if (how === 'inner') {
+    CUSTOMERS.forEach(c => {
+      const matching = ORDERS.filter(o => o.customer_id === c.customer_id);
+      matching.forEach(o => result.push({...c, order_id: o.order_id, amount: o.amount, _match: true}));
+    });
+  } else if (how === 'left') {
+    CUSTOMERS.forEach(c => {
+      const matching = ORDERS.filter(o => o.customer_id === c.customer_id);
+      if (matching.length) matching.forEach(o => result.push({...c, order_id: o.order_id, amount: o.amount, _match: true}));
+      else result.push({...c, order_id: null, amount: null, _match: false});
+    });
+  } else if (how === 'right') {
+    ORDERS.forEach(o => {
+      const c = CUSTOMERS.find(c => c.customer_id === o.customer_id);
+      if (c) result.push({...c, order_id: o.order_id, amount: o.amount, _match: true});
+      else result.push({customer_id: o.customer_id, name: null, region: null, order_id: o.order_id, amount: o.amount, _match: false});
+    });
+  } else { // outer
+    CUSTOMERS.forEach(c => {
+      const matching = ORDERS.filter(o => o.customer_id === c.customer_id);
+      if (matching.length) matching.forEach(o => result.push({...c, order_id: o.order_id, amount: o.amount, _match: true}));
+      else result.push({...c, order_id: null, amount: null, _match: false});
+    });
+    ORDERS.forEach(o => {
+      if (!leftIds.has(o.customer_id)) {
+        result.push({customer_id: o.customer_id, name: null, region: null, order_id: o.order_id, amount: o.amount, _match: false});
+      }
+    });
+  }
+
+  const cols = ['customer_id','name','region','order_id','amount'];
+  const tbl = document.getElementById('merge-result-table');
+  tbl.querySelector('thead tr').innerHTML = cols.map(c=>`<th>${c}</th>`).join('');
+  tbl.querySelector('tbody').innerHTML = result.map(r => {
+    return '<tr>' + cols.map(c => {
+      const v = r[c];
+      if (v === null) return `<td class="merge-null">NaN</td>`;
+      if (r._match) return `<td class="merge-match">${fmtVal(v)}</td>`;
+      return `<td>${fmtVal(v)}</td>`;
+    }).join('') + '</tr>';
+  }).join('');
+
+  document.getElementById('merge-count').textContent = `(${result.length} rows)`;
+  document.getElementById('merge-code').innerHTML =
+    `<span class="label">pandas</span><span class="var">pd</span>.<span class="fn">merge</span>(<span class="var">customers</span>, <span class="var">orders</span>, <span class="var">on</span><span class="op">=</span><span class="str">'customer_id'</span>, <span class="var">how</span><span class="op">=</span><span class="str">'${how}'</span>)`;
+}
+
+renderMergeSource();
+setMerge('inner');
+
+// ============================
+// 5. PIVOT TABLES
+// ============================
+function updatePivot() {
+  const idx = document.getElementById('pv-index').value;
+  const cols = document.getElementById('pv-columns').value;
+  const vals = document.getElementById('pv-values').value;
+  const agg = document.getElementById('pv-agg').value;
+  const margins = document.getElementById('pv-margins').checked;
+
+  // Source table
+  const srcTbl = document.getElementById('pivot-source');
+  srcTbl.querySelector('thead tr').innerHTML = ['region','category','revenue','quantity'].map(c=>`<th>${c}</th>`).join('');
+  srcTbl.querySelector('tbody').innerHTML = PIVOT_DATA.map(r =>
+    `<tr>${['region','category','revenue','quantity'].map(c=>`<td>${r[c]}</td>`).join('')}</tr>`
+  ).join('');
+
+  // Compute pivot
+  const idxVals = [...new Set(PIVOT_DATA.map(r => r[idx]))];
+  const colVals = [...new Set(PIVOT_DATA.map(r => r[cols]))];
+
+  const pivot = {};
+  idxVals.forEach(iv => {
+    pivot[iv] = {};
+    colVals.forEach(cv => {
+      const matching = PIVOT_DATA.filter(r => r[idx] === iv && r[cols] === cv).map(r => r[vals]);
+      if (matching.length === 0) { pivot[iv][cv] = null; return; }
+      switch(agg) {
+        case 'sum': pivot[iv][cv] = matching.reduce((a,b)=>a+b,0); break;
+        case 'mean': pivot[iv][cv] = (matching.reduce((a,b)=>a+b,0)/matching.length).toFixed(1); break;
+        case 'count': pivot[iv][cv] = matching.length; break;
+        case 'min': pivot[iv][cv] = Math.min(...matching); break;
+        case 'max': pivot[iv][cv] = Math.max(...matching); break;
+      }
+    });
+  });
+
+  // Result table
+  const resTbl = document.getElementById('pivot-result');
+  let headerHtml = `<th>${idx}</th>` + colVals.map(c=>`<th>${c}</th>`).join('');
+  if (margins) headerHtml += '<th style="color:var(--yellow)">All</th>';
+  resTbl.querySelector('thead tr').innerHTML = headerHtml;
+
+  let bodyHtml = '';
+  idxVals.forEach(iv => {
+    bodyHtml += `<tr><td class="index-cell">${iv}</td>`;
+    let rowTotal = 0, rowCount = 0;
+    colVals.forEach(cv => {
+      const v = pivot[iv][cv];
+      bodyHtml += `<td>${v !== null ? (typeof v === 'number' ? v.toLocaleString() : v) : '-'}</td>`;
+      if (v !== null) { rowTotal += Number(v); rowCount++; }
+    });
+    if (margins) {
+      const mVal = agg === 'mean' ? (rowTotal/rowCount).toFixed(1) : rowTotal;
+      bodyHtml += `<td style="color:var(--yellow);font-weight:600">${typeof mVal === 'number' ? mVal.toLocaleString() : mVal}</td>`;
+    }
+    bodyHtml += '</tr>';
+  });
+  if (margins) {
+    bodyHtml += `<tr><td class="index-cell" style="color:var(--yellow)">All</td>`;
+    let grandTotal = 0, grandCount = 0;
+    colVals.forEach(cv => {
+      let colTotal = 0, colCount = 0;
+      idxVals.forEach(iv => { const v = pivot[iv][cv]; if (v !== null) { colTotal += Number(v); colCount++; } });
+      const mVal = agg === 'mean' ? (colTotal/colCount).toFixed(1) : colTotal;
+      bodyHtml += `<td style="color:var(--yellow);font-weight:600">${typeof mVal === 'number' ? mVal.toLocaleString() : mVal}</td>`;
+      grandTotal += colTotal; grandCount += colCount;
+    });
+    const gVal = agg === 'mean' ? (grandTotal/grandCount).toFixed(1) : grandTotal;
+    bodyHtml += `<td style="color:var(--yellow);font-weight:700">${typeof gVal === 'number' ? gVal.toLocaleString() : gVal}</td>`;
+    bodyHtml += '</tr>';
+  }
+  resTbl.querySelector('tbody').innerHTML = bodyHtml;
+
+  // Code
+  let code = `<span class="label">pandas</span><span class="var">pd</span>.<span class="fn">pivot_table</span>(<span class="var">df</span>, <span class="var">values</span><span class="op">=</span><span class="str">'${vals}'</span>, <span class="var">index</span><span class="op">=</span><span class="str">'${idx}'</span>, <span class="var">columns</span><span class="op">=</span><span class="str">'${cols}'</span>, <span class="var">aggfunc</span><span class="op">=</span><span class="str">'${agg}'</span>`;
+  if (margins) code += `, <span class="var">margins</span><span class="op">=</span><span class="kw">True</span>`;
+  code += ')';
+  document.getElementById('pivot-code').innerHTML = code;
+}
+
+updatePivot();
+
+// ============================
+// 6. SKLEARN PIPELINE
+// ============================
+function showPipeStep(step) {
+  document.querySelectorAll('.pipeline-step').forEach(s => s.classList.toggle('active', s.dataset.step === step));
+  document.querySelectorAll('.pipeline-detail').forEach(d => d.classList.remove('visible'));
+  const detail = document.getElementById('pipe-' + step);
+  if (detail) detail.classList.add('visible');
+
+  if (step === 'split') initSplitVisual();
+  if (step === 'preprocess') initScalerVisual();
+  if (step === 'model') updateModelCode();
+  if (step === 'cv') initCVVisual();
+}
+
+function initSplitVisual() {
+  const container = document.getElementById('split-visual');
+  if (container.children.length > 0) return;
+  const n = 20;
+  const trainDiv = document.createElement('div');
+  trainDiv.style.cssText = 'flex:4;';
+  trainDiv.innerHTML = '<div style="font-size:.8rem;color:var(--muted);margin-bottom:.4rem;">Train (80%)</div><div id="split-train" style="display:flex;flex-wrap:wrap;gap:4px;min-height:40px;padding:.5rem;background:rgba(108,138,255,.05);border:1px solid var(--border);border-radius:8px;"></div>';
+  const testDiv = document.createElement('div');
+  testDiv.style.cssText = 'flex:1;';
+  testDiv.innerHTML = '<div style="font-size:.8rem;color:var(--muted);margin-bottom:.4rem;">Test (20%)</div><div id="split-test" style="display:flex;flex-wrap:wrap;gap:4px;min-height:40px;padding:.5rem;background:rgba(255,107,138,.05);border:1px solid var(--border);border-radius:8px;"></div>';
+  container.appendChild(trainDiv);
+  container.appendChild(testDiv);
+  animateSplit();
+}
+
+function animateSplit() {
+  const trainEl = document.getElementById('split-train');
+  const testEl = document.getElementById('split-test');
+  trainEl.innerHTML = '';
+  testEl.innerHTML = '';
+  const n = 20;
+  const indices = Array.from({length:n},(_,i)=>i);
+  // Shuffle
+  for (let i = indices.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [indices[i],indices[j]]=[indices[j],indices[i]]; }
+  const testIndices = new Set(indices.slice(0, Math.floor(n*0.2)));
+
+  indices.forEach((idx, pos) => {
+    const dot = document.createElement('div');
+    dot.style.cssText = `width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:600;opacity:0;transform:scale(0);transition:all .3s ease;`;
+    dot.textContent = idx;
+    if (testIndices.has(idx)) {
+      dot.style.background = 'rgba(255,107,138,.2)';
+      dot.style.color = 'var(--pink)';
+      dot.style.border = '1px solid rgba(255,107,138,.4)';
+      setTimeout(() => { dot.style.opacity = '1'; dot.style.transform = 'scale(1)'; }, pos * 80);
+      testEl.appendChild(dot);
+    } else {
+      dot.style.background = 'rgba(108,138,255,.15)';
+      dot.style.color = 'var(--accent)';
+      dot.style.border = '1px solid rgba(108,138,255,.3)';
+      setTimeout(() => { dot.style.opacity = '1'; dot.style.transform = 'scale(1)'; }, pos * 80);
+      trainEl.appendChild(dot);
+    }
+  });
+}
+
+function showScaler(type) {
+  document.getElementById('scaler-standard').style.display = type === 'standard' ? '' : 'none';
+  document.getElementById('scaler-minmax').style.display = type === 'minmax' ? '' : 'none';
+  const tabs = document.querySelectorAll('#pipe-preprocess .tab');
+  tabs[0].classList.toggle('active', type === 'standard');
+  tabs[1].classList.toggle('active', type === 'minmax');
+  initScalerVisual();
+}
+
+function initScalerVisual() {
+  const rawVals = [1200, 3500, 8200, 15000, 22000, 45000, 62000];
+  const colors = ['var(--accent)','var(--teal)','var(--pink)','var(--yellow)','var(--purple)','var(--orange)','var(--green)'];
+
+  // Standard scaler
+  renderNumberLine('nl-before-std', rawVals, 0, 65000, colors, [0,15000,30000,45000,60000]);
+  const mean = rawVals.reduce((a,b)=>a+b,0)/rawVals.length;
+  const std = Math.sqrt(rawVals.map(v=>(v-mean)**2).reduce((a,b)=>a+b,0)/rawVals.length);
+  const stdVals = rawVals.map(v => ((v-mean)/std));
+  renderNumberLine('nl-after-std', stdVals, -1.5, 2.5, colors, [-1,0,1,2]);
+
+  // MinMax scaler
+  renderNumberLine('nl-before-mm', rawVals, 0, 65000, colors, [0,15000,30000,45000,60000]);
+  const min = Math.min(...rawVals), max = Math.max(...rawVals);
+  const mmVals = rawVals.map(v => (v-min)/(max-min));
+  renderNumberLine('nl-after-mm', mmVals, -0.1, 1.1, colors, [0, 0.25, 0.5, 0.75, 1.0]);
+}
+
+function renderNumberLine(id, vals, rangeMin, rangeMax, colors, ticks) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  let html = '<div class="axis"></div>';
+  ticks.forEach(t => {
+    const pct = 5 + ((t - rangeMin) / (rangeMax - rangeMin)) * 90;
+    html += `<div class="tick" style="left:${pct}%"></div>`;
+    html += `<div class="tick-label" style="left:${pct}%">${typeof t === 'number' && Math.abs(t) < 10 ? t.toFixed(t%1?2:0) : t.toLocaleString()}</div>`;
+  });
+  vals.forEach((v, i) => {
+    const pct = 5 + ((v - rangeMin) / (rangeMax - rangeMin)) * 90;
+    html += `<div class="point" style="left:${pct}%;background:${colors[i]}"></div>`;
+  });
+  el.innerHTML = html;
+}
+
+function updateModelCode() {
+  const sel = document.getElementById('model-select').value;
+  const codeEl = document.getElementById('model-code');
+  const models = {
+    lr: { imp: 'sklearn.linear_model', cls: 'LogisticRegression', params: 'C=1.0, max_iter=1000' },
+    rf: { imp: 'sklearn.ensemble', cls: 'RandomForestClassifier', params: 'n_estimators=100, max_depth=10, random_state=42' },
+    gb: { imp: 'sklearn.ensemble', cls: 'GradientBoostingClassifier', params: 'n_estimators=200, learning_rate=0.1, max_depth=3' },
+  };
+  const m = models[sel];
+  codeEl.innerHTML = `<span class="label">python</span><span class="kw">from</span> <span class="var">${m.imp}</span> <span class="kw">import</span> <span class="fn">${m.cls}</span>
+
+<span class="cm"># 1. Instantiate</span>
+<span class="var">model</span> <span class="op">=</span> <span class="fn">${m.cls}</span>(${m.params.split(',').map(p=>{const[k,v]=p.trim().split('=');return `<span class="var">${k}</span><span class="op">=</span><span class="num">${v}</span>`;}).join(', ')})
+
+<span class="cm"># 2. Fit</span>
+<span class="var">model</span>.<span class="fn">fit</span>(<span class="var">X_train</span>, <span class="var">y_train</span>)
+
+<span class="cm"># 3. Predict</span>
+<span class="var">y_pred</span> <span class="op">=</span> <span class="var">model</span>.<span class="fn">predict</span>(<span class="var">X_test</span>)`;
+}
+
+function initCVVisual() {
+  const container = document.getElementById('cv-folds');
+  if (container.children.length > 0) return;
+  for (let fold = 0; fold < 5; fold++) {
+    const row = document.createElement('div');
+    row.className = 'cv-fold';
+    row.innerHTML = `<div class="fold-label">Fold ${fold+1}</div>`;
+    for (let i = 0; i < 5; i++) {
+      const block = document.createElement('div');
+      block.className = 'fold-block' + (i === fold ? ' val' : '');
+      row.appendChild(block);
+    }
+    container.appendChild(row);
+  }
+}
+
+// ============================
+// 7. COMMON PATTERNS
+// ============================
+const PATTERNS = [
+  {
+    name: 'Drop Duplicates',
+    code: "df.drop_duplicates()",
+    before: [{a:1,b:'x'},{a:2,b:'y'},{a:1,b:'x'},{a:3,b:'z'}],
+    after: [{a:1,b:'x'},{a:2,b:'y'},{a:3,b:'z'}],
+    cols: ['a','b'],
+    detail: 'Removes duplicate rows. Use subset=[\'col\'] to check specific columns. keep=\'first\' (default), \'last\', or False.'
+  },
+  {
+    name: 'Fill Missing Values',
+    code: "df['col'].fillna(df['col'].mean())",
+    before: [{col:10},{col:null},{col:30},{col:null}],
+    after: [{col:10},{col:20},{col:30},{col:20}],
+    cols: ['col'],
+    detail: 'Replaces NaN with a computed value. Common strategies: mean, median, mode, or a constant like 0 or "Unknown".'
+  },
+  {
+    name: 'Apply Lambda',
+    code: "df['col'].apply(lambda x: x*2)",
+    before: [{col:5},{col:10},{col:15}],
+    after: [{col:10},{col:20},{col:30}],
+    cols: ['col'],
+    detail: 'Applies a function element-wise. Slower than vectorized ops but flexible. Use for complex transformations.'
+  },
+  {
+    name: 'One-Hot Encoding',
+    code: "pd.get_dummies(df['cat'], drop_first=True)",
+    before: [{cat:'A'},{cat:'B'},{cat:'C'},{cat:'A'}],
+    after: [{cat_B:0,cat_C:0},{cat_B:1,cat_C:0},{cat_B:0,cat_C:1},{cat_B:0,cat_C:0}],
+    cols: ['cat'],
+    afterCols: ['cat_B','cat_C'],
+    detail: 'Converts categorical to binary columns. drop_first=True avoids multicollinearity (the dummy variable trap).'
+  },
+  {
+    name: 'Parse Dates',
+    code: "df['date'] = pd.to_datetime(df['date'])",
+    before: [{date:'2024-01-15'},{date:'2024-03-22'},{date:'2024-07-01'}],
+    after: [{date:'2024-01-15 (datetime64)'},{date:'2024-03-22 (datetime64)'},{date:'2024-07-01 (datetime64)'}],
+    cols: ['date'],
+    detail: 'Converts string dates to datetime objects. Enables .dt accessor for .dt.year, .dt.month, .dt.dayofweek, etc.'
+  },
+  {
+    name: 'Value Counts',
+    code: "df['col'].value_counts(normalize=True)",
+    before: [{col:'A'},{col:'B'},{col:'A'},{col:'A'},{col:'B'}],
+    after: [{value:'A',proportion:0.6},{value:'B',proportion:0.4}],
+    cols: ['col'],
+    afterCols: ['value','proportion'],
+    detail: 'Counts occurrences of each unique value. normalize=True gives proportions instead of raw counts.'
+  },
+  {
+    name: 'Sort Values',
+    code: "df.sort_values('col', ascending=False)",
+    before: [{col:30},{col:10},{col:50},{col:20}],
+    after: [{col:50},{col:30},{col:20},{col:10}],
+    cols: ['col'],
+    detail: 'Sorts by one or more columns. Pass a list for multi-column sort. Use ascending=[True,False] for mixed order.'
+  },
+  {
+    name: 'Rename Columns',
+    code: "df.rename(columns={'old': 'new'})",
+    before: [{old_name:1},{old_name:2},{old_name:3}],
+    after: [{new_name:1},{new_name:2},{new_name:3}],
+    cols: ['old_name'],
+    afterCols: ['new_name'],
+    detail: 'Renames columns via a dictionary mapping. Does not modify in place unless inplace=True.'
+  },
+  {
+    name: 'Correlation Matrix',
+    code: "df[['col1','col2']].corr()",
+    before: [{col1:1,col2:2},{col1:3,col2:6},{col1:5,col2:10}],
+    after: [{' ':'col1',col1:'1.00',col2:'1.00'},{' ':'col2',col1:'1.00',col2:'1.00'}],
+    cols: ['col1','col2'],
+    afterCols: [' ','col1','col2'],
+    detail: 'Computes pairwise Pearson correlation. Values near 1 or -1 indicate strong linear relationship.'
+  },
+  {
+    name: 'Assign New Column',
+    code: "df.assign(ratio=lambda x: x.a / x.b)",
+    before: [{a:10,b:2},{a:20,b:5},{a:15,b:3}],
+    after: [{a:10,b:2,ratio:5.0},{a:20,b:5,ratio:4.0},{a:15,b:3,ratio:5.0}],
+    cols: ['a','b'],
+    afterCols: ['a','b','ratio'],
+    detail: 'Creates new columns in a chainable way. Returns a new DataFrame (does not modify in place). Preferred for method chaining.'
+  },
+];
+
+function initPatterns() {
+  const grid = document.getElementById('patterns-grid');
+  PATTERNS.forEach((p, i) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.onclick = () => card.classList.toggle('expanded');
+
+    const bCols = p.cols;
+    const aCols = p.afterCols || Object.keys(p.after[0]);
+
+    let beforeHtml = '<table class="mini-table"><tr>' + bCols.map(c=>`<th>${c}</th>`).join('') + '</tr>';
+    p.before.forEach(r => { beforeHtml += '<tr>' + bCols.map(c=>`<td>${r[c]===null?'<span style="color:var(--orange)">NaN</span>':r[c]}</td>`).join('') + '</tr>'; });
+    beforeHtml += '</table>';
+
+    let afterHtml = '<table class="mini-table"><tr>' + aCols.map(c=>`<th>${c}</th>`).join('') + '</tr>';
+    p.after.forEach(r => { afterHtml += '<tr>' + aCols.map(c=>`<td>${r[c]===null||r[c]===undefined?'-':r[c]}</td>`).join('') + '</tr>'; });
+    afterHtml += '</table>';
+
+    card.innerHTML = `
+      <h4>${p.name}</h4>
+      <div class="card-code">${p.code}</div>
+      <div style="display:flex;gap:.5rem;font-size:.75rem;color:var(--muted);">
+        <div style="flex:1"><div style="margin-bottom:.2rem;">Before:</div>${beforeHtml}</div>
+        <div style="flex:1"><div style="margin-bottom:.2rem;">After:</div>${afterHtml}</div>
+      </div>
+      <div class="card-detail">${p.detail}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+initPatterns();
+</script>
+</body>
+</html>

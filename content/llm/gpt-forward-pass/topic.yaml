@@ -1,0 +1,19 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: llm/gpt-forward-pass
+title: "GPT forward pass"
+tier: A
+requires: [dl/transformer-block, dl/positional-encodings, llm/next-token-targets-and-batches]
+aliases: [GPT, decoder-only forward pass, tied embeddings, LM head, logits, token and position embedding]
+objectives:
+  - "Implement the full forward pass of a decoder-only GPT from an explicit parameter dictionary"
+  - "Name the shape of every intermediate tensor, from token ids to (B, T, V) logits"
+  - "Explain weight tying and count the parameters it saves"
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: "Walk the shapes from token ids to logits, then say where the tied head saves V times D parameters."
+sources:
+  - "paper: Radford et al. 2019, Language Models are Unsupervised Multitask Learners (GPT-2)"
+  - "library: AI-ML/12-Frontiers/Radford GPT-2 2019.md"
+  - "paper: Vaswani et al. 2017, Attention Is All You Need (arXiv:1706.03762)"
+  - "corpus: library-papers/1706.03762.pdf.md"
+  - "paper: Press and Wolf 2017, Using the Output Embedding to Improve Language Models (arXiv:1608.05859)"
+status: reviewed

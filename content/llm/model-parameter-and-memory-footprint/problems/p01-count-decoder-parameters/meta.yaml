@@ -1,0 +1,14 @@
+# Problem metadata (CONTENT_SPEC §6.2).
+id: llm/model-parameter-and-memory-footprint/p01-count-decoder-parameters
+version: 2                      # bump when tests, tolerances or the contract change
+title: Count the parameters of a decoder-only transformer
+language: python                # python | sql
+runtime: py-stdlib              # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: count_parameters         # the function or class name the learner implements
+difficulty: medium              # easy | medium | hard
+minutes: 25
+core: true                      # p01 is the core problem: exactly one per topic
+tolerance: {atol: 0, rtol: 0}   # integer counts: exact equality, no tolerance
+banned_imports: [numpy, torch, jax, sklearn]
+timeout_s: 30
+status: reviewed

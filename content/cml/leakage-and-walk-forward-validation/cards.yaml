@@ -1,0 +1,31 @@
+cards:
+  - id: cml/leakage-and-walk-forward-validation#1
+    type: qa
+    front: Why does walk-forward validation place every test window after its training window?
+    back: The model must be scored on the future it will face. A random split lets it train on rows that come after its test rows.
+  - id: cml/leakage-and-walk-forward-validation#2
+    type: cloze
+    text: "A gap can exclude training labels that would be {{c1::unavailable at the prediction cutoff}}."
+  - id: cml/leakage-and-walk-forward-validation#3
+    type: qa
+    front: What is target leakage?
+    back: A feature that carries information about the target which will not be available when the model predicts, such as a row's own target inside its encoding.
+  - id: cml/leakage-and-walk-forward-validation#4
+    type: qa
+    front: What does an expanding target encoding use for row i?
+    back: The mean target of the earlier rows that share its category, and NaN when there are none.
+  - id: cml/leakage-and-walk-forward-validation#5
+    type: qa
+    front: Why is a scaler fitted on all rows before splitting a leak?
+    back: Its mean and variance include the test rows, so the test rows influence the training transform. This is preprocessing leakage.
+  - id: cml/leakage-and-walk-forward-validation#6
+    type: qa
+    front: What diagnostic exposes a leaky pipeline that is not obvious from its code?
+    back: Shuffle the labels before fitting the whole pipeline. Persistent above-chance scores can reveal target-dependent leakage; chance scores do not rule out other leaks.
+  - id: cml/leakage-and-walk-forward-validation#7
+    type: cloze
+    text: "Selecting features on all rows before cross-validation makes the CV score {{c1::optimistic}}, because the selection saw the test labels."
+  - id: cml/leakage-and-walk-forward-validation#8
+    type: qa
+    front: How does a rolling window differ from an expanding window?
+    back: A rolling window keeps a fixed number of most recent training rows. An expanding window keeps all history from the first row.

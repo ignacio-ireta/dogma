@@ -1,0 +1,13 @@
+id: inf/prefill-vs-decode-bottlenecks/p02-compute-bound-decode-batch
+version: 3                      # bump when tests, tolerances or the contract change
+title: Batch size at which decode becomes compute-bound
+language: python
+runtime: py-stdlib
+entry: compute_bound_decode_batch
+difficulty: medium
+minutes: 15
+core: false
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: an integer batch size from integer arithmetic
+banned_imports: [numpy]
+timeout_s: 30
+status: reviewed

@@ -1,0 +1,13 @@
+id: tst/beta
+title: Beta topic
+tier: B
+requires: [tst/alpha]
+aliases: [beta, grouped totals]
+objectives:
+  - Write a grouped total in SQL
+  - Explain why GROUP BY collapses rows to one per key
+minutes: {lesson: 8, practice: 12, min_viable: 10}
+interview_angle: A warm-up question about grouped aggregation.
+sources:
+  - "book: Example Author, Example SQL Book, ch. 2"
+status: draft

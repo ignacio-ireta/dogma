@@ -1,0 +1,24 @@
+cards:
+  - id: sql/sql-ranking-window-functions#1
+    type: qa
+    front: "What does a window function do that GROUP BY does not?"
+    back: "It computes a value for each row from its partition, and keeps every row. GROUP BY collapses rows into one per group."
+  - id: sql/sql-ranking-window-functions#2
+    type: qa
+    front: "Given revenues 10, 10, 5, what are RANK and DENSE_RANK for the 5?"
+    back: "RANK gives 3 (the tie skips a place). DENSE_RANK gives 2 (no gap)."
+  - id: sql/sql-ranking-window-functions#3
+    type: cloze
+    text: "Rows with equal ORDER BY values in a window are called {{c1::peers}}, and RANK and DENSE_RANK give them the same value."
+  - id: sql/sql-ranking-window-functions#4
+    type: qa
+    front: "Why must a tie-breaker go in ROW_NUMBER's ORDER BY but not in RANK's?"
+    back: "ROW_NUMBER needs a unique number per row. Adding a key to RANK's ORDER BY removes the peers, so the tie disappears."
+  - id: sql/sql-ranking-window-functions#5
+    type: qa
+    front: "Can a window function appear in a WHERE clause?"
+    back: "No. Windows are computed after WHERE. Filter the window in a subquery or with QUALIFY."
+  - id: sql/sql-ranking-window-functions#6
+    type: qa
+    front: "Where does DuckDB 2.0 sort NULL by default?"
+    back: "Last, for both ASC and DESC. Write NULLS LAST anyway, because other engines differ."

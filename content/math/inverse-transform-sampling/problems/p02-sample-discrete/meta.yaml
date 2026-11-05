@@ -1,0 +1,14 @@
+id: math/inverse-transform-sampling/p02-sample-discrete
+version: 3                     # bump when tests, tolerances or the contract change
+title: Discrete samples by inverse transform
+language: python
+runtime: py-numpy
+entry: sample_discrete
+difficulty: medium
+minutes: 25
+core: false
+# Category indices are integers, so the comparison is exact.
+tolerance: {atol: 0.0, rtol: 0.0}
+banned_imports: [scipy]
+timeout_s: 30
+status: reviewed

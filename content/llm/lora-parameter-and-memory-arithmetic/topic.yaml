@@ -1,0 +1,17 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: llm/lora-parameter-and-memory-arithmetic
+title: "LoRA parameter and memory arithmetic"
+tier: A
+requires: ['llm/model-parameter-and-memory-footprint', 'llm/lora-adapters']
+aliases: [trainable parameters, trainable fraction, adapter budget, optimizer state, Adam states, bytes per parameter, 4-bit base, memory estimate]
+objectives:
+  - "Count the trainable parameters of a LoRA configuration: r (d_in + d_out) per adapted matrix, times the number of layers"
+  - "Turn an adapter size and a frozen base into the fraction of trainable parameters, with the assumptions stated"
+  - "Estimate fine-tuning memory in exact bytes: a frozen base in its storage bits, plus adapter weights, gradients and fp32 Adam states"
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: "Count the adapter per matrix as r times the sum of its two dimensions, multiply by the layers, then say what the frozen base and the Adam states cost."
+sources:
+  - "library: AI-ML/02-Linear-Algebra/Eckart-Young Best Low-Rank Approximation 1936.md"
+  - "library: AI-ML/03-Optimization/Kingma Ba Adam 2015.md"
+  - "source: library-refresh/01-Mathematics/05-Linear-Algebra/1990-2021 -- Library -- From Latent Semantic Analysis to Embeddings and Low-Rank Adaptation -- Concept Note.md"
+status: reviewed

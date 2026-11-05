@@ -1,0 +1,17 @@
+id: math/reservoir-sampling
+title: Reservoir sampling
+tier: A
+requires: [cml/probability-basics]
+aliases: [reservoir sampling, Algorithm R, uniform sample from a stream, one-pass sampling, weighted reservoir, A-Res, streaming sample]
+objectives:
+  - Draw a uniform sample of k items from a stream of unknown length in one pass, with O(k) memory
+  - Prove by induction that each item is kept with probability k/n, and state the replacement rule exactly
+  - Explain the weighted variant (A-Res) and where reservoir sampling appears in logging and streaming systems
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "You have a log stream of unknown length. How do you keep a uniform sample of k lines in one pass?"
+  A strong answer gives the replacement rule, the k/n proof sketch, and the memory bound.
+sources:
+  - "paper: Vitter 1985, Random Sampling with a Reservoir (ACM Transactions on Mathematical Software 11(1))"
+  - "paper: Efraimidis & Spirakis 2006, Weighted Random Sampling with a Reservoir (Information Processing Letters 97(5))"
+status: reviewed

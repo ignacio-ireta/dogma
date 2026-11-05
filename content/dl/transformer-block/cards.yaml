@@ -1,0 +1,32 @@
+cards:
+  - id: dl/transformer-block#1
+    type: qa
+    front: Write the pre-norm decoder block as two residual updates.
+    back: "x' = x + MHA(LN1(x)); y = x' + FFN(LN2(x'))."
+  - id: dl/transformer-block#2
+    type: qa
+    front: In post-norm, what does the LayerNorm wrap?
+    back: The residual sum, LN(x + sublayer(x)). Pre-norm wraps only the sub-layer input.
+  - id: dl/transformer-block#3
+    type: qa
+    front: Which score entries does the causal mask set to -inf?
+    back: Entries with key index j greater than query index i, the strict upper triangle.
+  - id: dl/transformer-block#4
+    type: qa
+    front: By what does attention divide q.k before the softmax?
+    back: sqrt(d_head), the per-head width D / H, not sqrt(D).
+  - id: dl/transformer-block#5
+    type: qa
+    front: How many parameters does one block have, with biases and LayerNorm?
+    back: "4D^2 + 2DF + 9D + F, where F is the feed-forward width."
+  - id: dl/transformer-block#6
+    type: qa
+    front: Where does dropout go in a pre-norm block?
+    back: On each sub-layer output, before that output is added to the residual stream.
+  - id: dl/transformer-block#7
+    type: qa
+    front: Why does pre-norm train more stably than post-norm?
+    back: Its residual path is an identity map, so gradients reach the stream unscaled. Xiong et al. 2020 report stable training without warm-up.
+  - id: dl/transformer-block#8
+    type: cloze
+    text: "Exact GELU is z * {{c1::Phi(z) = 0.5 (1 + erf(z / sqrt 2))}}."

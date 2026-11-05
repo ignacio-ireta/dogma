@@ -1,0 +1,7 @@
+- when_asked: What does the current retention process do?
+  answer: Subscribers who call to cancel get a 20 percent discount. There is no proactive outreach. About 40 percent of cancel calls accept the offer.
+- when_asked: How do the segments differ?
+  answer: Prepaid is 60 percent of subscribers and 75 percent of churners. Postpaid is more stable.
+  exhibit: exhibits/segment-shares.csv
+- when_asked: What are the competitors doing?
+  answer: Two rivals launched unlimited-data plans 15 to 20 percent below our rates within the last year.

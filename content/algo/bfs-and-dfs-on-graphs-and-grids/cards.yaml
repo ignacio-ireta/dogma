@@ -1,0 +1,22 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: algo/bfs-and-dfs-on-graphs-and-grids#1
+    type: qa
+    front: Which container does BFS use, and which order does it visit cells in?
+    back: A FIFO queue, visiting cells in order of distance from the start.
+  - id: algo/bfs-and-dfs-on-graphs-and-grids#2
+    type: qa
+    front: When should BFS mark a cell visited for a shortest-path search?
+    back: When it is enqueued. Marking on dequeue lets one cell sit in the queue several times.
+  - id: algo/bfs-and-dfs-on-graphs-and-grids#3
+    type: cloze
+    text: "Plain DFS finds a path, but it does not guarantee the {{c1::shortest}} one in an unweighted grid."
+  - id: algo/bfs-and-dfs-on-graphs-and-grids#4
+    type: qa
+    front: What does a grid's neighbour set look like with 4-connectivity?
+    back: Up, down, left and right, with bounds checks and walls skipped.
+  - id: algo/bfs-and-dfs-on-graphs-and-grids#5
+    type: qa
+    front: Why is an explicit stack preferred to recursion for a long DFS?
+    back: Recursion depth grows with the path, and CPython's default limit is 1,000 calls.

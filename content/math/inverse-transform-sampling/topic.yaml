@@ -1,0 +1,18 @@
+id: math/inverse-transform-sampling
+title: Inverse-transform sampling
+tier: A
+requires: [cml/probability-basics]
+aliases: [inversion method, inverse CDF, quantile function, probability integral transform, exponential sampling, discrete sampling, cumulative sums, searchsorted]
+objectives:
+  - Sample from the exponential and a discrete distribution by mapping uniform draws through the inverse CDF, with the exact protocol the tests use
+  - Explain why F^-1(U) has distribution F, and why the discrete case is a search over the cumulative sums
+  - Compute the exponential map with log1p, validate the parameters, and say when the inverse CDF is unavailable
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "Given only a uniform random number generator, how do you sample from another distribution?" A strong
+  answer states the inverse-CDF rule, its one-uniform-per-draw cost, and the fallback to rejection when
+  the inverse has no closed form.
+sources:
+  - "book: Devroye, Non-Uniform Random Variate Generation (1986), chapter II, general principles and the inversion method"
+  - "book: Ross, Simulation (5th ed.), chapters on generating discrete and continuous random variables"
+status: reviewed

@@ -1,0 +1,23 @@
+-- Problem: customers whose total completed spend is above the average buyer total.
+--
+-- Tables:
+--   customers
+--     customer_id  BIGINT
+--     region       VARCHAR
+--   orders
+--     order_id     BIGINT
+--     customer_id  BIGINT    -- may be NULL: such an order belongs to no customer
+--     order_date   DATE
+--     status       VARCHAR   -- e.g. 'completed', 'pending', 'cancelled', 'refunded'
+--     amount       DOUBLE    -- may be NULL
+--
+-- A buyer has at least one order with status exactly 'completed'.
+-- total_spend: the buyer's sum of completed amounts (NULLs skipped; NULL if all are NULL).
+-- average_spend: the average of total_spend over the buyers (NULL totals skipped).
+-- Return buyers with total_spend strictly above average_spend, with these columns:
+--   customer_id, region, total_spend, average_spend
+-- Order by total_spend descending, then customer_id ascending.
+--
+-- Replace the line below with your query.
+
+SELECT 1;

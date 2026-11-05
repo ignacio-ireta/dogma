@@ -1,0 +1,13 @@
+id: algo/two-pointers-and-sliding-windows/p01-longest-window-within-budget
+version: 2                     # bump when tests, tolerances or the contract change
+title: Longest window within a budget
+language: python
+runtime: py-stdlib
+entry: longest_window_within_budget
+difficulty: medium
+minutes: 20
+core: true
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: integer lengths and starts, no floating point
+banned_imports: []
+timeout_s: 30
+status: reviewed

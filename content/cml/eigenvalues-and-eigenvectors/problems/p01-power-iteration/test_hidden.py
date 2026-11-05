@@ -1,0 +1,285 @@
+import numpy as np
+import pytest
+from hypothesis import given, settings
+from hypothesis import strategies as st
+from submission import power_iteration
+
+SEEDS = st.integers(min_value=0, max_value=10**6)
+SIZES = st.integers(min_value=1, max_value=8)
+SIGNS = st.sampled_from([-1.0, 1.0])
+
+
+def _symmetric_with_gap(seed, n, dominant_sign=1.0):
+    """Symmetric Q diag(λ) Qᵀ with dominant |λ| = 3.0 and all other |λ| <= 1.5."""
+    rng = np.random.default_rng(seed)
+    Q, _ = np.linalg.qr(rng.normal(size=(n, n)))
+    eigenvalues = rng.choice([-1.0, 1.0], size=n) * rng.uniform(0.2, 1.5, size=n)
+    eigenvalues[0] = dominant_sign * 3.0
+    return Q @ np.diag(eigenvalues) @ Q.T
+
+
+def _reference_dominant_pair(A):
+    """Dominant eigenpair from NumPy's symmetric eigensolver, chosen by largest |eigenvalue|."""
+    values, vectors = np.linalg.eigh(A)
+    k = int(np.argmax(np.abs(values)))
+    return values[k], vectors[:, k]
+
+
+def _sign_pivot(vector):
+    """Index of the first entry within a relative 1e-9 of the largest magnitude."""
+    magnitudes = np.abs(vector)
+    return int(np.flatnonzero(magnitudes >= np.max(magnitudes) * (1 - 1e-9))[0])
+
+
+def _must_raise_value_error(call, mistake, match=None):
+    """Fail with the kind of mistake, instead of pytest's generic 'DID NOT RAISE'."""
+    try:
+        call()
+    except ValueError as exc:
+        if match is not None and match not in str(exc):
+            raise AssertionError(f"{mistake} (the message should mention '{match}')") from exc
+        return
+    except Exception as exc:
+        raise AssertionError(f"{mistake} (raised {type(exc).__name__} instead)") from exc
+    raise AssertionError(mistake)
+
+
+@pytest.mark.parametrize(
+    ("n", "seed", "sign"),
+    [(1, 1, 1.0), (2, 2, -1.0), (3, 3, 1.0), (4, 4, -1.0), (6, 5, 1.0), (8, 6, -1.0)],
+)
+def test_matches_eigh_dominant_pair_on_random_symmetric_matrices(n, seed, sign):
+    A = _symmetric_with_gap(seed, n, dominant_sign=sign)
+    value, vector = power_iteration(A)
+    ref_value, ref_vector = _reference_dominant_pair(A)
+    assert abs(value - ref_value) <= 1e-9 * max(1.0, abs(ref_value)), (
+        "dominant eigenvalue differs from the reference: check the Rayleigh quotient v.Av on the "
+        "final unit vector"
+    )
+    cosine = abs(float(vector @ ref_vector))
+    assert abs(cosine - 1.0) <= 1e-9, (
+        "eigenvector direction differs from the reference: check the iteration and the final "
+        "normalisation"
+    )
+
+
+@settings(max_examples=60, deadline=None)
+@given(SEEDS, SIZES, SIGNS)
+def test_returned_pair_is_an_eigenpair_with_unit_eigenvector(seed, n, sign):
+    A = _symmetric_with_gap(seed, n, dominant_sign=sign)
+    value, vector = power_iteration(A)
+    assert abs(float(vector @ vector) - 1.0) <= 1e-12, "the eigenvector must have unit length"
+    residual = A @ vector - value * vector
+    assert np.sqrt(residual @ residual) <= 1e-8 * max(1.0, abs(value)), (
+        "A v should equal λ v for the returned pair: the iteration did not converge"
+    )
+
+
+@settings(max_examples=60, deadline=None)
+@given(SEEDS, SIZES, SIGNS)
+def test_largest_entry_of_eigenvector_is_positive(seed, n, sign):
+    A = _symmetric_with_gap(seed, n, dominant_sign=sign)
+    _, vector = power_iteration(A)
+    assert vector[_sign_pivot(vector)] > 0, (
+        "sign convention violated: the largest-magnitude entry of the eigenvector must be positive"
+    )
+
+
+def test_negative_dominant_eigenvalue_keeps_its_sign():
+    A = _symmetric_with_gap(seed=9, n=4, dominant_sign=-1.0)
+    value, _ = power_iteration(A)
+    assert value == pytest.approx(-3.0, abs=1e-8), (
+        "a negative dominant eigenvalue must keep its sign: returning |λ| loses it"
+    )
+
+
+def test_dominant_eigenvalue_is_chosen_by_magnitude_not_by_value():
+    value, vector = power_iteration(np.diag([-5.0, 4.0]))
+    assert value == pytest.approx(-5.0, abs=1e-9), (
+        "returned the largest algebraic eigenvalue: the dominant one has the largest |value|"
+    )
+    np.testing.assert_allclose(
+        np.abs(vector),
+        [1.0, 0.0],
+        atol=1e-9,
+        err_msg="the eigenvector returned is not for the largest-magnitude eigenvalue",
+    )
+
+
+def test_start_orthogonal_to_dominant_eigenvector_does_not_stall():
+    A = np.array([[2.0, -1.0], [-1.0, 2.0]])
+    value, vector = power_iteration(A)
+    assert value == pytest.approx(3.0, abs=1e-9), (
+        "stalled on the wrong eigenpair: the start vector had no component along the dominant "
+        "eigenvector. Use a generic start, not a constant vector"
+    )
+    np.testing.assert_allclose(
+        np.abs(vector),
+        [1 / np.sqrt(2), 1 / np.sqrt(2)],
+        atol=1e-9,
+        err_msg="the returned eigenvector belongs to the wrong eigenvalue: check the start vector",
+    )
+
+
+def test_slow_gap_converges_within_the_default_iteration_budget():
+    rng = np.random.default_rng(31)
+    Q, _ = np.linalg.qr(rng.normal(size=(3, 3)))
+    A = Q @ np.diag([1.0, 0.9, 0.5]) @ Q.T
+    value, _ = power_iteration(A)
+    assert value == pytest.approx(1.0, abs=1e-8), (
+        "did not converge within the default budget: check the residual stopping rule and that "
+        "the loop runs up to num_iters updates"
+    )
+
+
+def test_one_by_one_matrix_returns_its_entry_and_the_unit_vector():
+    value, vector = power_iteration([[-2.5]])
+    assert value == pytest.approx(-2.5, abs=1e-12), "the eigenvalue of a 1x1 matrix is its entry"
+    np.testing.assert_allclose(
+        vector, [1.0], atol=1e-12, err_msg="the unit eigenvector of 1x1 is [1]"
+    )
+
+
+def test_zero_matrix_returns_zero_eigenvalue_and_unit_vector_of_any_size():
+    for n in (1, 4):
+        value, vector = power_iteration(np.zeros((n, n)))
+        assert value == 0.0, f"zero {n}x{n} matrix must have eigenvalue 0.0"
+        assert abs(float(vector @ vector) - 1.0) <= 1e-12, "the vector must have unit length"
+
+
+def test_non_square_matrix_raises_value_error():
+    _must_raise_value_error(
+        lambda: power_iteration(np.ones((2, 3))),
+        "a non-square matrix must raise ValueError: check the shape before iterating",
+    )
+
+
+def test_small_asymmetry_is_rejected_rather_than_averaged():
+    _must_raise_value_error(
+        lambda: power_iteration([[1.0, 1e-3], [0.0, 1.0]]),
+        "a small asymmetry must raise ValueError: compare A with A transposed, not average it",
+        match="symmetric",
+    )
+
+
+def test_nan_entry_raises_value_error():
+    _must_raise_value_error(
+        lambda: power_iteration([[1.0, np.nan], [np.nan, 1.0]]),
+        "a NaN entry must raise ValueError: validate with np.isfinite before any arithmetic",
+    )
+
+
+@pytest.mark.parametrize("num_iters", [0, -5])
+def test_non_positive_iteration_budget_raises_value_error(num_iters):
+    _must_raise_value_error(
+        lambda: power_iteration(np.eye(2), num_iters=num_iters),
+        "num_iters below 1 must raise ValueError: check the budget before iterating",
+    )
+
+
+@pytest.mark.parametrize("tol", [0.0, -1e-6, float("nan")])
+def test_non_positive_or_nan_tolerance_raises_value_error(tol):
+    _must_raise_value_error(
+        lambda: power_iteration(np.eye(2), tol=tol),
+        "tol must be a positive number: check tol > 0, which also rejects NaN",
+    )
+
+
+def test_exhausted_budget_returns_the_current_estimate_without_error():
+    # Eigenvalues +1 and -1 have equal magnitude, so this iteration never converges and
+    # every update uses up the budget.
+    A = np.array([[0.0, 1.0], [1.0, 0.0]])
+    try:
+        value, vector = power_iteration(A, num_iters=5)
+    except Exception as exc:
+        raise AssertionError(
+            f"running out of iterations must return the current estimate, not raise "
+            f"({type(exc).__name__})"
+        ) from exc
+    assert np.isfinite(value) and abs(float(vector @ vector) - 1.0) <= 1e-12, (
+        "an exhausted budget must still return a finite eigenvalue and a unit vector"
+    )
+
+
+def test_repeated_calls_on_the_same_matrix_return_identical_results():
+    A = _symmetric_with_gap(seed=5, n=4)
+    first_value, first_vector = power_iteration(A)
+    second_value, second_vector = power_iteration(A)
+    assert first_value == second_value and np.array_equal(first_vector, second_vector), (
+        "the start vector must be fixed: the same input must give the same output every call"
+    )
+
+
+def test_tie_in_magnitude_resolves_the_sign_to_the_first_entry():
+    # The eigenvector for 3 is (1, -1)/sqrt(2): both entries have equal magnitude, so the
+    # convention picks the first entry, which must be positive.
+    _, vector = power_iteration([[2.0, -1.0], [-1.0, 2.0]])
+    assert vector[0] > 0 and vector[1] < 0, (
+        "sign convention: with equal magnitudes the first entry must be positive"
+    )
+
+
+def test_integer_input_returns_float_pair():
+    value, vector = power_iteration([[2, 1], [1, 2]])
+    assert isinstance(value, float), f"eigenvalue should be a Python float, got {type(value)}"
+    assert vector.dtype == np.float64, f"eigenvector dtype should be float64, got {vector.dtype}"
+    assert value == pytest.approx(3.0, abs=1e-9), "integer input must give the same eigenvalue"
+
+
+def test_input_matrix_is_not_mutated():
+    A = _symmetric_with_gap(seed=12, n=3)
+    A_copy = A.copy()
+    power_iteration(A)
+    np.testing.assert_array_equal(A, A_copy, err_msg="input matrix was modified in place")
+
+
+def test_a_single_iteration_is_an_allowed_budget():
+    value, vector = power_iteration([[2.0, 1.0], [1.0, 2.0]], num_iters=1)
+    assert isinstance(value, float) and np.isfinite(value), (
+        "num_iters = 1 is a valid budget: one update must return a finite eigenvalue estimate"
+    )
+    assert abs(float(vector @ vector) - 1.0) <= 1e-12, (
+        "num_iters = 1 is a valid budget: the returned eigenvector must still have unit length"
+    )
+
+
+def test_inputs_that_are_not_square_matrices_raise_value_error():
+    for bad in (np.array([1.0, 2.0, 3.0]), np.ones((2, 2, 2)), np.array(2.0)):
+        try:
+            power_iteration(bad)
+        except ValueError:
+            continue
+        except Exception as exc:
+            pytest.fail(
+                "an input that is not a square matrix must raise ValueError; the function "
+                f"raised {type(exc).__name__}"
+            )
+        pytest.fail("an input that is not a square matrix must raise ValueError, not return a pair")
+
+
+def test_symmetry_tolerance_scales_with_large_entries():
+    A = np.array([[1e6, 4e-4], [0.0, 2e5]])
+    value, _ = power_iteration(A)
+    assert value == pytest.approx(1e6, rel=1e-6), (
+        "a rounding-level asymmetry is judged against the size of the largest entry, so a large "
+        "matrix with a small asymmetry must be accepted"
+    )
+
+
+def test_symmetry_tolerance_scales_with_large_negative_entries():
+    A = np.array([[-1e6, 4e-4], [0.0, -2e5]])
+    value, _ = power_iteration(A)
+    assert value == pytest.approx(-1e6, rel=1e-6), (
+        "the symmetry tolerance depends on the largest entry by magnitude, not by value: a large "
+        "negative matrix with a small asymmetry must be accepted"
+    )
+
+
+def test_symmetry_tolerance_is_at_least_one_for_small_entries():
+    try:
+        power_iteration(np.array([[0.5, 7e-10], [0.0, 0.25]]))
+    except ValueError as exc:
+        pytest.fail(
+            "the symmetry tolerance is 1e-9 times max(1, largest entry): a small matrix with an "
+            f"asymmetry below 1e-9 must be accepted ({exc})"
+        )

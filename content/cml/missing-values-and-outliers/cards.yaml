@@ -1,0 +1,24 @@
+cards:
+  - id: cml/missing-values-and-outliers#1
+    type: qa
+    front: What does MCAR mean?
+    back: Missingness is unrelated to any value, observed or unobserved. Deleting those rows leaves an unbiased sample.
+  - id: cml/missing-values-and-outliers#2
+    type: qa
+    front: What does MNAR mean?
+    back: Missingness depends on unobserved values even after conditioning on observed variables; identification generally needs extra assumptions.
+  - id: cml/missing-values-and-outliers#3
+    type: cloze
+    text: "The modified z-score uses the median and the {{c1::median absolute deviation}}, so a single extreme value cannot move either one much."
+  - id: cml/missing-values-and-outliers#4
+    type: qa
+    front: What does this exercise flag when MAD is zero?
+    back: A value is flagged exactly when it differs from the median, because the score itself is undefined.
+  - id: cml/missing-values-and-outliers#5
+    type: qa
+    front: Why keep a missing-value indicator alongside the imputed value?
+    back: The fact that a value was missing can be predictive, and the indicator keeps that information after the fill.
+  - id: cml/missing-values-and-outliers#6
+    type: qa
+    front: Why is the classic z-score weak for detecting one large outlier?
+    back: The outlier inflates the mean and the standard deviation, which shrinks its own z-score.

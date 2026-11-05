@@ -1,0 +1,25 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: dl/tensors-in-pytorch-and-tinygrad#1
+    type: qa
+    front: "What five fields describe a PyTorch tensor?"
+    back: "storage, shape, strides, dtype and device."
+  - id: dl/tensors-in-pytorch-and-tinygrad#2
+    type: qa
+    front: "Where does element (i, j) of a 2-D tensor sit in storage?"
+    back: "At offset + i*stride0 + j*stride1, counted in elements."
+  - id: dl/tensors-in-pytorch-and-tinygrad#3
+    type: cloze
+    text: "x.t() returns a {{c1::view}} of x: it shares storage and permutes the strides."
+  - id: dl/tensors-in-pytorch-and-tinygrad#4
+    type: qa
+    front: "Why does reshape of a transposed tensor copy?"
+    back: "The current strides cannot describe the requested flat order, so the values must be rearranged in new memory."
+  - id: dl/tensors-in-pytorch-and-tinygrad#5
+    type: qa
+    front: "Which dtype does float32 tensor + float64 zero-dimensional tensor give?"
+    back: "float32. A zero-dimensional tensor does not raise the dtype within its category."
+  - id: dl/tensors-in-pytorch-and-tinygrad#6
+    type: cloze
+    text: "Broadcasting repeats a size-1 axis by giving it stride {{c1::0}}, so no memory is allocated."

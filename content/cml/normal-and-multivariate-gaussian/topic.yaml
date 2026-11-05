@@ -1,0 +1,19 @@
+id: cml/normal-and-multivariate-gaussian
+title: Normal and multivariate Gaussian
+tier: A
+requires: [cml/covariance-and-correlation, cml/matrix-inverse-and-rank]
+aliases: [Gaussian distribution, multivariate normal, Mahalanobis distance, log-likelihood, Cholesky log-determinant, Gaussian conditionals]
+objectives:
+  - Write the log-density of a multivariate normal term by term, and explain what each term measures
+  - Compute the multivariate normal log-density stably, with a Cholesky factor and a log-determinant rather than an inverse
+  - State the marginal and conditional distributions of a Gaussian vector and explain why log space is needed
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "Write the multivariate normal density and compute it stably." and "What is the Mahalanobis distance?" A strong
+  answer names the three terms, factors the covariance instead of inverting it, and checks symmetry and positive
+  definiteness first.
+sources:
+  - "book: Bishop, Pattern Recognition and Machine Learning, chapter on probability distributions (the Gaussian and its conditionals)"
+  - "book: Murphy, Probabilistic Machine Learning: An Introduction, chapter on the multivariate normal distribution"
+  - "book: Trefethen & Bau, Numerical Linear Algebra, lectures on Cholesky factorization"
+status: reviewed

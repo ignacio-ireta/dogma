@@ -1,0 +1,19 @@
+id: cml/sampling-distributions-standard-errors-and-cis
+title: Sampling distributions, standard errors and CIs
+tier: A
+requires: [cml/descriptive-statistics, cml/probability-basics]
+aliases: [standard error, confidence interval, sampling distribution, central limit theorem, t interval, margin of error, coverage]
+objectives:
+  - Separate the distribution of the data from the sampling distribution of the mean, and compute the standard error as s / sqrt(n)
+  - Implement a Student-t confidence interval for a mean, choosing the t quantile with n - 1 degrees of freedom
+  - State what a 95% interval guarantees (a property of the procedure) and what it does not (a probability for one interval)
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "What does a 95% confidence interval mean?" and "How would you put an interval on a metric from
+  12 skewed observations?" The strong answer names the procedure, the t quantile and where the
+  interval fails.
+sources:
+  - "book: Moore, McCabe & Craig, Introduction to the Practice of Statistics, chapters on confidence intervals for a mean and the t distribution"
+  - "book: Casella & Berger, Statistical Inference, chapters on sampling distributions and interval estimation"
+  - "source: library-refresh/01-Mathematics/06-Probability-and-Statistics/1933 -- Neyman and Pearson -- Hypothesis Tests as Controlled Decisions -- Study Note.md"
+status: reviewed

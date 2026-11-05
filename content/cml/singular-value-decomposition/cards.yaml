@@ -1,0 +1,32 @@
+cards:
+  - id: cml/singular-value-decomposition#1
+    type: qa
+    front: What constraints hold on U, Σ and V in A = UΣVᵀ?
+    back: U and V have orthonormal columns, and Σ is diagonal with non-negative entries sorted in decreasing order.
+  - id: cml/singular-value-decomposition#2
+    type: qa
+    front: How do singular values relate to the eigenvalues of AᵀA?
+    back: The squared singular values σᵢ² are the eigenvalues of AᵀA, and the right singular vectors vᵢ are its eigenvectors.
+  - id: cml/singular-value-decomposition#3
+    type: cloze
+    text: "A vᵢ = {{c1::σᵢ uᵢ}}, so the right singular vector vᵢ is mapped to a multiple of uᵢ."
+  - id: cml/singular-value-decomposition#4
+    type: qa
+    front: What does the low-rank approximation theorem state?
+    back: The rank-k truncation of the SVD is the closest matrix of rank at most k to A in the Frobenius norm.
+  - id: cml/singular-value-decomposition#5
+    type: qa
+    front: What is the Frobenius error of the best rank-k approximation?
+    back: The square root of the sum of the squared singular values after the first k.
+  - id: cml/singular-value-decomposition#6
+    type: qa
+    front: How is the pseudo-inverse written with the SVD?
+    back: A⁺ = V Σ⁺ Uᵀ, where Σ⁺ inverts each singular value above the cutoff and sets the others to zero.
+  - id: cml/singular-value-decomposition#7
+    type: qa
+    front: What is the condition number in terms of singular values?
+    back: κ = σ_max / σ_min. It is infinite when A is singular.
+  - id: cml/singular-value-decomposition#8
+    type: qa
+    front: What is NumPy's default numerical-rank tolerance?
+    back: Singular values above max(m, n) · ε · σ_max count as non-zero.

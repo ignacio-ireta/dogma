@@ -1,0 +1,13 @@
+id: sql/sql-top-n-and-latest-row-per-group/p01-latest-events
+version: 1
+title: Latest successful events per entity
+language: sql
+runtime: sql-duckdb
+entry: query
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 0.0, rtol: 0.0}
+banned_imports: []
+timeout_s: 30
+status: reviewed

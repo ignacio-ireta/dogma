@@ -1,0 +1,24 @@
+cards:
+- id: rl/q-learning#1
+  type: qa
+  front: Write the Q-learning update for a non-terminal transition.
+  back: "Q(s,a) <- Q(s,a) + alpha * (r + gamma * max over a' of Q(s',a') - Q(s,a))."
+- id: rl/q-learning#2
+  type: qa
+  front: What is the Q-learning target after a terminal transition?
+  back: The reward alone. The next state has no future return, so nothing is bootstrapped.
+- id: rl/q-learning#3
+  type: qa
+  front: How does SARSA differ from Q-learning in its target?
+  back: SARSA bootstraps from the action the behaviour policy actually takes next, so it is on-policy. Q-learning takes the max, so it is off-policy.
+- id: rl/q-learning#4
+  type: qa
+  front: Why can Q-learning learn the greedy policy while behaving epsilon-greedily?
+  back: The max in the target evaluates the greedy policy whatever the behaviour policy does, so the target policy and the behaviour policy differ.
+- id: rl/q-learning#5
+  type: cloze
+  text: "Tabular Q-learning converges under Robbins-Monro step sizes and when every state-action pair is visited {{c1::infinitely often}}."
+- id: rl/q-learning#6
+  type: qa
+  front: What are the Robbins-Monro step-size conditions?
+  back: The step sizes are positive, their sum diverges, and the sum of their squares is finite.

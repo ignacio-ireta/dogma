@@ -1,0 +1,21 @@
+id: cml/k-fold-cross-validation
+title: K-fold cross-validation
+tier: A
+requires: [cml/expectation-and-variance, cml/regression-metrics-and-robust-losses]
+aliases: [k-fold, cross validation, CV, KFold, leave-one-out, stratified folds, group k-fold, nested cross-validation, out-of-fold score]
+objectives:
+  - Implement k-fold index splits with the remainder rule, unshuffled and seeded-shuffled, and check them against a library
+  - Compute a cross-validated score and its spread across folds with the sample standard deviation
+  - Choose between stratified, grouped and time-ordered folds from the structure of the data, and say when nested CV is required
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "How would you estimate how well this model generalises?" and "You tuned with cross-validation and report
+  that score. Is it still an honest estimate?" The strong answer names the folds the data demands, and says
+  that selection on the same folds makes the reported score optimistic.
+sources:
+  - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter 7 (model assessment and selection, cross-validation)"
+  - "book: Hyndman & Athanasopoulos, Forecasting: Principles and Practice, chapter on evaluating forecast accuracy (time series cross-validation)"
+  - "paper: Arlot & Celisse 2010, A survey of cross-validation procedures for model selection (Statistics Surveys 4)"
+  - "paper: Kohavi 1995, A study of cross-validation and bootstrap for accuracy estimation and model selection (IJCAI)"
+  - "paper: Varma & Simon 2006, Bias in error estimation when using cross-validation for model selection (BMC Bioinformatics)"
+status: reviewed

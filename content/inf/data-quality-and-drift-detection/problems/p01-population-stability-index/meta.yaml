@@ -1,0 +1,14 @@
+id: inf/data-quality-and-drift-detection/p01-population-stability-index
+version: 3
+title: Population stability index
+language: python
+runtime: py-numpy
+entry: population_stability_index
+difficulty: medium
+minutes: 25
+core: true
+# Shares are simple ratios of counts, and the test compares against a loop reference at 1e-9.
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [pandas, scipy]
+timeout_s: 30
+status: reviewed

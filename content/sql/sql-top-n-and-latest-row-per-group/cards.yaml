@@ -1,0 +1,24 @@
+cards:
+  - id: sql/sql-top-n-and-latest-row-per-group#1
+    type: qa
+    front: What does ROW_NUMBER <= N guarantee within a group?
+    back: At most N rows, with positions determined by the full window ordering key.
+  - id: sql/sql-top-n-and-latest-row-per-group#2
+    type: qa
+    front: Why add a unique tie-breaker to latest-row ordering?
+    back: Equal timestamps otherwise leave the selected row unspecified.
+  - id: sql/sql-top-n-and-latest-row-per-group#3
+    type: qa
+    front: When should eligibility filtering happen for latest successful events?
+    back: Before ranking, so failed events cannot consume successful-event positions.
+  - id: sql/sql-top-n-and-latest-row-per-group#4
+    type: qa
+    front: Does the ordering inside OVER promise final result order?
+    back: No. Use a final ORDER BY when output ordering is required.
+  - id: sql/sql-top-n-and-latest-row-per-group#5
+    type: qa
+    front: Why can MAX(timestamp) and MAX(payload) produce an invalid record?
+    back: The two maxima can come from different input rows.
+  - id: sql/sql-top-n-and-latest-row-per-group#6
+    type: cloze
+    text: "For exactly one latest row per nonempty group, filter {{c1::ROW_NUMBER = 1}} after ranking."

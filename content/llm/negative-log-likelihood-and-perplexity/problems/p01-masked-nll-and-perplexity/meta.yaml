@@ -1,0 +1,13 @@
+id: llm/negative-log-likelihood-and-perplexity/p01-masked-nll-and-perplexity
+version: 2
+title: Masked mean NLL and perplexity from logits
+language: python
+runtime: py-torch
+entry: masked_nll_and_perplexity
+difficulty: medium
+minutes: 20
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}  # float64 agreement with the oracle; the float32 test uses its own declared bound
+banned_imports: [torch.nn, torch.log_softmax, torch.logsumexp, torch.special, torch.distributions]
+timeout_s: 30
+status: reviewed

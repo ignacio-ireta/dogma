@@ -1,0 +1,14 @@
+id: core
+title: "Test core path"
+start: 2026-10-26
+end: 2026-11-01
+sessions_per_day: 3
+session_minutes: 45
+days_per_week: 6
+weeks:
+  - week: 1
+    starts: 2026-10-26
+    theme: "Test theme"
+    topics:
+      - tst/alpha
+      - tst/gamma

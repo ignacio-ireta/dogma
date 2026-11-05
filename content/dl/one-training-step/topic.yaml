@@ -1,0 +1,19 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: dl/one-training-step
+title: "One training step"
+tier: A
+requires: [dl/gradients-with-framework-autograd, dl/training-an-mlp-from-scratch]
+aliases: [zero_grad, optimizer step, sgd step, training step, stale gradients, no_grad update]
+objectives:
+  - Write the five-line training step and state what each line guarantees
+  - Diagnose stale gradients and graph-tracked updates from the symptoms and a repeated-call test
+  - Implement a manual SGD step under no_grad that matches torch.optim.SGD on the same batch
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "Walk me through one training step" is a standard screen question. The answer that names the order
+  and the reason for each line, and the two expensive bugs, is what a senior engineer gives.
+sources:
+  - "library: AI-ML/03-Optimization/Robbins Monro Stochastic Approximation 1951.md"
+  - "library: AI-ML/03-Optimization/Cauchy Steepest Descent 1847.md"
+  - "book: Goodfellow, Bengio and Courville, Deep Learning, ch. 8 (optimization: stochastic gradient descent)"
+status: reviewed

@@ -1,0 +1,17 @@
+cards:
+- id: dl/counting-network-parameters#1
+  type: qa
+  front: How many weights connect dense widths a and b?
+  back: a*b scalar weights.
+- id: dl/counting-network-parameters#2
+  type: qa
+  front: With bias enabled, how many biases accompany a dense output width b?
+  back: b scalar biases.
+- id: dl/counting-network-parameters#3
+  type: qa
+  front: Does batch size change a dense layer parameter count?
+  back: No; the parameters are shared across examples.
+- id: dl/counting-network-parameters#4
+  type: qa
+  front: Should a parameter count include the output layer?
+  back: Yes, when counting the complete network.

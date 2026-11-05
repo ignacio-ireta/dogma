@@ -1,0 +1,14 @@
+# Problem metadata (CONTENT_SPEC §6.2).
+id: llm/temperature-top-k-and-top-p-sampling/p02-sample-with-a-generator
+version: 3                       # bump when tests, tolerances or the contract change
+title: "Sample a token with a passed-in generator"
+language: python                 # python | sql
+runtime: py-torch                # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: sample_token              # the function or class name the learner implements
+difficulty: medium
+minutes: 20
+core: false                      # p01 is the core problem: exactly one per topic
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}  # the probabilities are checked to 1e-9; draws are exact ints
+banned_imports: [torch.nn, torch.multinomial, torch.bucketize, torch.distributions]
+timeout_s: 30
+status: reviewed

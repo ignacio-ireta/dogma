@@ -1,0 +1,32 @@
+cards:
+  - id: cml/expectation-and-variance#1
+    type: qa
+    front: How is the variance of X defined, before any shortcut?
+    back: "Var(X) = E[(X − μ)²], the probability-weighted average squared distance from the mean μ."
+  - id: cml/expectation-and-variance#2
+    type: qa
+    front: What is Var(aX + b) in terms of Var(X)?
+    back: "a² · Var(X). The shift b drops out, and the slope is squared."
+  - id: cml/expectation-and-variance#3
+    type: qa
+    front: Write Var(X + Y) in terms of the variances and the covariance.
+    back: "Var(X) + Var(Y) + 2·Cov(X, Y)."
+  - id: cml/expectation-and-variance#4
+    type: cloze
+    text: "Var(X) = E[X²] − {{c1::μ²}}, the shortcut form of the variance."
+  - id: cml/expectation-and-variance#5
+    type: qa
+    front: Does linearity of expectation need the variables to be independent?
+    back: "No. E[X + Y] = E[X] + E[Y] holds for any joint distribution with finite means."
+  - id: cml/expectation-and-variance#6
+    type: qa
+    front: State the law of total variance.
+    back: "Var(X) = E[Var(X | Z)] + Var(E[X | Z])."
+  - id: cml/expectation-and-variance#7
+    type: qa
+    front: Why centre the values before squaring in float64?
+    back: "Squaring and subtracting two nearly equal large numbers cancels their leading digits. Centring first keeps each deviation small and exact."
+  - id: cml/expectation-and-variance#8
+    type: qa
+    front: When can a gradient be moved inside an expectation?
+    back: "When the difference quotients of the integrand have an integrable envelope near the parameter (dominated convergence). A step loss has no such envelope."

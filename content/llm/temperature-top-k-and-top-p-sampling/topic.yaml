@@ -1,0 +1,16 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: llm/temperature-top-k-and-top-p-sampling
+title: "Temperature, top-k and top-p sampling"
+tier: A
+requires: [cml/softmax, llm/autoregressive-generation-loop]
+aliases: [temperature scaling, nucleus sampling, top-k sampling, top-p, inverse CDF sampling, seeded sampling]
+objectives:
+  - "Implement the filtered next-token distribution for temperature, top-k and top-p, with the tie and boundary rules stated"
+  - "Draw one token from a distribution with an explicit torch.Generator and check the draws against the probabilities"
+  - "Explain the order of the filters and why top-p adapts to the confidence of the model"
+minutes: {lesson: 12, practice: 30, min_viable: 12}
+interview_angle: "Say what each knob does to the logits, the order the filters run in, and why top-p adapts to confidence where top-k does not."
+sources:
+  - "paper: Holtzman, Buys, Du, Forbes and Choi 2019, The Curious Case of Neural Text Degeneration (arXiv:1904.09751), nucleus sampling"
+  - "book: Goodfellow, Bengio and Courville, Deep Learning, the chapter on softmax outputs and sampling"
+status: reviewed

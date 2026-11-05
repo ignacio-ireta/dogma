@@ -1,0 +1,13 @@
+id: sql/sql-ranking-window-functions/p02-top-two-with-ties
+version: 2                      # bump when tests, tolerances or the contract change
+title: Top two revenues per category, with ties
+language: sql
+runtime: sql-duckdb
+entry: query
+difficulty: medium
+minutes: 20
+core: false
+tolerance: {atol: 1.0e-6, rtol: 1.0e-9}
+banned_imports: []              # SQL problems: nothing to ban at the module level
+timeout_s: 30
+status: reviewed

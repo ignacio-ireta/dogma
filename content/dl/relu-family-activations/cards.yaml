@@ -1,0 +1,17 @@
+cards:
+- id: dl/relu-family-activations#1
+  type: qa
+  front: What is ReLU(x)?
+  back: max(0, x).
+- id: dl/relu-family-activations#2
+  type: qa
+  front: What is the negative-region slope of leaky ReLU?
+  back: Its configured constant negative_slope.
+- id: dl/relu-family-activations#3
+  type: qa
+  front: What derivative does this exercise use at zero?
+  back: Zero, for every configured slope.
+- id: dl/relu-family-activations#4
+  type: qa
+  front: Where should finite differences check a ReLU derivative?
+  back: Away from the kink at zero.

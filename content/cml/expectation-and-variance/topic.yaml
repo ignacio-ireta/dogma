@@ -1,0 +1,19 @@
+id: cml/expectation-and-variance
+title: Expectation and variance
+tier: A
+requires: [cml/probability-basics]
+aliases: [mean, variance, standard deviation, linearity of expectation, second moment, law of total variance]
+objectives:
+  - Compute the mean, variance and standard deviation of a discrete distribution, taking the variance around the mean
+  - Apply linearity of expectation, even for dependent variables, and the rules for Var(aX+b) and Var(X+Y)
+  - Explain why the centred form E[(X-mu)^2] is preferred to E[X^2] - mu^2 in floating point
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "What is the variance of X + Y?" and "How do you compute a variance safely on large numbers?" A strong
+  answer uses linearity first, then the covariance term, and names cancellation as the numerical trap.
+sources:
+  - "book: Blitzstein & Hwang, Introduction to Probability, chapter on expectation"
+  - "book: Wasserman, All of Statistics, chapter on expectation"
+  - "book: Deisenroth, Faisal & Ong, Mathematics for Machine Learning, chapter on probability and distributions"
+  - "source: library-refresh/01-Mathematics/04-Analysis-and-Measure/2026 -- Library -- Dominated Convergence and Gradients of Expectations -- Concept Note.md"
+status: reviewed

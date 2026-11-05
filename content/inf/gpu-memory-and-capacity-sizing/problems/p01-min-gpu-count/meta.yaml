@@ -1,0 +1,13 @@
+id: inf/gpu-memory-and-capacity-sizing/p01-min-gpu-count
+version: 3                      # bump when tests, tolerances or the contract change
+title: Minimum tensor-parallel GPU count for a model and a target load
+language: python
+runtime: py-stdlib
+entry: min_gpu_count
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: integer byte budgets and a power-of-two count
+banned_imports: [numpy]
+timeout_s: 30
+status: reviewed

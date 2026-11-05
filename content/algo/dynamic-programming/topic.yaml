@@ -1,0 +1,14 @@
+id: algo/dynamic-programming
+title: "Dynamic programming"
+tier: A
+requires: [algo/hash-maps-and-sets]
+aliases: [DP, memoization, memo, tabulation, bottom-up, top-down, recurrence, coin change, longest common subsequence, edit distance]
+objectives:
+  - Define a DP by its state, transition, base case, order of evaluation and answer location before writing code
+  - Choose top-down memoisation or a bottom-up table, and state the stack or memory cost of each
+  - Reconstruct one optimal solution (argmin or argmax) with back-pointers or a walk back through the table
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: Write the recurrence in words first (what a state means, what it depends on, where the answer sits), then choose the table order; that answer is what the interviewer is listening for.
+sources:
+  - "book: Cormen et al., Introduction to Algorithms (3rd ed.), ch. 15 (dynamic programming, including LCS and rod cutting)"
+status: reviewed

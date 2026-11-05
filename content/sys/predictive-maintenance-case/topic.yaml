@@ -1,0 +1,17 @@
+id: sys/predictive-maintenance-case
+title: Predictive maintenance system
+tier: B
+kind: case
+requires: []
+aliases: [predictive maintenance, condition monitoring, failure prediction, asset failure, remaining useful life]
+objectives:
+  - Define the failure label, its horizon and the censoring rules before choosing a model
+  - Set the alert budget from the cost of each error and the crew's capacity
+  - Separate model quality from the decision value of the maintenance list
+minutes: {lesson: 12, practice: 40, min_viable: 15}
+interview_angle: How do you know a failure list is worth acting on, and what does a sensor change do to it?
+sources:
+  - "source: interview-prep/drills/case-scenarios/03-predictive-maintenance.md"
+  - "book: Kleinbaum and Klein, Survival Analysis: A Self-Learning Text, introductory chapters on censoring"
+  - "source: interview-prep/mock-interviews/SCORING_RUBRIC.md"
+status: reviewed

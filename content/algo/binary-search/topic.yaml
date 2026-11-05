@@ -1,0 +1,17 @@
+id: algo/binary-search
+title: Binary search
+tier: A
+requires: []
+aliases: [binary search, lower bound, upper bound, bisect, first true, search on the answer, monotone predicate, off-by-one]
+objectives:
+  - Write a lower-bound search with a stated invariant over a half-open interval, handling duplicates and the not-found case
+  - Tell a lower bound from an upper bound, and choose the update rule that keeps the answer inside the interval
+  - Apply binary search to the answer when a feasibility check is monotone, and state the search range
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "Find the first position where ..." and "the smallest value that works" are the standard binary
+  search questions. The interviewer checks the invariant, the off-by-one decisions, and whether the
+  search runs over positions or over answers.
+sources:
+  - "book: Knuth, The Art of Computer Programming, vol. 3 (2nd ed.), sec. 6.2.1, searching an ordered table"
+status: reviewed

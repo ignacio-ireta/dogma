@@ -1,0 +1,13 @@
+-- activity(user_id BIGINT, event_at TIMESTAMP): one row per logged activity; many rows may share
+-- a user and a calendar month. The table is read-only.
+--
+-- Return one row per (cohort_month, period) for every cohort month that has users, and for every
+-- period from 0 to the months between the cohort month and the latest activity month, inclusive.
+-- Output columns, in order:
+--   cohort_month    DATE    first day of the month of the user's first event
+--   period          BIGINT  whole calendar months since the cohort month (0 = the cohort's month)
+--   active_users    BIGINT  DISTINCT users of the cohort with an event in that period's month; 0 if none
+--   cohort_size     BIGINT  number of users in the cohort (the denominator for every period)
+--   retention_rate  DOUBLE  ROUND(active_users / cohort_size, 4)
+-- Order by cohort_month, then period.
+SELECT 1;

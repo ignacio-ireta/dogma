@@ -1,0 +1,26 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: llm/bradley-terry-reward-models#1
+    type: qa
+    front: What does the Bradley-Terry model say the chosen response's win probability is?
+    back: sigmoid(r_chosen - r_rejected), a sigmoid of the reward difference.
+  - id: llm/bradley-terry-reward-models#2
+    type: qa
+    front: What is the per-pair loss for a reward margin d = r_c - r_r?
+    back: -log(sigmoid(d)), which equals softplus(-d).
+  - id: llm/bradley-terry-reward-models#3
+    type: cloze
+    text: "Adding the same constant to both rewards leaves the loss unchanged because only {{c1::the difference r_c - r_r}} enters the model."
+  - id: llm/bradley-terry-reward-models#4
+    type: qa
+    front: Why is the naive log(sigmoid(d)) unsafe for very negative margins?
+    back: Near d = -710, exp(-d) overflows float64, sigmoid(d) becomes exactly 0, and the log returns -inf. Use the softplus form.
+  - id: llm/bradley-terry-reward-models#5
+    type: qa
+    front: How should a tied pair (r_c = r_r) be counted in pair accuracy?
+    back: As incorrect. Accuracy uses a strict comparison r_c > r_r.
+  - id: llm/bradley-terry-reward-models#6
+    type: qa
+    front: What happens to the loss gradient on a confidently correct pair?
+    back: It goes to zero, because the sigmoid of a large positive margin is near 1.

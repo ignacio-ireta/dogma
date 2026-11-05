@@ -1,0 +1,16 @@
+id: rl/reinforce/p01-reinforce-loss
+version: 3
+title: "REINFORCE loss for a batch of episodes"
+language: python
+runtime: py-torch
+entry: reinforce_loss
+difficulty: medium
+minutes: 30
+core: true
+# Float64 checks: the loss and gradients are computed by a sum of at most a few hundred terms of
+# magnitude O(1) to O(1e3), so 1e-9 is a tight but safe bound. Finite-difference checks use a
+# step of 1e-6 and a tolerance of 1e-6, which is what central differences give at this scale.
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [torch.nn, torch.distributions, torch.autograd, torch.func, numpy]
+timeout_s: 30
+status: reviewed

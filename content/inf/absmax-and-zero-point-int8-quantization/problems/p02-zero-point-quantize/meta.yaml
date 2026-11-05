@@ -1,0 +1,13 @@
+id: inf/absmax-and-zero-point-int8-quantization/p02-zero-point-quantize
+version: 3                      # bump when tests, tolerances or the contract change
+title: "Asymmetric zero-point int8 quantization"
+language: python                # python | sql
+runtime: py-numpy               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: zero_point_quantize      # the function or class name the learner implements
+difficulty: medium
+minutes: 20
+core: false                     # p02 is optional: the core problem is p01
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [torch]         # torch's quantization utilities compute the affine parameters
+timeout_s: 30
+status: reviewed

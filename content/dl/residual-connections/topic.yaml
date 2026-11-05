@@ -1,0 +1,15 @@
+id: dl/residual-connections
+title: "Residual connections"
+tier: A
+requires: ['dl/dense-layer-forward-pass', 'dl/backprop-through-a-dense-layer', 'dl/layer-normalization']
+aliases: ['skip connection', 'shortcut connection', 'residual block', 'identity shortcut', 'projection shortcut', 'pre-norm', 'post-norm']
+objectives:
+  - Implement a residual block with an identity shortcut, and with a projection shortcut when the width changes
+  - Explain why the identity path gives the input gradient dy/dx = I + dF/dx
+  - Choose pre-norm or post-norm ordering in a transformer and state its stability trade-off
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: Explain the degradation problem, the identity path in the backward pass, and why transformers normalise before the residual branch.
+sources:
+  - "paper: He et al. 2016, Deep Residual Learning for Image Recognition (arXiv:1512.03385)"
+  - "paper: Xiong et al. 2020, On Layer Normalization in the Transformer Architecture (arXiv:2002.04745)"
+status: reviewed

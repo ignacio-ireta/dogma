@@ -1,0 +1,20 @@
+id: cml/bootstrap-and-permutation-resampling
+title: Bootstrap and permutation resampling
+tier: A
+requires: [cml/sampling-distributions-standard-errors-and-cis]
+aliases: [bootstrap, percentile interval, plug-in principle, permutation test, randomization test, exchangeability, resampling, Monte Carlo p-value]
+objectives:
+  - Build a seeded percentile bootstrap interval for any statistic, following a fixed resampling protocol
+  - Implement a two-sided permutation test for a difference in means, with the +1 correction, and check it against exact enumeration on tiny samples
+  - Name the situations where the bootstrap fails (extremes, tiny samples, dependence) and the assumption a permutation test needs (exchangeability)
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "How would you put an interval on a metric that has no closed form?" and "How do you test a
+  difference when the samples are small and skewed?" The strong answer names what gets resampled, the
+  assumption it rests on, and the case where it fails.
+sources:
+  - "book: Efron & Tibshirani, An Introduction to the Bootstrap, chapters on the bootstrap and on bootstrap confidence intervals"
+  - "book: Good, Permutation, Parametric and Bootstrap Tests of Hypotheses, chapters on permutation tests"
+  - "paper: Phipson & Smyth 2010, Permutation P-values should never be zero (Statistical Applications in Genetics and Molecular Biology)"
+  - "source: library-refresh/01-Mathematics/06-Probability-and-Statistics/1979 -- Efron -- Bootstrap and Sampling Uncertainty -- Study Note.md"
+status: reviewed

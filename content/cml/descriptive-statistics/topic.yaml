@@ -1,0 +1,18 @@
+id: cml/descriptive-statistics
+title: Descriptive statistics
+tier: A
+requires: []
+aliases: [mean, median, mode, variance, standard deviation, quantile, IQR, outlier, Welford, numerical stability]
+objectives:
+  - Compute the mean, median, mode, sample variance and quartiles of a sample, choosing ddof and interpolation deliberately
+  - Implement the sample variance in one pass with Welford's update, and explain why the naive sum-of-squares formula fails
+  - Explain which statistics are robust to outliers (median, IQR) and which are not (mean, standard deviation)
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "When would you report the median rather than the mean?" and "How do you compute a variance over a stream of
+  numbers without storing them?" A strong answer names the breakdown point and the cancellation problem.
+sources:
+  - "book: Freedman, Pisani & Purves, Statistics (4th ed.), chapters on describing data (median, quartiles, standard deviation)"
+  - "paper: Welford 1962, Note on a Method for Calculating Corrected Sums of Squares and Products (Technometrics)"
+  - "paper: Hyndman & Fan 1996, Sample Quantiles in Statistical Packages (The American Statistician)"
+status: reviewed

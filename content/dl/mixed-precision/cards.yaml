@@ -1,0 +1,28 @@
+cards:
+  - id: dl/mixed-precision#1
+    type: qa
+    front: Why does fp16 training multiply the loss by a scale S before the backward pass?
+    back: "Gradients below about 3e-8, half the smallest fp16 subnormal, round to zero in fp16. Scaling by S moves them into the representable range, and the division by S after the backward pass restores their size."
+  - id: dl/mixed-precision#2
+    type: qa
+    front: What does dynamic loss scaling do on an overflow?
+    back: "It skips the optimizer step, multiplies the scale by the backoff factor (0.5 by default), and resets the good-step count to 0."
+  - id: dl/mixed-precision#3
+    type: qa
+    front: When does dynamic loss scaling double the scale?
+    back: "After growth_interval consecutive steps without overflow. The default interval in PyTorch is 2000, and the count restarts after each growth."
+  - id: dl/mixed-precision#4
+    type: cloze
+    text: "Master weights are kept in {{c1::fp32}} so that small updates are not lost to the low precision of the forward and backward copies."
+  - id: dl/mixed-precision#5
+    type: qa
+    front: Why do bf16 runs usually skip loss scaling?
+    back: "bf16 has the same 8-bit exponent as fp32, so its range covers typical gradients."
+  - id: dl/mixed-precision#6
+    type: qa
+    front: "Should gradients be clipped before or after unscaling?"
+    back: "After. Clipping must see true gradients, so unscale first, then clip, then step."
+  - id: dl/mixed-precision#7
+    type: qa
+    front: "Why does a long running sum in an fp16 accumulator stall?"
+    back: "Once a term is below half the spacing of the running sum, its addition rounds away."

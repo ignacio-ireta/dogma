@@ -1,0 +1,22 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused.
+cards:
+  - id: dl/layer-normalization#1
+    type: qa
+    front: Over which axis does layer normalization compute its statistics?
+    back: Over the last dimension, separately for every example and every leading position. Nothing is shared across examples.
+  - id: dl/layer-normalization#2
+    type: qa
+    front: Does layer normalization keep running statistics?
+    back: No. It computes the same statistics in training and inference, so there is no train-eval mismatch.
+  - id: dl/layer-normalization#3
+    type: qa
+    front: Which variance does layer normalization use in its denominator?
+    back: The biased variance over the last dimension, divided by D, with eps added inside the square root.
+  - id: dl/layer-normalization#4
+    type: cloze
+    text: "A layer norm of a constant row returns {{c1::the bias}}, because the centred values are all zero."
+  - id: dl/layer-normalization#5
+    type: qa
+    front: Why is layer normalization the usual choice for transformers?
+    back: Its output for one token does not depend on the batch or on padding in other sequences, and it works with batch size one.

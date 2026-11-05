@@ -1,0 +1,24 @@
+cards:
+  - id: cml/shuffling-splitting-and-batching-data#1
+    type: qa
+    front: With n = 10 and test_size = 0.25, how many test rows does the protocol give?
+    back: "3. The count is ceil(test_size * n) = ceil(2.5), not round(2.5), which is 2."
+  - id: cml/shuffling-splitting-and-batching-data#2
+    type: qa
+    front: What does a stratified split guarantee about each class?
+    back: Its test count is floor or ceil of its ideal share test_size times its class size, so it stays within one row of that share.
+  - id: cml/shuffling-splitting-and-batching-data#3
+    type: cloze
+    text: "For forecasting, a random split is unsuitable because it puts {{c1::future rows in training}} and past rows in the test set."
+  - id: cml/shuffling-splitting-and-batching-data#4
+    type: qa
+    front: Why must a class keep at least one training row in a stratified split?
+    back: A class with no training row is invisible to the model, so the split is refused rather than returned.
+  - id: cml/shuffling-splitting-and-batching-data#5
+    type: qa
+    front: Why should you avoid rebuilding the generator with the same seed inside the epoch loop?
+    back: Each epoch then repeats the same permutation, so every epoch sees the same batch sequence.
+  - id: cml/shuffling-splitting-and-batching-data#6
+    type: qa
+    front: What must a group split keep together?
+    back: All rows that share an entity, such as one patient or one user, so that they fall on the same side.

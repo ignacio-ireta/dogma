@@ -1,0 +1,28 @@
+cards:
+  - id: math/reservoir-sampling#1
+    type: qa
+    front: After n items, with what probability is each item in a reservoir of size k?
+    back: k / n, for n >= k.
+  - id: math/reservoir-sampling#2
+    type: qa
+    front: For item index i >= k (0-based), which integers does Algorithm R draw j from?
+    back: "Uniform over 0, 1, ..., i (inclusive). The item replaces slot j if j < k."
+  - id: math/reservoir-sampling#3
+    type: cloze
+    text: "On arrival, Algorithm R stores the item with 0-based index i with probability {{c1::k / (i + 1)}}."
+  - id: math/reservoir-sampling#4
+    type: qa
+    front: How much memory does reservoir sampling need, and does it depend on the stream length?
+    back: O(k) items. It does not depend on the stream length n.
+  - id: math/reservoir-sampling#5
+    type: qa
+    front: What does the reservoir hold if the stream is shorter than k?
+    back: Every item, in stream order.
+  - id: math/reservoir-sampling#6
+    type: qa
+    front: In the induction step, what is the survival probability of an item already stored when item n + 1 arrives?
+    back: n / (n + 1). It is evicted only if the draw hits its own slot.
+  - id: math/reservoir-sampling#7
+    type: qa
+    front: What key does the weighted variant A-Res assign to an item with weight w?
+    back: "u^(1/w) for a uniform u. Keep the k largest keys."

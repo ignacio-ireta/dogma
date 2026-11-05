@@ -1,0 +1,26 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: inf/arithmetic-intensity-and-the-roofline#1
+    type: qa
+    front: How many FLOPs does a dense product of an m x k and a k x n matrix cost?
+    back: 2 * m * n * k. Each output is a dot product of length k, with one multiply and one add per term.
+  - id: inf/arithmetic-intensity-and-the-roofline#2
+    type: qa
+    front: What does the ideal byte count of a matrix product include?
+    back: A, B and the output C, each element counted once at its element width. No reuse is credited.
+  - id: inf/arithmetic-intensity-and-the-roofline#3
+    type: qa
+    front: What is the ridge point of a device?
+    back: Peak FLOP/s divided by memory bandwidth, in FLOP per byte.
+  - id: inf/arithmetic-intensity-and-the-roofline#4
+    type: cloze
+    text: "An operation is {{c1::memory-bound}} when its intensity is below the ridge point, and compute-bound otherwise."
+  - id: inf/arithmetic-intensity-and-the-roofline#5
+    type: qa
+    front: What is the approximate intensity of a batch-1 fp16 matrix-vector product?
+    back: About 1 FLOP per byte, which is 2 divided by the element width. Each weight is read once and used once.
+  - id: inf/arithmetic-intensity-and-the-roofline#6
+    type: qa
+    front: What is the time lower bound of an operation?
+    back: The larger of FLOPs divided by peak FLOP/s and bytes divided by bandwidth.

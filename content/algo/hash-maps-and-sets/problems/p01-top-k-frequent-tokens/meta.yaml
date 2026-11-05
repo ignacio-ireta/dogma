@@ -1,0 +1,13 @@
+id: algo/hash-maps-and-sets/p01-top-k-frequent-tokens
+version: 1                     # bump when tests, tolerances or the contract change
+title: Top-k frequent tokens
+language: python
+runtime: py-stdlib
+entry: top_k_frequent
+difficulty: medium
+minutes: 20
+core: true
+tolerance: {atol: 0.0, rtol: 0.0}   # exact: integer counts and strings, no floating point
+banned_imports: [collections]
+timeout_s: 30
+status: reviewed

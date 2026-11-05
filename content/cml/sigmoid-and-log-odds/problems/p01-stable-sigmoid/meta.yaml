@@ -1,0 +1,13 @@
+id: cml/sigmoid-and-log-odds/p01-stable-sigmoid
+version: 2
+title: Stable sigmoid
+language: python
+runtime: py-numpy
+entry: sigmoid
+difficulty: medium
+minutes: 20
+core: true
+tolerance: {atol: 1.0e-15, rtol: 1.0e-12}  # tail values are compared relatively against a 60-digit reference
+banned_imports: [scipy]
+timeout_s: 30
+status: reviewed

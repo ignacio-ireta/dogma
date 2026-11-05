@@ -1,0 +1,24 @@
+cards:
+  - id: llm/bpe-merge-training#1
+    type: qa
+    front: What is one BPE training step?
+    back: Count adjacent symbol pairs weighted by word count, then merge the most frequent pair everywhere.
+  - id: llm/bpe-merge-training#2
+    type: qa
+    front: Why is the end-of-word marker a separate symbol?
+    back: So a merge can join it to the final character, and word endings stay distinct from word middles.
+  - id: llm/bpe-merge-training#3
+    type: qa
+    front: How do overlapping occurrences count in aaa for the pair (a, a)?
+    back: Twice, one for each adjacent position.
+  - id: llm/bpe-merge-training#4
+    type: qa
+    front: Why learn merges on a word-count table rather than the raw text?
+    back: The table is smaller, and no pair can cross a word boundary.
+  - id: llm/bpe-merge-training#5
+    type: qa
+    front: What is the final vocabulary size after k merges, starting from n initial symbols?
+    back: n plus k, since each merge adds exactly one new symbol.
+  - id: llm/bpe-merge-training#6
+    type: cloze
+    text: "On a tie in pair count, this course takes the {{c1::smallest pair in tuple order}} so the result is reproducible."

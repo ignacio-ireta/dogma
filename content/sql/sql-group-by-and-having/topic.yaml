@@ -1,0 +1,16 @@
+id: sql/sql-group-by-and-having
+title: SQL GROUP BY and HAVING
+tier: A
+requires: [sql/sql-select-filter-and-sort]
+aliases: [GROUP BY, HAVING, aggregation, group aggregates, COUNT, SUM, WHERE vs HAVING, aggregate functions]
+objectives:
+  - Group rows with GROUP BY and compute COUNT, SUM and AVG per group, stating how NULLs are treated
+  - Choose between WHERE and HAVING by asking whether a condition is about rows or about groups
+  - Keep groups above a threshold and sort them with a deterministic tie-breaker
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  Most analytics SQL questions are grouped aggregates. The interviewer checks the WHERE/HAVING
+  line, how COUNT and SUM treat NULLs, and whether a join has quietly multiplied the rows.
+sources:
+  - "book: Beaulieu, Learning SQL (3rd ed.), chapter on grouping and aggregates"
+status: reviewed

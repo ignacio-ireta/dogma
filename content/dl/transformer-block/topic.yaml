@@ -1,0 +1,15 @@
+id: dl/transformer-block
+title: "Transformer block"
+tier: A
+requires: ['dl/dense-layer-forward-pass', 'cml/softmax', 'dl/layer-normalization', 'dl/residual-connections', 'dl/causal-masking', 'dl/multi-head-attention', 'dl/position-wise-feed-forward-block']
+aliases: ['pre-norm block', 'decoder block', 'residual block', 'post-norm']
+objectives:
+  - Implement a pre-norm decoder block with causal attention and a GELU feed-forward sub-layer
+  - Explain why normalising the sub-layer input trains more stably than post-norm
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: Draw the residual stream, place each LayerNorm and mask, then count the block's parameters.
+sources:
+  - "paper: Vaswani et al. 2017, Attention Is All You Need (arXiv:1706.03762)"
+  - "paper: Xiong et al. 2020, On Layer Normalization in the Transformer Architecture (arXiv:2002.04745)"
+  - "book: Goodfellow, Bengio and Courville, Deep Learning, chapter 6"
+status: reviewed

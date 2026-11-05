@@ -1,0 +1,26 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: inf/absmax-and-zero-point-int8-quantization#1
+    type: qa
+    front: What is the symmetric absmax int8 scale of a group?
+    back: "s = max|x| / 127. The codes are round_half_to_even(x / s), clipped to [-127, 127]."
+  - id: inf/absmax-and-zero-point-int8-quantization#2
+    type: qa
+    front: What is the error bound of absmax quantization for an in-range value?
+    back: "|x - s*q| <= s/2, half of one code step."
+  - id: inf/absmax-and-zero-point-int8-quantization#3
+    type: cloze
+    text: "numpy.round breaks ties to the {{c1::even}} integer, so 2.5 becomes 2."
+  - id: inf/absmax-and-zero-point-int8-quantization#4
+    type: qa
+    front: What scale does an all-zero group get, and why?
+    back: "1.0. A zero scale would divide by zero when computing codes."
+  - id: inf/absmax-and-zero-point-int8-quantization#5
+    type: qa
+    front: How does the asymmetric zero point map 0.0 to a code?
+    back: "z = -128 - round(lo / s), with lo = min(min x, 0). The real value 0.0 dequantizes from code z exactly."
+  - id: inf/absmax-and-zero-point-int8-quantization#6
+    type: qa
+    front: Why does one outlier hurt a per-tensor scale?
+    back: "It sets absmax, so s grows for every value in the group. Per-channel scales confine the damage to one channel."

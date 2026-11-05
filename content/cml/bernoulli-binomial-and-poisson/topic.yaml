@@ -1,0 +1,19 @@
+id: cml/bernoulli-binomial-and-poisson
+title: Bernoulli, binomial and Poisson
+tier: A
+requires: [cml/probability-basics]
+aliases: [Bernoulli trial, binomial distribution, Poisson distribution, count data, rare events, overdispersion, Poisson limit]
+objectives:
+  - Derive the binomial as a sum of independent Bernoulli trials, and state the mean and variance of each
+  - Compute the binomial and Poisson pmf stably in log space, including for n = 10^6
+  - Explain the Poisson as the rare-event limit of the binomial, and recognise overdispersed counts
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  Asked as "binomial or Poisson?" and "why does a Poisson fit fail?". The strong answer names
+  the trial structure, checks variance against mean, and says what overdispersion does to
+  confidence intervals.
+sources:
+  - "book: Blitzstein & Hwang, Introduction to Probability, chapter on named discrete distributions"
+  - "book: Murphy, Probabilistic Machine Learning: An Introduction, chapter on probability"
+  - "book: Goodfellow, Bengio & Courville, Deep Learning, chapter on numerical computation (overflow and underflow)"
+status: reviewed

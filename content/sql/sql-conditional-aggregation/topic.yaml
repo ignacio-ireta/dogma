@@ -1,0 +1,19 @@
+id: sql/sql-conditional-aggregation
+title: SQL conditional aggregation
+tier: A
+requires: [sql/sql-group-by-and-having]
+aliases: [CASE inside aggregate, FILTER clause, conditional sum, pivot with CASE, COUNT FILTER, SUM CASE, conversion rate, NULLIF, integer division, COUNT vs SUM of a flag]
+objectives:
+  - "Count or sum only the matching rows inside a group, with CASE inside the aggregate or with FILTER"
+  - "Choose COUNT(*), COUNT(column) or a sum of a 0/1 flag, knowing which rows each one counts"
+  - "Compute a safe fraction per group: divide as DOUBLE, guard the zero denominator, and round to a stated precision"
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "Conversion rate and revenue by channel and device, in one query" is a common screen question.
+  The interviewer checks whether the conditions sit inside the aggregates, whether COUNT counts
+  matches or non-NULL values, whether the division is a fraction, and whether a channel with no
+  matches shows 0 or NULL.
+sources:
+  - "book: Beaulieu, Learning SQL (3rd ed.), the material on grouping and aggregates"
+  - "book: Molinaro, SQL Cookbook, the reporting and pivot recipes"
+status: reviewed

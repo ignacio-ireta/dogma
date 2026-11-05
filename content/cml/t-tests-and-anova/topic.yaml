@@ -1,0 +1,19 @@
+id: cml/t-tests-and-anova
+title: t-tests and ANOVA
+tier: A
+requires: [cml/sampling-distributions-standard-errors-and-cis]
+aliases: [Welch t-test, Student t-test, unequal variances, paired t-test, one-way ANOVA, F test, variance decomposition, between and within variation]
+objectives:
+  - Implement Welch's two-sample t-test with the Welch–Satterthwaite degrees of freedom and a two-sided p-value
+  - Explain why Welch is the default over Student's pooled test, and when a paired test is the right one
+  - Compute a one-way ANOVA F statistic as a ratio of between-group and within-group variation, and say what to do after a significant result
+minutes: {lesson: 12, practice: 20, min_viable: 15}
+interview_angle: >-
+  "Two groups, unequal variances and sizes: which t-test and why?" and "What does a significant ANOVA
+  tell you, and what do you do next?" The strong answer names the assumption, the pairing and the
+  multiple comparisons.
+sources:
+  - "book: Casella & Berger, Statistical Inference, chapters on the two-sample t-test and on analysis of variance"
+  - "book: Moore, McCabe & Craig, Introduction to the Practice of Statistics, chapters on two-sample and paired comparisons and on one-way ANOVA"
+  - "source: library-refresh/01-Mathematics/06-Probability-and-Statistics/1933 -- Neyman and Pearson -- Hypothesis Tests as Controlled Decisions -- Study Note.md"
+status: reviewed

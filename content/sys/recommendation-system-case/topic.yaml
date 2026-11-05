@@ -1,0 +1,18 @@
+id: sys/recommendation-system-case
+title: Recommendation system
+tier: B
+kind: case
+requires: []
+aliases: [recommender, recommendation, ranking feed, personalisation, collaborative filtering, cold start, candidate generation, two-stage ranking]
+objectives:
+  - "Separate candidate generation from ranking, and judge each stage with its own metric"
+  - "Correct logged feedback for position bias and exposure before comparing models"
+  - "Defend a launch decision with a Pareto view of engagement, diversity and latency, and an equal-budget comparison"
+minutes: {lesson: 12, practice: 40, min_viable: 15}
+interview_angle: "Why did an offline win go flat online, and how do you launch a ranker without starting a popularity feedback loop?"
+sources:
+  - "paper: Joachims et al. 2017, Unbiased Learning-to-Rank with Biased Feedback (arXiv:1608.04468)"
+  - "paper: Järvelin & Kekäläinen 2002, Cumulated gain-based evaluation of IR techniques (ACM Transactions on Information Systems)"
+  - "paper: Deb et al. 2002, A fast and elitist multiobjective genetic algorithm: NSGA-II (IEEE Transactions on Evolutionary Computation)"
+  - "source: interview-prep/mock-interviews/SCORING_RUBRIC.md"
+status: reviewed

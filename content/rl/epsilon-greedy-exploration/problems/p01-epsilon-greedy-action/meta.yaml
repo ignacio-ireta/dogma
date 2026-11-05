@@ -1,0 +1,15 @@
+id: rl/epsilon-greedy-exploration/p01-epsilon-greedy-action
+version: 2
+title: "Epsilon-greedy action with a fixed draw order"
+language: python
+runtime: py-numpy
+entry: epsilon_greedy_action
+difficulty: easy
+minutes: 20
+core: true
+# Frequency tests use N = 20000 draws. The standard error of a frequency is at most 0.5/sqrt(N),
+# about 0.0035, so 0.02 is about 5.7 standard errors. The seed is fixed as well.
+tolerance: {atol: 2.0e-2, rtol: 0.0}
+banned_imports: [random, scipy.stats]
+timeout_s: 30
+status: reviewed

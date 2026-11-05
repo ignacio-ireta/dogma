@@ -1,0 +1,28 @@
+cards:
+  - id: sql/pandas-merge-and-reshape#1
+    type: qa
+    front: What does how="left" keep, and what fills the columns of an unmatched row?
+    back: Every row of the left frame is kept. The right-hand columns of an unmatched row are NaN.
+  - id: sql/pandas-merge-and-reshape#2
+    type: qa
+    front: What does validate="many_to_one" check, and what happens when it fails?
+    back: That the right-hand key is unique. A duplicate key raises MergeError, which is a ValueError, instead of silently repeating the left rows.
+  - id: sql/pandas-merge-and-reshape#3
+    type: qa
+    front: Two rows have NaN as their join key. Do they match each other in pandas merge?
+    back: Yes. Unlike SQL, pandas matches NaN keys to NaN keys. Check for missing keys before merging.
+  - id: sql/pandas-merge-and-reshape#4
+    type: qa
+    front: Does groupby keep groups whose key is NaN?
+    back: No, by default dropna=True drops them silently. Fill the key with a label such as "unknown" first if the rows matter.
+  - id: sql/pandas-merge-and-reshape#5
+    type: qa
+    front: What is the default aggregation of pivot_table?
+    back: mean, not sum. Set aggfunc="sum" explicitly when the question asks for totals.
+  - id: sql/pandas-merge-and-reshape#6
+    type: qa
+    front: What does pivot do when the same (index, column) pair appears twice?
+    back: It raises ValueError (duplicate entries). Use pivot_table or groupby with an aggregate instead.
+  - id: sql/pandas-merge-and-reshape#7
+    type: cloze
+    text: "To turn a wide table back into long rows, use {{c1::melt}}."

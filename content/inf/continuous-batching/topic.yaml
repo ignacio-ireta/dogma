@@ -1,0 +1,16 @@
+# Topic metadata (CONTENT_SPEC §2). id, title and tier come from the syllabus; do not change them.
+id: inf/continuous-batching
+title: "Continuous batching"
+tier: A
+requires: ['inf/ttft-itl-and-throughput', 'algo/stacks-and-queues']
+aliases: [iteration-level scheduling, in-flight batching, static batching, request scheduling, max batch size, token budget, FCFS admission, head-of-line blocking]
+objectives:
+  - "Simulate static and continuous batching step by step for FCFS admission, with a max batch size and a prefill token budget"
+  - "Explain why a static batch waits for its longest sequence, and why a continuous batch admits a new request as soon as a slot frees"
+  - "State the exact step semantics used for first-token and finish steps, and what each policy does to TTFT and throughput"
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: "Explain that static batching holds freed slots idle until the longest request finishes, and that iteration-level scheduling trades a little scheduler work for higher utilisation and lower queueing delay."
+sources:
+  - "paper: Yu et al. 2022, Orca: A Distributed Serving System for Transformer-Based Generative Models (OSDI 2022); general topic source, not quoted"
+  - "paper: Kwon et al. 2023, Efficient Memory Management for Large Language Model Serving with PagedAttention (arXiv:2309.06180); general topic source, not quoted"
+status: reviewed

@@ -1,0 +1,23 @@
+cards:
+  - id: cml/ranking-metrics#1
+    type: qa
+    front: "What discount does the item at 1-based rank r receive in DCG?"
+    back: "1 / log2(r + 1). Rank 1 has discount 1."
+  - id: cml/ranking-metrics#2
+    type: qa
+    front: "Why is NDCG divided by IDCG?"
+    back: "IDCG is the DCG of the ideal order of the same items. Dividing puts the value in [0, 1], with 1 for an ideal list."
+  - id: cml/ranking-metrics#3
+    type: cloze
+    text: "Reciprocal rank is 1 divided by {{c1::the 1-based rank of the first relevant item}}, and 0 when none is retrieved."
+  - id: cml/ranking-metrics#4
+    type: qa
+    front: "What denominator does average precision at k use, and why?"
+    back: "This course uses min(k, number of relevant items), so a fully relevant top k scores 1 even when more relevant items exist. Some definitions divide by the total relevant count."
+  - id: cml/ranking-metrics#5
+    type: qa
+    front: "Does the log base in NDCG change its value?"
+    back: "No. The factor ln(base) appears in both DCG and IDCG and cancels in the ratio."
+  - id: cml/ranking-metrics#6
+    type: cloze
+    text: "Recall at k divides the relevant items in the top k by {{c1::the total number of relevant items}}."

@@ -1,0 +1,32 @@
+cards:
+  - id: algo/binary-search#1
+    type: qa
+    front: What is the lower bound of a target in a sorted list?
+    back: The first index i with a[i] >= target, or len(a) if no element qualifies.
+  - id: algo/binary-search#2
+    type: qa
+    front: How does the upper bound differ from the lower bound on duplicates?
+    back: The upper bound is the first index whose value is strictly greater than the target.
+  - id: algo/binary-search#3
+    type: qa
+    front: In a half-open search over [lo, hi), why does hi start at len(a) and not len(a) - 1?
+    back: len(a) is one past the last index, and it is a valid answer when nothing qualifies.
+  - id: algo/binary-search#4
+    type: cloze
+    text: "For a lower bound, when a[mid] < target, the update is lo = {{c1::mid + 1}}."
+  - id: algo/binary-search#5
+    type: qa
+    front: For a lower bound with the test a[mid] >= target passing, why is hi = mid and not hi = mid - 1?
+    back: mid passes and may itself be the first qualifying index, so it must stay inside [lo, hi).
+  - id: algo/binary-search#6
+    type: qa
+    front: At most how many probes does a lower-bound search make on n sorted items?
+    back: floor(log2 n) + 1.
+  - id: algo/binary-search#7
+    type: qa
+    front: What must a feasibility check satisfy to binary-search over the answer?
+    back: "It must be monotone: if capacity c works, every larger capacity works too."
+  - id: algo/binary-search#8
+    type: qa
+    front: Which bisect function returns the lower bound?
+    back: bisect_left. bisect_right returns the upper bound.

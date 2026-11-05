@@ -1,0 +1,14 @@
+id: inf/continuous-batching/p01-batch-scheduler-steps
+version: 2                      # bump when tests, tolerances or the contract change
+title: "Simulate static and continuous batching"
+language: python                # python | sql
+runtime: py-stdlib              # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
+entry: simulate_batching        # the function or class name the learner implements
+difficulty: medium
+minutes: 25
+core: true                      # p01 is the core problem: exactly one per topic
+# Integer step counts only: no tolerance applies. Declared as zero for the record.
+tolerance: {atol: 0.0, rtol: 0.0}
+banned_imports: [numpy, pandas, torch]   # vector libraries would hide the step loop
+timeout_s: 30
+status: reviewed

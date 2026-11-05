@@ -1,0 +1,18 @@
+id: cml/ridge-regression-and-weight-decay
+title: Ridge regression and weight decay
+tier: A
+requires: [cml/normal-equation, cml/eigenvalues-and-eigenvectors, cml/gradient-descent]
+aliases: [ridge, L2 penalty, Tikhonov regularisation, weight decay, shrinkage, AdamW, decoupled weight decay]
+objectives:
+  - Derive the ridge solution with an unpenalised intercept by centring the data, and implement it with a linear solve
+  - Explain the shrinkage of each singular direction and why ridge is defined for rank-deficient designs
+  - Explain why weight decay equals L2 for plain SGD but not for Adam, and why standardising features comes first
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: "What does ridge do to correlated features, and how do you choose alpha? Then: is weight decay the same as L2 under Adam?"
+sources:
+  - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter 3 (linear methods for regression, shrinkage methods)"
+  - "library: AI-ML/03-Optimization/Loshchilov AdamW 2019.md"
+  - "source: library-refresh/01-Mathematics/08-Optimization/2004 -- Boyd and Vandenberghe -- Convexity, Duality and KKT Certificates -- Study Note.md"
+  - "paper: Loshchilov & Hutter 2017, Decoupled Weight Decay Regularization (arXiv:1711.05101)"
+  - "paper: Hoerl & Kennard 1970, Ridge regression: biased estimation for nonorthogonal problems (Technometrics)"
+status: reviewed

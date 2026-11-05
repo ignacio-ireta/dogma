@@ -1,0 +1,22 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: inf/paged-kv-cache#1
+    type: qa
+    front: How many blocks does a sequence of n tokens hold, with block size B?
+    back: "ceil(n / B). The table grows only when a token starts a new block."
+  - id: inf/paged-kv-cache#2
+    type: qa
+    front: Where does token position p live in a block table?
+    back: "Table index p // B, at offset p mod B inside that physical block."
+  - id: inf/paged-kv-cache#3
+    type: cloze
+    text: "Internal fragmentation in a paged KV cache is confined to the {{c1::last block}} of each sequence."
+  - id: inf/paged-kv-cache#4
+    type: qa
+    front: Why does paging raise the batch size in the same memory?
+    back: "Slots are not reserved for the maximum output length, so the memory held by unused reservations becomes free for more sequences."
+  - id: inf/paged-kv-cache#5
+    type: qa
+    front: What should the allocator do when it cannot allocate all the blocks a request needs?
+    back: "Raise a named error and change nothing, because a half-built block table leaks blocks."

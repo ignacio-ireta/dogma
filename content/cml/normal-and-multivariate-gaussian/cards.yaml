@@ -1,0 +1,24 @@
+cards:
+  - id: cml/normal-and-multivariate-gaussian#1
+    type: qa
+    front: Write the log-density of N(μ, Σ) in d dimensions, term by term.
+    back: "−(d/2) log 2π − (1/2) log det Σ − (1/2)(x − μ)ᵀ Σ⁻¹ (x − μ)."
+  - id: cml/normal-and-multivariate-gaussian#2
+    type: qa
+    front: What is the Mahalanobis distance of x from μ under Σ?
+    back: "δ = sqrt((x − μ)ᵀ Σ⁻¹ (x − μ)). It measures distance in units of the distribution's own spread."
+  - id: cml/normal-and-multivariate-gaussian#3
+    type: qa
+    front: How do you get log det Σ from a Cholesky factor L with Σ = LLᵀ?
+    back: "log det Σ = 2 Σᵢ log Lᵢᵢ, the sum over the diagonal of L."
+  - id: cml/normal-and-multivariate-gaussian#4
+    type: cloze
+    text: "The quadratic form (x − μ)ᵀ Σ⁻¹ (x − μ) equals ‖z‖² where L z = x − μ, so Σ⁻¹ is never {{c1::formed}}."
+  - id: cml/normal-and-multivariate-gaussian#5
+    type: qa
+    front: What is the marginal distribution of a subset of components of a Gaussian vector?
+    back: "Gaussian, with the matching sub-vector of μ and sub-matrix of Σ."
+  - id: cml/normal-and-multivariate-gaussian#6
+    type: qa
+    front: Why compute the density in log space?
+    back: "Products of many densities underflow or overflow in float64, while their logarithms add and stay in range."

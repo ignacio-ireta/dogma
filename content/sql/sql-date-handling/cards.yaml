@@ -1,0 +1,28 @@
+cards:
+  - id: sql/sql-date-handling#1
+    type: qa
+    front: In DuckDB, what type does DATE - DATE return?
+    back: BIGINT, the number of calendar days between the two dates.
+  - id: sql/sql-date-handling#2
+    type: qa
+    front: Why test a month with start <= t < next_start instead of BETWEEN on timestamps?
+    back: BETWEEN includes its upper bound, so an event at the next month's first instant is counted in both months.
+  - id: sql/sql-date-handling#3
+    type: cloze
+    text: "In DuckDB, TIMESTAMP minus TIMESTAMP returns an {{c1::INTERVAL}}, not a number of days."
+  - id: sql/sql-date-handling#4
+    type: qa
+    front: Which function includes its stop value when you generate a month series over DATE bounds, generate_series or range?
+    back: generate_series includes the stop value. range excludes it.
+  - id: sql/sql-date-handling#5
+    type: qa
+    front: What type does date_trunc('month', d) return when d is a DATE?
+    back: TIMESTAMP. Cast it with CAST(... AS DATE) when the output must be a date.
+  - id: sql/sql-date-handling#6
+    type: qa
+    front: Why does date_part('day', ts2 - ts1) give 0 for 23:59 to 00:01 on the next day?
+    back: It reads the day field of the elapsed interval (two minutes), not the number of calendar days crossed.
+  - id: sql/sql-date-handling#7
+    type: qa
+    front: Why does a LEFT JOIN from a calendar of months keep an empty month?
+    back: Every calendar row is kept, and a month with no matched events gets COUNT(DISTINCT user_id) = 0.

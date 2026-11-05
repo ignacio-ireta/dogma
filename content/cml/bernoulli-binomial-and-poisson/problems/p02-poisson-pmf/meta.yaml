@@ -1,0 +1,13 @@
+id: cml/bernoulli-binomial-and-poisson/p02-poisson-pmf
+version: 3
+title: Poisson probability mass function
+language: python
+runtime: py-numpy
+entry: poisson_pmf
+difficulty: easy
+minutes: 15
+core: false
+tolerance: {atol: 1.0e-14, rtol: 1.0e-9}
+banned_imports: [scipy]
+timeout_s: 30
+status: reviewed

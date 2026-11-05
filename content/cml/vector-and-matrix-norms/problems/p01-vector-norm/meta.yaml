@@ -1,0 +1,13 @@
+id: cml/vector-and-matrix-norms/p01-vector-norm
+version: 1
+title: Vector p-norm
+language: python
+runtime: py-numpy
+entry: vector_norm
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}  # the oracle is NumPy on moderate values; extreme cases use rtol 1e-12
+banned_imports: [numpy.linalg]
+timeout_s: 30
+status: reviewed

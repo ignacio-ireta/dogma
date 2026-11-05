@@ -1,0 +1,13 @@
+id: cml/xgboost-second-order-objective/p02-logloss-grad-hess
+version: 2
+title: Log-loss gradient and Hessian
+language: python
+runtime: py-numpy
+entry: logloss_grad_hess
+difficulty: medium
+minutes: 20
+core: false
+tolerance: {atol: 1.0e-12, rtol: 1.0e-12}
+banned_imports: [xgboost, scipy, sklearn, statsmodels, torch]
+timeout_s: 30
+status: reviewed

@@ -1,0 +1,28 @@
+cards:
+  - id: cml/feature-scaling#1
+    type: qa
+    front: Which rows determine a scaler's fitted mean and scale?
+    back: Only the training rows for the current split or fold.
+  - id: cml/feature-scaling#2
+    type: cloze
+    text: "The population variance used here divides squared deviations by {{c1::n}}, not n minus one."
+  - id: cml/feature-scaling#3
+    type: qa
+    front: What scale is used for an exactly constant training feature?
+    back: One; the transform still subtracts that feature's training mean.
+  - id: cml/feature-scaling#4
+    type: qa
+    front: Does standardization make a skewed feature Gaussian?
+    back: No. It changes location and scale, not the distribution's shape.
+  - id: cml/feature-scaling#5
+    type: qa
+    front: Why can feature units change the effect of L2 regularization?
+    back: A unit change changes the coefficient needed for the same prediction, hence its penalty.
+  - id: cml/feature-scaling#6
+    type: qa
+    front: Why should a new serving batch not fit its own scaler?
+    back: It would change the coordinate system that the trained model expects.
+  - id: cml/feature-scaling#7
+    type: qa
+    front: Which two statistics does a robust scaler use in place of the mean and standard deviation?
+    back: The median for the center and the interquartile range (75th minus 25th percentile) for the scale.

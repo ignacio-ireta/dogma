@@ -1,0 +1,13 @@
+id: dl/training-an-mlp-from-scratch/p01-train-two-layer-mlp
+version: 3
+title: Deterministic two-layer training
+language: python
+runtime: py-numpy
+entry: train_mlp
+difficulty: medium
+minutes: 25
+core: true
+tolerance: {atol: 1.0e-8, rtol: 1.0e-6}
+banned_imports: [torch, jax, tensorflow, sklearn]
+timeout_s: 30
+status: reviewed

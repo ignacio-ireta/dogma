@@ -1,0 +1,15 @@
+id: sql/sql-select-filter-and-sort/p01-top-five-completed-orders-2024
+version: 2                     # bump when tests, tolerances or the contract change
+title: Top five completed orders of 2024
+language: sql
+runtime: sql-duckdb
+entry: query
+difficulty: easy
+minutes: 20
+core: true
+# Amounts are copied from the table, not computed, and are compared after rounding to 6 decimals.
+# The tolerance is declared for consistency with the other SQL problems.
+tolerance: {atol: 1.0e-6, rtol: 1.0e-9}
+banned_imports: []             # SQL problems: nothing to ban at the module level
+timeout_s: 30
+status: reviewed

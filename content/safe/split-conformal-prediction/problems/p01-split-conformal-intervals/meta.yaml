@@ -1,0 +1,14 @@
+# Problem metadata (CONTENT_SPEC §6.2).
+id: safe/split-conformal-prediction/p01-split-conformal-intervals
+version: 2                      # bump when tests, tolerances or the contract change
+title: "Split conformal intervals for regression"
+language: python
+runtime: py-numpy
+entry: split_conformal_interval
+difficulty: medium
+minutes: 12
+core: true
+tolerance: {atol: 1.0e-12, rtol: 1.0e-12}   # bounds are calibration residuals shifted by test predictions
+banned_imports: [numpy.quantile, numpy.percentile, numpy.nanquantile, numpy.nanpercentile]
+timeout_s: 30
+status: reviewed

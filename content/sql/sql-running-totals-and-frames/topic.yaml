@@ -1,0 +1,14 @@
+id: sql/sql-running-totals-and-frames
+title: "SQL running totals and frames"
+tier: A
+requires: [sql/sql-ranking-window-functions]
+aliases: [running total, cumulative sum, moving average, window frame, ROWS BETWEEN, RANGE INTERVAL, default frame, peers]
+objectives:
+  - Write a running total whose value per row is unambiguous when timestamps tie
+  - Choose ROWS, RANGE or GROUPS and state the frame explicitly instead of relying on the default
+  - Compute a calendar-based trailing average over data with missing days, and say which window it is
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: Name the partition that resets the total, the unique order key, and the frame, in that order, before writing any OVER clause.
+sources:
+  - "book: Molinaro & de Graaf, SQL Cookbook (2nd ed.), running totals and window frames"
+status: reviewed

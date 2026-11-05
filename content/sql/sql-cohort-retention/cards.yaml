@@ -1,0 +1,26 @@
+# 4-8 cards, minimum information: one fact per card (CONTENT_SPEC §4).
+# Ids are <topic id>#<n>; n is never reused. Cloze text must contain {{c1::...}}.
+cards:
+  - id: sql/sql-cohort-retention#1
+    type: qa
+    front: How is a user's cohort defined in a retention table?
+    back: By the calendar month of the user's first activity event, truncated to the first day of that month.
+  - id: sql/sql-cohort-retention#2
+    type: qa
+    front: What is the denominator of a retention rate in a cohort table?
+    back: The cohort size, the number of users whose cohort is that month. Not the previous period's active count.
+  - id: sql/sql-cohort-retention#3
+    type: qa
+    front: Why must a retention query use COUNT(DISTINCT user_id)?
+    back: A user with several events in one period must count once in that cell; COUNT counts events.
+  - id: sql/sql-cohort-retention#4
+    type: qa
+    front: Why does a retention grid need a LEFT JOIN from the period calendar to the activity counts?
+    back: So that periods with no active user still appear as rows with zero, instead of being dropped.
+  - id: sql/sql-cohort-retention#5
+    type: qa
+    front: How do you measure a period offset in months between two first-of-month dates?
+    back: Use DATE_DIFF('month', cohort_month, activity_month), not days divided by 30.
+  - id: sql/sql-cohort-retention#6
+    type: cloze
+    text: "Period 0 of every cohort has retention_rate {{c1::1.0}}, because a cohort is defined by its first activity month."

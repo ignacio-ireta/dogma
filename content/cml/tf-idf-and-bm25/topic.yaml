@@ -1,0 +1,19 @@
+id: cml/tf-idf-and-bm25
+title: TF-IDF and BM25
+tier: A
+requires: [cml/cosine-similarity]
+aliases: [tf-idf, TF-IDF, term frequency, inverse document frequency, idf, bag of words, BM25, Okapi BM25, lexical retrieval, sparse retrieval, term saturation, length normalisation, FTS5, cosine similarity on text]
+objectives:
+  - Build a TF-IDF matrix with the smoothed idf and l2 normalisation, and state the tokenizer that defines the terms
+  - Score documents with BM25, and explain what k1 (term saturation) and b (length normalisation) each control
+  - Explain why BM25 remains a strong baseline for RAG, and how it combines with dense retrieval in a hybrid system
+minutes: {lesson: 12, practice: 25, min_viable: 15}
+interview_angle: >-
+  "Build a keyword search over these documents" or "why not just use embeddings?" A strong answer: BM25 is a
+  fast, explainable lexical baseline with term saturation and length normalisation, it matches exact terms that
+  embeddings can blur, and a hybrid system fuses its ranking with a dense retriever's.
+sources:
+  - "book: Manning, Raghavan & Schütze, Introduction to Information Retrieval, chapter 6 (scoring, term weighting and the vector space model)"
+  - "paper: Robertson & Zaragoza 2009, The Probabilistic Relevance Framework: BM25 and Beyond (Foundations and Trends in Information Retrieval)"
+  - "paper: Spärck Jones 1972, A statistical interpretation of term specificity and its application in retrieval (Journal of Documentation)"
+status: reviewed

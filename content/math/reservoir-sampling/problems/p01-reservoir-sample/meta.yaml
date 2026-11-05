@@ -1,0 +1,14 @@
+id: math/reservoir-sampling/p01-reservoir-sample
+version: 1                     # bump when tests, tolerances or the contract change
+title: Reservoir sample of k items
+language: python
+runtime: py-numpy
+entry: reservoir_sample
+difficulty: medium
+minutes: 25
+core: true
+# The sample is a list of stream items compared exactly; there is no floating-point arithmetic.
+tolerance: {atol: 0.0, rtol: 0.0}
+banned_imports: [scipy]
+timeout_s: 30
+status: reviewed

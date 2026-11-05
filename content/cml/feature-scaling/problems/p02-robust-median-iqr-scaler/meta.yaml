@@ -1,0 +1,13 @@
+id: cml/feature-scaling/p02-robust-median-iqr-scaler
+version: 4
+title: Robust median and IQR scaler
+language: python
+runtime: py-numpy
+entry: robust_standardize
+difficulty: medium
+minutes: 25
+core: false
+tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
+banned_imports: [sklearn, scipy, statistics, numpy.percentile, numpy.quantile, numpy.nanpercentile, numpy.nanquantile]
+timeout_s: 30
+status: reviewed

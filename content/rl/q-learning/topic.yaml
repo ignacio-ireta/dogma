@@ -1,0 +1,15 @@
+id: rl/q-learning
+title: "Q-learning"
+tier: A
+requires: ['rl/epsilon-greedy-exploration', 'rl/mdps-and-discounted-returns']
+aliases: ['off-policy TD control', 'Watkins Q-learning', 'tabular Q-learning', 'TD target', 'max bootstrap', 'SARSA contrast']
+objectives:
+  - Implement one tabular Q-learning update with a bootstrapped max target and no bootstrap at terminal states
+  - Run a full tabular Q-learning loop with epsilon-greedy behaviour and check it against an independent loop and the analytic optimum of a deterministic gridworld
+  - Contrast Q-learning with SARSA and state the convergence conditions with appropriate caution
+minutes: {lesson: 14, practice: 30, min_viable: 15}
+interview_angle: Explain why the target uses the max over next actions, why behaviour can differ from the target policy, and what a step size schedule has to satisfy.
+sources:
+  - "book: Sutton and Barto, Reinforcement Learning: An Introduction (2nd ed.), ch. 6 (Q-learning: off-policy TD control)"
+  - "library: Mathematics/11-Optimization-Theory/Robbins-Monro - Stochastic Approximation 1951.md"
+status: reviewed
