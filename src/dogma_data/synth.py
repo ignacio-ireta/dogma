@@ -17,7 +17,6 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
-_BOOST = 6.0  # logit boost on the predicted class; large enough that argmax equals it
 _BURN_IN = 100  # discarded AR steps so the series starts near stationarity
 
 
@@ -409,14 +408,19 @@ def peaked_probs(
     accuracy: float = 0.85,
     temperature: float = 0.5,
     overconfidence: float = 1.5,
+    margin_scale: float = 2.0,
 ) -> NDArray[np.float64]:
     """Return (n, n_classes) class probabilities that are accurate but over-confident.
 
     For each row the predicted class is the true class with probability ``accuracy``, otherwise
-    a uniformly random wrong class. Logits are N(0, 1) noise plus a boost on the predicted class.
-    Probabilities are ``softmax(overconfidence * logits / temperature)`` (max-subtracted for
-    stability), so rows sum to 1. Realism: a classifier whose confidence is higher than its
-    accuracy, the situation where calibration and conformal sets matter.
+    a uniformly random wrong class. Logits are N(0, 1) noise; the predicted class's logit is set
+    to the largest other logit plus a half-normal margin with scale ``margin_scale``, so the
+    argmax is always the predicted class and confidence varies from row to row. Probabilities
+    are ``softmax(overconfidence * logits / temperature)`` (max-subtracted for stability), so
+    rows sum to 1. With the defaults and 10 classes, mean confidence is about 0.875 against an
+    accuracy of 0.85, the median confidence is about 0.97, and the 5% quantile about 0.48.
+    Realism: a classifier whose confidence is higher than its accuracy, the situation where
+    calibration and conformal sets matter.
     """
     gen = _check_rng(rng)
     labels = np.asarray(y)
@@ -430,13 +434,18 @@ def peaked_probs(
     acc = _check_fraction("accuracy", accuracy)
     temp = _check_float("temperature", temperature, low=0.0, low_open=True)
     over = _check_float("overconfidence", overconfidence, low=0.0, low_open=True)
+    margin = _check_float("margin_scale", margin_scale, low=0.0, low_open=True)
     labels = labels.astype(np.int64)
     n = labels.size
+    rows = np.arange(n)
     correct = gen.random(n) < acc
     wrong = (labels + gen.integers(1, k, size=n)) % k
     predicted = np.where(correct, labels, wrong)
     logits = gen.standard_normal((n, k))
-    logits[np.arange(n), predicted] += _BOOST
+    others = logits.copy()
+    others[rows, predicted] = -np.inf
+    gaps = np.abs(gen.normal(0.0, margin, size=n))
+    logits[rows, predicted] = others.max(axis=1) + gaps
     scaled = over * logits / temp
     scaled = scaled - scaled.max(axis=1, keepdims=True)
     expv = np.exp(scaled)

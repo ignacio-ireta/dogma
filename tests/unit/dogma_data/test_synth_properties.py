@@ -264,8 +264,12 @@ def test_peaked_probs_are_accurate_and_overconfident() -> None:
     assert bool(np.all(probs >= 0.0)) and bool(np.all(np.isfinite(probs)))
     argmax_acc = float(np.mean(np.argmax(probs, axis=1) == y))
     assert abs(argmax_acc - acc) < 4 * math.sqrt(acc * (1 - acc) / n)
-    mean_confidence = float(probs.max(axis=1).mean())
-    assert mean_confidence > acc + 0.05
+    confidence = probs.max(axis=1)
+    # Over-confident: mean confidence exceeds accuracy by far more than its standard error.
+    assert float(confidence.mean()) > acc + 4 * float(confidence.std()) / math.sqrt(n)
+    # Not degenerate: confidence varies from row to row, as a real classifier's does.
+    assert float(np.quantile(confidence, 0.05)) < 0.7
+    assert float(np.median(confidence)) < 0.995
 
 
 def test_peaked_probs_stable_for_large_logits() -> None:

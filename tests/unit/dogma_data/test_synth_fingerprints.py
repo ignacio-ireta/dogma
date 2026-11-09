@@ -100,7 +100,7 @@ PINNED: dict[str, str] = {
     "outlier_channel_activations": (
         "28adcd054bbd250add0988c448ec7553f7113d1e589dafffc1785c25dbe8d99f"
     ),
-    "peaked_probs": "16a2690380f164009a4b5c9f045550122b6d9a65d00d212c2884c25d09529d14",
+    "peaked_probs": "de9fe9925de4e43595b76310f4a8fc3a120f6e58bb433cf80352d5c19d0c8650",
 }
 
 EVENT_LOG_PINNED: dict[str, str] = {

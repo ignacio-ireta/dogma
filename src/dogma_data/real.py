@@ -90,7 +90,7 @@ def _sklearn_real(name: str) -> RealData:
             name,
             _float_array(bunch.data),
             _float_array(bunch.target),
-            tuple(bunch.feature_names),
+            tuple(str(name) for name in bunch.feature_names),
             "target",
         )
     if name == "wine":
@@ -99,7 +99,7 @@ def _sklearn_real(name: str) -> RealData:
             name,
             _float_array(bunch.data),
             _float_array(bunch.target),
-            tuple(bunch.feature_names),
+            tuple(str(name) for name in bunch.feature_names),
             "target",
         )
     if name == "breast_cancer":
@@ -108,7 +108,7 @@ def _sklearn_real(name: str) -> RealData:
             name,
             _float_array(bunch.data),
             _float_array(bunch.target),
-            tuple(bunch.feature_names),
+            tuple(str(name) for name in bunch.feature_names),
             "target",
         )
     if name == "diabetes":
@@ -117,7 +117,7 @@ def _sklearn_real(name: str) -> RealData:
             name,
             _float_array(bunch.data),
             _float_array(bunch.target),
-            tuple(bunch.feature_names),
+            tuple(str(name) for name in bunch.feature_names),
             "target",
         )
     if name == "digits":
@@ -131,7 +131,7 @@ def _sklearn_real(name: str) -> RealData:
         name,
         _float_array(bunch.data),
         _float_array(bunch.target),
-        tuple(bunch.feature_names),
+        tuple(str(name) for name in bunch.feature_names),
         ",".join(bunch.target_names),
     )
 
