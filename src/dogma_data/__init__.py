@@ -7,7 +7,15 @@ functions that need them.
 """
 
 from dogma_data import synth
-from dogma_data.real import RealData, available, fingerprint, load, load_frame, load_series
+from dogma_data.real import (
+    RealData,
+    available,
+    fingerprint,
+    load,
+    load_frame,
+    load_series,
+    load_text,
+)
 from dogma_data.seeds import rng
 
 __all__ = [
@@ -17,6 +25,7 @@ __all__ = [
     "load",
     "load_frame",
     "load_series",
+    "load_text",
     "rng",
     "synth",
 ]

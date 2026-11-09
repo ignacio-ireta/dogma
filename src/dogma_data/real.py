@@ -2,8 +2,10 @@
 
 Numeric tabular sets (``load``) come from sklearn and statsmodels bundles, raw and unscaled.
 Series (``load_series``) keep their NaNs. Vendored CSVs (``load_frame`` only) are copied from
-``sources/`` and are deliberately not cleaned. Everything reads local files; nothing uses the
-network. pandas, sklearn and statsmodels are imported inside the functions that need them.
+``sources/`` and are deliberately not cleaned. HuggingFace snapshots are vendored text files under
+``data/hf/`` (``scripts/sync_hf_datasets.py``): tables load with ``load_frame``, books with
+``load_text``. Everything reads local files; nothing uses the network. pandas, sklearn and
+statsmodels are imported inside the functions that need them.
 """
 
 from __future__ import annotations
@@ -11,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import importlib
 import io
+import json
 from dataclasses import dataclass
 from importlib.resources import files
 from typing import Any
@@ -23,6 +26,12 @@ _STATSMODELS = ("engel", "longley", "macrodata", "spector", "stackloss")
 _SERIES = ("co2", "elnino", "nile", "sunspots")
 _VENDORED = ("customers", "orders", "penguins", "surveys")
 _VENDORED_FILES = {name: f"{name}.csv" for name in _VENDORED}
+_HF_TABLES = {
+    "adult": "adult.csv",
+    "california_housing": "california_housing.csv",
+    "gsm8k": "gsm8k.jsonl",
+}
+_HF_TEXTS = ("gutenberg_frankenstein", "gutenberg_pride_prejudice", "gutenberg_walden")
 
 
 def _pandas() -> Any:
@@ -66,7 +75,7 @@ class RealData:
 
 def available() -> tuple[str, ...]:
     """Return every dataset id this module can load, sorted."""
-    return tuple(sorted((*_SKLEARN, *_STATSMODELS, *_SERIES, *_VENDORED)))
+    return tuple(sorted((*_SKLEARN, *_STATSMODELS, *_SERIES, *_VENDORED, *_HF_TABLES, *_HF_TEXTS)))
 
 
 def _check_name(name: object) -> str:
@@ -177,9 +186,9 @@ def _series_values(name: str) -> tuple[NDArray[np.float64], Any]:
 
 
 def _check_numeric(name: str) -> None:
-    if name in _SERIES or name in _VENDORED:
+    if name in _SERIES or name in _VENDORED or name in _HF_TABLES or name in _HF_TEXTS:
         raise ValueError(
-            f"{name!r} is not a numeric tabular dataset; use load_series or load_frame"
+            f"{name!r} is not a numeric tabular dataset; use load_series, load_frame or load_text"
         )
 
 
@@ -207,15 +216,48 @@ def _vendored_frame(name: str) -> Any:
     return pd.read_csv(io.BytesIO(resource.read_bytes()))
 
 
+def _hf_bytes(filename: str) -> bytes:
+    return (files("dogma_data") / "data" / "hf" / filename).read_bytes()
+
+
+def _hf_table(name: str) -> Any:
+    pd = _pandas()
+
+    filename = _HF_TABLES[name]
+    raw = _hf_bytes(filename)
+    if filename.endswith(".jsonl"):
+        lines = raw.decode("utf-8").splitlines()
+        return pd.DataFrame([json.loads(line) for line in lines if line])
+    return pd.read_csv(io.BytesIO(raw))
+
+
+def load_text(name: str) -> str:
+    """Return a vendored public-domain book slice (about 40 KB of real English text).
+
+    Lines end with ``\\n``; the slice starts at the first sentence of the book, after its contents.
+    """
+    _check_name(name)
+    if name not in _HF_TEXTS:
+        raise ValueError(f"{name!r} is not a text; texts: {', '.join(_HF_TEXTS)}")
+    return _hf_bytes(f"{name}.txt").decode("utf-8")
+
+
 def load_frame(name: str) -> Any:
     """Return any dataset as a pandas DataFrame (fresh each call).
 
     Numeric sets equal ``load(name).frame()``. Series sets are one column, keeping a date index
-    when the source has one. Vendored sets are read as-is, without cleaning.
+    when the source has one. Vendored sets and HF tables are read as-is, without cleaning. A
+    text is one row per line, in a ``line`` column.
     """
     _check_name(name)
     if name in _VENDORED:
         return _vendored_frame(name)
+    if name in _HF_TABLES:
+        return _hf_table(name)
+    if name in _HF_TEXTS:
+        pd = _pandas()
+
+        return pd.DataFrame({"line": load_text(name).splitlines()})
     if name in _SERIES:
         pd = _pandas()
 

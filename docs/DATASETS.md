@@ -19,11 +19,12 @@ Test rules: [CONTENT_SPEC §6.6](CONTENT_SPEC.md).
 ## How to load
 
 ```python
-from dogma_data import available, fingerprint, load, load_frame, load_series, rng, synth
+from dogma_data import available, fingerprint, load, load_frame, load_series, load_text, rng, synth
 
 data = load("breast_cancer")  # RealData: X, y, feature_names, target_name, frame()
 values = load_series("co2")  # 1-D float64 in time order; NaNs kept
 table = load_frame("penguins")  # pandas DataFrame, as-is
+book = load_text("gutenberg_walden")  # about 40 KB of real English prose
 ids = available()  # every dataset id, sorted
 digest = fingerprint("iris")  # sha256 of the CSV text, used by the unit tests
 gen = rng("py-realism:cms:0")  # seeded numpy Generator from a string key
@@ -33,7 +34,8 @@ gen = rng("py-realism:cms:0")  # seeded numpy Generator from a string key
 |---|---|---|
 | `load(name)` | `RealData` (frozen dataclass) | Numeric tabular sets only. Raw and unscaled. |
 | `load_series(name)` | `ndarray` | Series sets only. NaNs are kept. |
-| `load_frame(name)` | pandas `DataFrame` | Any dataset. Vendored sets are read without cleaning. |
+| `load_frame(name)` | pandas `DataFrame` | Any dataset. Vendored sets and HF tables are read without cleaning; a text is one row per line. |
+| `load_text(name)` | `str` | The Gutenberg slices only. Each starts at the book's first sentence. |
 | `fingerprint(name)` | `str` | Hash of `load_frame(name)`. Detects drift after a lock change. |
 | `available()` | `tuple[str, ...]` | All ids. |
 | `rng(key)` | `numpy.random.Generator` | Key is hashed with sha256. Keys are `<problem>:<purpose>:<i>`. |
@@ -110,7 +112,17 @@ datasets, and they enter the repo as snapshots:
 - Licence policy: CC0, public domain, MIT, Apache-2.0 or BSD are accepted. CC-BY is accepted with
   an entry in `src/dogma_data/data/NOTICE`. NC, ND, SA, unknown and missing licences are refused.
 - `trust_remote_code` is always off.
-- Tests read the vendored files directly. Nothing in `tests/` downloads or calls the sync script.
+- Tests read the vendored files through `load_frame` and `load_text`. Nothing in `tests/` or
+  `content/` downloads or calls the sync script.
+
+| Id | Source (pinned revision in `hf_manifest.yaml`) | Licence | Selection | Use |
+|---|---|---|---|---|
+| `gsm8k` | `openai/gsm8k`, test split | MIT | first 300 rows, question and answer | pass@k, majority vote, answer extraction (`#### <number>`) |
+| `adult` | `scikit-learn/adult-census-income` | CC0 | rows 8000-14000 (18.8% >50K) | categoricals, imbalance, `?` as missing, drift |
+| `california_housing` | `gvlassis/california_housing` | MIT | first 6000 rows | target censored at 5.00001, heavy-tailed features |
+| `gutenberg_frankenstein`, `gutenberg_pride_prejudice`, `gutenberg_walden` | `sedthh/gutenberg_english` (public-domain books) | MIT card | about 40 KB from each book's first sentence | BPE, tokenizers, TF-IDF/BM25, chunking, retrieval |
+
+Attributions are in `src/dogma_data/data/hf/NOTICE`.
 
 ## When the lock changes
 

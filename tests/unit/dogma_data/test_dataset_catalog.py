@@ -203,6 +203,55 @@ def test_orders_and_surveys_have_missing_values() -> None:
     assert int(surveys["nps_score"].isna().sum()) == 100
 
 
+# --- HF snapshots (vendored by scripts/sync_hf_datasets.py) ---
+
+
+def test_adult_keeps_question_mark_missing_markers_and_imbalance() -> None:
+    adult = dogma_data.load_frame("adult")
+    marks = {col: int((adult[col] == "?").sum()) for col in adult.columns}
+    assert marks["workclass"] == 338
+    assert marks["occupation"] == 340
+    assert marks["native.country"] == 98
+    assert abs(float((adult["income"] == ">50K").mean()) - 0.1878) < 1e-3
+
+
+def test_california_target_is_censored_and_features_heavy_tailed() -> None:
+    houses = dogma_data.load_frame("california_housing")
+    assert float(houses["MedHouseVal"].max()) == 5.00001
+    assert int((houses["MedHouseVal"] == 5.00001).sum()) == 241
+    occupancy = houses["AveOccup"]
+    assert float(occupancy.max()) > 50 * float(occupancy.median())
+
+
+def test_gsm8k_answers_end_with_the_final_number() -> None:
+    answers = dogma_data.load_frame("gsm8k")["answer"]
+    assert bool(answers.str.contains(r"#### -?[\d,.]+\s*$", regex=True).all())
+
+
+@pytest.mark.parametrize(
+    ("name", "opening"),
+    [
+        ("gutenberg_frankenstein", "You will rejoice to hear that no disaster"),
+        ("gutenberg_pride_prejudice", "IT is a truth universally acknowledged"),
+        ("gutenberg_walden", "When I wrote the following pages"),
+    ],
+)
+def test_text_starts_at_the_first_sentence_and_is_real_prose(name: str, opening: str) -> None:
+    text = dogma_data.load_text(name)
+    assert text.startswith(opening)
+    assert text.endswith("\n")
+    words = text.lower().split()
+    counts = sorted(
+        (words.count(w) for w in set(words)), reverse=True
+    )  # Zipf-like: a few very common words, a long tail of rare ones
+    assert counts[0] > 50 * counts[len(counts) // 2]
+
+
+def test_load_text_rejects_tables() -> None:
+    with pytest.raises(ValueError):
+        dogma_data.load_text("adult")
+
+
 # --- vendored copies and the load contract ---
 
 
@@ -243,6 +292,9 @@ def test_frame_equals_load_frame_for_numeric_sets() -> None:
         (real.load, 3),
         (dogma_data.load_series, "iris"),
         (dogma_data.load_frame, "nope"),
+        (real.load, "adult"),
+        (real.load, "gutenberg_walden"),
+        (dogma_data.load_series, "adult"),
         (dogma_data.fingerprint, "nope"),
     ],
 )

@@ -312,3 +312,102 @@ wine:
   - principal-component-analysis
   - feature-scaling
   - k-means
+adult:
+  id: adult
+  kind: hf
+  loader: load_frame-only
+  licence: CC0 1.0 (scikit-learn/adult-census-income, UCI Adult census extract)
+  shape:
+  - 6000
+  - 15
+  sha256: f848efddb546766ca58d10fe3f5deeb4608e436470d9c10bf5b3a888bf288639
+  quirks:
+  - rows 8000-14000 of the HF train split; income >50K is 18.8% (imbalanced)
+  - '"?" marks missing values: workclass 338, occupation 340, native.country 98'
+  - string categoricals, several with high cardinality (native.country, occupation)
+  fits:
+  - categorical-encoding
+  - handling-class-imbalance
+  - missing-values-and-outliers
+  - preprocessing-pipelines
+  - data-quality-and-drift-detection
+california_housing:
+  id: california_housing
+  kind: hf
+  loader: load_frame-only
+  licence: MIT (gvlassis/california_housing; 1990 census block groups, public)
+  shape:
+  - 6000
+  - 9
+  sha256: 5a4a5d5d90575775a320d4bd2e88ce11b89501d27184b0a7b89b4153025a84a3
+  quirks:
+  - target MedHouseVal is censored at 5.00001 (about $500,001); 241 rows sit at the cap
+  - AveRooms, AveOccup and Population are heavy-tailed with extreme outliers
+  fits:
+  - regression-metrics-and-robust-losses
+  - ridge-regression-and-weight-decay
+  - feature-scaling
+gsm8k:
+  id: gsm8k
+  kind: hf
+  loader: load_frame-only
+  licence: MIT (openai/gsm8k, test split)
+  shape:
+  - 300
+  - 2
+  sha256: e35b83741b44db15cd43da1b959ee3427480bda6c00dc128e0c6b851bc16bb72
+  quirks:
+  - every answer ends with "#### <number>", the final numeric answer
+  - answers contain worked steps with <<calculator>> annotations
+  fits:
+  - pass-k-and-majority-voting
+gutenberg_frankenstein:
+  id: gutenberg_frankenstein
+  kind: hf
+  loader: load_text
+  licence: public-domain text (sedthh/gutenberg_english, MIT card); Mary Shelley, 1818
+  shape:
+  - 1185
+  - 1
+  sha256: 4c26c3b21a32ffd7dce83831e07f9069276eb64969b70f72f2eebaad6ed379ea
+  quirks:
+  - about 40 KB starting at Letter 1; real English word frequencies, punctuation, blank lines
+  fits:
+  - bpe-merge-training
+  - bpe-encode-and-decode
+  - word-and-character-tokenizers
+  - tf-idf-and-bm25
+  - retrieval-augmented-generation-pipeline
+gutenberg_pride_prejudice:
+  id: gutenberg_pride_prejudice
+  kind: hf
+  loader: load_text
+  licence: public-domain text (sedthh/gutenberg_english, MIT card); Jane Austen, 1813
+  shape:
+  - 1169
+  - 1
+  sha256: 5b368183f929865de9e68b8bea90cf2f9e6b61f3df8e4be9a7383e70094b08cc
+  quirks:
+  - about 40 KB starting at chapter 1 ("IT is a truth", a small-caps artefact); dialogue, quotes
+  fits:
+  - bpe-merge-training
+  - bpe-encode-and-decode
+  - word-and-character-tokenizers
+  - tf-idf-and-bm25
+  - retrieval-augmented-generation-pipeline
+gutenberg_walden:
+  id: gutenberg_walden
+  kind: hf
+  loader: load_text
+  licence: public-domain text (sedthh/gutenberg_english, MIT card); Henry David Thoreau, 1854
+  shape:
+  - 1104
+  - 1
+  sha256: ee9e986fdd95a7b17f487f25b29cbc29dddf2211aa2b18a073c37d82c795ab77
+  quirks:
+  - about 40 KB starting at "Economy"; long sentences, numbers and currency amounts
+  fits:
+  - bpe-merge-training
+  - word-and-character-tokenizers
+  - tf-idf-and-bm25
+  - retrieval-augmented-generation-pipeline
