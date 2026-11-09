@@ -175,3 +175,70 @@ def test_bare_banned_name_does_not_match_same_named_attribute(tmp_path: Path) ->
     sub.write_text("import random\ndef f(rng, n):\n    return random.random()\n")
     findings = check_submission(sub, language="python", entry="f", banned_imports=["random"])
     assert [f.rule for f in findings] == ["banned-import"]
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "import dogma_data\n\ndef add(a, b):\n    return a + b\n",
+        "from dogma_data import synth\n\ndef add(a, b):\n    return a + b\n",
+        "from dogma_data.real import load\n\ndef add(a, b):\n    return a + b\n",
+        "import datasets\n\ndef add(a, b):\n    return a + b\n",
+        "from datasets import load_dataset\n\ndef add(a, b):\n    return a + b\n",
+        "import huggingface_hub\n\ndef add(a, b):\n    return a + b\n",
+        "from huggingface_hub import hf_hub_download\n\ndef add(a, b):\n    return a + b\n",
+    ],
+    ids=[
+        "dogma-data-import",
+        "dogma-data-from-import",
+        "dogma-data-submodule",
+        "datasets-import",
+        "datasets-from-import",
+        "huggingface-hub-import",
+        "huggingface-hub-from-import",
+    ],
+)
+def test_test_data_layer_is_banned_in_every_problem(tmp_path, source):
+    # The ban is platform-wide: an empty meta.yaml banned list must not allow it.
+    findings = _check(tmp_path, source, banned=())
+    assert _rules(findings) == ["banned-import"]
+    assert "test-data helpers" in findings[0].message
+    assert "download datasets" in findings[0].message
+    assert findings[0].line == 1
+
+
+def test_test_data_ban_reports_each_offending_line_once(tmp_path):
+    source = "import datasets\nfrom dogma_data import synth\n\ndef add(a, b):\n    return a + b\n"
+    assert [f.line for f in _check(tmp_path, source, banned=())] == [1, 2]
+
+
+def test_a_module_that_only_shares_a_prefix_is_not_banned(tmp_path):
+    source = "import dogma_datasets_tools\nimport datasetsx\n\ndef add(a, b):\n    return a + b\n"
+    assert _check(tmp_path, source, banned=()) == []
+
+
+def test_test_data_attribute_names_are_not_banned(tmp_path):
+    # Only imports count: a local variable or attribute named like the layer is fine.
+    source = "class Box:\n    datasets = 1\n\ndef add(a, b):\n    return a + b + Box.datasets\n"
+    assert _check(tmp_path, source, banned=()) == []
+
+
+def test_test_data_ban_applies_alongside_the_problem_ban(tmp_path):
+    source = "import numpy.linalg\nimport datasets\n\ndef add(a, b):\n    return a + b\n"
+    findings = _check(tmp_path, source)
+    assert [(f.rule, f.line) for f in findings] == [("banned-import", 1), ("banned-import", 2)]
+    assert "numpy.linalg" in findings[0].message
+    assert "test-data helpers" in findings[1].message
+
+
+def test_platform_ban_names_the_mistake_for_a_submodule_import(tmp_path):
+    findings = _check(tmp_path, "from dogma_data import synth\n\ndef add(a, b):\n    return a\n")
+    assert findings[0].message.startswith("submissions may not import test-data helpers")
+    assert "dogma_data" in findings[0].message
+
+
+def test_platform_ban_does_not_apply_to_sql(tmp_path):
+    findings = _check(
+        tmp_path, "SELECT 1;\n", language="sql", entry="query", name="submission.sql", banned=()
+    )
+    assert findings == []

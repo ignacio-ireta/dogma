@@ -7,11 +7,16 @@ small sources. Nothing here grades a submission; the integration step is the too
 from __future__ import annotations
 
 import importlib.util
+import json
+import subprocess
 import sys
 from pathlib import Path
 from types import ModuleType
 
 import pytest
+
+from dogma.grading.models import GradeReport, RunStatus
+from dogma.grading.models import TestResult as GradedTest
 
 SCRIPT = Path(__file__).resolve().parents[3] / "scripts" / "exercise_audit.py"
 
@@ -250,3 +255,238 @@ def test_the_precision_label_is_the_tightest_error_caught(audit: ModuleType) -> 
     assert audit._precision_label(rows) == "1e-06"
     assert audit._precision_label([{"epsilon": 1e-3, "verdict": "survived"}]) == "n/a"
     assert audit._precision_label([]) == "n/a"
+
+
+# --- salt and realism -----------------------------------------------------------------------------
+
+
+def _report(status: RunStatus, tests: tuple[GradedTest, ...] = ()) -> GradeReport:
+    return GradeReport(
+        attempt_id="a",
+        problem_id="t/x/p01-demo",
+        problem_version=1,
+        runtime="py-numpy",
+        status=status,
+        tests=tests,
+    )
+
+
+def _failure(file: str) -> GradeReport:
+    failed = GradedTest(
+        name=f"test_{file}_catches_bug", file=file, outcome="fail", message="shape mismatch"
+    )
+    return _report(RunStatus.FAILED, (failed,))
+
+
+@pytest.fixture
+def fake_grader(audit: ModuleType, monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, bool]]:
+    """A stand-in grader: a ``BUG`` source fails any suite whose file has a ``CATCH`` marker.
+
+    Returns the list that records ``(problem id, include_hidden)`` for every call.
+    """
+    calls: list[tuple[str, bool]] = []
+
+    def grade(problem: object, source: str, settings: object, *, include_hidden: bool = True):
+        path = problem.path  # type: ignore[attr-defined]
+        calls.append((problem.id, include_hidden))  # type: ignore[attr-defined]
+        public = (path / "test_public.py").read_text(encoding="utf-8")
+        hidden_file = path / "test_hidden.py"
+        hidden = hidden_file.read_text(encoding="utf-8") if hidden_file.is_file() else ""
+        if "BUG" in source and "CATCH" in public:
+            return _failure("public")
+        if include_hidden and "BUG" in source and "CATCH" in hidden:
+            return _failure("hidden")
+        return _report(RunStatus.PASSED)
+
+    monkeypatch.setattr(audit, "grade_source", grade)
+    return calls
+
+
+def _git(repo: Path, *args: str) -> None:
+    subprocess.run(
+        ["git", "-C", str(repo), "-c", "user.name=t", "-c", "user.email=t@example.com", *args],
+        check=True,
+        capture_output=True,
+    )
+
+
+@pytest.fixture
+def demo(audit: ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """A git repo with one problem at HEAD whose tests do not catch the BUG marker."""
+    root = tmp_path / "repo"
+    problem_dir = root / "content" / "t" / "x" / "problems" / "p01-demo"
+    problem_dir.mkdir(parents=True)
+    (problem_dir / "solution.py").write_text("def f(x):\n    return x\n", encoding="utf-8")
+    (problem_dir / "test_public.py").write_text("def test_example():\n    pass\n")
+    (problem_dir / "test_hidden.py").write_text("def test_base_hidden():\n    pass\n")
+    _git(root, "init", "-q")
+    _git(root, "add", "-A")
+    _git(root, "commit", "-q", "-m", "base")
+    monkeypatch.setattr(audit, "REPO", root)
+    problem = audit.Problem("t/x/p01-demo", problem_dir, "python", "f", 30, ())
+    monkeypatch.setattr(audit, "discover", lambda repo, only: [problem])  # no meta.yaml needed
+    return problem
+
+
+def _add_realism_test(problem: object) -> None:
+    hidden = problem.path / "test_hidden.py"  # type: ignore[attr-defined]
+    hidden.write_text(hidden.read_text(encoding="utf-8") + "# CATCH realistic data\n")
+
+
+def _wrong(tmp_path: Path, name: str = "wrong.py", body: str = "BUG") -> Path:
+    path = tmp_path / name
+    path.write_text(f"# {body}\ndef f(x):\n    return x + 1\n", encoding="utf-8")
+    return path
+
+
+def _rows(out: Path) -> list[dict]:
+    return [json.loads(line) for line in (out / "realism.jsonl").read_text().splitlines()]
+
+
+@pytest.mark.parametrize(
+    ("base", "new", "expected"),
+    [
+        ("survived", "killed_hidden", "killed"),
+        ("survived", "killed_public", "killed"),
+        ("survived", "survived", "survives"),
+        ("killed_hidden", "killed_hidden", "already_caught"),
+        ("killed_public", "survived", "already_caught"),
+        ("timeout", "survived", "error"),
+        ("survived", "error", "error"),
+    ],
+)
+def test_realism_verdicts(audit: ModuleType, base: str, new: str, expected: str) -> None:
+    assert audit.realism_verdict(base, new) == expected
+
+
+def test_a_wrong_solution_the_base_missed_is_killed(
+    audit: ModuleType, demo, tmp_path: Path, fake_grader
+) -> None:
+    _add_realism_test(demo)
+    out = tmp_path / "out"
+    wrong = _wrong(tmp_path)
+    assert audit.main(["realism", "--out", str(out), demo.id, str(wrong)]) == 0
+    verdicts = {row["kind"]: row["verdict"] for row in _rows(out)}
+    assert verdicts == {"reference": "survived", "wrong": "killed"}
+
+
+def test_a_wrong_solution_the_base_already_catches_fails_the_check(
+    audit: ModuleType, demo, tmp_path: Path, fake_grader
+) -> None:
+    _add_realism_test(demo)
+    _git(audit.REPO, "add", "-A")
+    _git(audit.REPO, "commit", "-q", "-m", "base already catches")
+    out = tmp_path / "out"
+    assert audit.main(["realism", "--out", str(out), demo.id, str(_wrong(tmp_path))]) == 1
+    (wrong_row,) = [row for row in _rows(out) if row["kind"] == "wrong"]
+    assert wrong_row["verdict"] == "already_caught"
+
+
+def test_a_wrong_solution_that_passes_the_new_tests_survives(
+    audit: ModuleType, demo, tmp_path: Path, fake_grader, capsys
+) -> None:
+    _add_realism_test(demo)
+    out = tmp_path / "out"
+    survivor = _wrong(tmp_path, body="ok")
+    assert audit.main(["realism", "--out", str(out), demo.id, str(survivor)]) == 1
+    assert "wrong.py: survives" in capsys.readouterr().out
+
+
+def test_every_wrong_solution_must_be_killed(
+    audit: ModuleType, demo, tmp_path: Path, fake_grader
+) -> None:
+    _add_realism_test(demo)
+    out = tmp_path / "out"
+    killed = _wrong(tmp_path, "a.py")
+    survivor = _wrong(tmp_path, "b.py", body="ok")
+    assert audit.main(["realism", "--out", str(out), demo.id, str(killed), str(survivor)]) == 1
+
+
+def test_a_failing_reference_fails_the_check(
+    audit: ModuleType, demo, tmp_path: Path, fake_grader, capsys
+) -> None:
+    _add_realism_test(demo)
+    demo.solution.write_text("# BUG\ndef f(x):\n    return x\n", encoding="utf-8")
+    out = tmp_path / "out"
+    assert audit.main(["realism", "--out", str(out), demo.id, str(_wrong(tmp_path))]) == 1
+    assert "reference solution.py" in capsys.readouterr().out
+
+
+def test_a_blind_solution_must_pass_the_new_tests(
+    audit: ModuleType, demo, tmp_path: Path, fake_grader
+) -> None:
+    _add_realism_test(demo)
+    out = tmp_path / "out"
+    wrong = str(_wrong(tmp_path))
+    blind_ok = tmp_path / "blind_ok.py"
+    blind_ok.write_text("def f(x):\n    return x\n", encoding="utf-8")
+    blind_bad = tmp_path / "blind_bad.py"
+    blind_bad.write_text("# BUG\ndef f(x):\n    return x\n", encoding="utf-8")
+    args = ["realism", "--out", str(out), "--blind"]
+    assert audit.main([*args, str(blind_ok), demo.id, wrong]) == 0
+    assert audit.main([*args, str(blind_bad), demo.id, wrong]) == 1
+
+
+def test_a_base_without_hidden_tests_is_graded_on_public_only(
+    audit: ModuleType, demo, tmp_path: Path, fake_grader
+) -> None:
+    _git(audit.REPO, "rm", "-q", "content/t/x/problems/p01-demo/test_hidden.py")
+    _git(audit.REPO, "commit", "-q", "-m", "no hidden tests at base")
+    (demo.path / "test_hidden.py").write_text(
+        "def test_realistic():\n    pass\n# CATCH realistic data\n", encoding="utf-8"
+    )
+    out = tmp_path / "out"
+    assert audit.main(["realism", "--out", str(out), demo.id, str(_wrong(tmp_path))]) == 0
+    assert ("t/x/p01-demo", False) in fake_grader
+    (wrong_row,) = [row for row in _rows(out) if row["kind"] == "wrong"]
+    assert (wrong_row["base"], wrong_row["verdict"]) == ("survived", "killed")
+
+
+def test_unknown_revision_and_missing_files_are_usage_errors(
+    audit: ModuleType, demo, tmp_path: Path, fake_grader
+) -> None:
+    _add_realism_test(demo)
+    wrong = str(_wrong(tmp_path))
+    out = tmp_path / "out"
+    assert audit.main(["realism", "--out", str(out), "--base", "no-such-rev", demo.id, wrong]) == 2
+    assert audit.main(["realism", "--out", str(out), demo.id, str(tmp_path / "nope.py")]) == 2
+    assert audit.main(["realism", "--out", str(out), demo.id]) == 2
+
+
+def test_rows_are_reused_until_a_file_or_a_suite_changes(
+    audit: ModuleType, demo, tmp_path: Path, fake_grader
+) -> None:
+    _add_realism_test(demo)
+    out = tmp_path / "out"
+    wrong = str(_wrong(tmp_path))
+    argv = ["realism", "--out", str(out), demo.id, wrong]
+    assert audit.main(argv) == 0
+    graded = len(fake_grader)
+    assert audit.main(argv) == 0
+    assert len(fake_grader) == graded  # nothing changed: every row is reused
+    demo.path.joinpath("test_public.py").write_text("def test_example():\n    pass\n# new\n")
+    assert audit.main(argv) == 0
+    assert len(fake_grader) > graded  # the public suite changed: the rows are graded again
+
+
+def test_seeds_set_the_data_salt_to_each_seed(
+    audit: ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    problem_dir = tmp_path / "problem"
+    problem_dir.mkdir()
+    (problem_dir / "solution.py").write_text("def f(x):\n    return x\n", encoding="utf-8")
+    (problem_dir / "test_public.py").write_text("def test_a():\n    pass\n", encoding="utf-8")
+    (problem_dir / "test_hidden.py").write_text("def test_b():\n    pass\n", encoding="utf-8")
+    problem = audit.Problem("t/x/p01", problem_dir, "python", "f", 30, ())
+    monkeypatch.setattr(audit, "SEEDS", (1, 2, 3))
+    envs: list[dict[str, str]] = []
+
+    def fake_run(command, **kwargs):
+        envs.append(kwargs["env"])
+        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(audit.subprocess, "run", fake_run)
+
+    assert audit.cmd_seeds([problem], tmp_path / "out", workers=1) == 0
+    assert sorted(env["DOGMA_DATA_SALT"] for env in envs) == ["1", "2", "3"]
+    assert all(env["PYTHONHASHSEED"] == env["DOGMA_DATA_SALT"] for env in envs)

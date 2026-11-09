@@ -10,6 +10,7 @@ CONTENT_PREREQ_CYCLE (the requires graph has a cycle).
 from __future__ import annotations
 
 import re
+import sys
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -46,6 +47,29 @@ LANGUAGE_PROBLEM_FILES = {
     "sql": ("starter.sql", "solution.sql"),
 }
 PYTHON_ENTRY_FILES = ("starter.py", "solution.py")
+# Tests may import the stdlib (any module in sys.stdlib_module_names) and these top-level packages
+# (CONTENT_SPEC section 6.4). torch is added only for py-torch problems.
+TEST_IMPORT_ALLOWED = frozenset(
+    {
+        "numpy",
+        "scipy",
+        "pandas",
+        "sklearn",
+        "statsmodels",
+        "duckdb",
+        "pytest",
+        "hypothesis",
+        "submission",
+        "dogma_data",
+    }
+)
+TEST_IMPORT_TORCH_RUNTIME = "py-torch"
+# Allowed top-level packages whose listed submodules are still forbidden, with the reason.
+TEST_IMPORT_FORBIDDEN = {
+    "statsmodels.api": "it takes about 3 s to import; use statsmodels.datasets.<name> or a module",
+    "datasets": "dataset downloads belong to the sync script; tests read the vendored files",
+    "huggingface_hub": "downloads belong to the sync script; tests read the vendored files",
+}
 CARD_MIN, CARD_MAX = 4, 8
 QUESTION_MIN, QUESTION_MAX = 2, 4
 PROBLEMS_MIN, PROBLEMS_MAX = 1, 3
@@ -527,7 +551,8 @@ def _check_python(problem: ProblemPackage) -> list[Issue]:
         if name == "starter.py":
             issues.extend(_check_starter(problem, path, facts, entry))
         if name.startswith("test_"):
-            issues.extend(_check_test_module(name, path, facts, entry, language))
+            runtime = meta.runtime if meta is not None else None
+            issues.extend(_check_test_module(name, path, facts, entry, language, runtime=runtime))
     return issues
 
 
@@ -556,7 +581,13 @@ def _check_starter(
 
 
 def _check_test_module(
-    name: str, path: str, facts: PythonFacts, entry: str | None, language: str | None
+    name: str,
+    path: str,
+    facts: PythonFacts,
+    entry: str | None,
+    language: str | None,
+    *,
+    runtime: str | None,
 ) -> list[Issue]:
     issues: list[Issue] = []
     if language == "sql" and "submission.sql" not in facts.string_constants:
@@ -583,6 +614,12 @@ def _check_test_module(
                 f"{name} must import the learner's code: from submission import {entry}",
             )
         )
+    for module in sorted(facts.imported_modules):
+        reason = _test_import_problem(module, runtime)
+        if reason is not None:
+            issues.append(
+                Issue("TEST_IMPORT_NOT_ALLOWED", path, f"{name} imports {module!r}: {reason}")
+            )
     minimum = PUBLIC_TESTS_MIN if name == "test_public.py" else HIDDEN_TESTS_MIN
     found = len(facts.test_functions)
     if found < minimum:
@@ -592,6 +629,22 @@ def _check_test_module(
             )
         )
     return issues
+
+
+def _test_import_problem(module: str, runtime: str | None) -> str | None:
+    """Why a test may not import ``module``, or None when it may (CONTENT_SPEC section 6.4)."""
+    for banned, reason in TEST_IMPORT_FORBIDDEN.items():
+        if module == banned or module.startswith(banned + "."):
+            return f"forbidden in tests: {reason}"
+    top = module.split(".", 1)[0]
+    if top == "solution" or top in sys.stdlib_module_names or top in TEST_IMPORT_ALLOWED:
+        return None  # solution has its own code, PROBLEM_TEST_SOLUTION_IMPORT
+    if top == "torch" and runtime == TEST_IMPORT_TORCH_RUNTIME:
+        return None
+    return (
+        "not allowed in tests: use the stdlib, numpy, scipy, pandas, scikit-learn, statsmodels, "
+        "duckdb, pytest, hypothesis or dogma_data (torch only for py-torch problems)"
+    )
 
 
 def _check_not_case(pkg: TopicPackage) -> list[Issue]:

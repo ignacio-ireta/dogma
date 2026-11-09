@@ -6,6 +6,8 @@ import shutil
 from collections.abc import Callable
 from pathlib import Path
 
+import pytest
+
 from dogma.content.loader import load_topic
 from dogma.content.schemas import CorePath, Syllabus
 from dogma.content.validate import (
@@ -407,3 +409,104 @@ def test_a_sources_path_resolves_under_the_repository_sources(
     assert "SOURCE_NOT_FOUND" not in _topic_codes(alpha, syllabus)
     _set_sources(alpha, "source: interview-prep/frameworks/Missing.md")
     assert "SOURCE_NOT_FOUND" in _topic_codes(alpha, syllabus)
+
+
+# --- test import allowlist (CONTENT_SPEC section 6.4) --------------------------------------------
+
+
+def _test_import_issues(
+    topic: Path, syllabus: Syllabus, *, file: str = "test_hidden.py", imports: str
+) -> list[Issue]:
+    path = topic / "problems" / "p01-double-all" / file
+    path.write_text(imports + path.read_text(encoding="utf-8"), encoding="utf-8")
+    return [
+        issue
+        for issue in validate_topic(load_topic(topic), syllabus)
+        if issue.code == "TEST_IMPORT_NOT_ALLOWED"
+    ]
+
+
+def _set_runtime(topic: Path, runtime: str) -> None:
+    meta = topic / "problems" / "p01-double-all" / "meta.yaml"
+    text = meta.read_text(encoding="utf-8")
+    meta.write_text(text.replace("runtime: py-numpy", f"runtime: {runtime}"), encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    "imports",
+    [
+        "import math\nimport json\nfrom pathlib import Path\n",
+        "import numpy.linalg\nimport scipy.stats\nimport pandas as pd\n",
+        "import sklearn.linear_model\nfrom statsmodels.stats import proportion\n",
+        "import statsmodels.datasets.spector\nimport duckdb\nimport hypothesis.extra.numpy\n",
+        "from dogma_data import synth\nfrom dogma_data.real import load\n",
+    ],
+    ids=["stdlib", "numpy-scipy-pandas", "sklearn-statsmodels", "datasets-module", "dogma-data"],
+)
+def test_allowed_test_imports_pass(alpha: Path, syllabus: Syllabus, imports: str) -> None:
+    assert _test_import_issues(alpha, syllabus, imports=imports) == []
+
+
+@pytest.mark.parametrize(
+    "imports",
+    ["import requests\n", "from scikit_image import io\n", "import dogma\n"],
+    ids=["third-party", "scikit-image", "dogma-itself"],
+)
+def test_a_module_off_the_allowlist_is_reported_by_name(
+    alpha: Path, syllabus: Syllabus, imports: str
+) -> None:
+    (issue,) = _test_import_issues(alpha, syllabus, imports=imports)
+    module = imports.split()[1]
+    assert module in issue.message
+    assert "not allowed in tests" in issue.message
+
+
+def test_statsmodels_api_is_forbidden_even_though_statsmodels_is_allowed(
+    alpha: Path, syllabus: Syllabus
+) -> None:
+    (issue,) = _test_import_issues(alpha, syllabus, imports="import statsmodels.api as sm\n")
+    assert "statsmodels.api" in issue.message
+    assert "statsmodels.datasets" in issue.message
+
+
+def test_statsmodels_api_from_import_is_forbidden(alpha: Path, syllabus: Syllabus) -> None:
+    (issue,) = _test_import_issues(alpha, syllabus, imports="from statsmodels.api import OLS\n")
+    assert "statsmodels.api" in issue.message
+
+
+@pytest.mark.parametrize(
+    "imports",
+    ["import datasets\n", "from datasets import load_dataset\n"],
+    ids=["import", "from-import"],
+)
+def test_huggingface_datasets_are_forbidden_in_tests(
+    alpha: Path, syllabus: Syllabus, imports: str
+) -> None:
+    (issue,) = _test_import_issues(alpha, syllabus, imports=imports)
+    assert "forbidden in tests" in issue.message
+    assert "vendored" in issue.message
+
+
+def test_huggingface_hub_is_forbidden_in_tests(alpha: Path, syllabus: Syllabus) -> None:
+    (issue,) = _test_import_issues(alpha, syllabus, imports="import huggingface_hub\n")
+    assert "huggingface_hub" in issue.message
+    assert "forbidden in tests" in issue.message
+
+
+def test_torch_is_refused_for_a_numpy_problem(alpha: Path, syllabus: Syllabus) -> None:
+    (issue,) = _test_import_issues(alpha, syllabus, imports="import torch\n")
+    assert "torch" in issue.message
+
+
+def test_torch_is_allowed_for_a_py_torch_problem(alpha: Path, syllabus: Syllabus) -> None:
+    _set_runtime(alpha, "py-torch")
+    assert _test_import_issues(alpha, syllabus, imports="import torch.nn.functional\n") == []
+
+
+def test_solution_import_keeps_its_own_issue_code(alpha: Path, syllabus: Syllabus) -> None:
+    # solution is forbidden by PROBLEM_TEST_SOLUTION_IMPORT, not the allowlist (no double report).
+    path = alpha / "problems" / "p01-double-all" / "test_hidden.py"
+    path.write_text("import solution\n" + path.read_text(encoding="utf-8"), encoding="utf-8")
+    codes = _codes(validate_topic(load_topic(alpha), syllabus))
+    assert "PROBLEM_TEST_SOLUTION_IMPORT" in codes
+    assert "TEST_IMPORT_NOT_ALLOWED" not in codes
