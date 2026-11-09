@@ -189,8 +189,10 @@ Therefore:
   independently (pandas over the same fixtures) or a small hard-coded table. Compare
   order-insensitively unless the task requires `ORDER BY`.
 - Tests **never** import `solution.py`. They may only use the stdlib, numpy, scipy, pandas,
-  scikit-learn, statsmodels, duckdb, pytest and hypothesis, plus torch for `py-torch` problems
-  when its optional dependency group is selected.
+  scikit-learn, statsmodels, duckdb, pytest, hypothesis and `dogma_data` (§6.6), plus torch for
+  `py-torch` problems when its optional dependency group is selected. Validation enforces this
+  (`TEST_IMPORT_NOT_ALLOWED`) and also refuses `statsmodels.api` (a 3 s import: use
+  `statsmodels.datasets.<name>` or a specific module), `datasets` and `huggingface_hub`.
 - **Name each test after the behaviour it checks** (`test_zero_vector_raises_value_error`). The
   name is what the learner sees for a failing hidden test.
 - Give assertions a message that names the *kind* of mistake (`err_msg="shape mismatch: …"`).
@@ -216,6 +218,55 @@ Therefore:
 - `banned_imports`: a bare name (`random`, `bisect`) bans the *import* only. A dotted name
   (`numpy.linalg`, `scipy.stats.ttest_ind`) also bans attribute access to its last component.
 - Fast: the whole run takes under 10 s on a laptop.
+
+### 6.6 Test data
+
+Bulk random data hides failures that real data exposes (overflow on large scores, gradient descent
+on mixed scales, autocorrelation, ties from rounding) and teaches the wrong intuition (scaling
+never matters, AUC is always 0.5). Where the algorithm's behaviour depends on the data's
+structure, use the test-only package `dogma_data` ([DATASETS.md](DATASETS.md), ADR-0020).
+Submissions can't import it: the static check rejects it in every problem.
+
+**Choose the data by what the test proves:**
+
+| Kind | Use it when | Oracle |
+|---|---|---|
+| Hand-built | An exact contract rule: empty, ties, overflow, collinear, invalid input | Literal values |
+| Real (`dogma_data.load`, `load_series`, `load_frame`) | Behaviour depends on real structure: scales, spectra, autocorrelation, correlated features, rounding ties, skew, NaN | A library oracle on the same data, or a metamorphic invariant |
+| Semi-synthetic | A known truth on realistic inputs: real `X`, then `y = X @ beta + noise` written inline | The known truth plus a library oracle |
+| Realistic synthetic (`dogma_data.synth`) | No real set fits, or a property must be controlled: AUC, imbalance, tail weight, outlier channels | A library or reference oracle |
+
+**Realism checklist.** Ask which of these the algorithm is sensitive to, and make sure at least
+one hidden test exercises each that applies: features on scales spanning orders of magnitude;
+strongly correlated or near-collinear features; heavy tails and outliers; uneven noise; rare
+classes (1:100); scores that carry signal (AUC 0.7–0.95) and tied scores; values rounded to a few
+decimals (ties, duplicates); NaN gaps; autocorrelation, season and trend; skewed users or
+categories; dirty categorical keys (case, stray spaces).
+
+**Robustness rules:**
+
+- Compute expected values at runtime from an oracle on the same data. Never hard-code a number
+  read off a random draw or a real dataset; literal expectations belong to hand-built cases.
+- A statistical assertion states its bound (binomial or CLT, at least 4 standard errors).
+- Seed data with `dogma_data.rng("<problem id>:<purpose>:<i>")`, not `range(8)`. The exercise
+  audit varies the draw through `DOGMA_DATA_SALT`, so a test that passes only for one lucky draw
+  is caught. Hypothesis stays seeded by the runner.
+- Load real data in a module-scoped fixture, never at import time: a collection error would show
+  as a hidden failure that names no mistake.
+- Every realism test maps to a sentence in the Contract or Constraints of `problem.md`. If the
+  behaviour is only implied, add the sentence (and bump the version) or report it; don't test it
+  silently. Pick tolerances the conditioning allows: on longley (cond ≈ 4.9e9) compare fitted
+  values or the objective, not coefficients at `rtol=1e-6`.
+- Public tests stay literal (they mirror the examples). The one exception is a self-describing
+  call such as `load("iris")`.
+- Keep the whole run under 10 s with a naive correct solution, not only the reference. Slice
+  large text (a pure-Python BPE on 1 MB times out).
+- Name the dataset in a `problem.md` example and list the realism families under "Done looks
+  like" (families, never values). Show one real-data failure in the lesson's "Where it breaks",
+  with rounded numbers reproduced by a snippet (BLAS builds differ in the last digits).
+- Prove each realism test earns its place: a hand-written realistic wrong solution must pass the
+  old tests and fail the new ones (`scripts/exercise_audit.py realism`), and the references must
+  survive `exercise_audit.py seeds`.
 
 ### 6.5 `hints.md`
 
