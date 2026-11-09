@@ -43,6 +43,9 @@ dev = [
     "types-PyYAML>=6.0",
     "types-psutil>=6.1",
 ]
+hf = [
+    "datasets==5.1.0",
+]
 torch = [
     "torch==2.14.1",
 ]
