@@ -42,7 +42,7 @@
   columns: [TEXT]
   filter: {column: METADATA, contains: '"title": "Pride and Prejudice"'}
   rows: {start: 0, stop: 1}
-  text: {column: TEXT, max_chars: 40000}
+  text: {column: TEXT, max_chars: 40000, start_after: is a truth universally acknowledged}
   format: txt
 - id: gutenberg_frankenstein
   repo: sedthh/gutenberg_english
@@ -57,7 +57,7 @@
   columns: [TEXT]
   filter: {column: METADATA, contains: '"title": "Frankenstein; Or'}
   rows: {start: 0, stop: 1}
-  text: {column: TEXT, max_chars: 40000}
+  text: {column: TEXT, max_chars: 40000, start_after: You will rejoice to hear that no disaster}
   format: txt
 - id: gutenberg_walden
   repo: sedthh/gutenberg_english
@@ -72,5 +72,5 @@
   columns: [TEXT]
   filter: {column: METADATA, contains: '"title": "Walden, and'}
   rows: {start: 0, stop: 1}
-  text: {column: TEXT, max_chars: 40000}
+  text: {column: TEXT, max_chars: 40000, start_after: When I wrote the following pages}
   format: txt

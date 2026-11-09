@@ -219,6 +219,84 @@ def test_truncate_refuses_when_there_is_no_line_boundary() -> None:
         sync.truncate_at_line("x" * 50, 10)
 
 
+def test_start_at_marker_begins_at_the_marker_line() -> None:
+    text = "contents\nlist of stuff\nIT is a truth universally, that\nmore text\n"
+    assert (
+        sync.start_at_marker(text, "is a truth universally")
+        == "IT is a truth universally, that\nmore text\n"
+    )
+
+
+def test_start_at_marker_uses_the_first_occurrence() -> None:
+    text = "one marker here\nand marker again\n"
+    assert sync.start_at_marker(text, "marker") == "one marker here\nand marker again\n"
+
+
+def test_start_at_marker_at_the_very_start_keeps_everything() -> None:
+    assert sync.start_at_marker("first line\nsecond\n", "first") == "first line\nsecond\n"
+
+
+def test_start_at_marker_missing_is_an_error() -> None:
+    with pytest.raises(sync.SyncError, match="not in the text"):
+        sync.start_at_marker("nothing relevant\n", "absent phrase")
+
+
+def test_start_after_is_parsed_and_must_be_a_string() -> None:
+    entry = sync.parse_entry(
+        raw_entry(
+            format="txt",
+            columns=["TEXT"],
+            text={"column": "TEXT", "max_chars": 500, "start_after": "opening line"},
+        )
+    )
+    assert entry.text == sync.TextLimit(column="TEXT", max_chars=500, start_after="opening line")
+    with pytest.raises(sync.ManifestError, match="start_after"):
+        sync.parse_entry(
+            raw_entry(
+                format="txt",
+                columns=["TEXT"],
+                text={"column": "TEXT", "max_chars": 5, "start_after": 3},
+            )
+        )
+
+
+def test_render_entry_starts_at_marker_then_applies_max_chars_at_a_line_boundary() -> None:
+    entry = sync.parse_entry(
+        raw_entry(
+            format="txt",
+            columns=["TEXT"],
+            text={"column": "TEXT", "max_chars": 30, "start_after": "beta"},
+        )
+    )
+    source = "alpha\ncontents\nbeta line\ngamma line\ndelta line\nepsilon\n"
+    data = sync.render_entry(entry, [{"TEXT": source}])
+    # Starts at "beta line"; the limit of 30 chars cuts after "gamma line\n" (line boundary).
+    assert data.decode() == "beta line\ngamma line\n"
+
+
+def test_render_entry_marker_missing_fails_the_entry() -> None:
+    entry = sync.parse_entry(
+        raw_entry(
+            format="txt",
+            columns=["TEXT"],
+            text={"column": "TEXT", "max_chars": 30, "start_after": "zeta"},
+        )
+    )
+    with pytest.raises(sync.SyncError, match="zeta"):
+        sync.render_entry(entry, [{"TEXT": "alpha\nbeta\n"}])
+
+
+def test_describe_selection_mentions_the_start_marker() -> None:
+    entry = sync.parse_entry(
+        raw_entry(
+            format="txt",
+            columns=["TEXT"],
+            text={"column": "TEXT", "max_chars": 9, "start_after": "beta"},
+        )
+    )
+    assert "'beta'" in sync.describe_selection(entry)
+
+
 class _Counting:
     """Iterable that records how many rows were pulled, to prove early stop."""
 

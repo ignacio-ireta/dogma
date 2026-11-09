@@ -109,6 +109,7 @@ class RowWindow:
 class TextLimit:
     column: str
     max_chars: int
+    start_after: str | None = None
 
 
 @dataclass(frozen=True)
@@ -193,6 +194,14 @@ def normalise_text(text: str) -> str:
 
 def normalise_value(value: Any) -> Any:
     return normalise_text(value) if isinstance(value, str) else value
+
+
+def start_at_marker(text: str, marker: str) -> str:
+    """Start at the line holding the first occurrence of marker (both are NFC-normalised)."""
+    index = text.find(normalise_text(marker))
+    if index < 0:
+        raise SyncError(f"start_after marker {marker!r} is not in the text")
+    return text[text.rfind("\n", 0, index) + 1 :]
 
 
 def truncate_at_line(text: str, max_chars: int) -> str:
@@ -300,10 +309,11 @@ def _row_filter(raw: Mapping[str, Any]) -> Filter | None:
 def _text_limit(raw: Mapping[str, Any]) -> TextLimit | None:
     if "text" not in raw:
         return None
-    value = _mapping(raw, "text", frozenset({"column", "max_chars"}))
+    value = _mapping(raw, "text", frozenset({"column", "max_chars", "start_after"}))
     column = _required_str(value, "column")
     max_chars = _int_in(value.get("max_chars"), "text.max_chars", 1, HARD_MAX_BYTES)
-    return TextLimit(column=column, max_chars=max_chars)
+    start_after = _optional_str(value, "start_after")
+    return TextLimit(column=column, max_chars=max_chars, start_after=start_after)
 
 
 def parse_entry(raw: object) -> Entry:
@@ -420,6 +430,8 @@ def render_entry(entry: Entry, rows: Sequence[Mapping[str, Any]]) -> bytes:
     if entry.text is not None:
         for record in records:
             value = record[entry.text.column]
+            if entry.text.start_after is not None:
+                value = start_at_marker(value, entry.text.start_after)
             record[entry.text.column] = truncate_at_line(value, entry.text.max_chars)
     if entry.format == "csv":
         content = render_csv(columns, records)
@@ -448,7 +460,14 @@ def describe_selection(entry: Entry) -> str:
     if entry.rows is not None:
         parts.append(f"rows {entry.rows.start} to {entry.rows.stop} of the (filtered) split")
     if entry.text is not None:
-        parts.append(f"{entry.text.column} cut at a line boundary within {entry.text.max_chars}")
+        start = (
+            f", starting at the line with {entry.text.start_after!r}"
+            if entry.text.start_after
+            else ""
+        )
+        parts.append(
+            f"{entry.text.column} cut at a line boundary within {entry.text.max_chars}{start}"
+        )
     return "; ".join(parts) + "."
 
 
