@@ -1,0 +1,56 @@
+{
+  "adult": {
+    "bytes": 753785,
+    "file": "data/hf/adult.csv",
+    "licence": "cc0-1.0",
+    "repo": "scikit-learn/adult-census-income",
+    "revision": "fbeef6ec0e6fd88a5028b94683144000a6b380d5",
+    "rows": 6000,
+    "sha256": "28478a37cf615753b768383db4afd28bf879e4afe7e85d0e1b5f025fb9e6b749"
+  },
+  "california_housing": {
+    "bytes": 550099,
+    "file": "data/hf/california_housing.csv",
+    "licence": "mit",
+    "repo": "gvlassis/california_housing",
+    "revision": "17110e600427385a20e8358b00adc9b032d185ff",
+    "rows": 6000,
+    "sha256": "71cb820acb325c51102fb5ecf4eaada24fd588335100860624a765009161b6da"
+  },
+  "gsm8k": {
+    "bytes": 168656,
+    "file": "data/hf/gsm8k.jsonl",
+    "licence": "mit",
+    "repo": "openai/gsm8k",
+    "revision": "740312add88f781978c0658806c59bc2815b9866",
+    "rows": 300,
+    "sha256": "b703002569557788476f54cf558078963054d3ad5b77495172556a14ac9fcf8b"
+  },
+  "gutenberg_frankenstein": {
+    "bytes": 40076,
+    "file": "data/hf/gutenberg_frankenstein.txt",
+    "licence": "mit",
+    "repo": "sedthh/gutenberg_english",
+    "revision": "28973b04f28fd7be4a6186a042bc26159d4366ca",
+    "rows": 1,
+    "sha256": "95e4e92f3168fffeb9daeca98016faac1d12a39e1dbb0fec7d1ef98536f3a614"
+  },
+  "gutenberg_pride_prejudice": {
+    "bytes": 40749,
+    "file": "data/hf/gutenberg_pride_prejudice.txt",
+    "licence": "mit",
+    "repo": "sedthh/gutenberg_english",
+    "revision": "28973b04f28fd7be4a6186a042bc26159d4366ca",
+    "rows": 1,
+    "sha256": "d7be5e840fef8d98bdad5df140a69234dea47addf85fccc585e7107177a73ab3"
+  },
+  "gutenberg_walden": {
+    "bytes": 40112,
+    "file": "data/hf/gutenberg_walden.txt",
+    "licence": "mit",
+    "repo": "sedthh/gutenberg_english",
+    "revision": "28973b04f28fd7be4a6186a042bc26159d4366ca",
+    "rows": 1,
+    "sha256": "0342c730620483c3fe7f5208f469a038dd2f456900ad325a29b3fa775a0e3981"
+  }
+}

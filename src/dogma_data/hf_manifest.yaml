@@ -1,0 +1,76 @@
+# Pinned HuggingFace snapshots for the dogma_data test layer.
+# Sync: uv run --frozen --isolated --group hf python -I scripts/sync_hf_datasets.py [--only ID]
+# Offline check: uv run --frozen python scripts/sync_hf_datasets.py --check
+# Licences are checked against the card at `revision` and the policy in the sync script.
+- id: gsm8k
+  repo: openai/gsm8k
+  revision: 740312add88f781978c0658806c59bc2815b9866
+  config: main
+  split: test
+  licence: mit
+  columns: [question, answer]
+  rows: {start: 0, stop: 300}
+  format: jsonl
+- id: adult
+  repo: scikit-learn/adult-census-income
+  revision: fbeef6ec0e6fd88a5028b94683144000a6b380d5
+  split: train
+  licence: cc0-1.0
+  # Rows 0-4000 are 61% >50K (the file's head is not representative); 8000-14000 is ~19%.
+  rows: {start: 8000, stop: 14000}
+  format: csv
+- id: california_housing
+  repo: gvlassis/california_housing
+  revision: 17110e600427385a20e8358b00adc9b032d185ff
+  split: train
+  licence: mit
+  rows: {start: 0, stop: 6000}
+  format: csv
+# Three public-domain books (published before 1900) from one 335 MB shard of the English
+# Gutenberg dump. The shard is read once (streamed); the filter keeps the single catalogue row
+# for each title and the text is cut at a line boundary near 40 KB.
+- id: gutenberg_pride_prejudice
+  repo: sedthh/gutenberg_english
+  revision: 28973b04f28fd7be4a6186a042bc26159d4366ca
+  split: train
+  data_files: [data/train-00000-of-00037-f5fce855b93d2d02.parquet]
+  licence: mit
+  notice: >-
+    Project Gutenberg eBook text (Jane Austen, 1813). The source card lists MIT for the dataset
+    and warns that some books may be under copyright elsewhere; only titles published before 1900
+    were selected.
+  columns: [TEXT]
+  filter: {column: METADATA, contains: '"title": "Pride and Prejudice"'}
+  rows: {start: 0, stop: 1}
+  text: {column: TEXT, max_chars: 40000}
+  format: txt
+- id: gutenberg_frankenstein
+  repo: sedthh/gutenberg_english
+  revision: 28973b04f28fd7be4a6186a042bc26159d4366ca
+  split: train
+  data_files: [data/train-00000-of-00037-f5fce855b93d2d02.parquet]
+  licence: mit
+  notice: >-
+    Project Gutenberg eBook text (Mary Shelley, 1818). The source card lists MIT for the dataset
+    and warns that some books may be under copyright elsewhere; only titles published before 1900
+    were selected.
+  columns: [TEXT]
+  filter: {column: METADATA, contains: '"title": "Frankenstein; Or'}
+  rows: {start: 0, stop: 1}
+  text: {column: TEXT, max_chars: 40000}
+  format: txt
+- id: gutenberg_walden
+  repo: sedthh/gutenberg_english
+  revision: 28973b04f28fd7be4a6186a042bc26159d4366ca
+  split: train
+  data_files: [data/train-00000-of-00037-f5fce855b93d2d02.parquet]
+  licence: mit
+  notice: >-
+    Project Gutenberg eBook text (Henry David Thoreau, 1854). The source card lists MIT for the
+    dataset and warns that some books may be under copyright elsewhere; only titles published
+    before 1900 were selected.
+  columns: [TEXT]
+  filter: {column: METADATA, contains: '"title": "Walden, and'}
+  rows: {start: 0, stop: 1}
+  text: {column: TEXT, max_chars: 40000}
+  format: txt
