@@ -22,3 +22,24 @@ def test_todo_hidden_small_magnitudes_are_stable():
 
 def test_todo_hidden_inputs_are_not_mutated():
     todo_entry()  # TODO: check the arguments are unchanged after the call
+
+# Real or semi-synthetic data (CONTENT_SPEC §6.6): uncomment to use. Load it in module-scoped
+# fixtures, never at import, and compare with a library oracle computed on the same arrays.
+# import numpy as np
+# import pytest
+# from dogma_data import load, rng, synth
+#
+#
+# @pytest.fixture(scope="module")
+# def real_features():
+#     return load("breast_cancer").X  # raw, unscaled: scales span several orders of magnitude
+#
+#
+# @pytest.fixture(scope="module")
+# def mixed_scales():
+#     return synth.correlated_mixed_scale(rng("p01-todo:mixed:0"), 200, 8)
+#
+#
+# def test_todo_hidden_on_real_features(real_features):
+#     got = todo_entry(real_features)  # TODO: compare with an oracle on the same array
+#     assert np.isfinite(got).all()

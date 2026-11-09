@@ -18,8 +18,19 @@ Usage (the torch group is needed for the py-torch runtime)::
     uv run --frozen --group torch python scripts/exercise_audit.py report    --out DIR
     uv run --frozen --group torch python scripts/exercise_audit.py survivors --out DIR
     uv run --frozen --group torch python scripts/exercise_audit.py witness   --out DIR ID FILE
+    uv run --frozen --group torch python scripts/exercise_audit.py realism  --out DIR ID WRONG...
+        (optional: --base REV, default HEAD; --blind FILE)
 
 ``--only PREFIX`` (repeatable) limits a command to problems whose id starts with PREFIX.
+
+``seeds`` also sets ``DOGMA_DATA_SALT`` to the seed, so tests that draw data through
+``dogma_data.rng`` see a different draw per run. The default grader never sets the salt.
+
+``realism`` grades the reference, the optional blind solution and each WRONG file against the
+test files at git revision ``--base`` (default HEAD, the "base" suite) and against the working
+tree (the "new" suite). Each WRONG file must pass the base suite and fail the new one (``killed``).
+It exits 0 only when the reference and the blind solution pass the new suite and every WRONG file
+is killed. Results go to ``DIR/realism.jsonl``, keyed by the file and suite hashes.
 """
 
 from __future__ import annotations
@@ -40,7 +51,7 @@ import threading
 from collections import Counter, defaultdict
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -517,7 +528,9 @@ def _passes_static(problem: Problem, source: str) -> bool:
 # --- Grading ------------------------------------------------------------------------------------
 
 
-def grade_source(problem: Problem, source: str, settings: Settings) -> GradeReport:
+def grade_source(
+    problem: Problem, source: str, settings: Settings, *, include_hidden: bool = True
+) -> GradeReport:
     """Grade ``source`` on the real path, in a scratch repo root."""
     with tempfile.TemporaryDirectory(prefix="audit-") as tmp:
         root = Path(tmp)
@@ -525,7 +538,7 @@ def grade_source(problem: Problem, source: str, settings: Settings) -> GradeRepo
         submission.write_text(source, encoding="utf-8")
         scratch = settings.model_copy(update={"repo_root": root})
         return attempt.grade_attempt(
-            problem.path, submission, include_hidden=True, settings=scratch
+            problem.path, submission, include_hidden=include_hidden, settings=scratch
         )
 
 
@@ -828,7 +841,11 @@ def cmd_seeds(problems: Sequence[Problem], out: Path, workers: int) -> int:
                     "test_public.py",
                     "test_hidden.py",
                 ]
-                env = {**os.environ, "PYTHONHASHSEED": str(seed)}
+                env = {
+                    **os.environ,
+                    "PYTHONHASHSEED": str(seed),
+                    "DOGMA_DATA_SALT": str(seed),
+                }
                 try:
                     done = subprocess.run(
                         command,
@@ -1053,6 +1070,213 @@ def cmd_witness(problems: Sequence[Problem], out: Path, problem_id: str, file: P
     return 0 if blind_ok else 1
 
 
+# --- Realism: do the new realism tests catch a realistic wrong solution? -----------------------
+
+_TEST_FILES = ("test_public.py", "test_hidden.py")
+_CLEAN_VERDICTS = frozenset({"survived", "killed_public", "killed_hidden"})
+
+
+@dataclass(frozen=True)
+class Suite:
+    """The two test files of one problem. ``None`` means the file is absent."""
+
+    public: str | None
+    hidden: str | None
+
+
+@dataclass(frozen=True)
+class _Check:
+    """One file to grade: the reference, a blind solution, or a wrong one with its base suite."""
+
+    kind: str
+    path: Path
+    against: Suite | None = None
+
+
+class _UsageError(Exception):
+    """An argument or a suite that cannot be graded; the message says why."""
+
+
+def working_suite(problem: Problem) -> Suite:
+    """The test files as they are in the working tree (the "new" suite)."""
+    return Suite(*(_read_or_none(problem.path / name) for name in _TEST_FILES))
+
+
+def base_suite(problem: Problem, rev: str) -> Suite:
+    """The test files as they are at git revision ``rev`` (the "base" suite)."""
+    rel = problem.path.relative_to(REPO).as_posix()
+    return Suite(*(_git_show(rev, f"{rel}/{name}") for name in _TEST_FILES))
+
+
+def _read_or_none(path: Path) -> str | None:
+    return path.read_text(encoding="utf-8") if path.is_file() else None
+
+
+def _git(*args: str) -> subprocess.CompletedProcess[bytes]:
+    return subprocess.run(["git", "-C", str(REPO), *args], capture_output=True, check=False)
+
+
+def _git_show(rev: str, path: str) -> str | None:
+    done = _git("show", f"{rev}:{path}")
+    return done.stdout.decode("utf-8") if done.returncode == 0 else None
+
+
+def _suite_sha(suite: Suite) -> str:
+    return hashlib.sha256(json.dumps([suite.public, suite.hidden]).encode()).hexdigest()[:16]
+
+
+def _text_sha(text: str) -> str:
+    return hashlib.sha256(text.encode()).hexdigest()[:16]
+
+
+def grade_suite(problem: Problem, source: str, suite: Suite, settings: Settings) -> GradeReport:
+    """Grade ``source`` through the real grader against ``suite``, in a scratch copy of the problem.
+
+    A missing hidden file means the suite has no hidden tests, so only the public file runs.
+    """
+    with tempfile.TemporaryDirectory(prefix="audit-realism-") as tmp:
+        copied = Path(tmp) / "problem"
+        shutil.copytree(problem.path, copied, ignore=shutil.ignore_patterns("__pycache__"))
+        for name, text in zip(_TEST_FILES, (suite.public, suite.hidden), strict=True):
+            target = copied / name
+            if text is None:
+                target.unlink(missing_ok=True)
+            else:
+                target.write_text(text, encoding="utf-8")
+        scoped = replace(problem, path=copied)
+        return grade_source(scoped, source, settings, include_hidden=suite.hidden is not None)
+
+
+def realism_verdict(base: str, new: str) -> str:
+    """``killed``, ``already_caught`` or ``survives``; ``error`` if a run was neither pass nor fail.
+
+    ``base`` and ``new`` are :func:`verdict` values of one wrong file on the two suites.
+    """
+    if base not in _CLEAN_VERDICTS or new not in _CLEAN_VERDICTS:
+        return "error"
+    if base != "survived":
+        return "already_caught"
+    return "killed" if new != "survived" else "survives"
+
+
+def _realism_setup(
+    problems: Sequence[Problem], words: Sequence[str], base: str, blind: Path | None
+) -> tuple[Problem, list[Path], Suite, Suite]:
+    """Check the arguments and load both suites, or raise ``_UsageError`` saying why not."""
+    if len(words) < 2:
+        raise _UsageError("usage: realism [--base REV] [--blind FILE] PROBLEM_ID WRONG [WRONG ...]")
+    problem_id, *wrong_names = words
+    match = [problem for problem in problems if problem.id == problem_id]
+    if not match:
+        raise _UsageError(f"no problem {problem_id}")
+    wrongs = [Path(name) for name in wrong_names]
+    for path in [*wrongs, *([blind] if blind is not None else [])]:
+        if not path.is_file():
+            raise _UsageError(f"no such file: {path}")
+    if _git("rev-parse", "--verify", "--quiet", f"{base}^{{commit}}").returncode != 0:
+        raise _UsageError(f"unknown git revision {base!r}")
+    problem = match[0]
+    new = working_suite(problem)
+    if new.public is None or new.hidden is None:
+        raise _UsageError(f"{problem.id}: the working tree needs test_public.py and test_hidden.py")
+    old = base_suite(problem, base)
+    if old.public is None:
+        raise _UsageError(f"{problem.id}: {base} has no test_public.py for this problem")
+    return problem, wrongs, new, old
+
+
+def _grade_check(
+    problem: Problem, source: str, new: Suite, against: Suite | None
+) -> dict[str, Any]:
+    """The verdicts of one file on the new suite and, for wrong files, on the base suite."""
+    settings = Settings()
+    new_row = record(grade_suite(problem, source, new, settings))
+    fields: dict[str, Any] = {
+        "new": new_row["verdict"],
+        "new_message": new_row["message"],
+        "base": None,
+        "base_message": "",
+        "verdict": new_row["verdict"],
+    }
+    if against is not None:
+        base_row = record(grade_suite(problem, source, against, settings))
+        fields.update(
+            base=base_row["verdict"],
+            base_message=base_row["message"],
+            verdict=realism_verdict(base_row["verdict"], new_row["verdict"]),
+        )
+    return fields
+
+
+def _run_check(
+    problem: Problem, check: _Check, new: Suite, log: Log, cached: dict[str, dict[str, Any]]
+) -> dict[str, Any]:
+    """Grade one check, or reuse its row when the file and both suites are unchanged."""
+    source = check.path.read_text(encoding="utf-8")
+    against_sha = _suite_sha(check.against) if check.against is not None else "-"
+    key = f"{check.kind}:{problem.id}:{_text_sha(source)}:{_suite_sha(new)}:{against_sha}"
+    if key not in cached:
+        cached[key] = {
+            "key": key,
+            "kind": check.kind,
+            "problem": problem.id,
+            "file": check.path.name,
+            "file_sha": _text_sha(source),
+            "new_sha": _suite_sha(new),
+            "base_sha": against_sha,
+            **_grade_check(problem, source, new, check.against),
+        }
+        log.write(cached[key])
+    return cached[key]
+
+
+def _realism_failures(rows: Sequence[dict[str, Any]]) -> list[str]:
+    failures = []
+    for row in rows:
+        if row["kind"] == "wrong" and row["verdict"] != "killed":
+            failures.append(f"{row['file']}: {row['verdict']} (a wrong solution must be killed)")
+        elif row["kind"] != "wrong" and row["verdict"] != "survived":
+            failures.append(f"{row['kind']} {row['file']}: {row['verdict']} on the new tests")
+    return failures
+
+
+def cmd_realism(
+    problems: Sequence[Problem],
+    out: Path,
+    words: Sequence[str],
+    base: str,
+    blind: Path | None,
+) -> int:
+    """Check that the new realism tests kill each realistic wrong solution the base missed."""
+    try:
+        problem, wrongs, new, old = _realism_setup(problems, words, base, blind)
+    except _UsageError as exc:
+        print(exc, file=sys.stderr)
+        return 2
+    checks = [_Check("reference", problem.solution)]
+    if blind is not None:
+        checks.append(_Check("blind", blind))
+    checks.extend(_Check("wrong", path, old) for path in wrongs)
+    log = Log(out / "realism.jsonl", lambda row: row["key"])
+    cached = {row["key"]: row for row in read_jsonl(log.path)}
+    rows = [_run_check(problem, check, new, log, cached) for check in checks]
+
+    print(f"{'check':<10} {'file':<28} {'base':<16} {'new':<16} verdict")
+    for row in rows:
+        print(
+            f"{row['kind']:<10} {row['file']:<28} {row['base'] or '-':<16} "
+            f"{row['new']:<16} {row['verdict']}"
+        )
+    failures = _realism_failures(rows)
+    if failures:
+        print("realism: FAILED")
+        for reason in failures:
+            print(f"  {reason}")
+        return 1
+    print(f"realism: all {len(wrongs)} wrong solutions are killed by the new tests")
+    return 0
+
+
 def effective_rows(out: Path) -> list[dict[str, Any]]:
     """Mutant rows, with timeouts replaced by their quieter re-run where there is one."""
     quiet = read_jsonl(out / "mutants_rechecked.jsonl")
@@ -1198,9 +1422,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             "survivors",
             "summary",
             "witness",
+            "realism",
         ],
     )
-    parser.add_argument("args", nargs="*", help="submit: PROBLEM_ID FILE")
+    parser.add_argument("args", nargs="*", help="submit: PROBLEM_ID FILE; realism: ID WRONG...")
+    parser.add_argument("--base", default="HEAD", help="realism: git revision of the base tests")
+    parser.add_argument("--blind", type=Path, default=None, help="realism: a blind solution")
     parser.add_argument("--out", type=Path, required=True, help="directory for results")
     parser.add_argument("--only", action="append", default=[], help="problem id prefix")
     parser.add_argument("--workers", type=int, default=10)
@@ -1221,6 +1448,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "submit": lambda: cmd_submit(problems, out, args.args[0], Path(args.args[1])),
         "survivors": lambda: cmd_survivors(problems, out, args.limit, args.cap),
         "witness": lambda: cmd_witness(problems, out, args.args[0], Path(args.args[1])),
+        "realism": lambda: cmd_realism(problems, out, args.args, args.base, args.blind),
         "report": lambda: cmd_report(out),
         "summary": lambda: cmd_summary(out),
     }

@@ -254,6 +254,10 @@ GradeReport
   `torch.nn.functional`, DuckDB. This is what keeps LLM-authored content honest.
 - **Gradient checks** (finite differences) for every backprop and autograd problem.
 - **Result-set equality** for SQL, ignoring order unless the problem requires `ORDER BY`.
+- **Test data** from `dogma_data` (content tests only): real offline datasets, vendored
+  snapshots and seeded synthetic generators, so bulk random inputs have real structure. Tests
+  read vendored files and local bundles, never the network. Each dataset and generator is
+  listed in [DATASETS.md](DATASETS.md).
 
 **Feedback contract** (ported from MVS `selfcheck`): blank or unattempted → a gentle reminder,
 not a failure. Wrong → a precise message that names the *type* of error ("shape mismatch",
@@ -682,6 +686,7 @@ dogma/
 │   │   ├── db/        SQLAlchemy models, Alembic migrations
 │   │   ├── api/       FastAPI app
 │   │   └── cli/       Typer app
+│   ├── dogma_data/   # test-only data layer: real sets, HF snapshots, synth; numpy at import
 │   └── dogma_harness/   # runs inside the sandbox; stdlib + pytest; never imports dogma
 ├── tools/docmd/ vendored PDF→Markdown converter (own uv project, MIT)
 ├── web/         React + Vite + TS (from I-15)
@@ -697,6 +702,11 @@ dogma/
 `learning`, `tutor`; `runner` ← `grading` only through the GradeReport schema; `api`/`cli` are the
 only layers that wire components together; `dogma_harness` imports nothing from `dogma`; `web` talks
 only to `/api/v1`.
+
+**Test data** (`src/dogma_data/`) is test-only. At import time it loads only numpy; other libraries
+load inside the functions that need them. It never imports `dogma` or `dogma_harness`, and neither
+imports it. The submission static check bans it. The opt-in `hf` dependency group is used only by
+`scripts/sync_hf_datasets.py`, which vendors text snapshots; tests never install or call it.
 
 ## 9. Decision log
 

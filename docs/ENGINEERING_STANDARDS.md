@@ -165,6 +165,8 @@ A problem is shippable only if **all** of the following hold:
       input, shapes, numerical stability (large or small magnitudes), and dtype.
 - [ ] **Oracle comparison** on randomized inputs whenever a library implementation exists.
       If none exists, add a property test or an analytic case.
+- [ ] Bulk random data is realistic where realism matters: real or semi-synthetic data via
+      `dogma_data`, or a `dogma_data.synth` generator; see CONTENT_SPEC §6.6.
 - [ ] Gradient problems include a finite-difference check.
 - [ ] Tolerances are declared in `meta.yaml` (`atol`, `rtol`) and justified when looser than
       `1e-6`.
@@ -359,7 +361,7 @@ groups / clusters. Colour is never the only signal. Pair it with a label or line
 - Trunk-based: `main` always passes the gate. Use short-lived branches for anything over one
   commit.
 - **Conventional commits** with scopes: `content`, `runner`, `grading`, `learning`, `tutor`,
-  `corpus`, `sources`, `db`, `api`, `cli`, `web`, `docs`, `build`. Examples:
+  `corpus`, `sources`, `data`, `db`, `api`, `cli`, `web`, `docs`, `build`. Examples:
   `feat(runner): add RSS watchdog`, `content(cml): add gradient-descent p01`.
 - Keep **content commits separate from code commits**. A content commit touches only `content/`
   and `curriculum/`.

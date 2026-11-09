@@ -1,0 +1,46 @@
+Vendored HuggingFace dataset snapshots used by the dogma_data test layer.
+Each snapshot is pinned to a dataset revision and was checked against the licence
+policy in scripts/sync_hf_datasets.py. Regenerate with:
+  uv run --frozen --isolated --group hf python -I scripts/sync_hf_datasets.py
+
+## gsm8k
+- Source: https://huggingface.co/datasets/openai/gsm8k at 740312add88f781978c0658806c59bc2815b9866
+- Licence: mit
+- File: data/hf/gsm8k.jsonl (300 rows)
+- Selection: test split; config main; columns question, answer; rows 0 to 300 of the (filtered) split.
+- Notice: none required by the licence
+
+## adult
+- Source: https://huggingface.co/datasets/scikit-learn/adult-census-income at fbeef6ec0e6fd88a5028b94683144000a6b380d5
+- Licence: cc0-1.0
+- File: data/hf/adult.csv (6000 rows)
+- Selection: train split; all columns; rows 8000 to 14000 of the (filtered) split.
+- Notice: none required by the licence
+
+## california_housing
+- Source: https://huggingface.co/datasets/gvlassis/california_housing at 17110e600427385a20e8358b00adc9b032d185ff
+- Licence: mit
+- File: data/hf/california_housing.csv (6000 rows)
+- Selection: train split; all columns; rows 0 to 6000 of the (filtered) split.
+- Notice: none required by the licence
+
+## gutenberg_pride_prejudice
+- Source: https://huggingface.co/datasets/sedthh/gutenberg_english at 28973b04f28fd7be4a6186a042bc26159d4366ca
+- Licence: mit
+- File: data/hf/gutenberg_pride_prejudice.txt (1 rows)
+- Selection: train split; columns TEXT; rows where METADATA contains '"title": "Pride and Prejudice"'; rows 0 to 1 of the (filtered) split; TEXT cut at a line boundary within 40000, starting at the line with 'is a truth universally acknowledged'.
+- Notice: Project Gutenberg eBook text (Jane Austen, 1813). The source card lists MIT for the dataset and warns that some books may be under copyright elsewhere; only titles published before 1900 were selected.
+
+## gutenberg_frankenstein
+- Source: https://huggingface.co/datasets/sedthh/gutenberg_english at 28973b04f28fd7be4a6186a042bc26159d4366ca
+- Licence: mit
+- File: data/hf/gutenberg_frankenstein.txt (1 rows)
+- Selection: train split; columns TEXT; rows where METADATA contains '"title": "Frankenstein; Or'; rows 0 to 1 of the (filtered) split; TEXT cut at a line boundary within 40000, starting at the line with 'You will rejoice to hear that no disaster'.
+- Notice: Project Gutenberg eBook text (Mary Shelley, 1818). The source card lists MIT for the dataset and warns that some books may be under copyright elsewhere; only titles published before 1900 were selected.
+
+## gutenberg_walden
+- Source: https://huggingface.co/datasets/sedthh/gutenberg_english at 28973b04f28fd7be4a6186a042bc26159d4366ca
+- Licence: mit
+- File: data/hf/gutenberg_walden.txt (1 rows)
+- Selection: train split; columns TEXT; rows where METADATA contains '"title": "Walden, and'; rows 0 to 1 of the (filtered) split; TEXT cut at a line boundary within 40000, starting at the line with 'When I wrote the following pages'.
+- Notice: Project Gutenberg eBook text (Henry David Thoreau, 1854). The source card lists MIT for the dataset and warns that some books may be under copyright elsewhere; only titles published before 1900 were selected.

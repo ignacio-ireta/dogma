@@ -17,6 +17,10 @@ from dogma.grading.models import StaticFinding
 Language = Literal["python", "sql"]
 
 _FUNCTION_OR_CLASS = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
+# Test-data helpers and dataset downloads belong to the tests alone (I-31a). This applies to every
+# problem, so it is not repeated in each meta.yaml.
+PLATFORM_BANNED_IMPORTS = ("dogma_data", "datasets", "huggingface_hub")
+_PLATFORM_MESSAGE = "submissions may not import test-data helpers (dogma_data) or download datasets"
 
 
 def check_submission(
@@ -60,6 +64,7 @@ def _check_python(source: str, *, entry: str, banned: Sequence[str]) -> list[Sta
             )
         )
     findings.extend(_banned_findings(tree, banned))
+    findings.extend(_platform_findings(tree))
     return findings
 
 
@@ -68,6 +73,29 @@ def _defines_top_level(tree: ast.Module, entry: str) -> bool:
 
 
 def _banned_findings(tree: ast.Module, banned: Sequence[str]) -> list[StaticFinding]:
+    return [
+        StaticFinding(
+            rule="banned-import",
+            message=f"`{module}` is not allowed in this problem (line {line})",
+            line=line,
+        )
+        for line, module in sorted(_hits(tree, banned))
+    ]
+
+
+def _platform_findings(tree: ast.Module) -> list[StaticFinding]:
+    lines = sorted({line for line, _ in _hits(tree, PLATFORM_BANNED_IMPORTS)})
+    return [
+        StaticFinding(
+            rule="banned-import",
+            message=f"{_PLATFORM_MESSAGE} (line {line})",
+            line=line,
+        )
+        for line in lines
+    ]
+
+
+def _hits(tree: ast.Module, banned: Sequence[str]) -> set[tuple[int, str]]:
     hits: set[tuple[int, str]] = set()
     for node in ast.walk(tree):
         line = getattr(node, "lineno", None)
@@ -77,14 +105,7 @@ def _banned_findings(tree: ast.Module, banned: Sequence[str]) -> list[StaticFind
             for module in banned:
                 if _matches(name, module, is_attribute=isinstance(node, ast.Attribute)):
                     hits.add((line, module))
-    return [
-        StaticFinding(
-            rule="banned-import",
-            message=f"`{module}` is not allowed in this problem (line {line})",
-            line=line,
-        )
-        for line, module in sorted(hits)
-    ]
+    return hits
 
 
 def _names_used(node: ast.AST) -> list[str]:

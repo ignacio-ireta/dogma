@@ -1,0 +1,15 @@
+dogma_data: attributions
+
+This package ships small datasets for offline content tests. Each file is listed in DATA_SOURCES.md
+with its origin and licence. Attributions:
+
+- Palmer Penguins (penguins.csv): Gorman KB, Williams TD, Fraser WR (2014), PLoS ONE 9(3): e90081.
+  Horst AM, Hill AP, Gorman KB (2020), palmerpenguins. Licence CC0 1.0. No attribution is required,
+  and the citation is given as a courtesy.
+- Synthetic interview-prep files (customers.csv, orders.csv, surveys.csv): generated in this
+  repository by sources/interview-prep/generate_mock_data.py. They contain no real people.
+- scikit-learn bundled datasets: Pedregosa et al. (2011), JMLR 12, and the scikit-learn BSD-3
+  licence for the packaging.
+- statsmodels bundled datasets: Seabold S, Perktold J (2010), statsmodels, Python in Science
+  Conference. Dataset texts are as recorded in each module's COPYRIGHT string. The spector dataset
+  is used with the express permission of its author, who retains all rights.
