@@ -11,6 +11,8 @@ from hypothesis import strategies as st
 from sklearn.impute import SimpleImputer
 from submission import impute_with_indicators
 
+from dogma_data import load_frame
+
 SETTINGS = settings(max_examples=40, deadline=None, report_multiple_bugs=False)
 
 
@@ -170,3 +172,45 @@ def test_invalid_requests_raise_value_error(frame, numeric, strategy):
         lambda: impute_with_indicators(frame, numeric, strategy),
         "an invalid imputation request was accepted: check the strategy, the names and the data",
     )
+
+
+@pytest.fixture(scope="module")
+def penguins():
+    return load_frame("penguins")
+
+
+@pytest.mark.parametrize("strategy", ["median", "mean"], ids=["median", "mean"])
+def test_matches_simple_imputer_on_real_penguin_measurements(penguins, strategy):
+    # Real measurements with gaps on the same rows, in grams and millimetres.
+    numeric = ["bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"]
+    oracle = SimpleImputer(strategy=strategy, add_indicator=True).fit_transform(
+        penguins[numeric].to_numpy(dtype=np.float64)
+    )
+    out = _run(penguins, numeric, strategy)
+    got_values = out[numeric].to_numpy(dtype=np.float64)
+    got_indicators = out[[f"{name}_was_missing" for name in numeric]].to_numpy(dtype=np.float64)
+    if not np.allclose(got_values, oracle[:, :4], rtol=1e-9, atol=1e-9):
+        pytest.fail(
+            "imputed penguin measurements differ: fill each gap with the observed statistic"
+        )
+    if not np.array_equal(got_indicators, oracle[:, 4:]):
+        pytest.fail("indicator values differ: 1 exactly on the rows where the measurement was NaN")
+
+
+def test_gaps_in_unnamed_columns_stay_as_they_are_on_real_penguins(penguins):
+    # Only body_mass_g is named. Other gapped columns (including the text column sex) keep their
+    # NaN values, get no indicator, and an all-missing column that is not named raises nothing.
+    frame = penguins.assign(unused=np.nan)
+    out = _run(frame, ["body_mass_g"])
+    if list(out.columns) != [*frame.columns, "body_mass_g_was_missing"]:
+        pytest.fail(
+            "column layout differs: only named gapped columns get an indicator, and the rest"
+            " keep their columns"
+        )
+    for name in frame.columns:
+        if name == "body_mass_g":
+            continue
+        if not out[name].equals(frame[name]):
+            pytest.fail(f"an unnamed column was changed: {name} must be copied unchanged")
+    if out["body_mass_g"].isna().any():
+        pytest.fail("the named gap in body_mass_g was not filled")

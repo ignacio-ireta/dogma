@@ -20,7 +20,8 @@ the same columns, in the same order.
   - a column `"<name>_was_missing"` of dtype `int8` (1 where the value was missing, 0 otherwise),
     **only** for named columns that have at least one missing value in `df`. These indicator columns
     come after all original columns, in the order the names appear in `numeric`;
-  - every other column copied unchanged, including its dtype.
+  - every other column copied unchanged, including its dtype and its missing values. A gap in a column
+    that is not named gets no fill and no indicator.
 - Raises `ValueError` when `strategy` is unknown; when a name is missing from `df` or is not numeric;
   when a name is listed twice; when a column needs imputation but has no observed value; and when the
   indicator `<name>_was_missing` of a column with a gap already exists in `df`.
@@ -46,6 +47,11 @@ the same columns, in the same order.
 ValueError              # strategy must be "median" or "mean"
 ```
 
+On real `penguins` (344 × 7, loaded with `load_frame`), `impute_with_indicators(df, ["bill_length_mm",
+"body_mass_g"])` fills the two gaps in each column, which fall on the same rows, and adds
+`bill_length_mm_was_missing` and `body_mass_g_was_missing`. The NaN in `sex` and the NaN in
+`flipper_length_mm` stay as they are, with no indicator.
+
 ## Constraints
 
 - Allowed: pandas and NumPy.
@@ -56,9 +62,11 @@ ValueError              # strategy must be "median" or "mean"
 
 All public tests pass, then **Submit** passes the hidden tests. Those compare the imputed values and the
 indicator values with scikit-learn's `SimpleImputer(add_indicator=True)` on random tables with missing
-values in some columns and none in others, for both strategies. They also check: the exact column
-layout, with indicators only for columns that had gaps and appended in the order named; the `int8`
-indicator dtype; that columns without gaps keep their dtype; that the input frame is unchanged; the
-median and mean on a column with an even count and with a single value; large-magnitude values; an
-empty frame; an empty list of names; and the invalid cases (unknown strategy, unknown or non-numeric
-column, duplicate name, a column with no observed value, and an indicator name that already exists).
+values in some columns and none in others, for both strategies, and on the real `penguins`
+measurements, where gaps fall on the same rows. They also check: the exact column layout, with
+indicators only for columns that had gaps and appended in the order named; the `int8` indicator
+dtype; that columns without gaps keep their dtype; that gaps in unnamed columns, text columns
+included, are copied unchanged with no indicator; that the input frame is unchanged; the median and
+mean on a column with an even count and with a single value; large-magnitude values; an empty frame;
+an empty list of names; and the invalid cases (unknown strategy, unknown or non-numeric column,
+duplicate name, a column with no observed value, and an indicator name that already exists).

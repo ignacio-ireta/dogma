@@ -62,6 +62,7 @@ resampling rule in [book: Kuhn & Johnson, Applied Predictive Modeling, chapters 
 - **High cardinality.** One-hot encoding a column with thousands of values makes thousands of sparse columns,
   and most of them are rare or unseen at serving time. Hashing or target encoding are alternatives. Target
   encoding is itself a leakage risk: fit it only on training folds.
+- **Real rare levels.** On `adult`, `native.country` has 39 training levels in the first 4000 rows, 8 of them seen at most twice. Capping the encoder at the ten most frequent levels would zero the 3.9% of later test rows whose country falls outside that top ten, and a silent cap breaks the contract. Keep every training level.
 - **Unseen values.** An all-zero block says "no known category". It does not say the category is rare. Log how
   often unseen values appear before trusting the model on them.
 - **All-missing training columns.** A median or a mode does not exist. Raise an error, rather than inventing a

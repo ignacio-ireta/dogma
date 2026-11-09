@@ -38,7 +38,8 @@ return the same arrays.
 
 1. Mode of the observed training values. Ties go to the smallest value.
 2. Fill every missing value in `train` with that mode.
-3. `categories` are the sorted distinct values of the filled training column.
+3. `categories` are the sorted distinct values of the filled training column, however rare: a level
+   seen once in train gets its own column.
 4. A row gets a `1.0` in the column of its category and `0.0` in the others. In `test`, a missing
    value is treated as the training mode. A value that is not in `categories` gives an all-zero block.
 
@@ -58,6 +59,11 @@ return the same arrays.
 [[ 0.        ,  0.,  0.],
  [ 2.82842712,  1.,  0.]]
 ```
+
+On real `adult` (`load_frame`), `native.country` has 39 levels in the first 4000 rows, 8 of them seen at
+most twice. In the next 2000 rows, 3.9% of the countries fall outside the ten most frequent training
+levels, and one country never occurs in train. Such rows get an all-zero block, and every training level
+keeps its column. In that file `?` marks a missing answer, so pass it as NaN.
 
 ```python
 >>> train = pd.DataFrame({"plan": ["pro", "basic", "pro", "basic", np.nan]})
@@ -79,8 +85,9 @@ return the same arrays.
 All public tests pass, then **Submit** passes the hidden tests. Those compare your output with a
 scikit-learn `ColumnTransformer` (median imputation and standardization for the numeric columns,
 most-frequent imputation and a one-hot encoder that ignores unknown categories for the categorical
-ones) on random mixed tables with missing values, unseen categories and a constant column. They also
-check: that the test table never changes the fitted training output; that missing test values take the
-training median and mode; that unseen test categories give all-zero blocks; the mode tie rule; column
-order; output shape; a train column with no observed values; invalid column names and duplicates; and
-inputs left unchanged.
+ones) on random mixed tables with missing values, unseen categories and a constant column, and on the
+real `adult` columns: rare and unseen countries, and a constant zero column. They also check: that the
+test table never changes the fitted training output; that missing test values take the training median
+and mode; that unseen test categories give all-zero blocks; that rare training levels keep their own
+column, with no capped or grouped levels; the mode tie rule; column order; output shape; a train column
+with no observed values; invalid column names and duplicates; and inputs left unchanged.

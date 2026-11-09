@@ -64,6 +64,7 @@ These distinctions follow [book: Little & Rubin, Statistical Analysis with Missi
   each training fold, exactly as with a scaler.
 - **Zero MAD.** When more than half of the values are equal, the MAD is zero and the score divides by zero.
   The rule must say what happens, and it must not silently return no outliers.
+- **Mean-centred scores on skewed data.** On real `engel` income (235 households, skew 2.8), the median and MAD rule flags 7 households at threshold 3.5. Centring on the mean (982.5, against a median of 884.0) flags 6: the upper tail pulls the mean and hides one household. Centre on the median, and check skew before reading flags as errors.
 - **Trimming real extremes.** Capping or deleting a true tail changes the target you are modelling. Transform
   or keep it when the extreme is a real observation.
 - **Deletion under MNAR.** Dropping rows with a gap keeps only the rows whose missingness the mechanism

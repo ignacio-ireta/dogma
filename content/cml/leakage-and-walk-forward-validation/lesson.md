@@ -68,6 +68,7 @@ way: identify the estimand before estimating it.
   influence the selected features. Refit selection inside each fold, even when all original features are noise.
 - **Target encoding.** A singleton category encoded with its full-data target mean reproduces its own
   label exactly. Cross-fitting or an availability-aware historical encoding avoids that direct leak.
+- **Long histories and windows.** On real `adult` keys in file order, `native.country` has 5350 United-States rows. A 500-row window instead of the expanding mean changes 1896 of 5959 encodings by more than 0.01. A window, a decay or a batch reset looks harmless on short tests and silently changes the feature on long real series.
 - **Duplicates.** Near-identical rows on both sides of a split reward memorisation. Deduplicate or group.
 - **Gap too small.** If the label arrives three days late, a zero gap may train on recent labels
   that would not yet have arrived at the simulated prediction time. A row gap assumes a known time interval per row.

@@ -14,12 +14,14 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from submission import fit_transform_pipeline
 
+from dogma_data import load_frame
+
 NUMERIC = ["age", "income", "count", "const"]
 CATEGORICAL = ["city", "plan"]
 SETTINGS = settings(max_examples=40, deadline=None, report_multiple_bugs=False)
 
 
-def _oracle(train, test):
+def _oracle(train, test, numeric=NUMERIC, categorical=CATEGORICAL):
     ct = ColumnTransformer(
         [
             (
@@ -27,7 +29,7 @@ def _oracle(train, test):
                 Pipeline(
                     [("impute", SimpleImputer(strategy="median")), ("scale", StandardScaler())]
                 ),
-                NUMERIC,
+                numeric,
             ),
             (
                 "cat",
@@ -37,7 +39,7 @@ def _oracle(train, test):
                         ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
                     ]
                 ),
-                CATEGORICAL,
+                categorical,
             ),
         ],
         remainder="drop",
@@ -298,3 +300,35 @@ def test_nearly_constant_training_column_is_standardized_to_finite_values():
         atol=1e-6,
         err_msg="a non-constant training column must be standardized by its population std",
     )
+
+
+ADULT_NUMERIC = ["age", "fnlwgt", "hours.per.week", "capital.gain"]
+ADULT_CATEGORICAL = ["workclass", "occupation", "native.country"]
+
+
+@pytest.fixture(scope="module")
+def adult_split():
+    # Real census rows. "?" marks a missing answer in this source, so it becomes NaN here.
+    frame = load_frame("adult")
+    for column in ADULT_CATEGORICAL:
+        frame[column] = frame[column].replace("?", np.nan)
+    return frame.iloc[:4000].reset_index(drop=True), frame.iloc[4000:6000].reset_index(drop=True)
+
+
+def test_matches_column_transformer_on_real_adult_with_rare_and_unseen_countries(adult_split):
+    # native.country has about 40 levels, several seen once or twice in train, and test has a
+    # country that train never saw. capital.gain is constant (zero) in this slice.
+    train, test = adult_split
+    want_train, want_test = _oracle(train, test, ADULT_NUMERIC, ADULT_CATEGORICAL)
+    got_train, got_test = _call(train, test, ADULT_NUMERIC, ADULT_CATEGORICAL)
+    if got_train.shape != want_train.shape or got_test.shape != want_test.shape:
+        pytest.fail("output shape differs on real census columns: one block per training level")
+    if not np.allclose(got_train, want_train, rtol=1e-9, atol=1e-9):
+        pytest.fail(
+            "train output differs on real census columns: keep every training level, rare or not"
+        )
+    if not np.allclose(got_test, want_test, rtol=1e-9, atol=1e-9):
+        pytest.fail(
+            "test output differs on real census columns: unseen levels are all zero, and missing"
+            " test answers take the training mode"
+        )

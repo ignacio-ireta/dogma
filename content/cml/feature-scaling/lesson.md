@@ -72,6 +72,8 @@ Gaussian. This distinction matters when diagnosing a model's assumptions.
 Outliers can move the mean and scale enough to compress typical observations.
 Median and IQR scaling is a separate policy, the subject of p02. It needs its own zero-IQR rule. This topic uses the rule that scikit-learn's `RobustScaler` applies to its array scales: an IQR below ten machine epsilons becomes 1.0. Min-max scaling does not guarantee that unseen values stay between zero and one.
 
+On raw `digits` (1797 × 64), 20 pixel columns have IQR zero, and 17 of them still vary. A candidate who special-cases only constant columns keeps scale zero for those 17, so in just the first 60 rows all 1020 of their entries (60 × 17) become infinite or NaN. The zero-IQR rule must cover varying columns too, and the standard deviation is no substitute for the IQR.
+
 Constant columns need an explicit fallback. Tiny nonzero scales are not constant:
 replacing every small scale with one changes the requested transformation.
 For numerical stability, divide centered values by their largest magnitude

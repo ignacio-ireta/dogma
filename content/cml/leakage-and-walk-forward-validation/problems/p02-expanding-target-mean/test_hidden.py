@@ -5,6 +5,8 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import expanding_target_mean
 
+from dogma_data import load_frame
+
 
 def _encode(categories, target):
     """Call the learner's function and return a float64 array, naming the mistake if it crashes."""
@@ -262,4 +264,27 @@ def test_opposite_sign_huge_targets_average_without_overflow():
         bool(np.isfinite(got[2]) and abs(got[2]) <= 1e-9 * 1.5e308),
         "the mean of large targets with opposite signs must stay finite and near zero: do not"
         " form a difference between a running mean and a target that can overflow",
+    )
+
+
+@pytest.fixture(scope="module")
+def adult_rows():
+    # Real census rows in file order (the clock). Target: income above 50K. Keys: raw occupation
+    # ("?" is a level here) and native.country, with a few dominant levels and many rare ones.
+    frame = load_frame("adult")
+    return frame, (frame["income"].to_numpy() == ">50K").astype(np.float64)
+
+
+@pytest.mark.parametrize("column", ["occupation", "native.country"], ids=["occupation", "country"])
+def test_matches_pandas_expanding_idiom_on_real_census_keys_and_income(adult_rows, column):
+    # Long series with a dominant level and many rare ones: an expanding mean must average the whole
+    # earlier history of each category, not a recent window or a decayed average.
+    frame, income = adult_rows
+    cats = frame[column].tolist()
+    expected = _pandas_reference(cats, income)
+    _assert_encoding(
+        _encode(cats, income),
+        expected,
+        "the encoding on real census keys is not the plain expanding mean of earlier rows:"
+        " no window, decay or smoothing",
     )

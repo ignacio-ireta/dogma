@@ -10,6 +10,8 @@ from hypothesis import strategies as st
 from sklearn.preprocessing import RobustScaler
 from submission import robust_standardize
 
+from dogma_data import load
+
 SETTINGS = settings(max_examples=40, deadline=None, report_multiple_bugs=False)
 
 
@@ -200,4 +202,38 @@ def test_iqr_just_above_ten_epsilons_is_kept():
         rtol=1e-9,
         atol=0.0,
         err_msg="a scale of 10.5 machine epsilons is not below ten, so it must be kept",
+    )
+
+
+@pytest.fixture(scope="module")
+def digits_pixels():
+    return load("digits").X
+
+
+def test_zero_iqr_pixels_that_still_vary_get_unit_scale_on_real_digits(digits_pixels):
+    # Most pixels of the handwritten digits are zero, so many columns have IQR zero while varying.
+    train, values = digits_pixels, digits_pixels[:60]
+    expected = RobustScaler().fit(train)
+    out, center, scale = _call(train, values)
+    if not np.all(np.isfinite(out)):
+        pytest.fail(
+            "non-finite output: a zero-IQR column kept scale zero; scale must come from the IQR"
+            " and any IQR below ten epsilons must become one, even if the column varies"
+        )
+    np.testing.assert_allclose(
+        center, expected.center_, rtol=1e-9, atol=1e-9, err_msg="center differs from the median"
+    )
+    np.testing.assert_allclose(
+        scale,
+        expected.scale_,
+        rtol=1e-9,
+        atol=1e-9,
+        err_msg="scale differs: zero-IQR columns must get scale one, other columns the IQR",
+    )
+    np.testing.assert_allclose(
+        out,
+        expected.transform(values),
+        rtol=1e-9,
+        atol=1e-9,
+        err_msg="transformed values differ on real pixel data",
     )
