@@ -1,0 +1,10 @@
+id: fixtures/py-realism/p01-column-means
+version: 1
+language: python
+runtime: py-numpy
+entry: column_means
+difficulty: easy
+minutes: 5
+core: false
+timeout_s: 30
+status: draft
