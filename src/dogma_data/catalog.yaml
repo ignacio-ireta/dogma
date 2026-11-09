@@ -1,0 +1,314 @@
+# Catalog of dogma_data datasets. Read by dogma_data.real.catalog().
+# sha256 is the fingerprint of load_frame(id); a change means the library or lock moved.
+# Provenance and licences: DATA_SOURCES.md next to the vendored CSVs.
+breast_cancer:
+  id: breast_cancer
+  kind: sklearn
+  loader: load
+  licence: BSD-3 (bundled with scikit-learn; underlying data public domain or UCI)
+  shape:
+  - 569
+  - 31
+  sha256: af5c127464af4e5a29543cd10bd0c98acf1fa48d58f01d89364ee03c34edf3d2
+  quirks:
+  - column means range from about 0.004 (fractal dimension error) to about 880 (worst area)
+  - 21 feature pairs have |corr| > 0.9
+  - standardized logistic regression reaches 99.3% training accuracy (nearly separable)
+  fits:
+  - logistic-regression
+  - covariance-and-correlation
+  - random-forests-and-feature-importance
+  - roc-pr-curves-and-auc
+  - bootstrap-and-permutation-resampling
+co2:
+  id: co2
+  kind: statsmodels
+  loader: load_series
+  licence: public domain (statsmodels bundle)
+  shape:
+  - 2284
+  - 1
+  sha256: 331c204c62b23ca703dbc28112a1a99d8dfdd52d12981157cd6ce8af9888076d
+  quirks:
+  - 2284 weekly values from 1958 with a DatetimeIndex
+  - 59 NaN kept in the series
+  - trend plus yearly season
+  fits:
+  - rolling-statistics-stationarity-and-autocorrelation
+  - missing-values-and-outliers
+  - leakage-and-walk-forward-validation
+customers:
+  id: customers
+  kind: vendored
+  loader: load_frame-only
+  licence: synthetic, generated in this repo (sources/interview-prep)
+  shape:
+  - 5000
+  - 11
+  sha256: 9efb0f7d844b1388a1d88860a8ba844c1966d90344e8d63205684847571c220d
+  quirks:
+  - 5000 rows; 50 duplicated customer_id values
+  - 15 impossible ages (<= 0 or >= 150) plus 15 NaN age
+  - gender and plan_type have casing variants and a blank value
+  - malformed or blank signup_date values (not_a_date, 2025/13/01, N/A, blank); 200 NaN annual_income
+  fits:
+  - sql-select-filter-and-sort
+  - sql-conditional-aggregation
+  - handling-class-imbalance
+diabetes:
+  id: diabetes
+  kind: sklearn
+  loader: load
+  licence: BSD-3 (bundled with scikit-learn; underlying data public domain or UCI)
+  shape:
+  - 442
+  - 11
+  sha256: f74bf23aaccd7a79598c9396c427ab37c73f1e951e6ed0a66964f0c2dbdd3a25
+  quirks:
+  - 'loaded with scaled=False: raw, unscaled features'
+  - sex is binary with values 1.0 and 2.0
+  - 442 rows, 10 features, continuous target
+  fits:
+  - ridge-regression-and-weight-decay
+  - lasso-and-elastic-net
+  - random-forests-and-feature-importance
+digits:
+  id: digits
+  kind: sklearn
+  loader: load
+  licence: BSD-3 (bundled with scikit-learn; underlying data public domain or UCI)
+  shape:
+  - 1797
+  - 65
+  sha256: f3eeace2ae5b6c9fb397c6a20e4469050e1cb89b793612eb46a6d499ea48f73f
+  quirks:
+  - 3 zero-variance pixel columns
+  - 20 pixel columns have IQR = 0
+  - 64 integer-valued features in 0..16
+  fits:
+  - principal-component-analysis
+  - singular-value-decomposition
+  - k-means
+elnino:
+  id: elnino
+  kind: statsmodels
+  loader: load_series
+  licence: public domain (statsmodels bundle)
+  shape:
+  - 732
+  - 1
+  sha256: 5775baec506e4fe5b3494461beaa9c4e96a9a617bb1319840123ebc53a2ef5f3
+  quirks:
+  - 61 years x 12 months flattened row-major to 732 monthly values, no NaN
+  - lag-12 autocorrelation about 0.76 (seasonal)
+  fits:
+  - rolling-statistics-stationarity-and-autocorrelation
+  - leakage-and-walk-forward-validation
+engel:
+  id: engel
+  kind: statsmodels
+  loader: load
+  licence: public domain (statsmodels bundle)
+  shape:
+  - 235
+  - 2
+  sha256: 89ba917f589be06dc803f8cf85157252c057301de8e593018a760bd8b453dbc8
+  quirks:
+  - income (X) is right-skewed (skewness about 2.8)
+  - foodexp (y) is right-skewed (skewness about 1.7)
+  - 235 households, one feature
+  fits:
+  - bootstrap-and-permutation-resampling
+  - regression-metrics-and-robust-losses
+  - normal-equation
+iris:
+  id: iris
+  kind: sklearn
+  loader: load
+  licence: BSD-3 (bundled with scikit-learn; underlying data public domain or UCI)
+  shape:
+  - 150
+  - 5
+  sha256: 2c7887af0cd720e53fc6b535b8c0cb28a38cbacbe284ecd2544ddd0815d83d8b
+  quirks:
+  - one exactly duplicated row
+  - values have one decimal, so many ties
+  - three balanced classes of 50
+  fits:
+  - k-means
+  - nearest-neighbour-search-and-knn
+  - t-tests-and-anova
+  - feature-scaling
+linnerud:
+  id: linnerud
+  kind: sklearn
+  loader: load
+  licence: BSD-3 (bundled with scikit-learn; underlying data public domain or UCI)
+  shape:
+  - 20
+  - 6
+  sha256: 9acb9a97d629d50402bb52ce345d0120456dbd5bf266a0d078dca6dbec9f77aa
+  quirks:
+  - 20 rows; y is 2-D with three physiological targets (Weight, Waist, Pulse)
+  - 3 exercise features (Chins, Situps, Jumps), small n
+  fits:
+  - ridge-regression-and-weight-decay
+  - covariance-and-correlation
+longley:
+  id: longley
+  kind: statsmodels
+  loader: load
+  licence: public domain (statsmodels bundle)
+  shape:
+  - 16
+  - 7
+  sha256: 90414a2b9f221bcd69e1b7882d81535975bd61a45c1708f3afd16d501fd72057
+  quirks:
+  - design with intercept has condition number about 4.9e9 (raw regressors about 4.6e5)
+  - 16 rows, 6 regressors on very different scales (YEAR, POP vs GNPDEFL)
+  fits:
+  - normal-equation
+  - ridge-regression-and-weight-decay
+  - regression-metrics-and-robust-losses
+macrodata:
+  id: macrodata
+  kind: statsmodels
+  loader: load
+  licence: public domain (statsmodels bundle)
+  shape:
+  - 203
+  - 14
+  sha256: eb85457facea04bffdfb59f42727739ae8b2fdd8435e791a150182c64a295fd8
+  quirks:
+  - 203 quarterly rows, 14 numeric columns including year and quarter
+  - trending real series (realgdp, cpi, m1)
+  - 'y is None: all columns are features'
+  fits:
+  - rolling-statistics-stationarity-and-autocorrelation
+  - leakage-and-walk-forward-validation
+nile:
+  id: nile
+  kind: statsmodels
+  loader: load_series
+  licence: public domain (statsmodels bundle)
+  shape:
+  - 100
+  - 1
+  sha256: 44802126fadec26e571a5b7805f53311935d8beebad495877c71ef80a705933e
+  quirks:
+  - 100 yearly values, 1871 to 1970
+  - 'level change near 1898: mean about 1098 before, about 850 after'
+  fits:
+  - rolling-statistics-stationarity-and-autocorrelation
+  - leakage-and-walk-forward-validation
+orders:
+  id: orders
+  kind: vendored
+  loader: load_frame-only
+  licence: synthetic, generated in this repo (sources/interview-prep)
+  shape:
+  - 15000
+  - 5
+  sha256: 167de276ae4399948255e6cbcf1e77fd08d7526717157670c02db385b4f9846c
+  quirks:
+  - 15000 rows; 300 NaN amount (returns and cancellations)
+  - lognormal amounts (right-skewed)
+  - customer_id values are drawn from the customers ids
+  fits:
+  - sql-group-by-and-having
+  - pandas-merge-and-reshape
+  - sql-lag-and-lead
+penguins:
+  id: penguins
+  kind: vendored
+  loader: load_frame-only
+  licence: CC0 1.0 (Gorman et al. 2014; Horst et al. palmerpenguins)
+  shape:
+  - 344
+  - 7
+  sha256: a5aaa2902021c46d434c96a81d453cfe5ced42bf7ac6e833b825fe80e55ffbfa
+  quirks:
+  - 344 rows; 2 NaN in each measurement column, 11 NaN in sex
+  - string categoricals species, island, sex
+  fits:
+  - preprocessing-pipelines
+  - missing-values-and-outliers
+  - gaussian-mixtures-and-em
+  - choosing-a-tree-split
+spector:
+  id: spector
+  kind: statsmodels
+  loader: load
+  licence: used with express permission of the original author (statsmodels bundle)
+  shape:
+  - 32
+  - 4
+  sha256: 039227822f044d53d0138c07042d18e8d3ff63c3f6eb6d7906fb84a3a4643662
+  quirks:
+  - GRADE is binary (0/1), 32 rows
+  - small logit set (32 rows)
+  fits:
+  - logistic-regression
+  - handling-class-imbalance
+stackloss:
+  id: stackloss
+  kind: statsmodels
+  loader: load
+  licence: public domain (statsmodels bundle)
+  shape:
+  - 21
+  - 4
+  sha256: aee80546ca259375e9bf4deffc148049dc196032e466775794be8722eca945d4
+  quirks:
+  - 21 rows; observation 21 has the largest OLS studentized residual (about 2.6)
+  - fit on the full 21 rows is sensitive to observation 21
+  fits:
+  - regression-metrics-and-robust-losses
+  - missing-values-and-outliers
+sunspots:
+  id: sunspots
+  kind: statsmodels
+  loader: load_series
+  licence: public domain (statsmodels bundle)
+  shape:
+  - 309
+  - 1
+  sha256: d978404da58551ca148d99357893a150c49f7a9a37c4a5505cf21915725fbf14
+  quirks:
+  - 309 yearly values, 1700 to 2008
+  - ACF peaks near lag 10 to 11 (0.66 at lag 10)
+  - no NaN
+  fits:
+  - rolling-statistics-stationarity-and-autocorrelation
+  - leakage-and-walk-forward-validation
+surveys:
+  id: surveys
+  kind: vendored
+  loader: load_frame-only
+  licence: synthetic, generated in this repo (sources/interview-prep)
+  shape:
+  - 3000
+  - 4
+  sha256: 5850de6a687f78a76203854c4c43528ba916a8740999629d813198162511c4f5
+  quirks:
+  - 3000 rows; 145 NaN satisfaction_score, 100 NaN nps_score
+  - customer_id values sampled without replacement
+  fits:
+  - sql-joins-and-unions
+  - missing-values-and-outliers
+wine:
+  id: wine
+  kind: sklearn
+  loader: load
+  licence: BSD-3 (bundled with scikit-learn; underlying data public domain or UCI)
+  shape:
+  - 178
+  - 14
+  sha256: 912f5007fe6bcde317b293ddf0d1d3ae988ecce64b4babb54d636d178961b891
+  quirks:
+  - proline (std ~314) carries about 99.8% of total variance unscaled
+  - 13 features, 3 cultivars
+  fits:
+  - principal-component-analysis
+  - feature-scaling
+  - k-means

@@ -55,7 +55,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/dogma", "src/dogma_harness"]
+packages = ["src/dogma", "src/dogma_harness", "src/dogma_data"]
 
 [tool.uv]
 default-groups = ["dev"]
@@ -83,7 +83,7 @@ ignore = [
 python_version = "3.12"
 strict = true
 mypy_path = "src"
-packages = ["dogma", "dogma_harness"]
+packages = ["dogma", "dogma_harness", "dogma_data"]
 warn_unreachable = true
 show_error_codes = true
 
@@ -103,11 +103,11 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["dogma", "dogma_harness"]
+source = ["dogma", "dogma_harness", "dogma_data"]
 branch = true
 
 [tool.importlinter]
-root_packages = ["dogma", "dogma_harness"]
+root_packages = ["dogma", "dogma_harness", "dogma_data"]
 
 [[tool.importlinter.contracts]]
 name = "Harness never imports the app"
@@ -140,3 +140,15 @@ source_modules = [
     "dogma.db",
 ]
 forbidden_modules = ["dogma.cli", "dogma.api"]
+
+[[tool.importlinter.contracts]]
+name = "dogma_data never imports the app or the harness"
+type = "forbidden"
+source_modules = ["dogma_data"]
+forbidden_modules = ["dogma", "dogma_harness"]
+
+[[tool.importlinter.contracts]]
+name = "The app and the harness never import dogma_data"
+type = "forbidden"
+source_modules = ["dogma", "dogma_harness"]
+forbidden_modules = ["dogma_data"]
