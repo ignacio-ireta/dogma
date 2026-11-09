@@ -63,6 +63,9 @@ Work stops and resumes across sessions through the status table and the handoff 
 | I-29 | Introduction: a Start here page and a guided first problem | — | I-15, I-16 | done |
 | I-30a | Time-warp backend + CLI: personal calendar offset, sync to the furthest exercise, `dogma warp`, `dogma course reset` (plan `2026-11-03-time-warp.md`) | — | I-10, I-13 | done |
 | I-30b | Time-warp API + web: `/calendar`, `/calendar/warp`, `/course/reset`, Progress page controls, Today offer | — | I-30a, I-17 | done |
+| I-31a | Data realism platform: `dogma_data` (real offline datasets, frozen realistic generators, seeds), `hf` dependency group + HF snapshot sync, submission ban, test-import allowlist, `exercise_audit realism` (plan `2026-11-09-data-realism.md`) | — | I-03, I-28 | in-progress |
+| I-31b | Data realism content sweep: real and realistic data in the tests, statements and lessons of the affected problems (slices S1–S7) | — | I-31a | todo |
+| I-31c | Data realism review: second-agent review per slice, fresh exercise audit, statuses back to `reviewed` | — | I-31b | todo |
 
 ### Content runway (one wave per path week; ARCHITECTURE §7)
 
@@ -240,6 +243,28 @@ Plan: `docs/superpowers/plans/2026-11-03-time-warp.md`. ADR-0019.
 move ahead or back, restore the authored dates) and reset the course after a backup, in the CLI and the web app.
 Card and re-solve due dates never move. No wording about being behind.
 **Accept:** as listed in the plan. `make check` for I-30a, `make test-all` for I-30b.
+
+### I-31a, I-31b, I-31c · Data realism
+
+Plan: `docs/superpowers/plans/2026-11-09-data-realism.md`. ADR-0020.
+**Owns (I-31a):** `pyproject.toml` and `uv.lock` (the `hf` group and the `dogma_data` packaging and
+import contracts), `src/dogma_data/`, `tests/unit/dogma_data/`, `scripts/sync_hf_datasets.py`,
+`scripts/exercise_audit.py`, `src/dogma/grading/static.py`, `src/dogma/content/validate.py` (test
+import allowlist only), their unit tests, `tests/fixtures/problems/py-realism/`,
+`tests/integration/runner/test_runner_dogma_data.py`, ADR-0020, `docs/DATASETS.md`, and the
+CONTENT_SPEC §6.4/§6.6, ENGINEERING_STANDARDS §5.2/§12, ARCHITECTURE §4.3/§8 and template edits
+the plan lists. Sub-slices run in parallel worktrees on disjoint paths: a1 package, a2 guards and
+audit, a3 HF sync, then a4 Seatbelt test and docs.
+**Owns (I-31b):** the topic directories of slices S1–S7 in the plan; nothing under `src/`, `docs/`
+or this file. **Owns (I-31c):** the same topic directories, for review fixes only.
+**Do:** give tests real offline datasets, pinned HF snapshots and realistic generators where
+synthetic data hides failures; name the data in `problem.md`; show a real-data failure in the
+lesson. Keep every hand-built edge case.
+**Accept:** `dogma_data` loads only numpy on import and is rejected in submissions; every dataset's
+shape, hash and quirks are pinned by unit tests; each new realism test maps to a Contract sentence,
+fails a hand-written realistic wrong solution that passes the old tests (`exercise_audit
+realism`), passes the blind solution in under 10 s and survives `exercise_audit seeds` with the
+data salt; versions are bumped. `make test-all` passes.
 
 ## 3. Milestones
 
