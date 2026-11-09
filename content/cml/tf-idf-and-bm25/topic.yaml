@@ -16,4 +16,4 @@ sources:
   - "book: Manning, Raghavan & Schütze, Introduction to Information Retrieval, chapter 6 (scoring, term weighting and the vector space model)"
   - "paper: Robertson & Zaragoza 2009, The Probabilistic Relevance Framework: BM25 and Beyond (Foundations and Trends in Information Retrieval)"
   - "paper: Spärck Jones 1972, A statistical interpretation of term specificity and its application in retrieval (Journal of Documentation)"
-status: reviewed
+status: verified

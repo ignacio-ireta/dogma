@@ -29,7 +29,8 @@ candidates, not selected chunks.
 **Packing.** Walk the candidates in rank order. A chunk costs `len(text.split())` words. Add it if
 the running total plus its cost is at most `word_budget`. Otherwise skip it and keep going, so a
 shorter lower-ranked candidate can still fit. The budget counts chunk-text words only; ids, labels
-and the question are not counted.
+and the question are not counted. A chunk text may hold line breaks or runs of spaces: it is printed
+unchanged, and its cost is the number of words `str.split()` finds (`"a\nb"` costs 2).
 
 **Output.** A string built with `"\n".join` from these lines, in order:
 1. `Context:`
@@ -77,6 +78,23 @@ build_cited_prompt(
 # x costs 10 words, does not fit, and is skipped; y then z fit in the 5-word budget.
 ```
 
+Real text: a paragraph of `gutenberg_pride_prejudice` (public domain) can hold a line break, as in
+`"It is a truth\nuniversally acknowledged"`. The chunk is printed with its line break and
+costs 6 words (splitting on spaces alone would count 5):
+
+```python
+build_cited_prompt(
+    "q",
+    np.array([1.0]),
+    ["p"],
+    ["It is a truth\nuniversally acknowledged"],
+    np.array([[1.0]]),
+    k=1,
+    word_budget=6,
+)
+# -> "Context:\n[p] It is a truth\nuniversally acknowledged\n\nQuestion: q"
+```
+
 ## Constraints
 
 Allowed: Python standard library and NumPy. Not allowed: `sklearn`, `scipy.spatial` (including its
@@ -86,7 +104,8 @@ cosine distance), or any vector-database or retrieval library (`faiss`, `rank_bm
 ## Done looks like
 
 The public examples pass, plus a degenerate case with no chunks or a zero-norm vector. Hidden tests
-compare the ranking against an independent unit-normalised computation on seeded random inputs,
+compare the ranking against an independent unit-normalised computation on seeded random inputs and on
+bag-of-words vectors of real paragraphs (with line breaks), checking the prompt text and the word budget,
 and check ties broken by chunk id, a long vector that a dot product would wrongly favour, the
 skip-and-continue packing rule, the exact output format including the empty-context form, the
 k-candidate rule, and every error family.

@@ -12,4 +12,4 @@ interview_angle: "Walk the pipeline in order, measure recall@k before you judge 
 sources:
   - "library: AI-ML/12-Frontiers/Lewis Retrieval-Augmented Generation 2020.md"
   - "paper: Lewis et al. 2020, Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (arXiv:2005.11401); no claim in the lesson depends on its text"
-status: reviewed
+status: verified

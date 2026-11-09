@@ -17,6 +17,8 @@ from hypothesis import strategies as st
 from sklearn.feature_extraction.text import TfidfVectorizer
 from submission import tfidf_matrix
 
+from dogma_data import load_text, rng
+
 LARGE_DOCS = 3_000
 LARGE_TIME_LIMIT_S = 5.0
 WORDS = ["cat", "Cat", "dog", "DOG", "a", "I", "x", "42", "7", "the", "sat", "mat", "café", "naïve"]
@@ -230,3 +232,40 @@ def test_empty_corpus_raises_even_with_a_fixed_vocabulary():
         lambda: tfidf_matrix([], vocabulary=["cat", "dog"]),
         "an empty corpus must raise ValueError even when a vocabulary is given",
     )
+
+
+@pytest.fixture(scope="module")
+def prose() -> list[str]:
+    """Paragraphs of a public-domain novel (about 40 KB), split at blank lines."""
+    return [part for part in load_text("gutenberg_pride_prejudice").split("\n\n") if part.strip()]
+
+
+def test_matches_scikit_learn_on_real_prose_paragraphs(prose: list[str]) -> None:
+    draw = rng("cml/tf-idf-and-bm25/p01-tfidf-matrix:prose:0")
+    picks = sorted(int(i) for i in draw.choice(len(prose), size=150, replace=False))
+    docs = [prose[i] for i in picks]
+    want_matrix, want_vocab = _reference(docs)
+    got_matrix, got_vocab = _solve(docs)
+    assert got_vocab == want_vocab, (
+        "the vocabulary differs on real prose: lowercase, keep runs of two or more word "
+        "characters, and sort the terms"
+    )
+    assert got_matrix.shape == want_matrix.shape, (
+        "matrix shape: one row per paragraph, one column per term"
+    )
+    assert np.allclose(got_matrix, want_matrix, rtol=1e-9, atol=1e-12), MATRIX_MISTAKE
+
+
+def test_curly_apostrophes_and_em_dashes_separate_words_as_on_real_prose(prose: list[str]) -> None:
+    # Paragraphs holding a curly apostrophe or an em dash: "don\u2019t" is "don" and "t", and
+    # "word\u2014word" is two words. Stripping these characters before tokenising changes the terms.
+    docs = [part for part in prose if "\u2019" in part or "\u2014" in part][:60]
+    if not docs:
+        _fail("the prose fixture has no curly apostrophe or em dash: the test cannot run")
+    want_matrix, want_vocab = _reference(docs)
+    got_matrix, got_vocab = _solve(docs)
+    assert got_vocab == want_vocab, (
+        "a curly apostrophe or an em dash is punctuation and separates words: do not join "
+        "'don\u2019t' into 'dont' or 'word\u2014word' into one word"
+    )
+    assert np.allclose(got_matrix, want_matrix, rtol=1e-9, atol=1e-12), MATRIX_MISTAKE

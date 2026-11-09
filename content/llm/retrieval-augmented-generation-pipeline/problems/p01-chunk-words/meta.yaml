@@ -1,5 +1,5 @@
 id: llm/retrieval-augmented-generation-pipeline/p01-chunk-words
-version: 2
+version: 3
 title: Chunk a document into overlapping word windows
 language: python
 runtime: py-numpy
@@ -10,4 +10,4 @@ core: true
 tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
 banned_imports: [textwrap, nltk, tiktoken, langchain, llama_index]
 timeout_s: 30
-status: reviewed
+status: verified

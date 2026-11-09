@@ -8,6 +8,8 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import chunk_words
 
+from dogma_data import load_text
+
 WORD = st.text(alphabet=string.ascii_lowercase, min_size=1, max_size=4)
 
 
@@ -140,3 +142,25 @@ def test_input_string_is_not_changed():
     text = "keep  this   text"
     chunk_words(text, 2, 1)
     assert text == "keep  this   text", "the input string must not be changed"
+
+
+@pytest.fixture(scope="module")
+def book() -> str:
+    """About 40 KB of a public-domain book: punctuation is attached to words, as in real prose."""
+    return load_text("gutenberg_walden")
+
+
+@pytest.mark.parametrize(
+    "size, overlap", [(60, 15), (25, 0), (9, 8)], ids=["sixty", "no-overlap", "tight"]
+)
+def test_windows_over_real_prose_keep_punctuated_words_whole(book, size, overlap):
+    # A word is a run of non-whitespace: a word with an em dash or curly quotes is one word.
+    # Splitting on punctuation too would move every window boundary.
+    got = checked(lambda: chunk_words(book, size, overlap))
+    want = reference_chunks(book.split(), size, overlap)
+    if got != want:
+        pytest.fail(
+            "window boundaries differ on real prose: a word is a run of non-whitespace, so "
+            "punctuation such as an em dash or a curly quote stays attached to its word",
+            pytrace=False,
+        )

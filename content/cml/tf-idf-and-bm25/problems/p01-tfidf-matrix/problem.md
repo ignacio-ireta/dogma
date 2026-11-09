@@ -11,7 +11,8 @@ columns.
 - `docs`: a non-empty sequence of `str`. `n` is its length.
 - **Tokens.** Lowercase each document with `str.lower`, then take every match of the regular expression
   `(?u)\b\w\w+\b`. A token is a run of two or more word characters, so single characters such as `a`,
-  `I` and `7` are dropped, and `42` is kept. Punctuation separates tokens.
+  `I` and `7` are dropped, and `42` is kept. Punctuation separates tokens, including a curly
+  apostrophe (`’`) and an em dash (`—`): `don’t` gives `don`, and `word—word` gives two tokens.
 - **Term frequency** `tf(d, t)`: the raw count of token `t` in document `d`. No logarithm.
 - **Document frequency** `df(t)`: the number of documents that contain `t`, counted over all of `docs`,
   even when a `vocabulary` is given.
@@ -49,6 +50,9 @@ columns.
 ```
 
 ```python
+>>> tfidf_matrix(["Don’t stop—keep going.", "Keep going."])[1]
+['don', 'going', 'keep', 'stop']
+# Real prose: "don" is a token, the lone "t" is dropped, and the em dash separates two words.
 >>> matrix, vocab = tfidf_matrix(["red apple", "green apple"], vocabulary=["apple", "pear", "red"])
 >>> matrix.round(4).tolist()
 [[0.5797, 0.0, 0.8148], [1.0, 0.0, 0.0]]
@@ -66,7 +70,9 @@ columns.
 All public tests pass, then **Submit** runs the hidden tests. They compare the matrix and the vocabulary
 with scikit-learn's `TfidfVectorizer` on random corpora, with and without a fixed vocabulary. They check
 the tokenizer (case folding, single characters dropped, digits kept, accented letters kept), the sorted
-default vocabulary, the idf of a term present in every document, that each non-empty row has unit length,
+default vocabulary, the idf of a term present in every document, that curly apostrophes and em dashes separate words in
+real prose (paragraphs of `gutenberg_pride_prejudice`, a public-domain novel), that each non-empty row
+has unit length,
 that an empty document gives a zero row, the order of a fixed vocabulary, and the errors for an empty
 corpus, a corpus with no tokens, a repeated vocabulary term and an empty vocabulary. They check that the
 inputs are unchanged, that the matrix is `float64`, and that a 3,000-document corpus finishes quickly.

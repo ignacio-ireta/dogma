@@ -7,7 +7,8 @@ the previous one. The overlap keeps a sentence that straddles a boundary visible
 ## Contract
 
 - `text`: `str`. A **word** is a maximal run of non-whitespace characters, so `text.split()` defines
-  the words. Each returned chunk joins its words with a single space.
+  the words. Punctuation stays attached: `“Yes,”` and `pride—and` are one word each. Each returned
+  chunk joins its words with a single space.
 - `size`: `int`, at least 1.
 - `overlap`: `int`, with `0 <= overlap < size`.
 - Returns: `list[str]`, one string per chunk, in document order.
@@ -22,6 +23,11 @@ the previous one. The overlap keeps a sentence that straddles a boundary visible
 - Must not mutate inputs.
 
 ## Examples
+
+```python
+chunk_words("He said “no”—then left", 3, 1)
+# -> ['He said “no”—then', '“no”—then left']   # a word is split on whitespace only
+```
 
 ```python
 chunk_words("a b c d e f g h i j", 4, 2)
@@ -50,7 +56,8 @@ the raw string by characters.
 ## Done looks like
 
 The public examples pass, plus an empty-text case. Hidden tests compare against an independent
-enumeration of window starts on seeded random documents, and check the structural properties of
+enumeration of window starts on seeded random documents, and on real prose (`gutenberg_walden`,
+about 40 KB, with em dashes and curly quotes inside words). They check the structural properties of
 any overlapping chunking: every word is covered, consecutive full windows share exactly `overlap`
 words, no chunk is contained in its predecessor, and no chunk exceeds `size` words. They also cover
 `size` larger than the document, `overlap = 0`, and every invalid-argument family.

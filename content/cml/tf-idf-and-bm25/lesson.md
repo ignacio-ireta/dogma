@@ -47,6 +47,8 @@ Saturation with a document at average length: a count of 1, 2, 4 and 10 gives te
 - **Repeated query terms.** Whether a repeated query word counts twice depends on the engine. Check it before comparing numbers.
 - **Chunk size.** In RAG, changing the chunk length changes the average length, and so the length term.
 
+**Punctuation that is not ASCII.** Real prose has curly apostrophes and em dashes, and the token rule treats both as separators. On 45 paragraphs of *Pride and Prejudice* that contain one, a tokenizer that first removes the curly apostrophe gets 349 terms where scikit-learn gets 342. It gains `dont` and `bingleys`, and it loses `don` and `brother`, so every row that holds those words changes. Test a tokenizer on real text with its punctuation, not on lowercase ASCII words.
+
 **The system you already use.** `dogma corpus search` ranks chunks with SQLite FTS5's `bm25()`, ordered ascending, since lower values are better. The idf in FTS5 is the Robertson form, and in a check a term found in more than half the rows scored about $-10^{-6}$, that is, nearly nothing. A common word in your corpus therefore barely affects the ranking.
 
 ## Interview angle

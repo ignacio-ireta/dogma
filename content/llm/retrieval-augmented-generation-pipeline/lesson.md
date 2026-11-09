@@ -67,6 +67,8 @@ Noise for this session: the choice of vector database, approximate-nearest-neigh
   existing id with an unsupported claim is a grounding failure, and it needs a separate check.
 - **Budget loss.** Greedy packing can drop the gold chunk to make room for a shorter, weaker one. Measure recall@k before packing and again after it.
 
+**Punctuation inside words.** Chunking counts words by whitespace, so `pride—and` and `“no,”` are one word each. A regex word rule such as `\w+` splits them. On *Walden* (about 40 KB), `str.split()` finds 7,190 words and `\w+` finds 7,263. With 60-word windows and a 15-word overlap, that is 160 chunks against 162, and all 160 chunks at the same index differ. Recall@k then measures a different chunking from the one you deploy.
+
 ## Interview angle
 
 Sixty-second answer: "I chunk with overlap so a boundary fact survives in one window, embed each chunk, and rank by cosine with a fixed tie rule. I keep the top $k$ and pack under a word budget with stable ids. I measure recall@k first, then check that every citation maps to a packed chunk."

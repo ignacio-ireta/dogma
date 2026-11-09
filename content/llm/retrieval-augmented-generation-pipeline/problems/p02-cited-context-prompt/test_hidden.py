@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from collections import Counter
+from string import punctuation
+
 import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import build_cited_prompt
+
+from dogma_data import load_text, rng
 
 VOCAB = ["alpha", "beta", "gamma", "delta", "eps", "zeta"]
 
@@ -318,3 +323,57 @@ def test_scores_that_differ_in_the_ninth_decimal_are_not_ties():
     assert got == "Context:\n[b] y\n\nQuestion: q", (
         "scores are rounded to nine decimal places, so a difference at the ninth place must rank"
     )
+
+
+@pytest.fixture(scope="module")
+def passages() -> list[str]:
+    """Paragraphs of a public-domain novel. Many hold line breaks inside them, as real text does."""
+    return [part for part in load_text("gutenberg_pride_prejudice").split("\n\n") if part.strip()]
+
+
+def test_real_passages_print_exactly_and_cost_their_words_across_line_breaks(passages):
+    # Bag-of-words count vectors over the 150 most frequent words, computed here in the test.
+    tally = Counter(
+        word.strip(punctuation + "\u201c\u201d\u2018\u2019\u2014").lower()
+        for part in passages
+        for word in part.split()
+    )
+    vocabulary = [word for word, _ in tally.most_common(150) if word]
+
+    def count_vector(text: str) -> np.ndarray:
+        counts = Counter(
+            word.strip(punctuation + "\u201c\u201d\u2018\u2019\u2014").lower()
+            for word in text.split()
+        )
+        return np.array([float(counts[word]) for word in vocabulary])
+
+    pool = [part for part in passages if "\n" in part.strip() and count_vector(part).any()]
+    draw = rng("llm/retrieval-augmented-generation-pipeline/p02-cited-context-prompt:prose:0")
+    picks = sorted(int(i) for i in draw.choice(len(pool), size=min(30, len(pool)), replace=False))
+    texts = [pool[i] for i in picks]
+    vectors = np.stack([count_vector(text) for text in texts])
+    ids = [f"p{i:02d}" for i in range(len(texts))]
+    query_vector = count_vector("the man and his wife and a good fortune")
+    if not query_vector.any():
+        pytest.fail("the query vector is empty: the test cannot run", pytrace=False)
+    for k, budget in ((6, 90), (12, 60), (12, 250)):
+        want = reference(
+            query="what does the wife want?",
+            qv=query_vector,
+            ids=ids,
+            texts=texts,
+            vectors=vectors,
+            k=k,
+            budget=budget,
+        )
+        got = checked(
+            lambda k=k, budget=budget: build_cited_prompt(
+                "what does the wife want?", query_vector, ids, texts, vectors, k, budget
+            )
+        )
+        if got != want:
+            pytest.fail(
+                "the prompt differs on real prose: print each chunk text exactly as given, "
+                "including its line breaks, and cost a chunk by the words str.split() finds",
+                pytrace=False,
+            )

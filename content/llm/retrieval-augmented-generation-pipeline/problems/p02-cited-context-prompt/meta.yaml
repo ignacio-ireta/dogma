@@ -1,5 +1,5 @@
 id: llm/retrieval-augmented-generation-pipeline/p02-cited-context-prompt
-version: 3
+version: 4
 title: Retrieve top-k chunks by cosine similarity and pack a cited prompt
 language: python
 runtime: py-numpy
@@ -10,4 +10,4 @@ core: false
 tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
 banned_imports: [sklearn, scipy.spatial]
 timeout_s: 30
-status: reviewed
+status: verified
