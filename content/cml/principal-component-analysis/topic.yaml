@@ -17,4 +17,4 @@ sources:
   - "library: Mathematics/07-Multivariate-Statistics/Pearson - Principal Components 1901.md"
   - "library: Mathematics/07-Multivariate-Statistics/Hotelling - Principal Components 1933.md"
   - "source: library-refresh/01-Mathematics/05-Linear-Algebra/1955-1970 -- Penrose, Golub and Reinsch -- Least Squares, Pseudoinverses and Numerical Stability -- Concept Note.md"
-status: reviewed
+status: verified

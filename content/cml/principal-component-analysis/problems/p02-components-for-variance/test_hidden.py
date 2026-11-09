@@ -5,15 +5,19 @@ from hypothesis import strategies as st
 from sklearn.decomposition import PCA
 from submission import components_for_variance
 
+from dogma_data import load, rng
+from dogma_data.synth import correlated_mixed_scale
+
 SEEDS = st.integers(min_value=0, max_value=10**6)
 ROWS = st.integers(min_value=3, max_value=12)
 COLS = st.integers(min_value=2, max_value=5)
 THRESHOLDS = st.sampled_from([0.25, 0.5, 0.8, 0.9, 0.95, 1.0])
-MARGIN = 1e-9  # the oracle's own rounding margin; random data never sits this close to a tie
+MARGIN = 1e-12  # the contract's rounding margin; mixed-scale data has ratios near 1e-10
 
 
 def _data(seed, n, d):
-    return np.random.default_rng(seed).normal(size=(n, d))
+    """Correlated columns on scales from 0.01 to 1000, as real measurements have."""
+    return correlated_mixed_scale(rng(f"components-p02:data:{seed}:{n}:{d}"), n, d)
 
 
 def _call(X, threshold, mistake):
@@ -239,4 +243,28 @@ def test_cumulative_ratio_more_than_the_rounding_margin_below_does_not_reach_the
         _call(X, 0.5 + 2.5e-12, "the near-tie case was rejected or failed") == 2,
         "a cumulative ratio 1.5e-12 below the threshold is outside the 1e-12 rounding margin: "
         "it must not count as reaching the threshold",
+    )
+
+
+@pytest.fixture(scope="module")
+def wine_tiny():
+    """Raw wine scaled down by an exact power of two, 2**-40: its total variance is about 1e-19."""
+    return load("wine").X * 2.0**-40
+
+
+def test_tiny_scale_wine_is_not_constant_and_needs_the_real_count(wine_tiny):
+    # Proline carries about 99.8% of the variance at any scale, so one component reaches 0.95.
+    reference = PCA(n_components=0.95, svd_solver="full").fit(wine_tiny).n_components_
+    try:
+        count = components_for_variance(wine_tiny, 0.95)
+    except ValueError:
+        pytest.fail(
+            "tiny-scale data was treated as constant: a tiny positive total variance is not "
+            "constant, so test the total for exact zero, not against an absolute tolerance",
+            pytrace=False,
+        )
+    _check(
+        count == reference,
+        "tiny-scale data gave the wrong count: a tiny positive total variance is not constant, so "
+        "the constant-column check must be an exact zero test, not an absolute tolerance",
     )

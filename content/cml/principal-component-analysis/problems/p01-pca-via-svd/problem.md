@@ -21,7 +21,8 @@ observations projected onto those axes.
   - `"explained_variance_ratio"`: shape `(k,)`. Each explained variance divided by the total variance,
     which is the sum over all `d` columns of their sample variances (divisor `n - 1`). Dividing by the
     variance of the kept axes only is wrong. If the total is zero, because every column is constant,
-    every ratio is `0.0`.
+    every ratio is `0.0`. Zero means exactly zero: a tiny but positive total is not constant, and its ratios
+  are computed as usual.
   - `"transformed"`: shape `(n, k)`, equal to the centred `X` times `components.T`.
 - Sign convention: in each row of `components`, the entry of largest absolute value is positive. This
   is the rule scikit-learn applies in `PCA(svd_solver="full")`, its `svd_flip` with
@@ -48,6 +49,11 @@ array([[ 0.70710678, -0.70710678]])
 ValueError
 ```
 
+On raw `wine` (178 rows, 13 columns; column variances from about 0.02 to about 10^5, with proline the
+largest), the first axis carries about 99.8% of the variance. `explained_variance_ratio[0]` is about 0.998 with
+`n_components=1`, and the axis is almost pure proline. The same data scaled by $2^{-40}$ has a total variance near
+$10^{-19}$, and its ratios must be unchanged.
+
 ## Constraints
 
 - Allowed: NumPy array operations, including `numpy.linalg.svd` and `numpy.linalg.eigh`.
@@ -60,4 +66,7 @@ scikit-learn's full-SVD PCA on random data, including signs; that the explained 
 sample variances of the projections; that the ratios use the total variance; shift invariance, which
 catches a missing centring step; orthonormal axes in decreasing order of variance; the sign rule on its
 own; that keeping every axis preserves distances from the mean; rank-one and constant data; integer
-input; invalid input and parameters; and inputs left unchanged.
+input; invalid input and parameters; and inputs left unchanged. The realism families are mixed-scale real data (raw
+`wine`, where one column holds nearly all the variance), digit-style data with constant columns and a rank below
+its width, and the same real data scaled by a power of two, where a tiny total variance must still give its real
+ratios.

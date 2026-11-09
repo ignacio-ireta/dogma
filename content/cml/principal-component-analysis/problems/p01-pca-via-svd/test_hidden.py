@@ -5,13 +5,17 @@ from hypothesis import strategies as st
 from sklearn.decomposition import PCA
 from submission import pca
 
+from dogma_data import load, rng
+from dogma_data.synth import correlated_mixed_scale
+
 SEEDS = st.integers(min_value=0, max_value=10**6)
 ROWS = st.integers(min_value=3, max_value=12)
 COLS = st.integers(min_value=2, max_value=5)
 
 
 def _data(seed, n, d):
-    return np.random.default_rng(seed).normal(size=(n, d))
+    """Correlated columns on scales from 0.01 to 1000, as real measurements have."""
+    return correlated_mixed_scale(rng(f"pca-p01:data:{seed}:{n}:{d}"), n, d)
 
 
 def _call(X, k, mistake):
@@ -332,4 +336,41 @@ def test_entry_outside_the_tie_band_decides_the_sign_by_magnitude():
         components[0, 1] > 0,
         "the largest-magnitude entry lies outside the tie band of the other entry, so it alone "
         "sets the sign and must be positive",
+    )
+
+
+@pytest.fixture(scope="module")
+def wine_tiny():
+    """Raw wine (proline near 1000, hue near 0.7) scaled down by an exact power of two, 2**-40."""
+    return load("wine").X * 2.0**-40
+
+
+def _relative_close(actual, expected, mistake):
+    """Relative agreement only: an absolute tolerance would hide every value at this scale."""
+    try:
+        np.testing.assert_allclose(actual, expected, rtol=1e-9, atol=0.0)
+    except AssertionError:
+        pytest.fail(mistake, pytrace=False)
+
+
+def test_tiny_scale_wine_keeps_its_real_ratios_and_is_not_treated_as_constant(wine_tiny):
+    # The total variance of this data is about 1e-19, far below any absolute epsilon. Its ratios
+    # are the ordinary ones, so they must agree with scikit-learn on the same numbers.
+    result = _call(wine_tiny, 3, "pca failed on a valid tiny-scale matrix")
+    ref = PCA(n_components=3, svd_solver="full").fit(wine_tiny)
+    _relative_close(
+        _field(result, "explained_variance_ratio"),
+        ref.explained_variance_ratio_,
+        "tiny-scale data gave the wrong ratios: a tiny positive total variance is not constant, "
+        "so test the total for exact zero, not against an absolute tolerance",
+    )
+    _relative_close(
+        _field(result, "explained_variance"),
+        ref.explained_variance_,
+        "tiny-scale data gave the wrong explained variances: keep the scale of the data",
+    )
+    _relative_close(
+        _field(result, "components")[:3],
+        ref.components_,
+        "tiny-scale data gave the wrong axes: the axes are scale-free, so they must match",
     )

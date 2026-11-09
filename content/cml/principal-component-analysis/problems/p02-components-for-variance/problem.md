@@ -19,7 +19,8 @@ ratio divides by the total variance of all columns.
   one more component. This function does not follow that rule.
 - Raises `ValueError` when `X` is not 2-D, has fewer than two rows or no columns, contains NaN or
   infinity, when `threshold` is not a real number in `(0, 1]`, or when every column is constant. A
-  constant matrix has zero total variance, so no ratio exists.
+  constant matrix has zero total variance, so no ratio exists. "Constant" means exactly constant:
+  the test is for zero total variance, so a tiny but positive total gives an ordinary count.
 - Must not mutate its input.
 
 ## Examples
@@ -36,6 +37,9 @@ ratio divides by the total variance of all columns.
 ValueError
 ```
 
+On raw `wine` (178 rows, 13 columns, proline carrying about 99.8% of the variance) the count at threshold
+`0.95` is 1, and at `0.999` it is 2. The same data scaled by $2^{-40}$ must give the same counts.
+
 ## Constraints
 
 - Allowed: NumPy array operations, including `numpy.linalg.svd` and `numpy.linalg.eigh`.
@@ -48,3 +52,5 @@ on random data at thresholds away from ties; minimality and reach, checked again
 eigenvalue computation; monotonicity in the threshold; a threshold of one on rank-deficient data; exact
 ties, both a symmetric case and the worked example; a large common offset that an uncentred computation
 gets wrong; constant data; threshold, shape and boolean errors; integer input; and inputs left unchanged.
+The realism families are mixed-scale real data (raw `wine`, where one column holds nearly all the variance) and
+the same data scaled by a power of two, whose total variance is tiny but positive.

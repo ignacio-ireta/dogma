@@ -83,6 +83,8 @@ Hotelling named principal components and turned them into a general statistical 
 - **Interpretability.** Each axis is a weighted mix of every input variable.
 - **Relevance.** The top axes maximise variance, not prediction; a classifier may need a direction PCA discards.
 
+**Units decide the axes.** Raw `wine` (178 rows, 13 columns) has column variances from about 0.02 to about 10^5. Its first axis carries 99.8% of the variance and is almost pure `proline`. Standardising the columns, a habit many people bring from other models, gives a first axis with 36.2% of the variance, led by `flavanoids`. Neither result is a bug. PCA follows the units it is given, so decide the scaling before you read the axes.
+
 ## Interview angle
 
 The 60-second answer: PCA finds orthogonal directions of maximum variance in the centred data, computed from the SVD of
