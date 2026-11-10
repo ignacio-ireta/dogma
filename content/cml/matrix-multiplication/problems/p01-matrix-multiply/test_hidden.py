@@ -107,7 +107,7 @@ def test_matches_numpy_matmul_on_random_float_matrices():
         )
 
 
-@settings(max_examples=80, deadline=None)
+@settings(max_examples=80, deadline=None, report_multiple_bugs=False)
 @given(int_matrices())
 def test_identity_matrices_are_neutral_on_both_sides(matrix):
     m, n = len(matrix), len(matrix[0])
@@ -119,7 +119,7 @@ def test_identity_matrices_are_neutral_on_both_sides(matrix):
     )
 
 
-@settings(max_examples=80, deadline=None)
+@settings(max_examples=80, deadline=None, report_multiple_bugs=False)
 @given(product_pairs())
 def test_result_has_rows_of_a_and_columns_of_b(pair):
     A, B = pair
@@ -130,7 +130,7 @@ def test_result_has_rows_of_a_and_columns_of_b(pair):
     )
 
 
-@settings(max_examples=80, deadline=None)
+@settings(max_examples=80, deadline=None, report_multiple_bugs=False)
 @given(product_pairs())
 def test_transpose_of_product_is_product_of_transposes_in_reverse_order(pair):
     A, B = pair
@@ -141,7 +141,7 @@ def test_transpose_of_product_is_product_of_transposes_in_reverse_order(pair):
     assert lhs == rhs, "(AB)^T should equal B^T A^T: the factor order must reverse"
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(product_triples())
 def test_associativity_holds_exactly_for_small_integer_matrices(triple):
     A, B, C = triple
@@ -152,7 +152,17 @@ def test_associativity_holds_exactly_for_small_integer_matrices(triple):
     )
 
 
-@pytest.mark.parametrize(("a_shape", "b_shape"), MISMATCHED_SHAPES)
+@pytest.mark.parametrize(
+    ("a_shape", "b_shape"),
+    MISMATCHED_SHAPES,
+    ids=[
+        "same-shape-wide",
+        "same-shape-tall",
+        "row-by-column-mismatch",
+        "square-by-wider",
+        "column-by-short-wide",
+    ],
+)
 def test_inner_dimension_mismatch_raises_and_names_both_shapes(a_shape, b_shape):
     A = [[1] * a_shape[1] for _ in range(a_shape[0])]
     B = [[1] * b_shape[1] for _ in range(b_shape[0])]
