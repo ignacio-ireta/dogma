@@ -6,8 +6,10 @@ test grades a real submission; the runbook's Accept commands do that.
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
+import shutil
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -289,3 +291,382 @@ def test_unknown_problem_is_usage_error_with_close_match(gate, repo_problem, tmp
     err = capsys.readouterr().err
     assert "no problem t/x/p01-dem" in err
     assert PROBLEM_ID in err
+
+
+# --- manifest writers ---------------------------------------------------------------------------
+
+FIXTURE_REL = "fixtures/py-variants/p01-add"
+PLAIN = "def add(a, b):\n    return a + b\n"
+BUG = "def add(a, b):\n    return a + b  # BUG\n"
+PUBLIC_BUG = "def add(a, b):\n    return a + b  # PUBLICBUG\n"
+BOOM = "def add(a, b):\n    return a + b  # BOOM\n"
+BROKEN = "def add(a, b):\n    return a  # BROKEN\n"
+SLOW = "def add(a, b):\n    return a  # SLOW\n"
+
+
+def _fake_report(source: str) -> GradeReport:
+    """What the fake grader says, from the marker in the submitted source."""
+    if "SLOW" in source:
+        return _report(RunStatus.TIMEOUT)
+    if "PUBLICBUG" in source:
+        return _report(
+            RunStatus.FAILED,
+            (
+                GradedTest(
+                    name="test_example_adds_two_ints",
+                    file="public",
+                    outcome="fail",
+                    message="add(2, 3) should be 5",
+                ),
+                GradedTest(name="test_large_ints_stay_exact", file="hidden", outcome="pass"),
+            ),
+        )
+    if "BUG" in source or "BOOM" in source:
+        message = "ValueError: boom" if "BOOM" in source else "large ints lost precision"
+        return _report(
+            RunStatus.FAILED,
+            (
+                GradedTest(name="test_example_adds_two_ints", file="public", outcome="pass"),
+                GradedTest(
+                    name="test_large_ints_stay_exact",
+                    file="hidden",
+                    outcome="fail",
+                    message=message,
+                ),
+            ),
+        )
+    if "BROKEN" in source:
+        return _report(
+            RunStatus.FAILED,
+            (
+                GradedTest(name="test_example_adds_two_ints", file="public", outcome="fail"),
+                GradedTest(name="test_large_ints_stay_exact", file="hidden", outcome="fail"),
+            ),
+        )
+    return _report(
+        RunStatus.PASSED,
+        (
+            GradedTest(name="test_example_adds_two_ints", file="public", outcome="pass"),
+            GradedTest(name="test_large_ints_stay_exact", file="hidden", outcome="pass"),
+        ),
+    )
+
+
+@pytest.fixture
+def problem_dir(gate: ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """The fixture problem copied into a scratch repo, which the gate's audit tool reads."""
+    root = tmp_path / "repo"
+    target = root / "content" / "fixtures" / "py-variants" / "problems" / "p01-add"
+    shutil.copytree(FIXTURE, target, ignore=shutil.ignore_patterns("__pycache__"))
+    monkeypatch.setattr(gate.audit, "REPO", root)
+    return target
+
+
+@pytest.fixture
+def grader(gate: ModuleType, monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """Replace the real grader with the fake. Returns the sources it was asked to grade."""
+    calls: list[str] = []
+
+    def grade(_problem, source, _settings, **_kw):
+        calls.append(source)
+        return _fake_report(source)
+
+    monkeypatch.setattr(gate.audit, "grade_source", grade)
+    return calls
+
+
+def _candidate(tmp_path: Path, name: str, body: str) -> Path:
+    path = tmp_path / "candidates" / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(body, encoding="utf-8")
+    return path
+
+
+def _reject_argv(out: Path, source: Path, *extra: str) -> list[str]:
+    base = [
+        "add-reject",
+        "--out",
+        str(out),
+        FIXTURE_REL,
+        str(source),
+        "--mistake",
+        "drops the bool check",
+        "--clause",
+        "C3",
+    ]
+    return [*base, *extra]
+
+
+def _manifest_of(gate: ModuleType, problem_dir: Path):
+    return gate.read_manifest(gate.find_problem(FIXTURE_REL))
+
+
+def test_add_reject_records_the_hidden_test_that_kills(gate, problem_dir, grader, tmp_path, capsys):
+    src = _candidate(tmp_path, "reject_no_overflow.py", BUG)
+    out = tmp_path / "out"
+    assert gate.main(_reject_argv(out, src)) == 0
+    text = capsys.readouterr().out
+    assert "added reject reject_no_overflow.py: killed_by test_large_ints_stay_exact" in text
+    assert "(hidden), message kind named" in text
+    manifest = _manifest_of(gate, problem_dir)
+    assert manifest.problem_version == 1
+    entry = manifest.reject[0]
+    assert (entry.file, entry.killed_by, entry.visible) == (
+        "reject_no_overflow.py",
+        "test_large_ints_stay_exact",
+        "hidden",
+    )
+    md = (problem_dir / "problem.md").read_text(encoding="utf-8")
+    assert entry.clause == gate.clause_text(md, "C3")
+    assert (problem_dir / "variants" / "reject_no_overflow.py").is_file()
+    assert not (out / "ledger.jsonl").exists()
+
+
+def test_add_reject_prefers_a_public_test(gate, problem_dir, grader, tmp_path):
+    src = _candidate(tmp_path, "reject_public.py", PUBLIC_BUG)
+    assert gate.main(_reject_argv(tmp_path / "out", src)) == 0
+    entry = _manifest_of(gate, problem_dir).reject[0]
+    assert (entry.killed_by, entry.visible) == ("test_example_adds_two_ints", "public")
+
+
+REJECT_REFUSALS = [
+    # (case, file name, source, extra arguments, exit code, text the output must hold)
+    ("survives", "reject_plain.py", PLAIN, [], 1, "SURVIVED"),
+    ("broken", "reject_broken.py", BROKEN, [], 1, "NOT KILLED"),
+    ("timeout", "reject_slow.py", SLOW, [], 1, "NOT KILLED"),
+    ("unknown clause", "reject_bug.py", BUG, ["--clause", "C9"], 1, "no clause C9"),
+    ("markup", "reject_bug.py", BUG, ["--mistake", "uses `x`"], 1, "use plain words"),
+    ("bad name", "bad.py", BUG, [], 2, "bad variant file name"),
+    ("wrong suffix", "reject_bug.sql", BUG, [], 2, "bad variant file name"),
+    ("not failing", "reject_bug.py", BUG, ["--killed-by", "test_sum_x"], 1, "does not fail"),
+    ("message absent", "reject_bug.py", BUG, ["--message-has", "overflow"], 1, "shows"),
+]
+
+
+@pytest.mark.usefixtures("grader")
+@pytest.mark.parametrize("row", REJECT_REFUSALS, ids=[row[0] for row in REJECT_REFUSALS])
+def test_add_reject_refusals_leave_no_trace(gate, problem_dir, tmp_path, capsys, row):
+    case, name, body, extra, code, text = row
+    src = _candidate(tmp_path, name, body)
+    out = tmp_path / "out"
+    assert gate.main(_reject_argv(out, src, *extra)) == code, case
+    captured = capsys.readouterr()
+    assert text in captured.err + captured.out, case
+    assert not (problem_dir / "variants").exists(), case
+    assert src.is_file()
+
+
+def test_add_reject_refuses_a_file_inside_variants(gate, problem_dir, grader, tmp_path):
+    inside = problem_dir / "variants" / "reject_inside.py"
+    inside.parent.mkdir()
+    inside.write_text(BUG, encoding="utf-8")
+    assert gate.main(_reject_argv(tmp_path / "out", inside)) == 2
+    assert not (problem_dir / "variants" / "manifest.yaml").exists()
+    assert inside.is_file()
+
+
+def test_refused_add_keeps_the_existing_manifest(gate, problem_dir, grader, tmp_path):
+    out = tmp_path / "out"
+    first = _candidate(tmp_path, "reject_first.py", BUG)
+    assert gate.main(_reject_argv(out, first)) == 0
+    before = (problem_dir / "variants" / "manifest.yaml").read_bytes()
+    second = _candidate(tmp_path, "reject_second.py", BROKEN)
+    assert gate.main(_reject_argv(out, second)) == 1
+    assert (problem_dir / "variants" / "manifest.yaml").read_bytes() == before
+    assert not (problem_dir / "variants" / "reject_second.py").exists()
+
+
+def test_message_defect_is_noted_in_the_ledger(gate, problem_dir, grader, tmp_path):
+    src = _candidate(tmp_path, "reject_boom.py", BOOM)
+    out = tmp_path / "out"
+    assert gate.main(_reject_argv(out, src)) == 0
+    rows = [json.loads(line) for line in (out / "ledger.jsonl").read_text().splitlines()]
+    assert [row["kind"] for row in rows] == ["message-defect"]
+    assert "reject_boom.py: test_large_ints_stay_exact shows kind=bare_exception" in rows[0]["text"]
+
+
+def test_add_accept_records_a_passing_solution(gate, problem_dir, grader, tmp_path, capsys):
+    src = _candidate(tmp_path, "accept_loop.py", PLAIN)
+    argv = [
+        "add-accept",
+        "--out",
+        str(tmp_path / "out"),
+        FIXTURE_REL,
+        str(src),
+        "--origin",
+        "freedom",
+        "--freedom",
+        "uses a loop",
+    ]
+    assert gate.main(argv) == 0
+    assert "added accept accept_loop.py (freedom)" in capsys.readouterr().out
+    entry = _manifest_of(gate, problem_dir).accept[0]
+    assert (entry.origin, entry.freedom) == ("freedom", "uses a loop")
+
+
+def test_add_accept_refuses_a_failing_solution(gate, problem_dir, grader, tmp_path, capsys):
+    src = _candidate(tmp_path, "accept_bug.py", BUG)
+    argv = ["add-accept", "--out", str(tmp_path / "out"), FIXTURE_REL, str(src)]
+    assert gate.main([*argv, "--origin", "freedom", "--freedom", "x"]) == 1
+    assert "NOT ACCEPTED" in capsys.readouterr().err
+    assert not (problem_dir / "variants").exists()
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        ["--origin", "blind"],  # a blind accept has a fixed name
+        ["--origin", "freedom"],  # freedom needs its text
+        ["--origin", "blind", "--freedom", "x"],  # blind takes no freedom text
+    ],
+)
+def test_add_accept_argument_mistakes_are_usage_errors(gate, problem_dir, grader, tmp_path, extra):
+    src = _candidate(tmp_path, "accept_other.py", PLAIN)
+    argv = ["add-accept", "--out", str(tmp_path / "out"), FIXTURE_REL, str(src), *extra]
+    assert gate.main(argv) == 2
+    assert not (problem_dir / "variants").exists()
+
+
+def test_add_uncovered_and_remove_variant(gate, problem_dir, grader, tmp_path, capsys):
+    out = tmp_path / "out"
+    uncovered = [
+        "add-uncovered",
+        "--out",
+        str(out),
+        FIXTURE_REL,
+        "--clause",
+        "C2",
+        "--reason",
+        "sums are exact by the contract",
+    ]
+    assert gate.main(uncovered) == 0
+    assert "added uncovered C2" in capsys.readouterr().out
+    md = (problem_dir / "problem.md").read_text(encoding="utf-8")
+    assert _manifest_of(gate, problem_dir).uncovered[0].clause == gate.clause_text(md, "C2")
+
+    src = _candidate(tmp_path, "accept_loop.py", PLAIN)
+    add = ["add-accept", "--out", str(out), FIXTURE_REL, str(src)]
+    assert gate.main([*add, "--origin", "freedom", "--freedom", "a loop"]) == 0
+    remove = ["remove-variant", "--out", str(out), FIXTURE_REL, "accept_loop.py"]
+    assert gate.main(remove) == 0
+    assert capsys.readouterr().out.endswith("removed accept_loop.py\n")
+    assert _manifest_of(gate, problem_dir).accept == ()
+    assert not (problem_dir / "variants" / "accept_loop.py").exists()
+
+    assert gate.main(["remove-variant", "--out", str(out), FIXTURE_REL, "accept_gone.py"]) == 2
+
+
+def test_remove_of_the_last_entry_deletes_manifest_and_directory(
+    gate, problem_dir, grader, tmp_path
+):
+    out = tmp_path / "out"
+    src = _candidate(tmp_path, "reject_bug.py", BUG)
+    assert gate.main(_reject_argv(out, src)) == 0
+    assert gate.main(["remove-variant", "--out", str(out), FIXTURE_REL, "reject_bug.py"]) == 0
+    assert not (problem_dir / "variants").exists()
+
+
+def _blind_submit(out: Path, problem_id: str, text: str, verdict: str = "survived", sha=None):
+    solution = out / "blind" / problem_id / "solution.py"
+    solution.parent.mkdir(parents=True, exist_ok=True)
+    solution.write_text(text, encoding="utf-8")
+    row = {
+        "problem": problem_id,
+        "verdict": verdict,
+        "source_sha": sha if sha is not None else _text_sha(text),
+    }
+    with (out / "blind.jsonl").open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(row) + "\n")
+
+
+def _text_sha(text: str) -> str:
+    return hashlib.sha256(text.encode()).hexdigest()[:16]
+
+
+def test_adopt_blind_adopts_a_passing_submission(gate, problem_dir, grader, tmp_path, capsys):
+    out = tmp_path / "out"
+    _blind_submit(out, FIXTURE_REL, PLAIN)
+    assert gate.main(["adopt-blind", "--out", str(out)]) == 0
+    text = capsys.readouterr().out
+    assert f"{FIXTURE_REL}  adopted  similarity=" in text
+    assert "adopt-blind: 1 adopted, 0 skipped" in text
+    entry = _manifest_of(gate, problem_dir).accept[0]
+    assert (entry.file, entry.origin) == ("accept_blind.py", "blind")
+
+
+@pytest.mark.usefixtures("grader")
+@pytest.mark.parametrize(
+    "kwargs",
+    [{"sha": "0" * 16}, {"verdict": "killed_hidden"}],
+    ids=["sha differs", "not survived"],
+)
+def test_adopt_blind_skips_a_submission_that_does_not_match(
+    gate, problem_dir, tmp_path, capsys, kwargs
+):
+    out = tmp_path / "out"
+    _blind_submit(out, FIXTURE_REL, PLAIN, **kwargs)
+    assert gate.main(["adopt-blind", "--out", str(out)]) == 0
+    reason = "no passing submit for this file"
+    assert f"{FIXTURE_REL}  skipped: {reason}" in capsys.readouterr().out
+    assert not (problem_dir / "variants").exists()
+
+
+def test_adopt_blind_skips_a_problem_without_a_file(gate, problem_dir, grader, tmp_path, capsys):
+    out = tmp_path / "out"
+    out.mkdir()
+    assert gate.main(["adopt-blind", "--out", str(out)]) == 0
+    assert f"{FIXTURE_REL}  skipped: no file" in capsys.readouterr().out
+
+
+def test_variants_grades_once_then_reuses_its_rows(gate, problem_dir, grader, tmp_path, capsys):
+    out = tmp_path / "out"
+    accept = _candidate(tmp_path, "accept_loop.py", PLAIN)
+    add = ["add-accept", "--out", str(out), FIXTURE_REL, str(accept)]
+    assert gate.main([*add, "--origin", "freedom", "--freedom", "a loop"]) == 0
+    reject = _candidate(tmp_path, "reject_bug.py", BUG)
+    assert gate.main(_reject_argv(out, reject)) == 0
+    grader.clear()
+    assert gate.main(["variants", "--out", str(out)]) == 0
+    assert len(grader) == 2
+    assert "variants: 2 ok, 0 mismatches in 1 problems" in capsys.readouterr().out
+    grader.clear()
+    assert gate.main(["variants", "--out", str(out)]) == 0
+    assert grader == []
+
+
+def test_variants_reports_a_reject_that_now_survives(gate, problem_dir, grader, tmp_path, capsys):
+    out = tmp_path / "out"
+    reject = _candidate(tmp_path, "reject_bug.py", BUG)
+    assert gate.main(_reject_argv(out, reject)) == 0
+    installed = problem_dir / "variants" / "reject_bug.py"
+    installed.write_text(PLAIN, encoding="utf-8")  # the wrong solution no longer has the marker
+    assert gate.main(["variants", "--out", str(out)]) == 1
+    text = capsys.readouterr().out
+    assert "reject_bug.py  expect=fail  got=survived  MISMATCH: no test fails" in text
+    assert "variants: 0 ok, 1 mismatches in 1 problems" in text
+
+
+def test_variants_with_no_manifest_checks_nothing(gate, problem_dir, grader, tmp_path, capsys):
+    assert gate.main(["variants", "--out", str(tmp_path / "out")]) == 0
+    assert "variants: 0 ok, 0 mismatches in 0 problems" in capsys.readouterr().out
+    assert grader == []
+
+
+@pytest.mark.usefixtures("problem_dir")
+def test_blind_similarity_ignores_lines_the_starter_already_has(gate):
+    problem = gate.find_problem(FIXTURE_REL)
+    reference = problem.solution.read_text(encoding="utf-8")
+    ratio, own_lines = gate.blind_similarity(problem, reference)
+    assert ratio == 1.0
+    # The signature and the docstring come from the starter, so only the body is counted.
+    assert own_lines == 4
+    other = (
+        "from __future__ import annotations\n\n\n"
+        "def add(a: int | float, b: int | float) -> int | float:\n"
+        '    """Return a + b, refusing anything that is not an int or a float."""\n'
+        "    if type(a) not in (int, float) or type(b) not in (int, float):\n"
+        '        raise TypeError("numbers only")\n'
+        "    return a + b\n"
+    )
+    ratio, _ = gate.blind_similarity(problem, other)
+    assert ratio < 0.5
