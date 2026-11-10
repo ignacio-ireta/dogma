@@ -18,6 +18,10 @@ Usage (the torch group is needed for the py-torch runtime)::
     variants     --out DIR [--only PREFIX]... [--workers N]
     gate         ID --out DIR [--mode none|add|text|refactor] [--base REV] [--wrong FILE]...
     bump-version ID --out DIR [--base REV]
+    add-test     ID TESTFILE --out DIR --wrong FILE --mistake TEXT --clause LABEL [--base REV]
+    mark-swept   ID --out DIR --kind reject|mutants --mode none|add [--base REV]
+    worklist     --out DIR --kind hygiene|blind|reject|mutants [--today YYYY-MM-DD]
+    scorecard    --out DIR
 
 Every sub-command takes ``--out DIR`` (created when missing). Files are written only under DIR,
 or under a problem's variants/ directory for the commands that change a manifest.
@@ -40,19 +44,21 @@ from collections import Counter
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
 import yaml
 from pydantic import BaseModel, ValidationError
 
-from dogma.content.loader import load_problem
+from dogma.content.loader import load_core_path, load_problem
 from dogma.content.markdown import parse_outline
 from dogma.content.schemas import (
     VARIANT_ACCEPT_PATTERN,
     VARIANT_REJECT_PATTERN,
     AcceptVariant,
+    CorePath,
+    PathWeek,
     RejectVariant,
     UncoveredClause,
     VariantsManifest,
@@ -1484,6 +1490,16 @@ def _check_line(check: Check) -> str:
     return f"{check.name:<10} {check.status}  {check.detail}".rstrip()
 
 
+def _print_checks(problem: audit.Problem, mode: str, base: str, checks: list[Check]) -> str:
+    """Print the gate report and return its verdict, PASS or FAIL."""
+    print(f"GATE {problem.id}  mode={mode}  base={base}")
+    for check in checks:
+        print(_check_line(check))
+    verdict = "FAIL" if any(check.status == "FAIL" for check in checks) else "PASS"
+    print(f"GATE: {verdict}")
+    return verdict
+
+
 def _record_gate(
     out: Path,
     *,
@@ -1531,11 +1547,7 @@ def cmd_gate(args: argparse.Namespace) -> int:
         out=args.out,
         workers=args.workers,
     )
-    print(f"GATE {problem.id}  mode={args.mode}  base={args.base}")
-    for check in checks:
-        print(_check_line(check))
-    verdict = "FAIL" if any(check.status == "FAIL" for check in checks) else "PASS"
-    print(f"GATE: {verdict}")
+    verdict = _print_checks(problem, args.mode, args.base, checks)
     _record_gate(
         args.out, problem=problem, mode=args.mode, commit=commit, verdict=verdict, checks=checks
     )
@@ -1557,21 +1569,359 @@ def _bump_meta(problem: audit.Problem, version: int) -> None:
     atomic_write(meta, updated)
 
 
-def cmd_bump_version(args: argparse.Namespace) -> int:
-    problem = find_problem(args.id)
-    commit = _commit_of(args.base)
+def _apply_version(problem: audit.Problem, commit: str) -> tuple[int, int]:
+    """Set meta.yaml and the manifest to the version the tests call for. Returns (old, new)."""
     old = _problem_version(problem)
     new = expected_version(problem, commit)
-    if new == old:
-        print(f"version: unchanged ({old})")
-    else:
+    if new != old:
         _bump_meta(problem, new)
-        print(f"version: {old} -> {new}")
     manifest = read_manifest(problem)
     if manifest is not None and manifest.problem_version != new:
         write_manifest(
             problem, _build(VariantsManifest, **{**dict(manifest), "problem_version": new})
         )
+    return old, new
+
+
+def cmd_bump_version(args: argparse.Namespace) -> int:
+    problem = find_problem(args.id)
+    old, new = _apply_version(problem, _commit_of(args.base))
+    if new == old:
+        print(f"version: unchanged ({old})")
+    else:
+        print(f"version: {old} -> {new}")
+    return 0
+
+
+# --- add-test, mark-swept, worklist, scorecard --------------------------------------------------
+
+_NO_BLIND = "no blind accept: record the gap with a no-witness note, add no test"
+_TEST_MAX_LINES = 40
+_TEST_REFUSED = re.compile(r"pytest\.raises|skip|xfail")
+_WORKERS = 10
+_SWEEPS = ("reject", "mutants")
+_WORKLIST_KINDS = ("hygiene", "blind", "reject", "mutants")
+_OPEN_NOTES = ("blocked", "question")
+
+
+def _bytes_or_none(path: Path) -> bytes | None:
+    return path.read_bytes() if path.is_file() else None
+
+
+def _restore(path: Path, data: bytes | None) -> None:
+    if data is None:
+        path.unlink(missing_ok=True)
+    else:
+        atomic_write(path, data)
+
+
+def _new_test(text: str, hidden: str) -> str:
+    """The name of the one test TESTFILE adds. Refuses a test the hidden suite must not get."""
+    if len(text.splitlines()) > _TEST_MAX_LINES:
+        raise GateError(f"a new test has at most {_TEST_MAX_LINES} lines")
+    if _TEST_REFUSED.search(text):
+        raise GateError("a new test does not use pytest.raises, skip or xfail")
+    try:
+        body = ast.parse(text).body
+    except SyntaxError as exc:
+        raise GateError(f"the new test does not parse: {exc.msg}") from exc
+    names = [
+        node.name
+        for node in body
+        if isinstance(node, ast.FunctionDef) and node.name.startswith("test_")
+    ]
+    if len(names) != 1:
+        raise GateError(f"a new test defines exactly one test_ function, found {len(names)}")
+    clash = sorted(set(_top_level_bindings(text)) & set(_top_level_bindings(hidden)))
+    if clash:
+        raise GateError("the new test repeats a name in test_hidden.py: " + ", ".join(clash))
+    findings = lint_hidden_tests(text)
+    if findings:
+        lines = "\n".join(f"  line {f.line}: {f.rule} {f.message}" for f in findings)
+        raise GateError(f"the new test has {len(findings)} lint findings:\n{lines}")
+    return names[0]
+
+
+def _append_test(path: Path, text: str) -> None:
+    before = path.read_text(encoding="utf-8")
+    body = before if before.endswith("\n") else before + "\n"
+    atomic_write(path, body + "\n" + text.strip("\n") + "\n")
+
+
+def _format_hidden(path: Path) -> None:
+    """Format, then lint, the whole hidden suite. A failing check is an error (no noqa here)."""
+    ok, output = _ruff(("format",), path)
+    if not ok:
+        raise GateError(f"ruff format failed on test_hidden.py:\n{output}")
+    ok, output = _ruff(("check",), path)
+    if not ok:
+        raise GateError(f"ruff check failed on test_hidden.py:\n{output}")
+
+
+def cmd_add_test(args: argparse.Namespace) -> int:
+    problem = find_problem(args.id)
+    name = args.wrong.name
+    _variant_name(problem, name, VARIANT_REJECT_PATTERN)
+    _candidate(args.wrong)
+    _candidate(args.testfile)
+    manifest = read_manifest(problem)
+    if manifest is None or not any(v.origin == "blind" for v in manifest.accept):
+        raise GateError(_NO_BLIND)
+    mistake = plain_words(args.mistake)
+    clause_text(_problem_md(problem), args.clause)
+    hidden = problem.path / "test_hidden.py"
+    if not hidden.is_file():
+        raise GateError(f"no test_hidden.py for {problem.id}")
+    new_test_text = args.testfile.read_text(encoding="utf-8")
+    new_name = _new_test(new_test_text, hidden.read_text(encoding="utf-8"))
+    commit = _commit_of(args.base)
+
+    files = (hidden, problem.path / "meta.yaml", _manifest_path(problem))
+    saved = {path: _bytes_or_none(path) for path in files}
+    variants = _variants_dir(problem)
+    variants_existed = variants.is_dir()
+    target = variants / name
+    target_existed = target.exists()
+
+    def restore() -> None:
+        for path, data in saved.items():
+            _restore(path, data)
+        if not target_existed:
+            target.unlink(missing_ok=True)
+        if not variants_existed and variants.is_dir() and not any(variants.iterdir()):
+            variants.rmdir()
+
+    try:
+        _append_test(hidden, new_test_text)
+        _format_hidden(hidden)
+        _apply_version(problem, commit)
+        checks = run_gate(
+            problem,
+            mode="add",
+            base=commit,
+            wrongs=[args.wrong],
+            out=args.out,
+            workers=_WORKERS,
+        )
+        if _print_checks(problem, "add", args.base, checks) != "PASS":
+            raise GateError("the gate did not pass")
+        entry, kind = _add_reject(
+            problem,
+            source=args.wrong,
+            name=name,
+            mistake=mistake,
+            clause_label=args.clause,
+            killed_by=new_name,
+            message_has=None,
+        )
+    except GateError as exc:
+        restore()
+        print(exc, file=sys.stderr)
+        print("ADD-TEST: FAILED, nothing changed")
+        return 1
+    except BaseException:
+        restore()
+        raise
+    if kind != "named":
+        append_note(
+            args.out,
+            problem.id,
+            "message-defect",
+            f"{name}: {entry.killed_by} shows kind={kind}",
+        )
+    print(f"ADD-TEST: added {new_name} and {name}")
+    return 0
+
+
+def cmd_mark_swept(args: argparse.Namespace) -> int:
+    problem = find_problem(args.id)
+    commit = _commit_of(args.base)
+    checks = run_gate(
+        problem,
+        mode=args.mode,
+        base=commit,
+        wrongs=[],
+        out=args.out,
+        workers=_WORKERS,
+    )
+    if _print_checks(problem, args.mode, args.base, checks) != "PASS":
+        return 1
+    manifest = _manifest_or_new(problem)
+    if args.kind in manifest.sweeps:
+        print(f"already marked {args.kind}")
+        return 0
+    sweeps = (*manifest.sweeps, args.kind)
+    write_manifest(problem, _build(VariantsManifest, **{**dict(manifest), "sweeps": sweeps}))
+    print(f"marked {args.kind}")
+    return 0
+
+
+def _current_week(weeks: Sequence[PathWeek], today: date) -> int:
+    """The last week that has started by ``today``; week 1 before the path starts."""
+    started = [week.week for week in weeks if week.starts <= today]
+    return started[-1] if started else 1
+
+
+def week_order(weeks: Sequence[PathWeek], today: date) -> list[int]:
+    """Week numbers to work through: the weeks after the current one, then the current one,
+    then the weeks before it, nearest first."""
+    if not weeks:
+        return []
+    current = _current_week(weeks, today)
+    numbers = [week.week for week in weeks]
+    ahead = sorted(number for number in numbers if number > current)
+    behind = sorted((number for number in numbers if number < current), reverse=True)
+    return [*ahead, current, *behind]
+
+
+def _core_path() -> CorePath:
+    return load_core_path(Settings().curriculum_dir / "paths" / "core.yaml")
+
+
+def _left(problem: audit.Problem, kind: str) -> bool:
+    if kind == "hygiene":
+        hidden = problem.path / "test_hidden.py"
+        return hidden.is_file() and bool(lint_hidden_tests(hidden.read_text(encoding="utf-8")))
+    manifest = read_manifest(problem)
+    if kind == "blind":
+        return manifest is None or not any(v.origin == "blind" for v in manifest.accept)
+    return manifest is None or kind not in manifest.sweeps
+
+
+def _notes_by_problem() -> dict[str, Counter[str]]:
+    found: dict[str, Counter[str]] = {}
+    for path in sorted(audit.REPO.glob("var/audit-i32/*/ledger.jsonl")):
+        for row in audit.read_jsonl(path):
+            found.setdefault(row["problem"], Counter())[row["kind"]] += 1
+    return found
+
+
+def _arrange(
+    problems: Sequence[audit.Problem], weeks: Sequence[PathWeek], today: date
+) -> tuple[list[tuple[int, list[audit.Problem]]], list[audit.Problem]]:
+    """Problems grouped by week, in worklist order, and the problems whose topic is off the path.
+
+    A topic counts for the first week that lists it. Inside a week, topics keep path order and
+    problems keep id order.
+    """
+    slots: dict[str, tuple[int, int]] = {}
+    position = 0
+    for week in weeks:
+        for topic in week.topics:
+            slots.setdefault(topic, (week.week, position))
+            position += 1
+    grouped: dict[int, list[tuple[tuple[int, str], audit.Problem]]] = {}
+    off: list[audit.Problem] = []
+    for problem in problems:
+        slot = slots.get(problem.id.rsplit("/", 1)[0])
+        if slot is None:
+            off.append(problem)
+        else:
+            grouped.setdefault(slot[0], []).append(((slot[1], problem.id), problem))
+    arranged: list[tuple[int, list[audit.Problem]]] = []
+    for number in week_order(weeks, today):
+        members = [item for _, item in sorted(grouped.get(number, []), key=lambda p: p[0])]
+        if members:
+            arranged.append((number, members))
+    return arranged, sorted(off, key=lambda item: item.id)
+
+
+def _annotation(counts: Counter[str]) -> str:
+    parts = [f"{kind} {counts[kind]}" for kind in _OPEN_NOTES if counts[kind]]
+    return f"  ({', '.join(parts)})" if parts else ""
+
+
+def _day(text: str | None) -> date:
+    if text is None:
+        return date.today()
+    try:
+        return date.fromisoformat(text)
+    except ValueError as exc:
+        raise UsageError(f"--today wants YYYY-MM-DD, not {text}") from exc
+
+
+def cmd_worklist(args: argparse.Namespace) -> int:
+    today = _day(args.today)
+    weeks = _core_path().weeks
+    left = [p for p in audit.discover(audit.REPO, []) if _left(p, args.kind)]
+    arranged, off = _arrange(left, weeks, today)
+    notes = _notes_by_problem()
+    current = _current_week(weeks, today)
+    print(f"WORKLIST {args.kind}  today={today.isoformat()}  current week={current}")
+    for number, members in arranged:
+        print(f"week {number}")
+        for problem in members:
+            print(f"  {problem.id}{_annotation(notes.get(problem.id, Counter()))}")
+    if off:
+        print("not on the path")
+        for problem in off:
+            print(f"  {problem.id}{_annotation(notes.get(problem.id, Counter()))}")
+    print(f"total: {len(left)}")
+    return 0
+
+
+_SCORE_HEADER = (
+    "| Problem | Version | Lint | Blind | Accepts | Rejects | Bullets | Sweeps | Notes |"
+)
+
+
+def bullet_coverage(problem_md: str, manifest: VariantsManifest | None) -> tuple[int, int]:
+    """(covered, total) over the Contract bullets C1 and up. A bullet is covered when the
+    squashed clause of a reject or an uncovered entry is a substring of it."""
+    bullets = [
+        text
+        for label, text in contract_clauses(problem_md)
+        if label.startswith("C") and label != "C0"
+    ]
+    entries: list[str] = []
+    if manifest is not None:
+        entries = [squash(entry.clause) for entry in (*manifest.reject, *manifest.uncovered)]
+    covered = sum(1 for text in bullets if any(entry in text for entry in entries if entry))
+    return covered, len(bullets)
+
+
+def _score_row(problem: audit.Problem, notes: dict[str, Counter[str]]) -> dict[str, Any]:
+    manifest = read_manifest(problem)
+    hidden = problem.path / "test_hidden.py"
+    lint = len(lint_hidden_tests(hidden.read_text(encoding="utf-8"))) if hidden.is_file() else 0
+    covered, total = bullet_coverage(_problem_md(problem), manifest)
+    counts = notes.get(problem.id, Counter())
+    open_notes = ", ".join(f"{kind} {counts[kind]}" for kind in NOTE_KINDS if counts[kind])
+    return {
+        "problem": problem.id,
+        "version": _problem_version(problem),
+        "lint": lint,
+        "blind": manifest is not None and any(v.origin == "blind" for v in manifest.accept),
+        "accepts": len(manifest.accept) if manifest else 0,
+        "rejects": len(manifest.reject) if manifest else 0,
+        "covered": covered,
+        "total": total,
+        "sweeps": tuple(manifest.sweeps) if manifest else (),
+        "notes": open_notes or "-",
+    }
+
+
+def cmd_scorecard(args: argparse.Namespace) -> int:
+    notes = _notes_by_problem()
+    problems = sorted(audit.discover(audit.REPO, []), key=lambda p: p.id)
+    rows = [_score_row(problem, notes) for problem in problems]
+    print(_SCORE_HEADER)
+    print("|" + "---|" * 9)
+    for row in rows:
+        sweeps = ",".join(row["sweeps"]) or "-"
+        print(
+            f"| {row['problem']} | {row['version']} | {row['lint']} | "
+            f"{'yes' if row['blind'] else 'no'} | {row['accepts']} | {row['rejects']} | "
+            f"{row['covered']}/{row['total']} | {sweeps} | {row['notes']} |"
+        )
+    print()
+    print(f"problems: {len(rows)}")
+    print(f"with a blind accept: {sum(1 for r in rows if r['blind'])}")
+    print(f"accepts: {sum(r['accepts'] for r in rows)}")
+    print(f"rejects: {sum(r['rejects'] for r in rows)}")
+    print(f"every bullet covered: {sum(1 for r in rows if r['covered'] == r['total'])}")
+    print(f"both sweeps: {sum(1 for r in rows if set(_SWEEPS) <= set(r['sweeps']))}")
+    print(f"lint findings: {sum(r['lint'] for r in rows)}")
     return 0
 
 
@@ -1671,6 +2021,34 @@ def _parser() -> argparse.ArgumentParser:  # noqa: PLR0915 - one add_parser bloc
     bump.add_argument("id")
     bump.add_argument("--base", default="HEAD", help="git revision the edit started from")
     bump.set_defaults(run=cmd_bump_version)
+
+    add_test = commands.add_parser("add-test", help="add one hidden test as one transaction")
+    _add_out(add_test)
+    add_test.add_argument("id")
+    add_test.add_argument("testfile", type=Path, help="a file holding the one new test")
+    add_test.add_argument("--wrong", type=Path, required=True, help="the wrong solution it kills")
+    add_test.add_argument("--mistake", required=True, help="the mistake, in plain words")
+    add_test.add_argument("--clause", required=True, help="the contract label, e.g. C2")
+    add_test.add_argument("--base", default="HEAD", help="git revision the edit started from")
+    add_test.set_defaults(run=cmd_add_test)
+
+    mark = commands.add_parser("mark-swept", help="record that a sweep passed for a problem")
+    _add_out(mark)
+    mark.add_argument("id")
+    mark.add_argument("--kind", required=True, choices=_SWEEPS)
+    mark.add_argument("--mode", required=True, choices=("none", "add"))
+    mark.add_argument("--base", default="HEAD", help="git revision the edit started from")
+    mark.set_defaults(run=cmd_mark_swept)
+
+    worklist = commands.add_parser("worklist", help="list the problems one kind still needs")
+    _add_out(worklist)
+    worklist.add_argument("--kind", required=True, choices=_WORKLIST_KINDS)
+    worklist.add_argument("--today", help="the date to plan from (default: today)")
+    worklist.set_defaults(run=cmd_worklist)
+
+    score = commands.add_parser("scorecard", help="one row per problem, as Markdown")
+    _add_out(score)
+    score.set_defaults(run=cmd_scorecard)
     return parser
 
 

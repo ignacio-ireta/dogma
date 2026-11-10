@@ -14,6 +14,7 @@ import re
 import shutil
 import subprocess
 import sys
+from datetime import date, timedelta
 from pathlib import Path
 from types import ModuleType
 
@@ -1155,3 +1156,466 @@ def test_a_real_error_in_a_variant_still_refuses_it(gate, problem_dir, grader, t
     assert gate.main([*argv, "--origin", "freedom", "--freedom", "adds a name"]) == 1
     assert "F821" in capsys.readouterr().err
     assert not (problem_dir / "variants").exists()
+
+
+# --- add-test, mark-swept, worklist, scorecard --------------------------------------------------
+
+
+def _bytes(path: Path) -> bytes | None:
+    return path.read_bytes() if path.is_file() else None
+
+
+def _state(problem_dir: Path) -> dict[str, object]:
+    """Every file add-test may touch, as bytes; the variant names, or None without a directory."""
+    variants = problem_dir / "variants"
+    return {
+        "hidden": _bytes(problem_dir / "test_hidden.py"),
+        "meta": _bytes(problem_dir / "meta.yaml"),
+        "manifest": _bytes(variants / "manifest.yaml"),
+        "variants": sorted(p.name for p in variants.iterdir()) if variants.is_dir() else None,
+    }
+
+
+def _blind_manifest(gate: ModuleType, problem_dir: Path, reject=()) -> None:
+    """A manifest with one blind accept (the correct fixture solution), as the tool writes it."""
+    variants = problem_dir / "variants"
+    variants.mkdir(exist_ok=True)
+    shutil.copyfile(FIXTURE / "solution.py", variants / "accept_blind.py")
+    manifest = gate.VariantsManifest(
+        problem_version=1,
+        accept=(gate.AcceptVariant(file="accept_blind.py", origin="blind"),),
+        reject=tuple(reject),
+    )
+    gate.write_manifest(gate.find_problem(FIXTURE_ID), manifest)
+
+
+def _add_test_argv(out: Path, testfile: Path, wrong: Path, *extra: str) -> list[str]:
+    base = [
+        "add-test",
+        FIXTURE_ID,
+        str(testfile),
+        "--out",
+        str(out),
+        "--wrong",
+        str(wrong),
+        "--mistake",
+        "drops the bool check",
+        "--clause",
+        "C1",
+    ]
+    return [*base, *extra]
+
+
+def _each_catch(problem, source, _settings, **_kw) -> GradeReport:
+    """Like _fake_gate_grade, but every hidden test whose text has CATCH fails on a BUG source."""
+    hidden_text = _read(problem.path / "test_hidden.py") or ""
+    tests = [
+        GradedTest(name=name, file="public", outcome="pass")
+        for name in _test_names(_read(problem.path / "test_public.py"))
+    ]
+    for node in ast.parse(hidden_text).body:
+        if isinstance(node, ast.FunctionDef) and node.name.startswith("test_"):
+            text = ast.get_source_segment(hidden_text, node) or ""
+            if "BUG" in source and "CATCH" in text:
+                outcome = GradedTest(
+                    name=node.name,
+                    file="hidden",
+                    outcome="fail",
+                    message="the sum is wrong for bools",
+                )
+            else:
+                outcome = GradedTest(name=node.name, file="hidden", outcome="pass")
+            tests.append(outcome)
+    failed = any(test.outcome != "pass" for test in tests)
+    return _report(RunStatus.FAILED if failed else RunStatus.PASSED, tests)
+
+
+@pytest.fixture
+def ruff_repo(gate: ModuleType, gate_repo: Path) -> Path:
+    """The scratch repo with the repository's own ruff configuration, as a real checkout has."""
+    shutil.copyfile(ROOT / "pyproject.toml", gate.audit.REPO / "pyproject.toml")
+    return gate_repo
+
+
+BUG_WRONG = "def add(a, b):\n    return a + b  # BUG\n"
+
+
+@pytest.mark.usefixtures("ruff_repo")
+def test_add_test_appends_bumps_and_records_the_reject(
+    gate, gate_repo, gate_grader, tmp_path, capsys
+):
+    _blind_manifest(gate, gate_repo)
+    testfile = _candidate(tmp_path, "new_test.py", CATCH_TEST)
+    wrong = _candidate(tmp_path, "reject_bool.py", BUG_WRONG)
+    out = tmp_path / "out"
+    assert gate.main(_add_test_argv(out, testfile, wrong)) == 0
+    text = capsys.readouterr().out
+    assert "GATE: PASS" in text
+    assert "ADD-TEST: added test_catches_bug and reject_bool.py" in text
+    assert "def test_catches_bug" in (gate_repo / "test_hidden.py").read_text(encoding="utf-8")
+    assert "version: 2" in (gate_repo / "meta.yaml").read_text(encoding="utf-8")
+    manifest = gate.read_manifest(gate.find_problem(FIXTURE_ID))
+    assert manifest.problem_version == 2
+    entry = manifest.reject[0]
+    assert (entry.file, entry.killed_by, entry.visible) == (
+        "reject_bool.py",
+        "test_catches_bug",
+        "hidden",
+    )
+    assert entry.clause == gate.clause_text(
+        (gate_repo / "problem.md").read_text(encoding="utf-8"), "C1"
+    )
+    assert (gate_repo / "variants" / "reject_bool.py").is_file()
+
+
+ADD_TEST_REFUSALS = [
+    # (case, test text, blind accept present, extra arguments, exit code, text in the output)
+    ("no blind accept", CATCH_TEST, False, [], 1, "no blind accept"),
+    (
+        "two tests",
+        CATCH_TEST + "\n\ndef test_second():\n    assert add(1, 1) == 2, 'adds'\n",
+        True,
+        [],
+        1,
+        "exactly one test_ function, found 2",
+    ),
+    (
+        "a taken name",
+        "def test_sum_of_negative_ints():\n    assert add(1, 1) == 2, 'adds'\n",
+        True,
+        [],
+        1,
+        "repeats a name",
+    ),
+    (
+        "41 lines",
+        "def test_long():\n" + "    x = 1\n" * 40 + "    assert add(1, 1) == 2, 'adds'\n",
+        True,
+        [],
+        1,
+        "at most 40 lines",
+    ),
+    (
+        "pytest.raises",
+        "def test_raises():\n    with pytest.raises(TypeError):\n        add(None, 1)\n",
+        True,
+        [],
+        1,
+        "does not use pytest.raises",
+    ),
+    (
+        "assert without a message",
+        "def test_bare():\n    assert add(1, 1) == 2\n",
+        True,
+        [],
+        1,
+        "lint findings",
+    ),
+    ("does not parse", "def test_bad(:\n", True, [], 1, "does not parse"),
+    ("bad label", CATCH_TEST, True, ["--clause", "C9"], 1, "no clause C9"),
+]
+
+
+@pytest.mark.parametrize("row", ADD_TEST_REFUSALS, ids=[row[0] for row in ADD_TEST_REFUSALS])
+@pytest.mark.usefixtures("ruff_repo", "gate_grader")
+def test_add_test_refusals_change_no_file(gate, ruff_repo, tmp_path, capsys, row):
+    case, body, blind, extra, code, text = row
+    if blind:
+        _blind_manifest(gate, ruff_repo)
+    testfile = _candidate(tmp_path, "new_test.py", body)
+    wrong = _candidate(tmp_path, "reject_bug.py", BUG_WRONG)
+    before = _state(ruff_repo)
+    assert gate.main(_add_test_argv(tmp_path / "out", testfile, wrong, *extra)) == code, case
+    captured = capsys.readouterr()
+    assert text in captured.err + captured.out, case
+    assert _state(ruff_repo) == before, case
+
+
+@pytest.mark.usefixtures("ruff_repo")
+def test_add_test_rejects_a_mistake_with_markup(gate, gate_repo, gate_grader, tmp_path, capsys):
+    _blind_manifest(gate, gate_repo)
+    testfile = _candidate(tmp_path, "new_test.py", CATCH_TEST)
+    wrong = _candidate(tmp_path, "reject_bug.py", BUG_WRONG)
+    before = _state(gate_repo)
+    argv = _add_test_argv(tmp_path / "out", testfile, wrong)
+    argv[argv.index("drops the bool check")] = "uses `x`"
+    assert gate.main(argv) == 1
+    assert "use plain words" in capsys.readouterr().err
+    assert _state(gate_repo) == before
+
+
+@pytest.mark.usefixtures("ruff_repo")
+def test_add_test_rolls_back_when_the_wrong_file_passes(
+    gate, gate_repo, gate_grader, tmp_path, capsys
+):
+    _blind_manifest(gate, gate_repo)
+    plain = "def test_plain():\n    assert add(True, 1) == 2, 'the sum is wrong for bools'\n"
+    testfile = _candidate(tmp_path, "new_test.py", plain)
+    wrong = _candidate(tmp_path, "reject_bug.py", BUG_WRONG)
+    before = _state(gate_repo)
+    assert gate.main(_add_test_argv(tmp_path / "out", testfile, wrong)) == 1
+    captured = capsys.readouterr()
+    assert "wrong      FAIL" in captured.out
+    assert "ADD-TEST: FAILED, nothing changed" in captured.out
+    assert _state(gate_repo) == before
+
+
+@pytest.mark.usefixtures("ruff_repo")
+def test_add_test_rolls_back_when_the_reference_fails(
+    gate, gate_repo, gate_grader, tmp_path, capsys
+):
+    _blind_manifest(gate, gate_repo)
+    broken = "def test_broken():  # BREAKREF\n    assert add(1, 1) == 2, 'adds'\n"
+    testfile = _candidate(tmp_path, "new_test.py", broken)
+    wrong = _candidate(tmp_path, "reject_bug.py", BUG_WRONG)
+    before = _state(gate_repo)
+    assert gate.main(_add_test_argv(tmp_path / "out", testfile, wrong)) == 1
+    captured = capsys.readouterr()
+    assert "reference  FAIL" in captured.out
+    assert "ADD-TEST: FAILED, nothing changed" in captured.out
+    assert _state(gate_repo) == before
+
+
+@pytest.mark.usefixtures("ruff_repo", "gate_grader")
+def test_add_test_rolls_back_when_ruff_rejects_the_suite(
+    gate, ruff_repo, tmp_path, monkeypatch, capsys
+):
+    _blind_manifest(gate, ruff_repo)
+    real_ruff = gate._ruff
+
+    def strict_check(step, target):
+        if step == ("check",) and target.name == "test_hidden.py":
+            return False, "F821 undefined name"
+        return real_ruff(step, target)
+
+    monkeypatch.setattr(gate, "_ruff", strict_check)
+    testfile = _candidate(tmp_path, "new_test.py", CATCH_TEST)
+    wrong = _candidate(tmp_path, "reject_bug.py", BUG_WRONG)
+    before = _state(ruff_repo)
+    assert gate.main(_add_test_argv(tmp_path / "out", testfile, wrong)) == 1
+    captured = capsys.readouterr()
+    assert "ruff check failed on test_hidden.py" in captured.err
+    assert "ADD-TEST: FAILED, nothing changed" in captured.out
+    assert _state(ruff_repo) == before
+
+
+@pytest.mark.usefixtures("ruff_repo", "gate_grader")
+def test_add_test_twice_bumps_the_version_once(gate, ruff_repo, tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(gate.audit, "grade_source", _each_catch)
+    _blind_manifest(gate, ruff_repo)
+    out = tmp_path / "out"
+    first = _candidate(tmp_path, "first.py", CATCH_TEST)
+    second_text = CATCH_TEST.replace("test_catches_bug", "test_catches_bug_again")
+    second = _candidate(tmp_path, "second.py", second_text)
+    wrong_one = _candidate(tmp_path, "reject_one.py", BUG_WRONG)
+    wrong_two = _candidate(tmp_path, "reject_two.py", BUG_WRONG)
+    assert gate.main(_add_test_argv(out, first, wrong_one)) == 0
+    assert gate.main(_add_test_argv(out, second, wrong_two)) == 0
+    assert "version: 2" in (ruff_repo / "meta.yaml").read_text(encoding="utf-8")
+    manifest = gate.read_manifest(gate.find_problem(FIXTURE_ID))
+    assert manifest.problem_version == 2
+    assert [entry.killed_by for entry in manifest.reject] == [
+        "test_catches_bug",
+        "test_catches_bug_again",
+    ]
+
+
+def _weeks(count: int) -> list:
+    start = date(2026, 11, 2)
+    return [{"week": n, "starts": start + timedelta(weeks=n - 1)} for n in range(1, count + 1)]
+
+
+def test_week_order_before_inside_and_after_the_path(gate):
+    weeks = [
+        gate.PathWeek(week=row["week"], starts=row["starts"], theme="t", topics=("t/one",))
+        for row in _weeks(13)
+    ]
+    assert gate.week_order(weeks, date(2026, 10, 1)) == [*range(2, 14), 1]
+    inside = weeks[3].starts + timedelta(days=2)
+    assert gate.week_order(weeks, inside) == [*range(5, 14), 4, 3, 2, 1]
+    assert gate.week_order(weeks, date(2027, 6, 1)) == list(range(13, 0, -1))
+    assert gate.week_order([], date(2026, 11, 2)) == []
+
+
+WORKLIST_WEEKS = (
+    {"week": 1, "starts": date(2026, 11, 2), "topics": ("t/two", "t/one")},
+    {"week": 2, "starts": date(2026, 11, 9), "topics": ("t/three",)},
+)
+CLEAN_HIDDEN = "def test_ok():\n    assert 1 == 1, 'a wrong sum'\n"
+DIRTY_HIDDEN = "def test_bad():\n    assert 1 == 2\n"
+BLIND_SWEPT = (
+    "problem_version: 1\naccept:\n  - file: accept_blind.py\n    origin: blind\n"
+    "sweeps:\n  - mutants\n"
+)
+
+
+@pytest.fixture
+def worklist_repo(gate, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """Five problems: a and c are unswept, b has a blind accept and mutants, e is on week 2,
+    d is off the path. c has a blocked note and a dirty hidden suite."""
+    root = tmp_path / "repo"
+    rows = [
+        ("t/one/p01-a", None, CLEAN_HIDDEN),
+        ("t/one/p02-b", BLIND_SWEPT, CLEAN_HIDDEN),
+        ("t/two/p01-c", None, DIRTY_HIDDEN),
+        ("t/three/p01-e", None, CLEAN_HIDDEN),
+        ("t/off/p01-d", None, CLEAN_HIDDEN),
+    ]
+    problems = []
+    for problem_id, manifest, hidden in rows:
+        path = root / "content" / problem_id
+        path.mkdir(parents=True)
+        (path / "test_hidden.py").write_text(hidden, encoding="utf-8")
+        if manifest is not None:
+            (path / "variants").mkdir()
+            (path / "variants" / "manifest.yaml").write_text(manifest, encoding="utf-8")
+        problems.append(gate.audit.Problem(problem_id, path, "python", "add", 30, ()))
+    gate.append_note(root / "var" / "audit-i32" / "run", "t/two/p01-c", "blocked", "stuck")
+    core = gate.CorePath(
+        id="core",
+        title="t",
+        start=date(2026, 11, 2),
+        end=date(2027, 1, 31),
+        sessions_per_day=3,
+        session_minutes=45,
+        days_per_week=6,
+        weeks=tuple(
+            gate.PathWeek(
+                week=row["week"],
+                starts=row["starts"],
+                theme="t",
+                topics=row["topics"],
+            )
+            for row in WORKLIST_WEEKS
+        ),
+    )
+    monkeypatch.setattr(gate.audit, "REPO", root)
+    monkeypatch.setattr(gate.audit, "discover", lambda repo, only: problems)
+    monkeypatch.setattr(gate, "_core_path", lambda: core)
+    return root
+
+
+def _worklist(gate, tmp_path: Path, kind: str, capsys) -> str:
+    argv = ["worklist", "--out", str(tmp_path / "out"), "--kind", kind, "--today", "2026-11-02"]
+    assert gate.main(argv) == 0
+    return capsys.readouterr().out
+
+
+def test_worklist_blind_lists_the_week_order_and_the_off_path_problem(
+    gate, worklist_repo, tmp_path, capsys
+):
+    assert _worklist(gate, tmp_path, "blind", capsys) == (
+        "WORKLIST blind  today=2026-11-02  current week=1\n"
+        "week 2\n"
+        "  t/three/p01-e\n"
+        "week 1\n"
+        "  t/two/p01-c  (blocked 1)\n"
+        "  t/one/p01-a\n"
+        "not on the path\n"
+        "  t/off/p01-d\n"
+        "total: 4\n"
+    )
+
+
+def test_worklist_reject_and_mutants_differ_by_their_sweep(gate, worklist_repo, tmp_path, capsys):
+    reject = _worklist(gate, tmp_path, "reject", capsys)
+    assert "  t/one/p02-b\n" in reject and reject.endswith("total: 5\n")
+    mutants = _worklist(gate, tmp_path, "mutants", capsys)
+    assert "t/one/p02-b" not in mutants and mutants.endswith("total: 4\n")
+
+
+def test_worklist_hygiene_lists_only_the_dirty_suite(gate, worklist_repo, tmp_path, capsys):
+    assert _worklist(gate, tmp_path, "hygiene", capsys) == (
+        "WORKLIST hygiene  today=2026-11-02  current week=1\n"
+        "week 1\n"
+        "  t/two/p01-c  (blocked 1)\n"
+        "total: 1\n"
+    )
+
+
+def test_worklist_with_nothing_left_prints_total_zero(
+    gate, worklist_repo, tmp_path, monkeypatch, capsys
+):
+    monkeypatch.setattr(gate.audit, "discover", lambda repo, only: [])
+    assert _worklist(gate, tmp_path, "blind", capsys) == (
+        "WORKLIST blind  today=2026-11-02  current week=1\ntotal: 0\n"
+    )
+
+
+def test_worklist_refuses_a_bad_date(gate, worklist_repo, tmp_path):
+    argv = ["worklist", "--out", str(tmp_path / "out"), "--kind", "blind", "--today", "soon"]
+    assert gate.main(argv) == 2
+
+
+def test_mark_swept_marks_on_pass_and_creates_the_manifest(
+    gate, gate_repo, gate_grader, tmp_path, capsys
+):
+    out = tmp_path / "out"
+    argv = ["mark-swept", FIXTURE_ID, "--out", str(out), "--kind", "reject", "--mode", "none"]
+    assert gate.main(argv) == 0
+    assert "marked reject" in capsys.readouterr().out
+    manifest = gate.read_manifest(gate.find_problem(FIXTURE_ID))
+    assert manifest.sweeps == ("reject",)
+    assert manifest.problem_version == 1
+
+
+def test_mark_swept_does_not_duplicate_a_kind(gate, gate_repo, gate_grader, tmp_path, capsys):
+    out = tmp_path / "out"
+    base = ["mark-swept", FIXTURE_ID, "--out", str(out), "--mode", "none"]
+    assert gate.main([*base, "--kind", "reject"]) == 0
+    assert gate.main([*base, "--kind", "mutants"]) == 0
+    assert gate.main([*base, "--kind", "reject"]) == 0
+    assert "already marked reject" in capsys.readouterr().out
+    assert gate.read_manifest(gate.find_problem(FIXTURE_ID)).sweeps == ("reject", "mutants")
+
+
+def test_mark_swept_writes_nothing_on_a_failing_gate(
+    gate, gate_repo, gate_grader, tmp_path, capsys
+):
+    _append(gate_repo / "problem.md", "\nan edit the gate must refuse\n")
+    argv = ["mark-swept", FIXTURE_ID, "--out", str(tmp_path / "out"), "--kind", "reject"]
+    argv += ["--mode", "none"]
+    assert gate.main(argv) == 1
+    assert "GATE: FAIL" in capsys.readouterr().out
+    assert not (gate_repo / "variants" / "manifest.yaml").exists()
+
+
+def test_bullet_coverage_counts_the_clauses_a_reject_or_uncovered_entry_names(gate):
+    reject = gate.RejectVariant(
+        file="reject_x.py",
+        mistake="m",
+        clause="Second bullet.",
+        killed_by="test_x",
+        visible="hidden",
+    )
+    assert gate.bullet_coverage(
+        PROBLEM_MD, gate.VariantsManifest(problem_version=1, reject=(reject,))
+    ) == (1, 2)
+    uncovered = gate.UncoveredClause(clause="A bullet that wraps onto a second line.", reason="r")
+    manifest = gate.VariantsManifest(problem_version=1, reject=(reject,), uncovered=(uncovered,))
+    assert gate.bullet_coverage(PROBLEM_MD, manifest) == (2, 2)
+    text_only = gate.RejectVariant(
+        file="reject_y.py",
+        mistake="m",
+        clause="Text before the list.",
+        killed_by="test_y",
+        visible="hidden",
+    )
+    assert gate.bullet_coverage(
+        PROBLEM_MD, gate.VariantsManifest(problem_version=1, reject=(text_only,))
+    ) == (0, 2)
+    assert gate.bullet_coverage(PROBLEM_MD, None) == (0, 2)
+
+
+def test_scorecard_prints_one_row_per_problem_and_the_summary(
+    gate, gate_repo, gate_grader, tmp_path, capsys
+):
+    gate.append_note(gate.audit.REPO / "var" / "audit-i32" / "run", FIXTURE_ID, "blocked", "x")
+    assert gate.main(["scorecard", "--out", str(tmp_path / "out")]) == 0
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[0].startswith("| Problem | Version | Lint | Blind | Accepts | Rejects |")
+    rows = [line for line in lines if line.startswith(f"| {FIXTURE_ID} |")]
+    assert len(rows) == 1
+    assert rows[0].startswith(f"| {FIXTURE_ID} | 1 | ")
+    assert rows[0].endswith("| - | blocked 1 |")
+    assert "problems: 1" in lines and "rejects: 0" in lines

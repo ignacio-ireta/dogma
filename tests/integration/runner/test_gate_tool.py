@@ -264,3 +264,78 @@ def _replace_text(path: Path, old: str, new: str) -> None:
     text = path.read_text(encoding="utf-8")
     assert old in text, f"{old!r} not in {path.name}"
     path.write_text(text.replace(old, new), encoding="utf-8")
+
+
+# --- add-test: one hidden test, as one transaction, with the real grader -------------------------
+
+
+@pytest.fixture
+def ruff_repo(gate: ModuleType, committed_problem: Path) -> Path:
+    """The committed copy with the repository's own ruff configuration, as a real checkout has."""
+    shutil.copyfile(ROOT / "pyproject.toml", gate.audit.REPO / "pyproject.toml")
+    return committed_problem
+
+
+def _files(problem_dir: Path) -> dict[str, object]:
+    """Everything add-test may change: the suite, the version, the manifest, the variants."""
+    variants = problem_dir / "variants"
+    return {
+        "hidden": (problem_dir / "test_hidden.py").read_bytes(),
+        "meta": (problem_dir / "meta.yaml").read_bytes(),
+        "manifest": (variants / "manifest.yaml").read_bytes(),
+        "variants": sorted(p.name for p in variants.iterdir()),
+    }
+
+
+def test_add_test_adds_the_bool_test_then_rolls_back_a_wrong_expectation(
+    gate, ruff_repo, tmp_path, capsys
+):
+    out = tmp_path / "out"
+    blind = _candidate(tmp_path, "accept_blind.py", SOLUTION.replace("a + b", "b + a"))
+    add_accept = ["add-accept", "--out", str(out), FIXTURE_REL, str(blind), "--origin", "blind"]
+    assert gate.main(add_accept) == 0
+    capsys.readouterr()
+
+    bool_test = _candidate(tmp_path, "bool_test.py", BOOL_TEST)
+    no_bool = SOLUTION.replace("isinstance(value, bool) or ", "")
+    wrong = _candidate(tmp_path, "reject_accepts_bools.py", no_bool)
+    add_test = [
+        "add-test",
+        FIXTURE_REL,
+        str(bool_test),
+        "--out",
+        str(out),
+        "--wrong",
+        str(wrong),
+        "--mistake",
+        "counts a bool as a number",
+        "--clause",
+        "C1",
+    ]
+    assert gate.main(add_test) == 0
+    assert "ADD-TEST: added test_bool_raises_type_error and reject_accepts_bools.py" in (
+        capsys.readouterr().out
+    )
+    before = _files(ruff_repo)
+
+    wrong_sum = _candidate(tmp_path, "reject_plus_one.py", "def add(a, b):\n    return a + b + 1\n")
+    wrong_expect = "\n\ndef test_sum_is_three():\n    assert add(1, 1) == 3, 'one and one is two'\n"
+    expect = _candidate(tmp_path, "expect_three.py", wrong_expect)
+    argv = [
+        "add-test",
+        FIXTURE_REL,
+        str(expect),
+        "--out",
+        str(out),
+        "--wrong",
+        str(wrong_sum),
+        "--mistake",
+        "adds one to the sum",
+        "--clause",
+        "C1",
+    ]
+    assert gate.main(argv) == 1
+    captured = capsys.readouterr()
+    assert "reference  FAIL" in captured.out
+    assert "ADD-TEST: FAILED, nothing changed" in captured.out
+    assert _files(ruff_repo) == before
