@@ -50,7 +50,11 @@ def _must_raise_value_error(call, mistake, match=None):
     raise AssertionError(mistake)
 
 
-@pytest.mark.parametrize(("n", "seed"), [(1, 1), (2, 2), (3, 3), (5, 4), (8, 5), (12, 6)])
+@pytest.mark.parametrize(
+    ("n", "seed"),
+    [(1, 1), (2, 2), (3, 3), (5, 4), (8, 5), (12, 6)],
+    ids=["case-a", "case-b", "case-c", "case-d", "case-e", "case-f"],
+)
 def test_matches_numpy_determinant_on_random_matrices(n, seed):
     A = _well_conditioned(seed, n)
     with _finishes_within(5, f"{n}x{n} matrix: {SLOW}"):
@@ -76,7 +80,7 @@ def test_thirty_by_thirty_matrix_matches_numpy():
     )
 
 
-@settings(max_examples=50, deadline=None)
+@settings(max_examples=50, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, SIZES)
 def test_determinant_of_a_product_is_product_of_determinants(seed, n):
     A = _well_conditioned(seed, n)
@@ -89,7 +93,7 @@ def test_determinant_of_a_product_is_product_of_determinants(seed, n):
     )
 
 
-@settings(max_examples=50, deadline=None)
+@settings(max_examples=50, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, SIZES)
 def test_transpose_has_the_same_determinant(seed, n):
     A = _well_conditioned(seed, n)
@@ -101,7 +105,7 @@ def test_transpose_has_the_same_determinant(seed, n):
     )
 
 
-@settings(max_examples=50, deadline=None)
+@settings(max_examples=50, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, SIZES)
 def test_swapping_two_rows_flips_the_sign(seed, n):
     if n < 2:
@@ -117,7 +121,7 @@ def test_swapping_two_rows_flips_the_sign(seed, n):
     )
 
 
-@settings(max_examples=50, deadline=None)
+@settings(max_examples=50, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, SIZES, st.sampled_from([-2.5, 0.5, 3.0]))
 def test_scaling_one_row_scales_the_determinant(seed, n, c):
     A = _well_conditioned(seed, n)
@@ -131,7 +135,7 @@ def test_scaling_one_row_scales_the_determinant(seed, n, c):
     )
 
 
-@settings(max_examples=50, deadline=None)
+@settings(max_examples=50, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, SIZES, st.sampled_from([-2.0, 0.5, 3.0]))
 def test_scaling_the_whole_matrix_multiplies_by_c_to_the_n(seed, n, c):
     A = _well_conditioned(seed, n)
@@ -143,7 +147,7 @@ def test_scaling_the_whole_matrix_multiplies_by_c_to_the_n(seed, n, c):
     )
 
 
-@settings(max_examples=50, deadline=None)
+@settings(max_examples=50, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, SIZES)
 def test_adding_a_multiple_of_one_row_to_another_keeps_the_determinant(seed, n):
     if n < 2:
@@ -159,7 +163,9 @@ def test_adding_a_multiple_of_one_row_to_another_keeps_the_determinant(seed, n):
     )
 
 
-@pytest.mark.parametrize("n", [1, 2, 3, 4, 5])
+@pytest.mark.parametrize(
+    "n", [1, 2, 3, 4, 5], ids=["case-a", "case-b", "case-c", "case-d", "case-e"]
+)
 def test_upper_and_lower_triangular_matrices_give_product_of_diagonal(n):
     rng = np.random.default_rng(100 + n)
     diagonal = rng.uniform(0.5, 3.0, size=n) * rng.choice([-1.0, 1.0], size=n)
@@ -222,7 +228,12 @@ def test_zero_by_zero_matrix_has_determinant_one():
 
 
 def test_one_by_one_matrix_returns_its_single_entry():
-    np.testing.assert_allclose(determinant([[-3.5]]), -3.5, rtol=1e-12)
+    np.testing.assert_allclose(
+        determinant([[-3.5]]),
+        -3.5,
+        rtol=1e-12,
+        err_msg="a 1x1 matrix has determinant equal to its single entry",
+    )
 
 
 def test_integer_input_returns_the_correct_value():
