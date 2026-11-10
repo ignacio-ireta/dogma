@@ -2,6 +2,44 @@ problem_version: 1
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_recursive_search.py
+  origin: freedom
+  freedom: recursive halving instead of a loop
+reject:
+- file: reject_heaviest_parcel_last.py
+  mistake: heaviest parcel last in the list breaks the lower end of the range
+  clause: '`weights`: a non-empty `list` of `int`s, each greater than 0, in shipping order.'
+  killed_by: test_matches_brute_force_over_every_capacity_on_small_random_inputs
+  visible: hidden
+- file: reject_days_clamped_to_parcels.py
+  mistake: days clamped to the parcel count minus one
+  clause: '`days`: an `int` of at least 1.'
+  killed_by: test_one_parcel_per_day_needs_only_the_heaviest_parcel
+  visible: public
+- file: reject_strict_days_comparison.py
+  mistake: strict comparison of days needed against days
+  clause: 'Returns: an `int` capacity `C` such that the parcels can be cut into at most `days` consecutive
+    runs, each with total weight at most `C`, and no smaller capacity does. `C` is at least the heaviest
+    parcel and at most the total weight.'
+  killed_by: test_example_three_days_needs_capacity_twelve
+  visible: public
+- file: reject_accepts_zero_weight.py
+  mistake: zero weight is accepted instead of raising
+  clause: 'Raises: `ValueError` when `weights` is empty, when any weight is not an `int` greater than
+    0, or when `days` is not an `int` of at least 1.'
+  killed_by: test_zero_negative_or_non_integer_weight_raises_value_error
+  visible: hidden
+- file: reject_appends_zero_to_input.py
+  mistake: appends a zero to the input list
+  clause: Must not mutate `weights`.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
+- file: reject_linear_scan_capacities.py
+  mistake: linear scan over every capacity instead of a binary search
+  clause: 'Not allowed: a scan that tries every capacity from the heaviest parcel up to the total weight.
+    The search must run in a logarithmic number of passes over the parcels.'
+  killed_by: test_large_input_is_answered_by_a_search_not_a_scan
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

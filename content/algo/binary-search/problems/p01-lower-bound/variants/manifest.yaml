@@ -1,7 +1,44 @@
-problem_version: 1
+problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_recursive_search.py
+  origin: freedom
+  freedom: recursive halving instead of a loop
+reject:
+- file: reject_tuple_bound_off_by_one.py
+  mistake: 'tuple input: hi starts one short, so a target above every element returns len minus one'
+  clause: '`sorted_values`: a `list` (or any sequence) of `int` or `float` in non-decreasing order. It
+    may be empty, may contain duplicates, and may contain negative numbers. Tests never pass an unsorted
+    list.'
+  killed_by: test_tuple_input_gives_the_same_answer_as_a_list
+  visible: hidden
+- file: reject_float_target_truncated.py
+  mistake: float target truncated
+  clause: '`target`: an `int` or a `float`, compared numerically with the elements.'
+  killed_by: test_matches_bisect_bisect_left_on_random_float_lists
+  visible: hidden
+- file: reject_empty_list_raises.py
+  mistake: empty list raises
+  clause: 'Raises: nothing in this problem.'
+  killed_by: test_target_outside_the_range_and_an_empty_list
+  visible: public
+- file: reject_copies_input.py
+  mistake: copies input
+  clause: Reads `sorted_values` with `len()` and indexing only. Do not copy, sort or iterate over it.
+  killed_by: test_reads_a_logarithmic_number_of_elements_on_a_large_list
+  visible: hidden
+- file: reject_writes_back_first_element.py
+  mistake: writes back first element
+  clause: Must not mutate `sorted_values`.
+  killed_by: test_input_list_is_not_mutated
+  visible: hidden
+- file: reject_hi_starts_at_last_index.py
+  mistake: hi starts at last index
+  clause: 'Returns: an `int` `i` with `0 <= i <= len(sorted_values)`. Every element before index `i` is
+    smaller than `target`. When `i < len(sorted_values)`, `sorted_values[i]` is at least `target`.'
+  killed_by: test_target_outside_the_range_and_an_empty_list
+  visible: public
 uncovered: []
-sweeps: []
+sweeps:
+- reject

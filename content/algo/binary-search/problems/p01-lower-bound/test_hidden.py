@@ -167,3 +167,20 @@ def test_reads_a_logarithmic_number_of_elements_on_a_large_list() -> None:
         assert got == bisect.bisect_left(values, target), (
             "result differs from the reference on a large list: check the midpoint and the range"
         )
+
+
+def test_tuple_input_gives_the_same_answer_as_a_list() -> None:
+    # The Contract says "a list (or any sequence)", so a tuple is a valid input.
+    values = (1, 3, 5)
+    # Target above every element: the answer is len(values) = 3, the same as for a list.
+    assert lower_bound(values, 9) == 3, (
+        "tuple input, target above every element: return len(sorted_values), as for a list"
+    )
+    # Target between 3 and 5: the answer is index 2, the same as for a list.
+    assert lower_bound(values, 4) == 2, (
+        "tuple input, target between two elements: return the index of the next larger one"
+    )
+    # Target below every element: the answer is index 0.
+    assert lower_bound(values, 0) == 0, (
+        "tuple input, target below every element: the answer is index 0"
+    )
