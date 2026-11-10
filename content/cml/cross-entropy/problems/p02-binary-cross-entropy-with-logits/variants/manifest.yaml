@@ -1,7 +1,51 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_divide_then_sum.py
+  origin: freedom
+  freedom: divides each term by n before summing, so only the last digits differ
+reject:
+- file: reject_rounded_targets.py
+  mistake: soft targets rounded to 0 or 1 before use
+  clause: '`y`: 1-D array-like of finite values in $[0, 1]$, the same length as `z`.'
+  killed_by: test_moderate_logits_match_the_scipy_log_sigmoid_reference
+  visible: hidden
+- file: reject_sum_not_mean.py
+  mistake: sum returned where the mean is asked
+  clause: 'Returns: a Python `float`, the mean loss over the $n$ examples. Never negative.'
+  killed_by: test_zero_logits_give_log_two
+  visible: public
+- file: reject_target_one_rejected.py
+  mistake: target exactly one rejected because the upper bound is exclusive
+  clause: 'Raises `ValueError` when: `z` or `y` is not 1-D; their lengths differ; `z` is empty; any entry
+    of `z` is NaN or infinite; any entry of `y` is NaN, infinite, below 0 or above 1.'
+  killed_by: test_zero_logits_give_log_two
+  visible: public
+- file: reject_naive_linear_term.py
+  mistake: positive-logit term computed as z minus z y, which cancels for soft targets near one
+  clause: 'Each per-example loss must keep **relative** precision, including the tiny loss of a confident
+    correct prediction (a large positive logit with target 1, or a large negative logit with target 0):
+    avoid any form that computes it as the difference of two large, nearly equal numbers.'
+  killed_by: test_soft_target_near_one_avoids_cancelling_large_positive_logit_terms
+  visible: hidden
+- file: reject_no_scale_guard.py
+  mistake: mean taken without normalising by the largest loss, so the sum overflows
+  clause: 'The mean must not overflow when it is representable: three losses of `1e308` have the mean
+    `1e308`.'
+  killed_by: test_mean_of_large_finite_losses_does_not_overflow_the_reduction
+  visible: hidden
+- file: reject_clipped_target_in_place.py
+  mistake: targets clipped in place, changing the caller's array
+  clause: Must not mutate its inputs. Must not emit a NumPy overflow, invalid-value or divide warning
+    for any finite input.
+  killed_by: test_extreme_logits_match_the_high_precision_reference
+  visible: hidden
+- file: reject_list_z_rejected.py
+  mistake: list logits rejected although the Contract accepts array-likes
+  clause: '`z`: 1-D array-like of finite real numbers, length $n \ge 1$.'
+  killed_by: test_list_inputs_match_their_array_equivalents
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

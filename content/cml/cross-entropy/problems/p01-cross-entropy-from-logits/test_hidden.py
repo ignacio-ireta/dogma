@@ -311,3 +311,30 @@ def test_scalar_logits_raise_value_error():
             f"the function raised {type(exc).__name__}"
         )
     pytest.fail("logits that are not a 2-D array must raise ValueError, not return a loss")
+
+
+def test_list_logits_are_accepted_as_array_like():
+    # The Contract accepts any 2-D array-like for the logits, including nested lists.
+    logits = [[0.3, -0.7], [2.0, 1.0], [-3.0, 3.0]]
+    targets = np.array([1, 0, 0])
+    ref = _reference_loss(np.array(logits, dtype=np.float64), targets)
+    loss, grad = _call(logits, targets)
+    assert abs(loss - ref) <= 1e-12, (
+        "nested-list logits are a valid 2-D array-like: the loss must match the reference"
+    )
+    assert grad.shape == (3, 2), (
+        "nested-list logits: the gradient must have the shape of the logits"
+    )
+
+
+def test_class_indices_above_127_are_not_wrapped_by_a_narrow_integer():
+    # The Contract allows any integer dtype with entries in [0, k), and k is not bounded.
+    rng = np.random.default_rng(1)
+    logits = rng.normal(size=(4, 200))
+    targets = np.array([150, 3, 199, 128], dtype=np.int64)
+    ref = _reference_loss(logits, targets)
+    loss, _ = _call(logits, targets)
+    assert abs(loss - ref) <= 1e-12, (
+        "class indices above 127 give the wrong loss: the target indices must not be "
+        "narrowed to a small integer type"
+    )

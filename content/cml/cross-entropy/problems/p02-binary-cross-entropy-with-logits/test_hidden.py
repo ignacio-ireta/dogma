@@ -214,3 +214,12 @@ def test_mean_of_losses_of_very_different_sizes_does_not_overflow():
         rtol=1e-12,
         err_msg="the mean of a huge loss and a tiny loss is representable and must not overflow",
     )
+
+
+def test_list_inputs_match_their_array_equivalents():
+    # z and y are 1-D array-likes, so plain Python lists are valid inputs.
+    got = _call([0.0, 2.0, -1.0], [1.0, 0.0, 0.5])
+    want = _call(np.array([0.0, 2.0, -1.0]), np.array([1.0, 0.0, 0.5]))
+    assert abs(got - want) <= 1e-12, (
+        "list inputs must give the same loss as their array equivalents"
+    )

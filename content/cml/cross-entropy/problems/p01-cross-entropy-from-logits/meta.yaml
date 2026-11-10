@@ -1,5 +1,5 @@
 id: cml/cross-entropy/p01-cross-entropy-from-logits
-version: 3
+version: 4
 title: Cross-entropy from logits
 language: python
 runtime: py-numpy
