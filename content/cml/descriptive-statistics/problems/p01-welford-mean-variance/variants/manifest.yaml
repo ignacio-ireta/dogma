@@ -2,6 +2,41 @@ problem_version: 1
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_collects_input_list.py
+  mistake: stores the whole input in a list before the pass
+  clause: Must use a single pass with O(1) memory, so the input is never collected into a list or array.
+  killed_by: test_streams_the_input_in_constant_memory
+  visible: hidden
+- file: reject_population_variance.py
+  mistake: divides M2 by n instead of n minus 1
+  clause: 'Returns: `(n, mean, variance)`. `n` is an int, the number of values. `mean` is a float. `variance`
+    is the sample variance, M2 / (n − 1), a float, and it is `nan` when `n == 1`.'
+  killed_by: test_small_sample_matches_hand_values
+  visible: public
+- file: reject_single_value_zero_variance.py
+  mistake: one value gives variance 0 instead of nan
+  clause: 'Returns: `(n, mean, variance)`. `n` is an int, the number of values. `mean` is a float. `variance`
+    is the sample variance, M2 / (n − 1), a float, and it is `nan` when `n == 1`.'
+  killed_by: test_single_value_has_nan_variance
+  visible: public
+- file: reject_missing_squared_factor.py
+  mistake: adds delta squared to M2 instead of the product with the updated deviation
+  clause: 'Returns: `(n, mean, variance)`. `n` is an int, the number of values. `mean` is a float. `variance`
+    is the sample variance, M2 / (n − 1), a float, and it is `nan` when `n == 1`.'
+  killed_by: test_small_sample_matches_hand_values
+  visible: public
+- file: reject_empty_returns_zero.py
+  mistake: returns zeros for empty input instead of raising
+  clause: Raises `ValueError` when `xs` is empty.
+  killed_by: test_empty_input_raises_value_error
+  visible: public
+- file: reject_needs_length.py
+  mistake: calls len on the input so a generator is rejected
+  clause: '`xs`: an iterable of real numbers: a list, a tuple, a NumPy array or a generator. Integers
+    allowed. Read it once, from start to end, and never store the values.'
+  killed_by: test_generator_input_gives_the_same_answer_as_a_list
+  visible: public
 uncovered: []
-sweeps: []
+sweeps:
+- reject

@@ -2,6 +2,53 @@ problem_version: 1
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_convex_combination.py
+  origin: freedom
+  freedom: interpolates as a convex combination of the two order statistics instead of value plus fraction
+    times the gap
+reject:
+- file: reject_sorts_caller_array.py
+  mistake: sorts the caller float array in place
+  clause: Must not mutate `xs`, and must not sort it in place.
+  killed_by: test_input_is_not_mutated_or_sorted_in_place
+  visible: hidden
+- file: reject_quantile_without_interpolation_bias.py
+  mistake: quartile position uses q times n instead of q times n minus 1
+  clause: 'Returns: `(lower, upper)`, two Python floats, with `lower = Q1 − k·IQR` and `upper = Q3 + k·IQR`.'
+  killed_by: test_quartiles_of_five_values_give_the_expected_fences
+  visible: public
+- file: reject_zero_k_rejected.py
+  mistake: rejects k equal to zero which the Contract allows
+  clause: '`k`: non-negative number, default `1.5`.'
+  killed_by: test_k_zero_gives_the_quartiles_themselves
+  visible: public
+- file: reject_nonfinite_only_nan.py
+  mistake: rejects NaN but lets infinity through
+  clause: Raises `ValueError` when `xs` is not 1-D, when it is empty, when it contains NaN or infinity,
+    or when `k` is negative.
+  killed_by: test_invalid_data_raises_value_error
+  visible: hidden
+- file: reject_accepts_2d.py
+  mistake: flattens 2-D input instead of rejecting it
+  clause: Raises `ValueError` when `xs` is not 1-D, when it is empty, when it contains NaN or infinity,
+    or when `k` is negative.
+  killed_by: test_invalid_data_raises_value_error
+  visible: hidden
+- file: reject_half_iqr_upper.py
+  mistake: the upper fence adds half the IQR
+  clause: 'Returns: `(lower, upper)`, two Python floats, with `lower = Q1 − k·IQR` and `upper = Q3 + k·IQR`.'
+  killed_by: test_quartiles_of_five_values_give_the_expected_fences
+  visible: public
+- file: reject_default_k_one.py
+  mistake: the default k is 1.0 not 1.5
+  clause: '`k`: non-negative number, default `1.5`.'
+  killed_by: test_quartiles_of_five_values_give_the_expected_fences
+  visible: public
+- file: reject_rejects_duplicates.py
+  mistake: rejects duplicate values
+  clause: '`xs`: 1-D array-like of finite real numbers, length n ≥ 1. Integers allowed. Duplicates allowed.'
+  killed_by: test_property_agrees_with_numpy_on_any_finite_list
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
