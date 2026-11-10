@@ -2,6 +2,52 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_bias_loop.py
+  origin: freedom
+  freedom: bias gradient summed by a loop over rows instead of a vectorised sum
+reject:
+- file: reject_rejects_integer_inputs.py
+  mistake: rejects integer arrays that the Contract says are valid
+  clause: '`X`, `W`, `G`: real numeric NumPy arrays, shapes `(n,d)`, `(d,k)`, `(n,k)`. Every dimension
+    is 1..64 and every entry is finite with absolute value <=1e6. Integer and strided arrays are valid;
+    complex, bool, and object arrays are invalid.'
+  killed_by: test_integer_strided_inputs_float64_and_no_mutation
+  visible: hidden
+- file: reject_bias_float32.py
+  mistake: returns the bias gradient as float32 instead of float64
+  clause: Return `(dX, dW, db)`, float64 arrays of shapes `(n,d)`, `(d,k)`, `(k,)`.
+  killed_by: test_random_scalar_loop_oracle
+  visible: hidden
+- file: reject_bias_keeps_row_axis.py
+  mistake: keeps a row axis so the bias gradient has shape one by k instead of k
+  clause: Return `(dX, dW, db)`, float64 arrays of shapes `(n,d)`, `(d,k)`, `(k,)`.
+  killed_by: test_one_row_example
+  visible: public
+- file: reject_mean_skips_bias.py
+  mistake: mean divides dX and dW by n but leaves the bias gradient unscaled
+  clause: '`reduction`: exactly `"sum"` or `"mean"`. For sum, differentiate `sum((X @ W + b) * G)`. For
+    mean, differentiate that scalar divided by `n`. This applies the factor to **all three** gradients.
+    The bias value is irrelevant.'
+  killed_by: test_mean_example
+  visible: public
+- file: reject_drops_reduction_check.py
+  mistake: accepts any reduction string and treats it as sum
+  clause: Raise `ValueError` for invalid ranks, shapes, bounds, dtypes, nonfinite entries, or reduction.
+    Do not mutate input arrays.
+  killed_by: test_invalid_shapes_values_and_policy
+  visible: hidden
+- file: reject_nonfinite_passes.py
+  mistake: lets NaN entries through the finiteness check
+  clause: Raise `ValueError` for invalid ranks, shapes, bounds, dtypes, nonfinite entries, or reduction.
+    Do not mutate input arrays.
+  killed_by: test_invalid_shapes_values_and_policy
+  visible: hidden
+- file: reject_inplace_scale_mean.py
+  mistake: divides the caller upstream array in place for mean
+  clause: Raise `ValueError` for invalid ranks, shapes, bounds, dtypes, nonfinite entries, or reduction.
+    Do not mutate input arrays.
+  killed_by: test_every_gradient_matches_finite_difference
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
