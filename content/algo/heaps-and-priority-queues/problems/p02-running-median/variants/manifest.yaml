@@ -2,6 +2,39 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_int_inputs_refused.py
+  mistake: int values are refused with a TypeError
+  clause: '`values`: a sequence of finite real numbers (ints or floats), possibly empty.'
+  killed_by: test_prefix_medians_for_mixed_insertions
+  visible: public
+- file: reject_lower_middle_even.py
+  mistake: an even count gives the lower middle value, not the mean
+  clause: 'Result: a list of `len(values)` Python floats. Element `i` is the median of `values[: i + 1]`:
+    the middle value if the count is odd, and the mean of the two middle values if the count is even.'
+  killed_by: test_prefix_medians_for_mixed_insertions
+  visible: public
+- file: reject_empty_raises.py
+  mistake: empty input raises instead of giving an empty list
+  clause: Empty `values` gives `[]`.
+  killed_by: test_empty_input_gives_an_empty_list
+  visible: public
+- file: reject_mean_overflows.py
+  mistake: the mean of the two middle values is a plain sum over two
+  clause: 'Values may be as large as `1e308`. Compute the mean of the two middle values without overflow:
+    for `1e308` and `1e308` it is `1e308`.'
+  killed_by: test_finite_extreme_even_median_does_not_overflow
+  visible: hidden
+- file: reject_only_nan_checked.py
+  mistake: infinite values are not rejected, only NaN
+  clause: Raises `ValueError` if any value is NaN or infinite.
+  killed_by: test_non_finite_values_raise_value_error
+  visible: hidden
+- file: reject_reverses_input.py
+  mistake: a list input is reversed in place
+  clause: Must run in O(n log n) time. Must not mutate its input.
+  killed_by: test_alternating_extremes
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

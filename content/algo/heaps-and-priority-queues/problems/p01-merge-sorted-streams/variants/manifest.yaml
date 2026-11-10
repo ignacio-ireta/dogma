@@ -2,6 +2,48 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_float_keys_truncated.py
+  mistake: keys are truncated to int so float keys lose their fraction
+  clause: '`streams`: a sequence of `k >= 0` iterables. Each yields `(key, label)` pairs with non-decreasing
+    keys. Keys are mutually comparable (ints or floats). Labels can be any objects, and they are **never
+    compared** by the merge.'
+  killed_by: test_keys_may_be_negative_floats
+  visible: hidden
+- file: reject_eager_head_reads.py
+  mistake: the first pair of each stream is read at call time
+  clause: Returns an iterator (a generator is fine). **Calling the function reads nothing from any stream.**
+    The first `next()` on the result is the first point at which a stream may be read.
+  killed_by: test_nothing_is_read_when_the_merge_is_created
+  visible: hidden
+- file: reject_ties_higher_stream_first.py
+  mistake: equal keys come out with the higher stream index first
+  clause: 'Ordering: the output is in non-decreasing key order. Among equal keys, a pair from a stream
+    with a lower index in `streams` comes first. Pairs from the same stream keep their own order.'
+  killed_by: test_matches_a_stable_sort_of_the_concatenated_streams
+  visible: hidden
+- file: reject_reads_two_ahead.py
+  mistake: each stream is read two pairs beyond what the caller took
+  clause: 'Laziness: after the caller has taken `m` pairs in total, a stream that has yielded `t` of its
+    pairs has been read at most `t + 1` times, so at most one pair per stream is read ahead. Infinite
+    streams are fine as long as the caller stops.'
+  killed_by: test_infinite_streams_merge_lazily_and_read_only_what_is_needed
+  visible: hidden
+- file: reject_empty_stream_stops_merge.py
+  mistake: an empty stream ends the whole merge
+  clause: An empty `streams` gives an empty iterator. An empty stream contributes nothing.
+  killed_by: test_empty_streams_contribute_nothing
+  visible: public
+- file: reject_linear_scan_heads.py
+  mistake: the heads are found by a linear scan instead of a heap
+  clause: Runs in O(n log k) time for `n` pairs in total, using a heap of the current head of each stream.
+  killed_by: test_large_merge_finishes_within_the_time_limit_and_matches_the_stable_sort
+  visible: hidden
+- file: reject_mutates_list_inputs.py
+  mistake: list inputs are reversed in place
+  clause: Must not mutate its inputs.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
