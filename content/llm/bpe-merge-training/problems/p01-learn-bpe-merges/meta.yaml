@@ -10,4 +10,4 @@ core: true
 tolerance: {atol: 0.0, rtol: 0.0}   # exact: integer counts and string merge lists
 banned_imports: []                  # no BPE library is installed; the contract forbids them in words
 timeout_s: 30
-status: verified
+status: reviewed

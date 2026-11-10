@@ -10,7 +10,8 @@ as equal, and if ties are settled by a rule that does not depend on luck. Implem
 - `answers`: a list or tuple of `str`, one final answer per sample, in sampling order. It must not be
   a bare `str`, which is a sequence of characters, not a list of answers.
 - **Normalise** each answer: `" ".join(a.split()).lower()`. This collapses runs of whitespace,
-  trims both ends and lowercases. Punctuation is kept, so `"3."` and `"3"` are different answers.
+  trims both ends and lowercases. Punctuation is kept, so `"3."` and `"3"` are different answers. A thousands separator is
+punctuation too: `"2,125"` and `"2125"` are different answers.
 - **Drop** every answer whose normalised form is the empty string. Dropped samples cast no vote.
 - **Vote.** Count the surviving normalised answers. The winner has the largest count.
 - **Tie rule.** If several answers share the largest count, the winner is the one that appeared
