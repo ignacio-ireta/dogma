@@ -1,5 +1,5 @@
 id: cml/a-b-test-design-and-analysis/p02-two-proportion-z-test
-version: 3
+version: 4
 title: Two-proportion z-test
 language: python
 runtime: py-data

@@ -1,5 +1,5 @@
 id: cml/a-b-test-design-and-analysis/p01-sample-size-two-proportions
-version: 3
+version: 4
 title: Sample size for two proportions
 language: python
 runtime: py-data

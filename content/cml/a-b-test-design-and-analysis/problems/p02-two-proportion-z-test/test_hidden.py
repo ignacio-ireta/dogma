@@ -198,3 +198,11 @@ def test_negative_conversions_in_arm_b_raise_value_error():
         lambda: two_proportion_z_test(10, 100, -1, 100),
         "a negative conversion count in arm B was accepted: counts must lie in [0, n]",
     )
+
+
+def test_whole_valued_float_count_is_rejected():
+    # Floats are not counts, even when the value is whole: 120.0 is a float, so it must raise.
+    _must_raise_value_error(
+        lambda: two_proportion_z_test(120.0, 1000, 90, 1000),
+        "a whole-valued float count was accepted: floats must raise ValueError",
+    )

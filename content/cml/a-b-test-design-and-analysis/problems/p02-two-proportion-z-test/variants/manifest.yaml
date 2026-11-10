@@ -1,7 +1,50 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_whole_floats_accepted.py
+  mistake: accepts a float count whose value is whole
+  clause: '`x_a`, `x_b`: integer numbers of conversions in arms A and B. `n_a`, `n_b`: integer numbers
+    of users in each arm. Python ints and NumPy integers are accepted. Floats and booleans are not counts
+    and raise `ValueError`.'
+  killed_by: test_whole_valued_float_count_is_rejected
+  visible: hidden
+- file: reject_full_arm_excluded.py
+  mistake: rejects a conversion count equal to the arm size
+  clause: 'Requirements: `n_a ≥ 1`, `n_b ≥ 1`, `0 ≤ x_a ≤ n_a`, `0 ≤ x_b ≤ n_b`.'
+  killed_by: test_every_user_converting_in_arm_a_is_accepted
+  visible: hidden
+- file: reject_sign_flipped.py
+  mistake: swaps the sign convention of z
+  clause: 'Formula: ```text p_a = x_a / n_a p_b = x_b / n_b p_pool = (x_a + x_b) / (n_a + n_b) pooled
+    rate, the null hypothesis z = (p_b − p_a) / sqrt(p_pool · (1 − p_pool) · (1/n_a + 1/n_b)) p = 2 ·
+    P(Z ≥ |z|), Z standard normal two-sided ``` The sign convention is `z = (p_B − p_A) / SE`. A positive
+    `z` means arm B converted more.'
+  killed_by: test_example_control_converts_more_gives_negative_z
+  visible: public
+- file: reject_one_sided_p.py
+  mistake: uses a one-sided p-value instead of two-sided
+  clause: 'Formula: ```text p_a = x_a / n_a p_b = x_b / n_b p_pool = (x_a + x_b) / (n_a + n_b) pooled
+    rate, the null hypothesis z = (p_b − p_a) / sqrt(p_pool · (1 − p_pool) · (1/n_a + 1/n_b)) p = 2 ·
+    P(Z ≥ |z|), Z standard normal two-sided ``` The sign convention is `z = (p_B − p_A) / SE`. A positive
+    `z` means arm B converted more.'
+  killed_by: test_example_control_converts_more_gives_negative_z
+  visible: public
+- file: reject_list_not_tuple.py
+  mistake: returns a list instead of a tuple
+  clause: 'Returns: a tuple `(z, p)` of two floats.'
+  killed_by: test_zero_conversions_in_arm_a_is_accepted
+  visible: hidden
+- file: reject_pooled_one_unguarded.py
+  mistake: misses the pooled rate of exactly 1
+  clause: Raises `ValueError` when a count is not an integer, when `n_a` or `n_b` is less than 1, when
+    a count is outside `[0, n]`, or when the pooled rate is 0 or 1 (the standard error is zero and `z`
+    is undefined).
+  killed_by: test_invalid_input_raises_value_error
+  visible: hidden
+uncovered:
+- clause: Must not mutate its inputs (they are scalars, but do not rely on that).
+  reason: inputs are integers, which cannot be changed in place
+sweeps:
+- reject

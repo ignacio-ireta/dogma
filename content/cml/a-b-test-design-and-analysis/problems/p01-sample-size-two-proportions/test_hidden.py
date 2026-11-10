@@ -212,3 +212,12 @@ def test_baseline_above_one_with_a_valid_treatment_rate_raises_value_error():
         lambda: sample_size_two_proportions(1.2, -0.7),
         "a baseline above 1 was accepted: p_baseline must be strictly between 0 and 1",
     )
+
+
+def test_control_rate_enters_the_formula_with_all_its_digits():
+    # The control rate is used as given, p1 = p_baseline. Rounding it to six decimals moves the
+    # count by several users at this effect size, so the ceiling differs.
+    p_baseline, mde = 0.2345678, 0.001
+    assert sample_size_two_proportions(p_baseline, mde) == _reference(p_baseline, mde, 0.05, 0.8), (
+        "the control rate must enter the formula unchanged: p1 = p_baseline, with every digit"
+    )
