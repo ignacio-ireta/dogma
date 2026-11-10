@@ -127,7 +127,7 @@ def test_activation_term_is_added_as_given():
         pytest.fail("the total must include the activation term exactly once")
 
 
-@pytest.mark.parametrize("optimizer", ["sgd"])
+@pytest.mark.parametrize("optimizer", ["sgd"], ids=["sgd"])
 def test_sgd_keeps_no_optimizer_state(optimizer):
     got = _call(**_kwargs("training", "fp32", optimizer, False))
     if got["optimizer_states"] != 0:
@@ -172,7 +172,7 @@ INVALID_CASES = {
 }
 
 
-@pytest.mark.parametrize("case", list(INVALID_CASES))
+@pytest.mark.parametrize("case", list(INVALID_CASES), ids=list(INVALID_CASES))
 def test_invalid_arguments_raise_value_error(case):
     args = INVALID_CASES[case]()
     try:
