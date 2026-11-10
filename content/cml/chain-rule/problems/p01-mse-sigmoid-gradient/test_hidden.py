@@ -76,7 +76,7 @@ def test_gradient_matches_central_differences_of_the_loss():
         )
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(
     arrays(np.float64, (4, 2), elements=ELEMENTS),
     arrays(np.float64, 4, elements=st.floats(0.0, 1.0)),
@@ -161,7 +161,7 @@ def test_shape_mistakes_raise_value_error(label, X, y, w):
 
 
 @pytest.mark.parametrize("bad", [float("nan"), float("inf")], ids=["nan", "inf"])
-@pytest.mark.parametrize("where", ["X", "y", "w"])
+@pytest.mark.parametrize("where", ["X", "y", "w"], ids=["in-x", "in-y", "in-w"])
 def test_non_finite_entries_raise_value_error(bad, where):
     X = np.array([[1.0, 2.0], [0.5, -1.0]])
     y = np.array([1.0, 0.0])
