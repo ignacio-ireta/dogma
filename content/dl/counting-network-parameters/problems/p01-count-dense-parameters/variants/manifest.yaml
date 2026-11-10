@@ -2,6 +2,53 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_widths_bool_isinstance.py
+  mistake: accepts bool widths because isinstance counts bool as int
+  clause: '`widths`: a list or tuple of at least two positive **Python integers**; booleans, float-valued
+    integers and NumPy integer scalars are not accepted. Each neighboring pair defines one layer.'
+  killed_by: test_invalid_widths_and_flag
+  visible: hidden
+- file: reject_widths_rejects_tuple.py
+  mistake: rejects tuple widths that the contract allows
+  clause: '`widths`: a list or tuple of at least two positive **Python integers**; booleans, float-valued
+    integers and NumPy integer scalars are not accepted. Each neighboring pair defines one layer.'
+  killed_by: test_no_bias_example
+  visible: public
+- file: reject_bias_output_forced.py
+  mistake: drops the bias flag for the output layer
+  clause: '`use_bias`: a Python `bool`, default `True`, applying to every layer.'
+  killed_by: test_no_bias_example
+  visible: public
+- file: reject_bias_uses_input_width.py
+  mistake: bias counted as input width instead of output width
+  clause: 'Return `(per_layer, total)`: a list of Python integer counts in forward order, followed by
+    their exact Python integer sum. A layer from width `a` to width `b` has `a*b` weights plus `b` biases
+    when enabled. Count the output layer as well as hidden layers.'
+  killed_by: test_bias_example
+  visible: public
+- file: reject_flag_check_dropped.py
+  mistake: no check that use_bias is a bool
+  clause: Raise `ValueError` for invalid widths, fewer than two widths or a non-bool flag.
+  killed_by: test_invalid_widths_and_flag
+  visible: hidden
+- file: reject_length_check_dropped.py
+  mistake: no check for fewer than two widths
+  clause: Raise `ValueError` for invalid widths, fewer than two widths or a non-bool flag.
+  killed_by: test_invalid_widths_and_flag
+  visible: hidden
+- file: reject_float_total.py
+  mistake: total computed through float loses integer precision
+  clause: Do not mutate `widths`. Do not allocate weight matrices. Arbitrarily large positive Python integers
+    are supported by integer arithmetic; counts must not wrap at fixed-width limits.
+  killed_by: test_large_counts_use_python_integers
+  visible: hidden
+- file: reject_mutates_list_input.py
+  mistake: appends to the caller's widths list
+  clause: Do not mutate `widths`. Do not allocate weight matrices. Arbitrarily large positive Python integers
+    are supported by integer arithmetic; counts must not wrap at fixed-width limits.
+  killed_by: test_seeded_count_matches_explicit_small_parameter_slots
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
