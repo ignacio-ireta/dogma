@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import importlib.util
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -160,3 +161,106 @@ def test_variants_passes_then_fails_when_a_killer_is_wrong(gate, problem_dir, tm
     )
     assert gate.main(["variants", "--out", str(out)]) == 1
     assert "MISMATCH: test_sum_of_negative_ints does not fail" in capsys.readouterr().out
+
+
+# --- gate: the real grader on a committed copy of the fixture -----------------------------------
+
+BOOL_TEST = (
+    "\n\ndef test_bool_raises_type_error():\n"
+    '    _raises_type_error(lambda: add(True, 1), "a bool is not a number here: raise TypeError")\n'
+)
+
+
+def _git(root: Path, *args: str) -> None:
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(root),
+            "-c",
+            "user.name=test",
+            "-c",
+            "user.email=test@example.invalid",
+            "-c",
+            "commit.gpgsign=false",
+            *args,
+        ],
+        capture_output=True,
+        check=True,
+    )
+
+
+@pytest.fixture
+def committed_problem(gate: ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """The fixture problem in a git repo, committed as the base. Returns the problem directory."""
+    root = tmp_path / "repo"
+    target = root / "content" / "fixtures" / "py-variants" / "problems" / "p01-add"
+    shutil.copytree(FIXTURE, target, ignore=shutil.ignore_patterns("__pycache__"))
+    _git(root, "init", "-q")
+    _git(root, "add", "-A")
+    _git(root, "commit", "-q", "-m", "base")
+    monkeypatch.setattr(gate.audit, "REPO", root)
+    return target
+
+
+def _gate(gate: ModuleType, tmp_path: Path, *extra: str) -> int:
+    return gate.main(["gate", FIXTURE_REL, "--out", str(tmp_path / "out"), *extra])
+
+
+def _verdict_line(capsys) -> str:
+    return next(line for line in capsys.readouterr().out.splitlines() if line.startswith("GATE:"))
+
+
+def test_gate_passes_the_fixture_unchanged(gate, committed_problem, tmp_path, capsys):
+    assert _gate(gate, tmp_path) == 0
+    assert _verdict_line(capsys) == "GATE: PASS"
+
+
+def test_gate_add_mode_accepts_a_bool_check_test_and_its_wrong_file(
+    gate, committed_problem, tmp_path, capsys
+):
+    _append_text(committed_problem / "test_hidden.py", BOOL_TEST)
+    candidate = _candidate(
+        tmp_path, "reject_accepts_bools.py", SOLUTION.replace("isinstance(value, bool) or ", "")
+    )
+    assert gate.main(["bump-version", FIXTURE_REL, "--out", str(tmp_path / "out")]) == 0
+    assert "version: 1 -> 2" in capsys.readouterr().out
+    assert _gate(gate, tmp_path, "--mode", "add", "--wrong", str(candidate)) == 0
+    assert _verdict_line(capsys) == "GATE: PASS"
+
+
+def test_gate_add_mode_fails_change_when_a_test_is_deleted(
+    gate, committed_problem, tmp_path, capsys
+):
+    _replace_text(
+        committed_problem / "test_hidden.py",
+        "def test_mixed_int_and_float():\n    assert add(1, 0.5) == 1.5, "
+        '"an int plus a float should be their sum"\n',
+        "",
+    )
+    assert _gate(gate, tmp_path, "--mode", "add") == 1
+    assert "change     FAIL" in capsys.readouterr().out
+
+
+def test_gate_text_mode_passes_a_reworded_message(gate, committed_problem, tmp_path, capsys):
+    _replace_text(committed_problem / "test_hidden.py", "check the sign", "look at the sign")
+    assert _gate(gate, tmp_path, "--mode", "text") == 0
+    assert _verdict_line(capsys) == "GATE: PASS"
+
+
+def test_gate_fails_the_reference_when_an_expected_value_changes(
+    gate, committed_problem, tmp_path, capsys
+):
+    _replace_text(committed_problem / "test_hidden.py", "add(-4, -6) == -10", "add(-4, -6) == -11")
+    assert _gate(gate, tmp_path, "--mode", "text") == 1
+    assert "reference  FAIL" in capsys.readouterr().out
+
+
+def _append_text(path: Path, text: str) -> None:
+    path.write_text(path.read_text(encoding="utf-8") + text, encoding="utf-8")
+
+
+def _replace_text(path: Path, old: str, new: str) -> None:
+    text = path.read_text(encoding="utf-8")
+    assert old in text, f"{old!r} not in {path.name}"
+    path.write_text(text.replace(old, new), encoding="utf-8")

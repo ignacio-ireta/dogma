@@ -6,10 +6,13 @@ test grades a real submission; the runbook's Accept commands do that.
 
 from __future__ import annotations
 
+import ast
 import hashlib
 import importlib.util
 import json
+import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -670,3 +673,485 @@ def test_blind_similarity_ignores_lines_the_starter_already_has(gate):
     )
     ratio, _ = gate.blind_similarity(problem, other)
     assert ratio < 0.5
+
+
+# --- the gate: normalising tests ----------------------------------------------------------------
+
+BASE_TEST = (
+    "import pytest\n"
+    "from hypothesis import given, settings\n"
+    "\n"
+    "@settings(deadline=None, report_multiple_bugs=False, max_examples=50)\n"
+    "def test_close(x):\n"
+    '    """Docstring."""\n'
+    '    assert x == 1, "msg"  # comment\n'
+    '    np.testing.assert_allclose(x, 1.0, rtol=1e-6, err_msg="old")\n'
+    '    pytest.fail("old wording")\n'
+    '@pytest.mark.parametrize("v", [1, 2], ids=["one", "two"])\n'
+    "def test_other(v):\n"
+    '    raise AssertionError("old")\n'
+)
+
+
+@pytest.mark.parametrize(
+    "edit",
+    [
+        lambda s: s.replace('"msg"', '"reworded"'),
+        lambda s: s.replace('err_msg="old"', 'err_msg="new text"'),
+        lambda s: s.replace('ids=["one", "two"]', 'ids=["a", "b"]'),
+        lambda s: s.replace("max_examples=50", "max_examples=50, deadline=None"),
+        lambda s: s.replace('pytest.fail("old wording")', 'pytest.fail("other")'),
+        lambda s: s.replace('AssertionError("old")', 'AssertionError("new")'),
+        lambda s: s.replace('    """Docstring."""', "    '''Other.'''"),
+        lambda s: s.replace("# comment", "# changed"),
+        lambda s: s.replace(
+            "from hypothesis import given, settings", "from hypothesis import given"
+        ),
+    ],
+)
+def test_normalise_ignores_messages_ids_docstrings_and_settings(gate, edit):
+    assert gate.normalise_tests(edit(BASE_TEST)) == gate.normalise_tests(BASE_TEST)
+
+
+def test_normalise_ignores_a_settings_decorator_added_whole(gate):
+    bare = "def test_a(x):\n    assert x\n"
+    added = (
+        "from hypothesis import settings\n"
+        "@settings(deadline=None, report_multiple_bugs=False)\n"
+        "def test_a(x):\n"
+        "    assert x\n"
+    )
+    assert gate.normalise_tests(added) == gate.normalise_tests(bare)
+
+
+@pytest.mark.parametrize(
+    "edit",
+    [
+        lambda s: s.replace("rtol=1e-6", "rtol=1e-3"),
+        lambda s: s.replace("max_examples=50", "max_examples=5"),
+        lambda s: s.replace('    assert x == 1, "msg"', "    pass"),
+        lambda s: s.replace("def test_close", "def test_renamed"),
+        lambda s: s.replace("[1, 2]", "[1, 3]"),
+        lambda s: s.replace("def test_other", "@pytest.mark.skip\ndef test_other"),
+        lambda s: s.replace("x == 1", "x == 2"),
+    ],
+)
+def test_normalise_sees_checks_values_names_and_skips(gate, edit):
+    assert gate.normalise_tests(edit(BASE_TEST)) != gate.normalise_tests(BASE_TEST)
+
+
+def test_normalise_sees_a_helper_call_replacing_pytest_raises(gate):
+    raising = "import pytest\n\ndef test_x():\n    with pytest.raises(TypeError):\n        f()\n"
+    helper = "import pytest\n\ndef test_x():\n    _expect_type_error(f)\n"
+    assert gate.normalise_tests(raising) != gate.normalise_tests(helper)
+
+
+def test_duplicate_top_level_names_and_test_function_names(gate):
+    source = (
+        "X = 1\nX = 2\n\ndef test_a():\n    pass\n\nclass Helper:\n    pass\n\n"
+        "def test_a():\n    pass\n\ndef helper():\n    pass\n"
+    )
+    assert gate.duplicate_top_level_names(source) == ["X", "test_a"]
+    assert gate.duplicate_top_level_names("def f():\n    pass\n") == []
+    assert gate.test_function_names(source) == {"test_a"}
+    assert gate.test_function_names("async def test_b():\n    pass\n") == {"test_b"}
+
+
+# --- the gate: a real git repository holding the fixture problem --------------------------------
+
+FIXTURE_ID = "fixtures/py-variants/p01-add"
+PROBLEM_REL = Path("content/fixtures/py-variants/problems/p01-add")
+HIDDEN_OLD = (FIXTURE / "test_hidden.py").read_text(encoding="utf-8")
+
+
+def _git(root: Path, *args: str) -> str:
+    done = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(root),
+            "-c",
+            "user.name=test",
+            "-c",
+            "user.email=test@example.invalid",
+            "-c",
+            "commit.gpgsign=false",
+            *args,
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return done.stdout.strip()
+
+
+def _replace(path: Path, old: str, new: str) -> None:
+    text = path.read_text(encoding="utf-8")
+    assert old in text, f"{old!r} not in {path.name}"
+    path.write_text(text.replace(old, new), encoding="utf-8")
+
+
+def _append(path: Path, text: str) -> None:
+    path.write_text(path.read_text(encoding="utf-8") + text, encoding="utf-8")
+
+
+CATCH_TEST = (
+    "\n\ndef test_catches_bug():  # CATCH\n"
+    '    assert add(True, 1) == 2, "the sum is wrong for bools"\n'
+)
+
+
+@pytest.fixture
+def gate_repo(gate: ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """The fixture problem, committed as the base. Returns the problem directory."""
+    root = tmp_path / "repo"
+    target = root / PROBLEM_REL
+    shutil.copytree(FIXTURE, target, ignore=shutil.ignore_patterns("__pycache__"))
+    _git(root, "init", "-q")
+    _git(root, "add", "-A")
+    _git(root, "commit", "-q", "-m", "base")
+    problem = gate.audit.Problem(
+        id=FIXTURE_ID,
+        path=target,
+        language="python",
+        entry="add",
+        timeout_s=30,
+        banned=(),
+        runtime="py-stdlib",
+    )
+    monkeypatch.setattr(gate.audit, "REPO", root)
+    monkeypatch.setattr(gate.audit, "discover", lambda repo, only: [problem])
+    monkeypatch.setattr(gate, "_run_seed", lambda *_args: (True, []))
+    return target
+
+
+def _test_names(text: str | None) -> list[str]:
+    """Test names as the fake grader reports them: one name per parametrize case id."""
+    if text is None:
+        return []
+    names: list[str] = []
+    for node in ast.parse(text).body:
+        if not (isinstance(node, ast.FunctionDef) and node.name.startswith("test_")):
+            continue
+        cases = [
+            "-".join(str(v) for v in value) if isinstance(value, tuple) else str(value)
+            for decorator in node.decorator_list
+            if isinstance(decorator, ast.Call)
+            and getattr(decorator.func, "attr", "") == "parametrize"
+            for value in ast.literal_eval(decorator.args[1])
+        ]
+        if cases:
+            names.extend(f"{node.name}[{case}]" for case in cases)
+        else:
+            names.append(node.name)
+    return names
+
+
+def _read(path: Path) -> str | None:
+    return path.read_text(encoding="utf-8") if path.is_file() else None
+
+
+def _fake_gate_grade(problem, source: str, _settings, **_kw) -> GradeReport:
+    """Results depend on the tests given: BREAKREF breaks the reference, BUG + CATCH is caught."""
+    public_names = _test_names(_read(problem.path / "test_public.py"))
+    hidden_text = _read(problem.path / "test_hidden.py") or ""
+    tests = [GradedTest(name=name, file="public", outcome="pass") for name in public_names]
+    for index, name in enumerate(_test_names(hidden_text)):
+        if "BREAKREF" in hidden_text and index == 0:
+            tests.append(GradedTest(name=name, file="hidden", outcome="fail", message="broken"))
+        elif (
+            "BUG" in source
+            and "CATCH" in hidden_text
+            and name.partition("[")[0] == "test_catches_bug"
+        ):
+            tests.append(
+                GradedTest(
+                    name=name,
+                    file="hidden",
+                    outcome="fail",
+                    message="the sum is wrong for bools",
+                )
+            )
+        else:
+            tests.append(GradedTest(name=name, file="hidden", outcome="pass"))
+    failed = any(test.outcome != "pass" for test in tests)
+    return _report(RunStatus.FAILED if failed else RunStatus.PASSED, tests)
+
+
+@pytest.fixture
+def gate_grader(gate: ModuleType, gate_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(gate.audit, "grade_source", _fake_gate_grade)
+
+
+def _checks(capsys) -> dict[str, str]:
+    lines = capsys.readouterr().out.splitlines()
+    found = (re.match(r"^(\w+)\s+(PASS|FAIL|SKIP)\b", line) for line in lines)
+    return {match.group(1): match.group(2) for match in found if match}
+
+
+ALL_PASS = {
+    "frozen": "PASS",
+    "manifest": "PASS",
+    "reference": "PASS",
+    "accepts": "PASS",
+    "rejects": "PASS",
+    "change": "PASS",
+    "wrong": "PASS",
+    "version": "PASS",
+    "lint": "PASS",
+    "names": "PASS",
+    "seeds": "PASS",
+    "time": "PASS",
+}
+
+
+def _run(gate: ModuleType, out: Path, *extra: str) -> int:
+    return gate.main(["gate", FIXTURE_ID, "--out", str(out), *extra])
+
+
+def test_gate_mode_none_passes_an_unchanged_problem(gate, gate_grader, tmp_path, capsys):
+    assert _run(gate, tmp_path / "out") == 0
+    checks = _checks(capsys)
+    assert checks == {**ALL_PASS, "wrong": "SKIP"}
+
+
+def test_gate_frozen_edit_fails_and_skips_the_rest(gate, gate_grader, gate_repo, tmp_path, capsys):
+    _replace(gate_repo / "solution.py", "return a + b", "return b + a")
+    assert _run(gate, tmp_path / "out") == 1
+    checks = _checks(capsys)
+    assert checks["frozen"] == "FAIL"
+    assert set(list(checks.values())[1:]) == {"SKIP"}
+
+
+def test_gate_stale_manifest_fails_the_manifest_check(
+    gate, gate_grader, gate_repo, tmp_path, capsys
+):
+    gate.write_manifest(gate.find_problem(FIXTURE_ID), gate.VariantsManifest(problem_version=7))
+    assert _run(gate, tmp_path / "out") == 1
+    checks = _checks(capsys)
+    assert checks["manifest"] == "FAIL"
+    assert checks["reference"] == "SKIP"
+
+
+def test_gate_reference_failure_skips_the_later_checks(
+    gate, gate_grader, gate_repo, tmp_path, capsys
+):
+    _append(gate_repo / "test_hidden.py", "\n# BREAKREF\n")
+    assert _run(gate, tmp_path / "out") == 1
+    checks = _checks(capsys)
+    assert checks["reference"] == "FAIL"
+    assert set(list(checks.values())[3:]) == {"SKIP"}
+
+
+def test_gate_accept_that_a_test_fails_is_refused(gate, gate_grader, gate_repo, tmp_path, capsys):
+    _append(gate_repo / "test_hidden.py", CATCH_TEST)
+    variants = gate_repo / "variants"
+    variants.mkdir()
+    (variants / "accept_bug.py").write_text(
+        (FIXTURE / "solution.py").read_text(encoding="utf-8").replace("a + b", "a + b  # BUG"),
+        encoding="utf-8",
+    )
+    manifest = gate.VariantsManifest(
+        problem_version=1,
+        accept=(
+            gate.AcceptVariant(file="accept_bug.py", origin="freedom", freedom="adds a bug marker"),
+        ),
+    )
+    gate.write_manifest(gate.find_problem(FIXTURE_ID), manifest)
+    _run(gate, tmp_path / "out")
+    checks = _checks(capsys)
+    assert checks["accepts"] == "FAIL"
+    assert checks["reference"] == "PASS"
+
+
+def test_gate_reject_that_survives_is_refused(gate, gate_grader, gate_repo, tmp_path, capsys):
+    variants = gate_repo / "variants"
+    variants.mkdir()
+    shutil.copyfile(FIXTURE / "solution.py", variants / "reject_none.py")
+    clause = gate.clause_text((gate_repo / "problem.md").read_text(encoding="utf-8"), "C1")
+    manifest = gate.VariantsManifest(
+        problem_version=1,
+        reject=(
+            gate.RejectVariant(
+                file="reject_none.py",
+                mistake="no mistake",
+                clause=clause,
+                killed_by="test_sum_of_negative_ints",
+                visible="hidden",
+            ),
+        ),
+    )
+    gate.write_manifest(gate.find_problem(FIXTURE_ID), manifest)
+    _run(gate, tmp_path / "out")
+    assert _checks(capsys)["rejects"] == "FAIL"
+
+
+def test_gate_add_mode_fails_when_a_line_is_deleted(gate, gate_grader, gate_repo, tmp_path, capsys):
+    _replace(
+        gate_repo / "test_hidden.py",
+        "def test_mixed_int_and_float():\n    assert add(1, 0.5) == 1.5, "
+        '"an int plus a float should be their sum"\n',
+        "",
+    )
+    _run(gate, tmp_path / "out", "--mode", "add")
+    assert _checks(capsys)["change"] == "FAIL"
+
+
+def test_gate_add_mode_fails_on_a_duplicate_name(gate, gate_grader, gate_repo, tmp_path, capsys):
+    _append(
+        gate_repo / "test_hidden.py",
+        '\n\ndef test_none_raises_type_error():\n    assert add(1, 1) == 2, "again"\n',
+    )
+    _run(gate, tmp_path / "out", "--mode", "add")
+    assert _checks(capsys)["change"] == "FAIL"
+
+
+def test_gate_text_mode_fails_when_a_compared_value_changes(
+    gate, gate_grader, gate_repo, tmp_path, capsys
+):
+    _replace(gate_repo / "test_hidden.py", "add(-4, -6) == -10", "add(-4, -6) == -11")
+    _run(gate, tmp_path / "out", "--mode", "text")
+    assert _checks(capsys)["change"] == "FAIL"
+
+
+def test_gate_text_mode_passes_a_reworded_message(gate, gate_grader, gate_repo, tmp_path, capsys):
+    _replace(gate_repo / "test_hidden.py", "check the sign", "look at the sign")
+    assert _run(gate, tmp_path / "out", "--mode", "text") == 0
+    checks = _checks(capsys)
+    assert checks["change"] == "PASS"
+    assert checks["reference"] == "PASS"
+
+
+def test_gate_new_test_without_bump_fails_the_version_check(
+    gate, gate_grader, gate_repo, tmp_path, capsys
+):
+    _append(gate_repo / "test_hidden.py", CATCH_TEST)
+    _run(gate, tmp_path / "out", "--mode", "add")
+    assert _checks(capsys)["version"] == "FAIL"
+
+
+def test_gate_add_mode_fails_on_an_assert_without_a_message(
+    gate, gate_grader, gate_repo, tmp_path, capsys
+):
+    _append(gate_repo / "test_hidden.py", "\n\ndef test_extra():\n    assert add(1, 1) == 2\n")
+    _run(gate, tmp_path / "out", "--mode", "add")
+    assert _checks(capsys)["lint"] == "FAIL"
+
+
+def test_gate_add_mode_fails_on_a_new_parametrize_id_with_digits(
+    gate, gate_grader, gate_repo, tmp_path, capsys
+):
+    _append(
+        gate_repo / "test_hidden.py",
+        '\n\n@pytest.mark.parametrize("a, b", [(1.5, 2)])\n'
+        "def test_new_case(a, b):\n"
+        '    assert add(a, b) == a + b, "adds the pair"\n',
+    )
+    _run(gate, tmp_path / "out", "--mode", "add")
+    assert _checks(capsys)["names"] == "FAIL"
+
+
+def test_gate_wrong_file_that_passes_is_refused(gate, gate_grader, gate_repo, tmp_path, capsys):
+    _append(gate_repo / "test_hidden.py", CATCH_TEST)
+    candidate = tmp_path / "candidates" / "wrong_none.py"
+    candidate.parent.mkdir()
+    shutil.copyfile(FIXTURE / "solution.py", candidate)
+    assert gate.main(["bump-version", FIXTURE_ID, "--out", str(tmp_path / "out")]) == 0
+    capsys.readouterr()
+    assert _run(gate, tmp_path / "out", "--mode", "add", "--wrong", str(candidate)) == 1
+    assert _checks(capsys)["wrong"] == "FAIL"
+
+
+def test_gate_add_mode_with_bump_and_a_rejected_wrong_file_passes(
+    gate, gate_grader, gate_repo, tmp_path, capsys
+):
+    _append(gate_repo / "test_hidden.py", CATCH_TEST)
+    candidate = tmp_path / "candidates" / "wrong_bug.py"
+    candidate.parent.mkdir()
+    candidate.write_text("def add(a, b):\n    return a + b  # BUG\n", encoding="utf-8")
+    out = tmp_path / "out"
+    assert gate.main(["bump-version", FIXTURE_ID, "--out", str(out)]) == 0
+    assert "version: 1 -> 2" in capsys.readouterr().out
+    assert _run(gate, out, "--mode", "add", "--wrong", str(candidate)) == 0
+    checks = _checks(capsys)
+    assert checks == ALL_PASS
+    rows = [json.loads(line) for line in (out / "gate.jsonl").read_text().splitlines()]
+    assert rows[-1]["result"] == "PASS"
+
+
+def test_gate_wrong_file_needs_add_mode(gate, gate_grader, gate_repo, tmp_path, capsys):
+    candidate = tmp_path / "wrong.py"
+    candidate.write_text("def add(a, b):\n    return a\n", encoding="utf-8")
+    assert _run(gate, tmp_path / "out", "--wrong", str(candidate)) == 2
+    assert "add only" in capsys.readouterr().err
+
+
+def test_gate_unknown_base_is_a_usage_error(gate, gate_grader, tmp_path, capsys):
+    assert _run(gate, tmp_path / "out", "--base", "no-such-revision") == 2
+    assert "unknown revision" in capsys.readouterr().err
+
+
+def test_gate_appends_one_row_per_run(gate, gate_grader, tmp_path, capsys):
+    out = tmp_path / "out"
+    _run(gate, out)
+    _run(gate, out)
+    rows = [json.loads(line) for line in (out / "gate.jsonl").read_text().splitlines()]
+    assert len(rows) == 2
+    assert rows[0]["problem"] == FIXTURE_ID
+    assert set(rows[0]["sha"]) == {"test_hidden.py", "test_public.py", "solution", "manifest"}
+
+
+def test_expected_version_counts_a_new_test_and_respects_the_tag(gate, gate_repo):
+    root = gate.audit.REPO
+    problem = gate.find_problem(FIXTURE_ID)
+    _git(root, "tag", "i32-start")  # the tag sits at version 1
+    _replace(gate_repo / "meta.yaml", "version: 1\n", "version: 2\n")
+    _git(root, "commit", "-q", "-am", "bump")
+    assert gate.expected_version(problem, "HEAD") == 1  # from the tag, no new test
+    _append(gate_repo / "test_hidden.py", CATCH_TEST)
+    assert gate.expected_version(problem, "HEAD") == 2  # tag version 1, plus one new test
+    _git(root, "tag", "-d", "i32-start")
+    assert gate.expected_version(problem, "HEAD") == 3  # no tag: start is HEAD (version 2)
+
+
+def test_bump_version_keeps_the_comment_and_updates_the_manifest(gate, gate_repo, tmp_path, capsys):
+    _replace(gate_repo / "meta.yaml", "version: 1\n", "version: 1  # the tests set this\n")
+    _append(gate_repo / "test_hidden.py", CATCH_TEST)
+    problem = gate.find_problem(FIXTURE_ID)
+    gate.write_manifest(problem, gate.VariantsManifest(problem_version=1))
+    out = tmp_path / "out"
+    assert gate.main(["bump-version", FIXTURE_ID, "--out", str(out)]) == 0
+    assert "version: 1 -> 2" in capsys.readouterr().out
+    text = (gate_repo / "meta.yaml").read_text(encoding="utf-8")
+    assert "version: 2  # the tests set this\n" in text
+    assert gate.read_manifest(problem).problem_version == 2
+    assert gate.main(["bump-version", FIXTURE_ID, "--out", str(out)]) == 0
+    assert "version: unchanged (2)" in capsys.readouterr().out
+
+
+STRICT_RUFF = '[tool.ruff]\nline-length = 100\n\n[tool.ruff.lint]\nselect = ["E", "F", "B"]\n'
+ZIP_NO_STRICT = (
+    "def add(a, b):\n    pairs = list(zip([a], [b]))\n    return pairs[0][0] + pairs[0][1]\n"
+)
+UNDEFINED_NAME = "def add(a, b):\n    return a + b + missing\n"
+
+
+def test_style_findings_in_a_variant_are_marked_with_noqa(gate, problem_dir, grader, tmp_path):
+    (gate.audit.REPO / "pyproject.toml").write_text(STRICT_RUFF, encoding="utf-8")
+    out = tmp_path / "out"
+    source = _candidate(tmp_path, "accept_zip.py", ZIP_NO_STRICT)
+    argv = ["add-accept", "--out", str(out), FIXTURE_REL, str(source)]
+    assert gate.main([*argv, "--origin", "freedom", "--freedom", "pairs the inputs"]) == 0
+    installed = (problem_dir / "variants" / "accept_zip.py").read_text(encoding="utf-8")
+    assert "# noqa: B905" in installed
+    assert "zip([a], [b])" in installed
+
+
+def test_a_real_error_in_a_variant_still_refuses_it(gate, problem_dir, grader, tmp_path, capsys):
+    (gate.audit.REPO / "pyproject.toml").write_text(STRICT_RUFF, encoding="utf-8")
+    out = tmp_path / "out"
+    source = _candidate(tmp_path, "accept_broken.py", UNDEFINED_NAME)
+    argv = ["add-accept", "--out", str(out), FIXTURE_REL, str(source)]
+    assert gate.main([*argv, "--origin", "freedom", "--freedom", "adds a name"]) == 1
+    assert "F821" in capsys.readouterr().err
+    assert not (problem_dir / "variants").exists()

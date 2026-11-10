@@ -16,6 +16,8 @@ Usage (the torch group is needed for the py-torch runtime)::
     remove-variant --out DIR ID NAME
     adopt-blind  --out DIR [--only PREFIX]...
     variants     --out DIR [--only PREFIX]... [--workers N]
+    gate         ID --out DIR [--mode none|add|text|refactor] [--base REV] [--wrong FILE]...
+    bump-version ID --out DIR [--base REV]
 
 Every sub-command takes ``--out DIR`` (created when missing). Files are written only under DIR,
 or under a problem's variants/ directory for the commands that change a manifest.
@@ -25,14 +27,19 @@ Exit codes: 0 success, 1 a check failed, 2 wrong usage.
 from __future__ import annotations
 
 import argparse
+import ast
 import difflib
 import json
+import os
 import re
 import shutil
 import subprocess
 import sys
+import tempfile
+from collections import Counter
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -50,7 +57,7 @@ from dogma.content.schemas import (
     UncoveredClause,
     VariantsManifest,
 )
-from dogma.content.testlint import lint_hidden_tests
+from dogma.content.testlint import id_leaks, lint_hidden_tests
 from dogma.content.validate import validate_variants
 from dogma.core.config import Settings
 from dogma.core.fsio import atomic_write
@@ -314,7 +321,12 @@ def cmd_ledger(args: argparse.Namespace) -> int:
 # --- manifest: reading, writing and rollback ----------------------------------------------------
 
 _ACCEPT_BLIND = "accept_blind"
-_RUFF_STEPS: tuple[tuple[str, ...], ...] = (("format",), ("check", "--fix"), ("check",))
+# Style and complexity rules. A variant is evidence, not reference code: a blind solution with
+# too many branches, or a zip without strict=, is what a learner writes. Findings in these
+# families are marked in the file with noqa. Anything else (syntax, undefined names, unused
+# variables) still refuses the variant.
+_STYLE_RULES = "B,C4,SIM,RUF,PTH,N,S,T20,PL,UP,E501"
+_NOQA_ROUNDS = 2
 
 
 def _variants_dir(problem: audit.Problem) -> Path:
@@ -481,12 +493,30 @@ def install_variant(problem: audit.Problem, source: Path, name: str) -> Path:
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(source, target)
     if target.suffix == ".py":
-        for step in _RUFF_STEPS:
-            ok, output = _ruff(step, target)
-            if not ok:
-                target.unlink()
-                raise GateError(f"ruff {' '.join(step)} failed on {name}:\n{output}")
+        failure = _tidy(target)
+        if failure is not None:
+            target.unlink()
+            raise GateError(f"ruff {failure[0]} failed on {name}:\n{failure[1]}")
     return target
+
+
+def _tidy(target: Path) -> tuple[str, str] | None:
+    """Format and lint one installed variant. Returns (step, output) for a failure, else None.
+
+    Safe fixes are applied. Style findings that remain are marked with noqa (``_STYLE_RULES``).
+    """
+    ok, output = _ruff(("format",), target)
+    if not ok:
+        return "format", output
+    _ruff(("check", "--fix"), target)  # its exit code also counts what it could not fix
+    for _ in range(_NOQA_ROUNDS):
+        ok, output = _ruff(("check",), target)
+        if ok:
+            return None
+        _ruff(("check", "--select", _STYLE_RULES, "--add-noqa"), target)
+        _ruff(("format",), target)
+    ok, output = _ruff(("check",), target)
+    return None if ok else ("check", output)
 
 
 # --- add-reject, add-accept, add-uncovered, remove-variant --------------------------------------
@@ -856,6 +886,690 @@ def cmd_variants(args: argparse.Namespace) -> int:
 # --- command line -------------------------------------------------------------------------------
 
 
+# --- gate: the checks one edit must pass --------------------------------------------------------
+
+GATE_MODES: tuple[str, ...] = ("none", "add", "text", "refactor")
+GATE_SEEDS: tuple[int, ...] = (1, 2, 3, 4, 5)
+_INFRA = ("timeout", "oom", "error")
+_MESSAGE_LEAK = re.compile(r"array\(|tensor\(|\d+\.\d{2,}|\d[eE][+-]?\d")
+_ASSERT_HELPERS = frozenset(
+    {
+        "assert_allclose",
+        "assert_array_equal",
+        "assert_array_almost_equal",
+        "assert_almost_equal",
+        "assert_equal",
+        "assert_close",
+    }
+)
+_FROZEN_TEXT = ("problem.md", "hints.md", "test_public.py")
+_BLOCKING = frozenset({"frozen", "manifest", "reference"})
+_FAST_MS = 10_000
+_SLOWER_FACTOR = 1.25
+_SLACK_MS = 1_000
+
+
+@dataclass(frozen=True)
+class Check:
+    """One line of the gate report."""
+
+    name: str
+    status: str  # "PASS" | "FAIL" | "SKIP"
+    detail: str = ""
+
+
+# --- normalising and reading tests --------------------------------------------------------------
+
+
+def _call_name(node: ast.expr) -> str:
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    return node.id if isinstance(node, ast.Name) else ""
+
+
+def _is_docstring(stmt: ast.stmt) -> bool:
+    return (
+        isinstance(stmt, ast.Expr)
+        and isinstance(stmt.value, ast.Constant)
+        and isinstance(stmt.value.value, str)
+    )
+
+
+def _is_bare_settings(node: ast.expr) -> bool:
+    return (
+        isinstance(node, ast.Call)
+        and _call_name(node.func) == "settings"
+        and not node.args
+        and not node.keywords
+    )
+
+
+_Definition = ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef
+
+
+def _without_keywords(node: ast.Call, names: frozenset[str]) -> None:
+    node.keywords = [keyword for keyword in node.keywords if keyword.arg not in names]
+
+
+class _Normaliser(ast.NodeTransformer):
+    """Strips what can change without changing a test: messages, docstrings, ids, settings."""
+
+    def generic_visit(self, node: ast.AST) -> ast.AST:
+        super().generic_visit(node)
+        for field in ("body", "orelse", "finalbody"):
+            value = getattr(node, field, None)
+            if isinstance(value, list):
+                setattr(node, field, [stmt for stmt in value if not _is_docstring(stmt)])
+        return node
+
+    def visit_Assert(self, node: ast.Assert) -> ast.AST:
+        self.generic_visit(node)
+        node.msg = None
+        return node
+
+    def visit_Raise(self, node: ast.Raise) -> ast.AST:
+        self.generic_visit(node)
+        exc = node.exc
+        if isinstance(exc, ast.Call) and _call_name(exc.func) == "AssertionError":
+            exc.args = []
+            exc.keywords = []
+        return node
+
+    def visit_Call(self, node: ast.Call) -> ast.AST:
+        self.generic_visit(node)
+        name = _call_name(node.func)
+        if name in _ASSERT_HELPERS:
+            _without_keywords(node, frozenset({"err_msg", "msg"}))
+        elif ast.unparse(node.func) == "pytest.fail":
+            node.args = []
+            node.keywords = []
+        elif name == "parametrize":
+            _without_keywords(node, frozenset({"ids"}))
+        elif name == "settings":
+            _without_keywords(node, frozenset({"deadline", "report_multiple_bugs"}))
+        return node
+
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> ast.AST | None:
+        if node.module == "hypothesis":
+            node.names = [alias for alias in node.names if alias.name != "settings"]
+            if not node.names:
+                return None
+        return node
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> ast.AST:
+        return self._definition(node)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> ast.AST:
+        return self._definition(node)
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> ast.AST:
+        return self._definition(node)
+
+    def _definition(self, node: _Definition) -> ast.AST:
+        self.generic_visit(node)
+        node.decorator_list = [d for d in node.decorator_list if not _is_bare_settings(d)]
+        return node
+
+
+def normalise_tests(source: str) -> str:
+    """The tree of a test file, with messages, docstrings and reporting options removed."""
+    return ast.dump(_Normaliser().visit(ast.parse(source)))
+
+
+def _top_level_bindings(source: str) -> Counter[str]:
+    counts: Counter[str] = Counter()
+    for node in ast.parse(source).body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            counts[node.name] += 1
+        elif isinstance(node, ast.Assign):
+            counts.update(t.id for t in node.targets if isinstance(t, ast.Name))
+    return counts
+
+
+def duplicate_top_level_names(source: str) -> list[str]:
+    """Names bound more than once at module level, sorted."""
+    return sorted(name for name, count in _top_level_bindings(source).items() if count > 1)
+
+
+def test_function_names(source: str) -> set[str]:
+    """Names of the top-level test functions."""
+    return {
+        node.name
+        for node in ast.parse(source).body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        and node.name.startswith("test_")
+    }
+
+
+def _working(path: Path) -> str | None:
+    return path.read_text(encoding="utf-8") if path.is_file() else None
+
+
+def _rel(problem: audit.Problem) -> str:
+    return problem.path.relative_to(audit.REPO).as_posix()
+
+
+def _hidden_names(report: GradeReport) -> set[str]:
+    return {test.name for test in report.tests if test.file == "hidden"}
+
+
+def _meta_key(text: str | None) -> dict[str, Any] | None:
+    """meta.yaml as data, without its version: the part an edit must not change."""
+    if text is None:
+        return None
+    data = yaml.safe_load(text) or {}
+    data.pop("version", None)
+    return data
+
+
+def expected_version(problem: audit.Problem, base: str) -> int:
+    """The version the tests call for: the start version, plus 1 for a new test function.
+
+    The start is the tag ``i32-start`` when it has this problem's meta.yaml, else ``base``.
+    """
+    rel = _rel(problem)
+    start = "i32-start" if audit._git_show("i32-start", f"{rel}/meta.yaml") is not None else base
+    meta_text = audit._git_show(start, f"{rel}/meta.yaml")
+    if meta_text is None:
+        return _problem_version(problem)
+    version = int(yaml.safe_load(meta_text)["version"])
+    before = audit._git_show(start, f"{rel}/test_hidden.py") or ""
+    now = _working(problem.path / "test_hidden.py") or ""
+    new_names = test_function_names(now) - test_function_names(before)
+    return version + (1 if new_names else 0)
+
+
+# --- the checks ---------------------------------------------------------------------------------
+
+
+class _GateRun:
+    """What the checks of one gate run share: the suites, and each grade made only once."""
+
+    def __init__(
+        self,
+        problem: audit.Problem,
+        *,
+        mode: str,
+        base: str,
+        wrongs: Sequence[Path],
+        out: Path,
+        workers: int,
+    ) -> None:
+        self.problem = problem
+        self.mode = mode
+        self.base = base
+        self.wrongs = list(wrongs)
+        self.out = out
+        self.workers = workers
+        self.rel = _rel(problem)
+        self.reference = problem.solution.read_text(encoding="utf-8")
+        self.settings = Settings()
+        self.new_suite = audit.working_suite(problem)
+        self.base_suite = audit.base_suite(problem, base)
+        self._new: list[GradeReport] = []
+        self._base: GradeReport | None = None
+        self._rows: list[dict[str, Any]] | None = None
+
+    def grade(self, source: str, suite: audit.Suite) -> GradeReport:
+        return audit.grade_suite(self.problem, source, suite, self.settings)
+
+    def new_reports(self) -> list[GradeReport]:
+        """The reference on the new suite, twice (once only when the first run fails)."""
+        if not self._new:
+            self._new.append(self.grade(self.reference, self.new_suite))
+            if self._new[0].status is RunStatus.PASSED:
+                self._new.append(self.grade(self.reference, self.new_suite))
+        return self._new
+
+    def base_report(self) -> GradeReport:
+        if self._base is None:
+            self._base = self.grade(self.reference, self.base_suite)
+        return self._base
+
+    def replayed(self) -> list[dict[str, Any]]:
+        if self._rows is None:
+            self._rows = replay_problem(self.problem, self.out, workers=self.workers)
+        return self._rows
+
+
+def _check_frozen(g: _GateRun) -> Check:
+    if audit._git_show(g.base, f"{g.rel}/meta.yaml") is None:
+        return Check("frozen", "PASS", "new problem")
+    names = (*_FROZEN_TEXT, f"solution{g.problem.suffix}", f"starter{g.problem.suffix}")
+    changed = [
+        n for n in names if _working(g.problem.path / n) != audit._git_show(g.base, f"{g.rel}/{n}")
+    ]
+    meta_now = _meta_key(_working(g.problem.path / "meta.yaml"))
+    if meta_now != _meta_key(audit._git_show(g.base, f"{g.rel}/meta.yaml")):
+        changed.append("meta.yaml (other than version)")
+    if changed:
+        return Check("frozen", "FAIL", "changed: " + ", ".join(changed))
+    return Check("frozen", "PASS", "no frozen file changed")
+
+
+def _check_manifest(g: _GateRun) -> Check:
+    if not _variants_dir(g.problem).is_dir():
+        return Check("manifest", "PASS", "none")
+    issues = validate_variants(load_problem(g.problem.path))
+    if issues:
+        detail = "; ".join(f"{Path(issue.path).name}: {issue.message}" for issue in issues)
+        return Check("manifest", "FAIL", detail)
+    return Check("manifest", "PASS", "valid")
+
+
+def _outcomes(report: GradeReport) -> list[tuple[str, str, str]]:
+    return sorted((test.file, test.name, test.outcome) for test in report.tests)
+
+
+def _counts_text(report: GradeReport) -> str:
+    public_passed, public_total = report.counts("public")
+    hidden_passed, hidden_total = report.counts("hidden")
+    return f"public {public_passed}/{public_total} hidden {hidden_passed}/{hidden_total}"
+
+
+def _check_reference(g: _GateRun) -> Check:
+    reports = g.new_reports()
+    for report in reports:
+        if report.status is not RunStatus.PASSED:
+            failed = ", ".join(f"{t.file} {t.name}" for t in _failed_tests(report))
+            detail = f"{report.status.value}: {failed or _counts_text(report)}"
+            return Check("reference", "FAIL", detail)
+    if len(reports) == 2 and _outcomes(reports[0]) != _outcomes(reports[1]):
+        return Check("reference", "FAIL", "the two runs differ")
+    return Check("reference", "PASS", f"{_counts_text(reports[0])}, twice")
+
+
+def _variant_check(g: _GateRun, expect: str, name: str) -> Check:
+    rows = [row for row in g.replayed() if row["expect"] == expect]
+    if not rows:
+        return Check(name, "PASS", "none")
+    bad = [row for row in rows if not row["ok"]]
+    if bad:
+        return Check(name, "FAIL", "; ".join(f"{r['file']}: {r['detail']}" for r in bad))
+    return Check(name, "PASS", f"{len(rows) - len(bad)} of {len(rows)}")
+
+
+def _check_accepts(g: _GateRun) -> Check:
+    return _variant_check(g, "pass", "accepts")
+
+
+def _check_rejects(g: _GateRun) -> Check:
+    return _variant_check(g, "fail", "rejects")
+
+
+def _numstat(text: str) -> tuple[int, int]:
+    """(added, deleted) from one ``git diff --numstat`` line; nothing printed means no change."""
+    if not text.strip():
+        return 0, 0
+    added, deleted, _path = text.strip().split("\t", 2)
+    return (0 if added == "-" else int(added)), (0 if deleted == "-" else int(deleted))
+
+
+def _change_add(g: _GateRun, base: str | None, new: str | None) -> Check:
+    diff = audit._git("diff", "--numstat", g.base, "--", f"{g.rel}/test_hidden.py")
+    added, deleted = _numstat(diff.stdout.decode("utf-8"))
+    if deleted:
+        return Check("change", "FAIL", f"{deleted} lines deleted: add tests, do not remove them")
+    duplicates = duplicate_top_level_names(new or "")
+    if duplicates:
+        return Check("change", "FAIL", "names bound twice: " + ", ".join(duplicates))
+    missing = _hidden_names(g.base_report()) - _hidden_names(g.new_reports()[0])
+    if missing:
+        return Check("change", "FAIL", "tests gone: " + ", ".join(sorted(missing)))
+    new_tests = len(test_function_names(new or "") - test_function_names(base or ""))
+    return Check("change", "PASS", f"+{added} -{deleted} lines, {new_tests} new test")
+
+
+def _change_refactor(g: _GateRun, base: str | None, new: str | None) -> Check:
+    lost = test_function_names(base or "") - test_function_names(new or "")
+    if lost:
+        return Check("change", "FAIL", "test functions removed: " + ", ".join(sorted(lost)))
+    results = _mutant_verdicts(g)
+    weakened = [
+        mutant for mutant, base_v, new_v in results if base_v != "survived" and new_v == "survived"
+    ]
+    detail = f"{len(results)} mutants, {len(weakened)} weakened"
+    if weakened:
+        changes = "; ".join(mutant.change for mutant in weakened[:3])
+        return Check("change", "FAIL", f"{detail}: {changes}")
+    return Check("change", "PASS", detail)
+
+
+def _mutant_verdicts(g: _GateRun) -> list[tuple[audit.Mutant, str, str]]:
+    """Each sampled mutant's verdict on the base suite and on the new suite."""
+    mutants = audit.mutants_for(g.problem, audit.MAX_MUTANTS)
+    pairs: dict[int, tuple[str, str]] = {}
+
+    def job(index: int, mutant: audit.Mutant) -> Callable[[], None]:
+        def run() -> None:
+            base_v = audit.verdict(g.grade(mutant.source, g.base_suite))
+            new_v = audit.verdict(g.grade(mutant.source, g.new_suite))
+            pairs[index] = (base_v, new_v)
+
+        return run
+
+    audit._run_all([job(i, m) for i, m in enumerate(mutants)], g.workers)
+    results: list[tuple[audit.Mutant, str, str]] = []
+    for index, mutant in enumerate(mutants):
+        base_v, new_v = pairs[index]
+        if base_v in _INFRA:  # infrastructure noise: grade alone, on both suites, before deciding
+            base_v = audit.verdict(g.grade(mutant.source, g.base_suite))
+            new_v = audit.verdict(g.grade(mutant.source, g.new_suite))
+        results.append((mutant, base_v, new_v))
+    return results
+
+
+def _change_none(base: str | None, new: str | None) -> Check:
+    if new == base:
+        return Check("change", "PASS", "unchanged")
+    return Check("change", "FAIL", "test_hidden.py changed: use --mode add, text or refactor")
+
+
+def _change_text(base: str | None, new: str | None) -> Check:
+    try:
+        same = _normal_or_none(base) == _normal_or_none(new)
+    except SyntaxError as exc:
+        return Check("change", "FAIL", f"test_hidden.py does not parse: {exc.msg}")
+    if same:
+        return Check("change", "PASS", "same tests, reworded only")
+    return Check("change", "FAIL", "a test changed beyond its messages and options")
+
+
+def _check_change(g: _GateRun) -> Check:
+    base = audit._git_show(g.base, f"{g.rel}/test_hidden.py")
+    new = _working(g.problem.path / "test_hidden.py")
+    if g.mode == "none":
+        return _change_none(base, new)
+    if g.mode == "add":
+        return _change_add(g, base, new)
+    if g.mode == "refactor":
+        return _change_refactor(g, base, new)
+    return _change_text(base, new)
+
+
+def _normal_or_none(text: str | None) -> str | None:
+    return None if text is None else normalise_tests(text)
+
+
+def _check_wrong(g: _GateRun) -> Check:
+    if g.mode != "add":
+        return Check("wrong", "SKIP")
+    if not g.wrongs:
+        return Check("wrong", "PASS", "none given")
+    problems: list[str] = []
+    details: list[str] = []
+    for path in g.wrongs:
+        text = path.read_text(encoding="utf-8")
+        if audit.verdict(g.grade(text, g.base_suite)) != "survived":
+            problems.append(f"{path.name} is already rejected by the base tests")
+        report = g.grade(text, g.new_suite)
+        failing = [t for t in report.tests if t.file == "hidden" and t.outcome in _FAILED]
+        if report.status is not RunStatus.FAILED or not failing:
+            problems.append(f"{path.name} is not rejected by the new tests")
+            continue
+        message = learner_message(failing[0])
+        kind = audit.classify_message(message)
+        if kind != "named":
+            problems.append(f"{path.name}: message kind {kind}")
+        elif _MESSAGE_LEAK.search(message):
+            problems.append(f"{path.name}: message shows values")
+        details.append(f"{path.name}: {failing[0].name}")
+    if problems:
+        return Check("wrong", "FAIL", "; ".join(problems))
+    return Check("wrong", "PASS", "; ".join(details))
+
+
+def _check_version(g: _GateRun) -> Check:
+    current = _problem_version(g.problem)
+    expected = expected_version(g.problem, g.base)
+    if current == expected:
+        return Check("version", "PASS", str(current))
+    return Check("version", "FAIL", f"meta.yaml says {current}, expected {expected}: bump-version")
+
+
+def _check_lint(g: _GateRun) -> Check:
+    findings = lint_hidden_tests(_working(g.problem.path / "test_hidden.py") or "")
+    if g.mode in ("text", "refactor"):
+        if findings:
+            return Check("lint", "FAIL", f"{len(findings)} findings, first line {findings[0].line}")
+        return Check("lint", "PASS", "0 findings")
+    base_text = audit._git_show(g.base, f"{g.rel}/test_hidden.py") or ""
+    base_counts = Counter(f.rule for f in lint_hidden_tests(base_text))
+    new_counts = Counter(f.rule for f in findings)
+    above = [rule for rule in new_counts if new_counts[rule] > base_counts[rule]]
+    if above:
+        return Check("lint", "FAIL", "more findings than before: " + ", ".join(above))
+    return Check("lint", "PASS", f"{len(findings)} findings, none above base")
+
+
+def _check_names(g: _GateRun) -> Check:
+    if g.mode == "none":
+        return Check("names", "PASS", "not checked in mode none")
+    leaks = id_leaks(_hidden_names(g.new_reports()[0]))
+    if g.mode in ("text", "refactor"):
+        if leaks:
+            return Check("names", "FAIL", "test ids show values: " + ", ".join(leaks))
+        return Check("names", "PASS", "no id leaks")
+    base_leaks = set(id_leaks(_hidden_names(g.base_report())))
+    fresh = [name for name in leaks if name not in base_leaks]
+    if fresh:
+        return Check("names", "FAIL", "new test ids show values: " + ", ".join(fresh))
+    return Check("names", "PASS", f"{len(leaks)} ids, none new")
+
+
+def _run_seed(
+    problem: audit.Problem, source: str, suite: audit.Suite, seed: int
+) -> tuple[bool, list[str]]:
+    """Plain pytest on one suite under one Hypothesis seed: (passed, failing test names)."""
+    with tempfile.TemporaryDirectory(prefix="gate-seed-") as tmp:
+        root = Path(tmp)
+        (root / f"submission{problem.suffix}").write_text(source, encoding="utf-8")
+        for name, text in zip(audit._TEST_FILES, (suite.public, suite.hidden), strict=True):
+            if text is not None:
+                (root / name).write_text(text, encoding="utf-8")
+        if (problem.path / "fixtures").is_dir():
+            shutil.copytree(problem.path / "fixtures", root / "fixtures")
+        names = [name for name in audit._TEST_FILES if (root / name).is_file()]
+        command = [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-q",
+            "--tb=line",
+            "-p",
+            "no:cacheprovider",
+            f"--hypothesis-seed={seed}",
+            *names,
+        ]
+        env = {**os.environ, "PYTHONHASHSEED": str(seed), "DOGMA_DATA_SALT": str(seed)}
+        try:
+            done = subprocess.run(
+                command,
+                cwd=root,
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=problem.timeout_s * 4,
+                check=False,
+            )
+        except subprocess.TimeoutExpired:
+            return False, ["<timeout>"]
+    failed = re.findall(r"^FAILED (\S+)", done.stdout, re.MULTILINE)
+    return done.returncode == 0, failed[:6]
+
+
+def _check_seeds(g: _GateRun) -> Check:
+    failing: dict[int, list[str]] = {}
+    for seed in GATE_SEEDS:
+        passed, failed = _run_seed(g.problem, g.reference, g.new_suite, seed)
+        if passed:
+            continue
+        if g.mode != "none":
+            base_passed, _ = _run_seed(g.problem, g.reference, g.base_suite, seed)
+            if not base_passed:
+                continue  # the base suite fails this seed too: not this edit's doing
+        failing[seed] = failed
+    detail = f"{len(GATE_SEEDS) - len(failing)} of {len(GATE_SEEDS)}"
+    if failing:
+        detail += "; failing " + "; ".join(f"seed {s}: {', '.join(n)}" for s, n in failing.items())
+    if failing and g.mode != "none":
+        return Check("seeds", "FAIL", detail)
+    return Check("seeds", "PASS", detail)
+
+
+def _check_time(g: _GateRun) -> Check:
+    new_ms = g.new_reports()[0].duration_ms
+    if g.mode == "none":
+        return Check("time", "PASS", f"{new_ms / 1000:.1f} s")
+    base_ms = g.base_report().duration_ms
+    detail = f"{new_ms / 1000:.1f} s (base {base_ms / 1000:.1f} s)"
+    limit = max(_FAST_MS, _SLOWER_FACTOR * base_ms + _SLACK_MS)
+    if new_ms <= limit:
+        return Check("time", "PASS", detail)
+    return Check("time", "FAIL", detail)
+
+
+_STEPS: tuple[tuple[str, Callable[[_GateRun], Check]], ...] = (
+    ("frozen", _check_frozen),
+    ("manifest", _check_manifest),
+    ("reference", _check_reference),
+    ("accepts", _check_accepts),
+    ("rejects", _check_rejects),
+    ("change", _check_change),
+    ("wrong", _check_wrong),
+    ("version", _check_version),
+    ("lint", _check_lint),
+    ("names", _check_names),
+    ("seeds", _check_seeds),
+    ("time", _check_time),
+)
+
+
+def run_gate(
+    problem: audit.Problem,
+    *,
+    mode: str,
+    base: str,
+    wrongs: Sequence[Path],
+    out: Path,
+    workers: int,
+) -> list[Check]:
+    """Every check, in order. After frozen, manifest or reference fails, the rest are SKIP."""
+    gate = _GateRun(problem, mode=mode, base=base, wrongs=wrongs, out=out, workers=workers)
+    checks: list[Check] = []
+    blocked = False
+    for name, step in _STEPS:
+        if blocked:
+            checks.append(Check(name, "SKIP"))
+            continue
+        check = step(gate)
+        checks.append(check)
+        blocked = check.status == "FAIL" and name in _BLOCKING
+    return checks
+
+
+def _commit_of(rev: str) -> str:
+    done = audit._git("rev-parse", "--verify", "--quiet", f"{rev}^{{commit}}")
+    if done.returncode != 0:
+        raise UsageError(f"unknown revision {rev}")
+    return done.stdout.decode("utf-8").strip()
+
+
+def _check_line(check: Check) -> str:
+    return f"{check.name:<10} {check.status}  {check.detail}".rstrip()
+
+
+def _record_gate(
+    out: Path,
+    *,
+    problem: audit.Problem,
+    mode: str,
+    commit: str,
+    verdict: str,
+    checks: list[Check],
+) -> None:
+    texts = {
+        "test_hidden.py": _working(problem.path / "test_hidden.py"),
+        "test_public.py": _working(problem.path / "test_public.py"),
+        "solution": _working(problem.solution),
+        "manifest": _working(_manifest_path(problem)),
+    }
+    row = {
+        "time": datetime.now(UTC).isoformat(timespec="seconds"),
+        "problem": problem.id,
+        "mode": mode,
+        "base": commit,
+        "result": verdict,
+        "checks": [asdict(check) for check in checks],
+        "sha": {
+            name: None if text is None else audit._text_sha(text) for name, text in texts.items()
+        },
+    }
+    out.mkdir(parents=True, exist_ok=True)
+    with (out / "gate.jsonl").open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(row) + "\n")
+
+
+def cmd_gate(args: argparse.Namespace) -> int:
+    if args.wrong and args.mode != "add":
+        raise UsageError("--wrong goes with --mode add only")
+    problem = find_problem(args.id)
+    commit = _commit_of(args.base)
+    for path in args.wrong:
+        if not path.is_file():
+            raise UsageError(f"no file {path}")
+    checks = run_gate(
+        problem,
+        mode=args.mode,
+        base=commit,
+        wrongs=args.wrong,
+        out=args.out,
+        workers=args.workers,
+    )
+    print(f"GATE {problem.id}  mode={args.mode}  base={args.base}")
+    for check in checks:
+        print(_check_line(check))
+    verdict = "FAIL" if any(check.status == "FAIL" for check in checks) else "PASS"
+    print(f"GATE: {verdict}")
+    _record_gate(
+        args.out, problem=problem, mode=args.mode, commit=commit, verdict=verdict, checks=checks
+    )
+    return 0 if verdict == "PASS" else 1
+
+
+def _bump_meta(problem: audit.Problem, version: int) -> None:
+    meta = problem.path / "meta.yaml"
+    text = meta.read_text(encoding="utf-8")
+    updated, count = re.subn(
+        r"^(version:\s*)\d+",
+        lambda match: f"{match.group(1)}{version}",
+        text,
+        count=1,
+        flags=re.MULTILINE,
+    )
+    if count != 1:
+        raise GateError("meta.yaml has no version line")
+    atomic_write(meta, updated)
+
+
+def cmd_bump_version(args: argparse.Namespace) -> int:
+    problem = find_problem(args.id)
+    commit = _commit_of(args.base)
+    old = _problem_version(problem)
+    new = expected_version(problem, commit)
+    if new == old:
+        print(f"version: unchanged ({old})")
+    else:
+        _bump_meta(problem, new)
+        print(f"version: {old} -> {new}")
+    manifest = read_manifest(problem)
+    if manifest is not None and manifest.problem_version != new:
+        write_manifest(
+            problem, _build(VariantsManifest, **{**dict(manifest), "problem_version": new})
+        )
+    return 0
+
+
 def _add_out(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--out", type=Path, required=True, help="directory for results")
 
@@ -935,6 +1649,23 @@ def _parser() -> argparse.ArgumentParser:  # noqa: PLR0915 - one add_parser bloc
     variants.add_argument("--only", action="append", default=[], help="problem id prefix")
     variants.add_argument("--workers", type=int, default=10, help="grading jobs at once")
     variants.set_defaults(run=cmd_variants)
+
+    gate = commands.add_parser("gate", help="run the checks for one edited problem")
+    _add_out(gate)
+    gate.add_argument("id")
+    gate.add_argument("--mode", choices=GATE_MODES, default="none", help="what the edit did")
+    gate.add_argument("--base", default="HEAD", help="git revision the edit started from")
+    gate.add_argument(
+        "--wrong", type=Path, action="append", default=[], help="a wrong solution (mode add)"
+    )
+    gate.add_argument("--workers", type=int, default=10, help="grading jobs at once")
+    gate.set_defaults(run=cmd_gate)
+
+    bump = commands.add_parser("bump-version", help="set meta.yaml version from the tests")
+    _add_out(bump)
+    bump.add_argument("id")
+    bump.add_argument("--base", default="HEAD", help="git revision the edit started from")
+    bump.set_defaults(run=cmd_bump_version)
     return parser
 
 
