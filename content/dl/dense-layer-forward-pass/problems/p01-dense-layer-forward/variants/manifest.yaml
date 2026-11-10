@@ -56,3 +56,4 @@ uncovered:
   reason: numeric and finite limits are outside the contract, so no wrong solution is promised to fail
 sweeps:
 - reject
+- mutants
