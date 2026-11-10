@@ -33,6 +33,8 @@ majority_vote(["Paris", "London", "paris", "london"])  # -> "paris"   (2 vs 2: P
 majority_vote(["  ", "7", "7 ", ""])  # -> "7"       (blank answers are dropped)
 ```
 
+On the pinned GSM8K test snapshot, final answers such as `2,125` keep their thousands separator: `majority_vote(["2,125", "2125"])` returns `"2,125"`, the first answer, because the two spellings are different.
+
 ## Constraints
 
 Allowed: Python standard library. Not allowed: `collections.Counter` (it is the reference for the
@@ -46,4 +48,5 @@ independent counter on seeded random answer lists, check the tie rule in several
 start, a tie with a later first occurrence, and a three-way tie), check normalisation of case and
 internal whitespace, and check that a strict majority does not depend on the order of the list. They
 also cover blank-only input, empty input, a bare string, non-string elements and input that is not
-mutated.
+mutated. Realism family: real GSM8K final answers with thousands separators, where commas are
+punctuation and not formatting.

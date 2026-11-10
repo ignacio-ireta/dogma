@@ -62,6 +62,11 @@ MCC is the phi coefficient: the Pearson correlation between the two binary vecto
 - **Zero denominators.** A model that never predicts positive has undefined precision. Return $0.0$ by an explicit convention, and say so.
 - **Threshold dependence.** The table belongs to one threshold. Compare thresholds on the same evaluation samples, reporting each threshold with its counts and scores.
 
+On the real `breast_cancer` dataset, thresholding `worst concave points` at 0.04 gives
+$[[61,296],[1,211]]$ with malignant as positive. Accuracy is 47.8%, precision 41.6%, and recall
+99.5%. If the matrix is transposed, accuracy stays 47.8% while precision and recall swap; the
+transposed matrix would claim 99.5% precision instead of 41.6%.
+
 ## Interview angle
 
 "The model is 99% accurate. Is it good?" Answer shape: not without the base rate. If positives are 1%, the all-negative model also scores 99%. Report recall and precision for the positive class, and MCC as one balanced number. Follow-ups are in `interview.md`.

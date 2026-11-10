@@ -37,6 +37,14 @@ array([[1, 0, 0],
 # Label 1 is not listed, so the two samples that touch it are ignored. Label 5 never occurs: zero row and column.
 ```
 
+On the real `breast_cancer` dataset, label malignant as 1 and threshold the `worst concave points`
+feature at 0.04. Rows are true labels and columns are predicted labels:
+
+```text
+[[61, 296],
+ [ 1, 211]]
+```
+
 ## Constraints
 
 - Allowed: the Python standard library and NumPy (for the returned array).
@@ -44,4 +52,4 @@ array([[1, 0, 0],
 
 ## Done looks like
 
-All public tests pass, then **Submit** passes the hidden tests. Those check agreement with a reference implementation on random integer labels, with and without an explicit `labels` list that contains unseen labels and omits seen ones. They also cover the orientation on asymmetric data (rows are true labels), a label that is only predicted, the order given by `labels`, repeated pairs adding up, samples outside `labels` being ignored, integer dtype, string labels, duplicate and empty and mismatched inputs raising `ValueError`, and inputs left unchanged.
+All public tests pass, then **Submit** passes the hidden tests. Those check agreement with a reference implementation on random integer labels, with and without an explicit labels list that contains unseen labels and omits seen ones, and agreement with scikit-learn on the real `breast_cancer` feature-score case with an explicit label list that omits an observed label and includes an unseen one. A Hypothesis property checks row and column sums on integer labels. They also cover the orientation on asymmetric data (rows are true labels), a label that is only predicted, the order given by `labels`, repeated pairs adding up, samples outside `labels` being ignored, integer dtype, string labels, duplicate and empty and mismatched inputs raising `ValueError`, and inputs left unchanged. Realism families covered: raw real feature scores, thresholded binary labels, and large counts.

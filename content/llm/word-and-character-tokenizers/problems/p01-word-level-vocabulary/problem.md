@@ -60,6 +60,10 @@ id, so the tokenizer never fails on unseen input. Decoding an `<unk>` id gives b
 TypeError  # text must be a str
 ```
 
+On real prose, such as the pinned `gutenberg_frankenstein` slice, `“What` and `What` are different words,
+and so are `father’s` and `father`: punctuation and case are kept, so the vocabulary and the ids of held-out text match
+the naive count-and-sort.
+
 ## Constraints
 
 - Allowed: built-in types and the standard library.
@@ -77,4 +81,5 @@ occurrences and not documents; case and punctuation kept; tabs, newlines and rep
 reserved special strings in the corpus and in the text; empty and whitespace-only text; a
 `min_count` above every count; a 5,000-word vocabulary with dense ids; round trips on generated
 text; bool and float arguments rejected; out-of-range and bool ids rejected; and a corpus that must
-not change.
+not change. Realism families: real English prose with capital letters, curly quotes and
+dashes, counted with `min_count` and checked on held-out text.

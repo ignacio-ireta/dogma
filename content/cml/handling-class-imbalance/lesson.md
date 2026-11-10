@@ -58,6 +58,10 @@ Prior shift: a model trained on a 50% positive sample outputs $p=0.80$. The depl
 - **Validation data** must keep the true base rate, or the threshold tuned on it will be wrong at deployment.
 - **Too few minority examples** cannot be fixed by any method. Collect more data.
 
+On the real `breast_cancer` dataset, malignant cases are 212 of 569. A classifier that predicts
+every case benign still reports 62.7% accuracy while recall for malignant cases is 0%. A respectable
+looking accuracy can hide a model that finds none of the cases you care about.
+
 ## Interview angle
 
 "Your data is 1% positive. What do you do?" Answer shape: metric first (average precision against the 1% baseline), then the threshold from costs on calibrated probabilities, then training changes only if the minority signal is too weak. Resample only inside training folds, and check calibration at the deployment base rate. Follow-ups are in `interview.md`.

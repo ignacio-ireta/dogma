@@ -10,9 +10,12 @@ from collections.abc import Callable
 from typing import Any, NoReturn
 
 import numpy as np
+import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import WordTokenizer
+
+from dogma_data import load_text, rng
 
 SPECIALS = ["<pad>", "<unk>", "<bos>", "<eos>"]
 UNK_ID = 1
@@ -75,9 +78,11 @@ def _build(corpus: list[str], min_count: int = 1) -> tuple[WordTokenizer | None,
 @settings(max_examples=80, deadline=None, derandomize=True, report_multiple_bugs=False)
 @given(seed=st.integers(min_value=0, max_value=10_000))
 def test_vocabulary_matches_the_naive_count_and_sort(seed: int) -> None:
-    rng = np.random.default_rng(seed)
-    corpus = _random_corpus(rng)
-    min_count = int(rng.integers(1, 4))
+    generator = rng(
+        f"llm/word-and-character-tokenizers/p01-word-level-vocabulary:vocabulary:{seed}"
+    )
+    corpus = _random_corpus(generator)
+    min_count = int(generator.integers(1, 4))
     tok, problem = _build(corpus, min_count)
     if problem is not None or tok is None:
         _fail(problem or "the tokenizer could not be built")
@@ -92,16 +97,16 @@ def test_vocabulary_matches_the_naive_count_and_sort(seed: int) -> None:
 @settings(max_examples=60, deadline=None, derandomize=True, report_multiple_bugs=False)
 @given(seed=st.integers(min_value=0, max_value=10_000))
 def test_encoding_matches_the_naive_ids(seed: int) -> None:
-    rng = np.random.default_rng(seed)
-    corpus = _random_corpus(rng)
-    min_count = int(rng.integers(1, 4))
+    generator = rng(f"llm/word-and-character-tokenizers/p01-word-level-vocabulary:encoding:{seed}")
+    corpus = _random_corpus(generator)
+    min_count = int(generator.integers(1, 4))
     tok, problem = _build(corpus, min_count)
     if problem is not None or tok is None:
         _fail(problem or "the tokenizer could not be built")
     # The specials are reserved: text that spells one of them is out of vocabulary, so only the
     # learned words (ids from 4 on) are looked up.
     vocab = {word: i for i, word in enumerate(_naive_tokens(corpus, min_count)) if i >= 4}
-    text = " ".join(ORACLE_WORDS[int(rng.integers(len(ORACLE_WORDS)))] for _ in range(6))
+    text = " ".join(ORACLE_WORDS[int(generator.integers(len(ORACLE_WORDS)))] for _ in range(6))
     expected = [vocab.get(piece, UNK_ID) for piece in text.split()]
     try:
         got = tok.encode(text)
@@ -116,6 +121,36 @@ def test_encoding_matches_the_naive_ids(seed: int) -> None:
             "encoded ids differ from the naive lookup: a word outside the vocabulary must get the "
             "<unk> id (1), and every word must be found with the same case and punctuation"
         )
+
+
+@pytest.fixture(scope="module")
+def gutenberg_books() -> tuple[str, str]:
+    """Load two pinned public-domain text slices once for the hidden tests."""
+    return load_text("gutenberg_frankenstein"), load_text("gutenberg_pride_prejudice")
+
+
+def test_real_gutenberg_vocabulary_and_unknown_ids_match_the_oracle(
+    gutenberg_books: tuple[str, str],
+) -> None:
+    training_text, heldout_text = gutenberg_books
+    corpus = [training_text]
+    min_count = 2
+    tok, problem = _build(corpus, min_count)
+    if problem is not None or tok is None:
+        _fail(problem or "the tokenizer could not be built on real text")
+    expected_tokens = _naive_tokens(corpus, min_count)
+    if tok.tokens != expected_tokens:
+        _fail(
+            "real Gutenberg vocabulary differs from the count-and-sort oracle: preserve exact "
+            "capitalization and punctuation in each whitespace-delimited word"
+        )
+    vocab = {word: index for index, word in enumerate(expected_tokens) if index >= len(SPECIALS)}
+    heldout_words = heldout_text.split()
+    expected_ids = [vocab.get(word, UNK_ID) for word in heldout_words]
+    if tok.encode(heldout_text) != expected_ids:
+        _fail("held-out Gutenberg words must keep exact matches and map unseen spellings to <unk>")
+    if not any("\u2019" in word for word in training_text.split()):
+        _fail("the Gutenberg fixture must include Unicode punctuation")
 
 
 @settings(max_examples=80, deadline=None, derandomize=True, report_multiple_bugs=False)

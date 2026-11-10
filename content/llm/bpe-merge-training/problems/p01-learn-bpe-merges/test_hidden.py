@@ -6,13 +6,17 @@ Failure messages name the kind of mistake and carry no hidden word table or merg
 from __future__ import annotations
 
 import copy
+from collections import Counter
 from collections.abc import Callable
 from typing import Any, NoReturn
 
 import numpy as np
+import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import train_bpe_merges
+
+from dogma_data import load_text, rng
 
 END = "</w>"
 
@@ -105,15 +109,15 @@ def _check_against_oracle(table: dict[str, int], num_merges: int) -> None:
 @settings(max_examples=80, deadline=None, derandomize=True, report_multiple_bugs=False)
 @given(seed=st.integers(min_value=0, max_value=10_000))
 def test_random_tables_match_the_naive_trainer(seed: int) -> None:
-    rng = np.random.default_rng(seed)
-    _check_against_oracle(_random_table(rng), int(rng.integers(0, 15)))
+    generator = rng(f"llm/bpe-merge-training/p01-learn-bpe-merges:random-table:{seed}")
+    _check_against_oracle(_random_table(generator), int(generator.integers(0, 15)))
 
 
 @settings(max_examples=40, deadline=None, derandomize=True, report_multiple_bugs=False)
 @given(seed=st.integers(min_value=0, max_value=10_000))
 def test_order_of_the_table_does_not_change_the_merges(seed: int) -> None:
-    rng = np.random.default_rng(seed)
-    table = _random_table(rng)
+    generator = rng(f"llm/bpe-merge-training/p01-learn-bpe-merges:table-order:{seed}")
+    table = _random_table(generator)
     reversed_table = dict(reversed(list(table.items())))
     try:
         forward = train_bpe_merges(table, 8)
@@ -127,6 +131,30 @@ def test_order_of_the_table_does_not_change_the_merges(seed: int) -> None:
     if forward != backward:
         _fail(
             "the merges depend on the order of the dict: the tie-break must not use insertion order"
+        )
+
+
+@pytest.fixture(scope="module")
+def gutenberg_word_counts() -> dict[str, int]:
+    """Count the first 3,000 whitespace-delimited tokens of the pinned Frankenstein slice."""
+    return dict(Counter(load_text("gutenberg_frankenstein").split()[:3000]))
+
+
+def test_real_gutenberg_counts_match_the_naive_trainer(
+    gutenberg_word_counts: dict[str, int],
+) -> None:
+    # The real slice keeps capitalization and punctuation in word spellings; do not fold or strip
+    # them before turning the text into the word-count table.
+    if not any(word != word.lower() for word in gutenberg_word_counts):
+        _fail("the Gutenberg fixture must include case-sensitive word spellings")
+    if not any(not word.isascii() for word in gutenberg_word_counts):
+        _fail("the Gutenberg fixture must include non-ASCII word spellings")
+    got = train_bpe_merges(gutenberg_word_counts, 20)
+    expected = _naive_train(gutenberg_word_counts, 20)
+    if got != expected:
+        _fail(
+            "real Gutenberg word counts differ from the independent trainer: preserve every word "
+            "character and weight each adjacent pair by its observed frequency"
         )
 
 

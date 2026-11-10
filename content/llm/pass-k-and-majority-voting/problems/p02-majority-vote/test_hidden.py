@@ -5,6 +5,8 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import majority_vote
 
+from dogma_data import load_frame
+
 POOL = ["Yes", "no", " 7 ", "7", "Paris", "paris ", "a  b", "a b", "", "  "]
 
 
@@ -90,6 +92,29 @@ def test_punctuation_is_kept_so_trailing_dot_is_a_different_answer():
     assert checked(lambda: majority_vote(["3.", "3.", "3"])) == "3.", (
         "punctuation is not normalised: '3.' and '3' are different answers, so '3.' wins 2 to 1"
     )
+
+
+@pytest.fixture(scope="module")
+def gsm8k_grouped_answer() -> str:
+    """Return one final answer with a thousands separator from the pinned GSM8K test snapshot."""
+    for answer in load_frame("gsm8k")["answer"]:
+        final = str(answer).rsplit("####", 1)[-1].strip()
+        if "," in final:
+            return final
+    pytest.fail("the pinned GSM8K snapshot must include a comma-grouped numeric answer")
+
+
+def test_real_gsm8k_thousands_separator_remains_punctuation(
+    gsm8k_grouped_answer: str,
+) -> None:
+    ungrouped = gsm8k_grouped_answer.replace(",", "")
+    got = checked(lambda: majority_vote([gsm8k_grouped_answer, ungrouped]))
+    if got != gsm8k_grouped_answer:
+        pytest.fail(
+            "GSM8K numeric punctuation is significant: a comma-grouped answer and its ungrouped "
+            "spelling remain distinct, so the first wins this tie",
+            pytrace=False,
+        )
 
 
 def test_blank_only_input_is_rejected():

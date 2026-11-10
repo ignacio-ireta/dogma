@@ -36,6 +36,12 @@ Implement `binary_scores(tp, fp, fn, tn)`. It takes the four cells of the 2 x 2 
 {'accuracy': 1.0, 'precision': 0.0, 'recall': 0.0, 'specificity': 1.0, 'f1': 0.0, 'mcc': 0.0}
 ```
 
+For 10,000 synthetic labels with one positive per 100 rows, `dogma_data.synth.informative_scores`
+with rounded ties and threshold 0.5 yields `(tp, fp, fn, tn) = (92, 4954, 8, 4946)` using keys
+`cml/confusion-matrix-and-count-based-scores/p02-binary-count-scores:rare-labels:0` and
+`cml/confusion-matrix-and-count-based-scores/p02-binary-count-scores:informative-scores:0`.
+Multiplying all four counts by the same factor leaves each score unchanged.
+
 ## Constraints
 
 - Allowed: the Python standard library and NumPy.
@@ -43,4 +49,4 @@ Implement `binary_scores(tp, fp, fn, tn)`. It takes the four cells of the 2 x 2 
 
 ## Done looks like
 
-All public tests pass, then **Submit** passes the hidden tests. Those check agreement with scikit-learn on count tuples rebuilt into label vectors, with the zero-division convention applied. They check that specificity is the true negative rate and not the negative predictive value, that accuracy is not balanced accuracy, and that every zero-denominator case returns `0.0` and never NaN. They check MCC on very large counts against exact integer arithmetic, the exact key set, that swapping the two classes leaves accuracy and MCC unchanged, that F1 is the harmonic mean of precision and recall, that NumPy integers are accepted, and that invalid counts raise `ValueError`.
+All public tests pass, then **Submit** passes the hidden tests. Those check agreement with scikit-learn on count tuples rebuilt into label vectors, with the zero-division convention applied. They check that specificity is the true negative rate and not the negative predictive value, that accuracy is not balanced accuracy, and that every zero-denominator case returns `0.0` and never NaN. They check MCC on very large counts against exact integer arithmetic, the exact key set, that swapping the two classes leaves accuracy and MCC unchanged, that F1 is the harmonic mean of precision and recall, that NumPy integers are accepted, and that invalid counts raise `ValueError`. Realism families covered: rare positives, predictive rounded ties, and large NumPy integer counts.

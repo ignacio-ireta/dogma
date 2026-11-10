@@ -10,9 +10,12 @@ from collections.abc import Callable
 from typing import Any, NoReturn
 
 import numpy as np
+import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import BPETokenizer
+
+from dogma_data import load_text, rng
 
 END = "</w>"
 
@@ -88,9 +91,9 @@ def _encode(tok: BPETokenizer, word: str) -> list[str]:
 @settings(max_examples=80, deadline=None, derandomize=True, report_multiple_bugs=False)
 @given(seed=st.integers(min_value=0, max_value=10_000))
 def test_random_merge_lists_match_the_naive_encoder(seed: int) -> None:
-    rng = np.random.default_rng(seed)
-    merges = _random_merges(rng)
-    word = "".join("abc"[int(rng.integers(3))] for _ in range(int(rng.integers(0, 9))))
+    generator = rng(f"llm/bpe-encode-and-decode/p01-apply-bpe-merges:random-merges:{seed}")
+    merges = _random_merges(generator)
+    word = "".join("abc"[int(generator.integers(3))] for _ in range(int(generator.integers(0, 9))))
     got = _encode(BPETokenizer(merges), word)
     if got != _naive_encode(word, merges):
         _fail(
@@ -103,9 +106,11 @@ def test_seeded_sweep_matches_the_naive_encoder() -> None:
     # Hypothesis draws only a few dozen seeds; this sweep covers 3000 fixed ones, so a rule that
     # is wrong in a few percent of cases (leftmost pair first, highest rank first) cannot hide.
     for seed in range(3000):
-        rng = np.random.default_rng(seed)
-        merges = _random_merges(rng)
-        word = "".join("abc"[int(rng.integers(3))] for _ in range(int(rng.integers(0, 9))))
+        generator = rng(f"llm/bpe-encode-and-decode/p01-apply-bpe-merges:seeded-sweep:{seed}")
+        merges = _random_merges(generator)
+        word = "".join(
+            "abc"[int(generator.integers(3))] for _ in range(int(generator.integers(0, 9)))
+        )
         got = _encode(BPETokenizer(merges), word)
         if got != _naive_encode(word, merges):
             _fail(
@@ -132,6 +137,31 @@ def test_decode_inverts_encode_for_any_merge_list(word: str, merges: list[tuple[
             "decode does not invert encode: concatenate the tokens and remove exactly the trailing "
             "marker"
         )
+
+
+@pytest.fixture(scope="module")
+def gutenberg_words() -> list[str]:
+    """Load the pinned public-domain Frankenstein text once for this hidden-test module."""
+    return load_text("gutenberg_frankenstein").split()
+
+
+def test_real_gutenberg_words_preserve_case_and_unicode(
+    gutenberg_words: list[str],
+) -> None:
+    merges = [("t", "h"), ("T", "h"), ("th", "e"), ("e", END), ("\u2019", "s")]
+    tok = BPETokenizer(merges)
+    if not any(word[:1].isupper() for word in gutenberg_words):
+        _fail("the Gutenberg fixture must include capitalized words")
+    if not any(any(not char.isascii() for char in word) for word in gutenberg_words):
+        _fail("the Gutenberg fixture must include non-ASCII characters")
+    for word in gutenberg_words:
+        got = _encode(tok, word)
+        if got != _naive_encode(word, merges):
+            _fail("real Gutenberg encoding differs from the independent rank-order encoder")
+        if "".join(got) != word + END or tok.decode(got) != word:
+            _fail(
+                "real Gutenberg words must preserve every original character through the round trip"
+            )
 
 
 @settings(max_examples=60, deadline=None, derandomize=True, report_multiple_bugs=False)
@@ -343,9 +373,9 @@ def test_decode_with_a_string_instead_of_a_list_raises_type_error() -> None:
 
 
 def test_long_word_matches_the_naive_encoder() -> None:
-    rng = np.random.default_rng(7)
-    merges = _random_merges(rng)
-    word = "".join("abc"[int(rng.integers(3))] for _ in range(400))
+    generator = rng("llm/bpe-encode-and-decode/p01-apply-bpe-merges:long-word:0")
+    merges = _random_merges(generator)
+    word = "".join("abc"[int(generator.integers(3))] for _ in range(400))
     got = _encode(BPETokenizer(merges), word)
     if got != _naive_encode(word, merges):
         _fail("on a long word the symbols differ from the naive encoder: check the repeated loop")

@@ -18,7 +18,14 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
 )
+from sklearn.metrics import (
+    confusion_matrix as sklearn_confusion_matrix,
+)
 from submission import binary_scores
+
+from dogma_data import rng, synth
+
+PROBLEM = "cml/confusion-matrix-and-count-based-scores/p02-binary-count-scores"
 
 KEY_MISTAKES = {
     "accuracy": "accuracy differs: it is (TP + TN) / N, the share of all samples that are right",
@@ -139,15 +146,52 @@ def test_large_counts_match_exact_integer_arithmetic(counts):
 
 
 def test_seeded_random_counts_match_scikit_learn():
-    rng = np.random.default_rng(2901)
+    generator = rng(f"{PROBLEM}:small-counts:0")
     for _ in range(25):
-        counts = [int(value) for value in rng.integers(0, 30, size=4)]
+        counts = [int(value) for value in generator.integers(0, 30, size=4)]
         counts[0] += 1
         expected = _reference(*counts)
         got = _solve(*counts)
         for key in sorted(EXPECTED_KEYS):
             message = KEY_MISTAKES[key]
             assert math.isclose(got[key], expected[key], rel_tol=1e-9, abs_tol=1e-12), message
+
+
+def test_matches_scikit_learn_on_tied_scores_and_million_scale_rare_counts():
+    y_true = synth.imbalanced_labels(rng(f"{PROBLEM}:rare-labels:0"), 10_000, positive_rate=0.01)
+    scores = synth.informative_scores(
+        rng(f"{PROBLEM}:informative-scores:0"), y_true, auc=0.82, decimals=2
+    )
+    y_pred = (scores >= 0.5).astype(int)
+    matrix = sklearn_confusion_matrix(y_true, y_pred, labels=[0, 1])
+    tn, fp, fn, tp = matrix.ravel()
+
+    assert int(y_true.sum()) == 100, "the fixture must contain one positive per 100 rows"
+    assert np.unique(scores).size < scores.size, "rounded informative scores must include ties"
+    scale = np.int64(1_000)
+    scaled_counts = (tp * scale, fp * scale, fn * scale, tn * scale)
+    assert all(isinstance(count, np.integer) for count in scaled_counts), (
+        "the large-count case must retain NumPy integer inputs"
+    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        expected = {
+            "accuracy": accuracy_score(y_true, y_pred),
+            "precision": precision_score(
+                y_true, y_pred, labels=[0, 1], pos_label=1, zero_division=0
+            ),
+            "recall": recall_score(y_true, y_pred, labels=[0, 1], pos_label=1, zero_division=0),
+            "specificity": recall_score(
+                y_true, y_pred, labels=[0, 1], pos_label=0, zero_division=0
+            ),
+            "f1": f1_score(y_true, y_pred, labels=[0, 1], pos_label=1, zero_division=0),
+            "mcc": matthews_corrcoef(y_true, y_pred),
+        }
+    got = _solve(*scaled_counts)
+    for key in sorted(EXPECTED_KEYS):
+        assert math.isclose(got[key], expected[key], rel_tol=1e-9, abs_tol=1e-12), (
+            f"{KEY_MISTAKES[key]} (large rare-class counts must preserve the same ratios)"
+        )
 
 
 def test_specificity_is_not_the_negative_predictive_value():

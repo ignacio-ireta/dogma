@@ -47,6 +47,10 @@ most frequent pair in every word. Return the merges in the order they were learn
 TypeError
 ```
 
+On real text, such as the first 3,000 words of `gutenberg_frankenstein` counted with `collections.Counter`,
+keys keep their capital letters and punctuation exactly as they appear, and the learned merges must match
+the naive trainer.
+
 ## Constraints
 
 - Allowed: built-in types and the standard library.
@@ -60,4 +64,5 @@ All public tests pass, then **Submit** runs the hidden tests. They compare your 
 independent naive trainer on seeded random word tables, and check the families: the tie-break in both
 directions and across the end-of-word marker; overlapping pairs such as `aaa`; word counts that weight
 pairs; early stop when every word is one symbol; a count above 2^53 that must stay exact; an empty table
-and zero merges; the list returned and the input unchanged; and rejected types and values.
+and zero merges; the list returned and the input unchanged; rejected types and values; and real
+English word counts with capital letters and non-ASCII punctuation, kept in the words exactly as given.

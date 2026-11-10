@@ -10,6 +10,8 @@ from hypothesis import strategies as st
 from sklearn.metrics import confusion_matrix as sklearn_confusion_matrix
 from submission import confusion_matrix
 
+from dogma_data import load, rng
+
 MATRIX_MISTAKE = (
     "matrix differs from the reference: rows are true labels, columns are predicted labels, "
     "and each sample adds one to its (true, predicted) cell"
@@ -50,33 +52,62 @@ def _label_pairs(draw):
     return y_true, y_pred
 
 
+PROBLEM = "cml/confusion-matrix-and-count-based-scores/p01-confusion-matrix-from-labels"
+
+
 @pytest.mark.parametrize(
     "seed", [0, 1, 2, 3, 4], ids=["case-0", "case-1", "case-2", "case-3", "case-4"]
 )
 def test_matches_scikit_learn_on_random_integer_labels(seed):
-    rng = np.random.default_rng(seed)
-    n = int(rng.integers(5, 80))
-    k = int(rng.integers(2, 6))
-    y_true = rng.integers(0, k, size=n)
-    y_pred = rng.integers(0, k, size=n)
+    generator = rng(f"{PROBLEM}:random-labels:{seed}")
+    n = int(generator.integers(5, 80))
+    k = int(generator.integers(2, 6))
+    y_true = generator.integers(0, k, size=n)
+    y_pred = generator.integers(0, k, size=n)
     expected = sklearn_confusion_matrix(y_true, y_pred)
     got = _solve(y_true, y_pred)
     assert got.shape == expected.shape, (
-        "matrix shape differs: the default label set is the sorted union of y_true and y_pred"
+        "matrix shape differs: the default label set is the sorted union of "
+        "true and predicted labels"
     )
     np.testing.assert_array_equal(got, expected, err_msg=MATRIX_MISTAKE)
 
 
 @pytest.mark.parametrize("seed", [10, 11, 12], ids=["subset-0", "subset-1", "subset-2"])
 def test_explicit_labels_match_scikit_learn_with_unseen_and_dropped_labels(seed):
-    rng = np.random.default_rng(seed)
-    n = int(rng.integers(10, 60))
-    y_true = rng.integers(0, 5, size=n)
-    y_pred = rng.integers(0, 5, size=n)
-    labels = [int(v) for v in rng.permutation(7)[:5]]
+    generator = rng(f"{PROBLEM}:explicit-labels:{seed}")
+    n = int(generator.integers(10, 60))
+    y_true = generator.integers(0, 5, size=n)
+    y_pred = generator.integers(0, 5, size=n)
+    labels = [int(v) for v in generator.permutation(7)[:5]]
     expected = sklearn_confusion_matrix(y_true, y_pred, labels=labels)
     got = _solve(y_true, y_pred, labels=labels)
     np.testing.assert_array_equal(got, expected, err_msg=LABELS_MISTAKE)
+
+
+@pytest.fixture(scope="module")
+def breast_cancer():
+    return load("breast_cancer")
+
+
+def test_matches_scikit_learn_on_breast_cancer_feature_scores(breast_cancer):
+    malignant = (np.asarray(breast_cancer.y) == 0).astype(int)
+    feature = list(breast_cancer.feature_names).index("worst concave points")
+    scores = breast_cancer.X[:, feature]
+    predictions = (scores >= 0.04).astype(int)
+
+    expected = sklearn_confusion_matrix(malignant, predictions, labels=[0, 1])
+    got = _solve(malignant, predictions)
+    assert got.shape == expected.shape, (
+        "matrix shape differs: the default label set is the sorted union of "
+        "true and predicted labels"
+    )
+    np.testing.assert_array_equal(got, expected, err_msg=MATRIX_MISTAKE)
+
+    labels = [1, 2]  # omit benign label 0 and include unseen label 2
+    expected_subset = sklearn_confusion_matrix(malignant, predictions, labels=labels)
+    got_subset = _solve(malignant, predictions, labels=labels)
+    np.testing.assert_array_equal(got_subset, expected_subset, err_msg=LABELS_MISTAKE)
 
 
 @settings(max_examples=100, deadline=None, report_multiple_bugs=False)

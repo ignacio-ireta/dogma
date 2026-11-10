@@ -55,6 +55,10 @@ gives a different answer, as the examples show.
 ValueError            # the end-of-word marker is missing
 ```
 
+On real text, such as the pinned `gutenberg_frankenstein` slice, every word contains capital letters, curly
+quotes such as `’` and `“`, and dashes. Encoding each word and joining its symbols must give back the word
+and the marker, character for character.
+
 ## Constraints
 
 - Allowed: built-in types and the standard library.
@@ -69,4 +73,6 @@ naive encoder on seeded random merge lists, check that every word round-trips th
 under Hypothesis, and cover these families: the rank-versus-position case in both directions; a merge created by
 an earlier merge that outranks a later rule; overlapping pairs such as `aaa`; every occurrence of the pair
 merged; unrelated characters left alone; the empty word; duplicate and malformed merges; whitespace and the
-marker text in the word; missing or misplaced markers in the tokens; and inputs that must not change.
+marker text in the word; missing or misplaced markers in the tokens; inputs that must not change; and real
+English prose with capital letters, curly quotes and non-ASCII punctuation, where merges must keep every
+original character.
