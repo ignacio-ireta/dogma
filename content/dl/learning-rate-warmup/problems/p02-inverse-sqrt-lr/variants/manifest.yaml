@@ -42,3 +42,4 @@ uncovered:
   reason: all inputs are immutable Python scalars, so no wrong solution can mutate them
 sweeps:
 - reject
+- mutants
