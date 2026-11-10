@@ -279,3 +279,26 @@ def test_edge_with_a_non_string_end_raises_type_error():
     except Exception as exc:
         pytest.fail(f"an edge with a non-string end raised {type(exc).__name__}, not TypeError")
     pytest.fail("each edge must be a pair of strings: a non-string end must raise TypeError")
+
+
+def test_ready_names_compare_with_python_str_order_not_case_folded():
+    # Python's str order puts uppercase letters first: "B" is 66 and "a" is 97, so "B" comes first.
+    # Lowercasing the names would wrongly put "a" first.
+    nodes = ["a", "B"]
+    edges = []
+    assert _order(nodes, edges) == ["B", "a"], (
+        "ready names must be ordered by Python str comparison, which is case-sensitive: "
+        "do not fold case"
+    )
+
+
+def test_duplicate_edges_are_left_unchanged_in_the_callers_list():
+    nodes = ["b", "a"]
+    edges = [("a", "b"), ("a", "b")]
+    edges_before = list(edges)
+    _order(nodes, edges)
+    if edges != edges_before:
+        pytest.fail(
+            "the function changed the edge list it was given: duplicate edges must stay as the "
+            "caller passed them, so work on a copy"
+        )

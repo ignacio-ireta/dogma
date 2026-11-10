@@ -1,7 +1,53 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_mixed_case_tie_order.py
+  mistake: ready names ordered by lowercased form
+  clause: 'Returns: a new `list` of `str` with every name in `nodes` exactly once. For every edge `(a,
+    b)`, `a` appears before `b`. Among all such lists it is the lexicographically smallest, comparing
+    names with Python''s `str` ordering.'
+  killed_by: test_ready_names_compare_with_python_str_order_not_case_folded
+  visible: hidden
+- file: reject_dedupe_edges_in_place.py
+  mistake: removes duplicate edges from the caller list in place
+  clause: Must not mutate `nodes` or `edges`.
+  killed_by: test_duplicate_edges_are_left_unchanged_in_the_callers_list
+  visible: hidden
+- file: reject_empty_node_list.py
+  mistake: rejects an empty node list with a ValueError
+  clause: '`nodes`: a `list` of distinct `str` names. An empty list is allowed.'
+  killed_by: test_empty_graph_returns_empty_list
+  visible: public
+- file: reject_duplicate_edge_counted_once.py
+  mistake: a duplicate edge adds to in-degree but is followed only once
+  clause: '`edges`: a `list` of `(a, b)` pairs of `str`. Each name must be in `nodes`. Duplicate edges
+    are allowed and change nothing. A list or tuple of two strings is accepted for each pair.'
+  killed_by: test_larger_random_dag_respects_every_edge_and_places_every_name
+  visible: hidden
+- file: reject_self_loop_ignored.py
+  mistake: a self-loop edge is ignored instead of reported as a cycle
+  clause: Raises `ValueError` when `nodes` has a repeated name, when an edge names a node that is not
+    in `nodes`, or when the dependencies contain a cycle. A self-loop `(a, a)` is a cycle.
+  killed_by: test_small_graphs_with_cycles_raise_value_error_naming_a_cycle
+  visible: hidden
+- file: reject_cycle_wrong_direction.py
+  mistake: the named cycle lists its steps in the wrong direction
+  clause: 'For a cycle, the message is exactly `graph has a cycle: ` (with the trailing space), followed
+    by the names of one cycle joined by ` -> `. The first and last names are equal, and every step is
+    an edge of the graph. For example: `graph has a cycle: b -> c -> a -> b`. A self-loop `(a, a)` gives
+    `graph has a cycle: a -> a`.'
+  killed_by: test_small_graphs_with_cycles_raise_value_error_naming_a_cycle
+  visible: hidden
+- file: reject_two_char_string_edge.py
+  mistake: a two character string is accepted as an edge
+  clause: Raises `TypeError` when `nodes` is not a list, or when a name or an edge is not a string pair.
+  killed_by: test_edge_given_as_a_string_raises_type_error
+  visible: hidden
+uncovered:
+- clause: 'Time: O((V + E) log V) for V nodes and E edges.'
+  reason: complexity bullet in the Contract; the runbook gives complexity wrong solutions only for K bullets,
+    see question note
+sweeps:
+- reject

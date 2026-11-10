@@ -1,5 +1,5 @@
 id: algo/topological-sort/p01-lexicographic-topological-order
-version: 3
+version: 4
 title: Lexicographically smallest topological order
 language: python
 runtime: py-stdlib
