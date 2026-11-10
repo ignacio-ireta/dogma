@@ -2,6 +2,54 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_reshape_batch.py
+  origin: freedom
+  freedom: reshapes the leading axes to 2-D and back instead of using the tensor as is
+reject:
+- file: reject_transposed_first_weight.py
+  mistake: first weight read transposed in the Linear layout
+  clause: '`w1`: shape `(d_in, h)`, `h >= 1`. `b1`: shape `(h,)`.'
+  killed_by: test_identity_block_matches_functional_oracle
+  visible: hidden
+- file: reject_transposed_second_weight.py
+  mistake: second weight read transposed in the Linear layout
+  clause: '`w2`: shape `(h, d_out)`, `d_out >= 1`. `b2`: shape `(d_out,)`.'
+  killed_by: test_projection_shortcut_example
+  visible: public
+- file: reject_projection_ignored_at_equal_width.py
+  mistake: identity used when widths match, projection ignored
+  clause: '`w_shortcut`: `None`, or shape `(d_in, d_out)`.'
+  killed_by: test_projection_block_matches_functional_oracle
+  visible: hidden
+- file: reject_mixed_dtype_cast_silently.py
+  mistake: weights cast to dtype of x instead of rejecting mixed dtypes
+  clause: Every tensor must be floating point and have the same dtype as `x`.
+  killed_by: test_mixed_dtype_and_integer_inputs_rejected
+  visible: hidden
+- file: reject_squeezes_single_output_width.py
+  mistake: output squeezed when d_out is 1
+  clause: 'Returns: torch tensor of shape `(..., d_out)`, same dtype as `x`.'
+  killed_by: test_projection_shortcut_example
+  visible: public
+- file: reject_no_zero_hidden_check.py
+  mistake: zero hidden width accepted instead of raising ValueError
+  clause: 'Raises: `ValueError` when `x` is not a tensor or not floating point, when `x` is 0-dimensional,
+    when any weight has the wrong shape or dtype, when `w_shortcut` is `None` and `d_out != d_in` (an
+    identity shortcut needs matching widths), or when d_in, h or d_out is zero. Zero-sized leading axes
+    are allowed.'
+  killed_by: test_zero_hidden_width_is_rejected_with_value_error
+  visible: hidden
+- file: reject_inplace_bias_rescale.py
+  mistake: caller bias b1 rescaled in place after the result is built
+  clause: Must not mutate inputs. Must not call `detach()` on any input.
+  killed_by: test_identity_block_matches_functional_oracle
+  visible: hidden
+- file: reject_empty_batch_raises.py
+  mistake: zero-sized batches rejected with ValueError
+  clause: '`x`: floating-point torch tensor of shape `(..., d_in)`, with `d_in >= 1`. Leading axes are
+    arbitrary and may be zero-sized.'
+  killed_by: test_zero_size_batch_returns_empty_output
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
