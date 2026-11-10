@@ -15,4 +15,4 @@ sources:
   - "source: library-refresh/01-Mathematics/08-Optimization/2004 -- Boyd and Vandenberghe -- Convexity, Duality and KKT Certificates -- Study Note.md"
   - "paper: Loshchilov & Hutter 2017, Decoupled Weight Decay Regularization (arXiv:1711.05101)"
   - "paper: Hoerl & Kennard 1970, Ridge regression: biased estimation for nonorthogonal problems (Technometrics)"
-status: verified
+status: reviewed
