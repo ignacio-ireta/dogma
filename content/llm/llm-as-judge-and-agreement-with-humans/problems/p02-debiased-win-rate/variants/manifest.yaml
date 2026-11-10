@@ -1,7 +1,51 @@
-problem_version: 1
+problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_tuple_drops_first_pair.py
+  mistake: tuple input loses its first pair
+  clause: '`judgments`: a non-empty list or tuple. Each element is a pair `(forward, reverse)`, one entry
+    per comparison item. - `forward` is the verdict when `X` is in position A and `Y` is in position B.
+    - `reverse` is the verdict when `Y` is in position A and `X` is in position B. - A verdict is `"A"`
+    (the answer in position A is better), `"B"` (position B is better) or `"tie"`.'
+  killed_by: test_tuple_of_judgments_is_read_in_full
+  visible: hidden
+- file: reject_reverse_order_not_swapped.py
+  mistake: reads the reverse order without the position swap
+  clause: '**Per-order reading for `X`.** In `forward`, `"A"` means `X` wins, `"B"` means `Y` wins. In
+    `reverse`, `"B"` means `X` wins, `"A"` means `Y` wins. `"tie"` is a tie in either order.'
+  killed_by: test_mixed_consistent_inconsistent_and_tie_items
+  visible: public
+- file: reject_single_win_counts_as_full.py
+  mistake: one decisive win for X counts as a full point
+  clause: '**Item score for `X`.** Score `1.0` when `X` wins in both orders. Score `0.0` when `Y` wins
+    in both orders. Every other item scores `0.5`. This covers ties, one tie with one decisive verdict,
+    and any pair where the two orders disagree. Inconsistent pairs count as ties.'
+  killed_by: test_mixed_consistent_inconsistent_and_tie_items
+  visible: public
+- file: reject_returns_y_win_rate.py
+  mistake: returns the win rate for Y
+  clause: '**Win rate.** The arithmetic mean of the item scores, a `float` in `[0, 1]`. Swapping `X` and
+    `Y` turns the rate into `1 - rate`.'
+  killed_by: test_random_judgments_match_the_lookup_table_oracle
+  visible: hidden
+- file: reject_unknown_forward_verdict_accepted.py
+  mistake: forward verdict never checked for unknown strings
+  clause: Raises `ValueError` when `judgments` is empty, or when a verdict is a `str` outside `{"A", "B",
+    "tie"}`.
+  killed_by: test_unknown_verdict_is_rejected
+  visible: hidden
+- file: reject_forward_type_not_checked.py
+  mistake: forward verdict not type-checked
+  clause: Raises `TypeError` when an element is not a 2-item tuple or list, or a verdict is not a `str`.
+  killed_by: test_non_string_verdict_is_rejected
+  visible: hidden
+- file: reject_judgments_sorted_in_place.py
+  mistake: sorts the caller judgment list in place
+  clause: Must not mutate the input.
+  killed_by: test_tuples_and_lists_are_both_accepted
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

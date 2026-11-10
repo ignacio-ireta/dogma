@@ -132,3 +132,12 @@ def test_malformed_element_is_rejected():
 
 def test_non_string_verdict_is_rejected():
     rejects(lambda: debiased_win_rate([(1, "B")]), TypeError)  # type: ignore[list-item]
+
+
+def test_tuple_of_judgments_is_read_in_full():
+    # Item scores: ("A", "B") is X in both orders (1.0), ("A", "A") is inconsistent (0.5),
+    # ("B", "A") is Y in both orders (0.0). Mean = (1.0 + 0.5 + 0.0) / 3 = 0.5.
+    got = checked(lambda: debiased_win_rate((("A", "B"), ("A", "A"), ("B", "A"))))
+    assert math.isclose(got, 0.5, abs_tol=1e-12), (
+        "a tuple of judgments must count every pair, the first one included"
+    )

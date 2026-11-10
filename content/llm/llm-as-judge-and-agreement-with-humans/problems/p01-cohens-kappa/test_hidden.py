@@ -148,3 +148,19 @@ def test_mixed_str_and_non_str_labels_raise_type_error():
 def test_non_str_label_in_the_label_set_raises_type_error():
     # A non-str entry in the label set is a non-str label, even when the ratings are all str.
     rejects(lambda: cohens_kappa(["x", "y"], ["x", "y"], ["x", "y", 2]), TypeError)  # type: ignore[list-item]
+
+
+def test_single_item_is_a_valid_input():
+    # One item, disagreeing: p_o = 0, p_a(x) = 1, p_b(x) = 0, p_a(y) = 0, p_b(y) = 1,
+    # so p_e = 0 and kappa = (0 - 0) / (1 - 0) = 0.
+    got = checked(lambda: cohens_kappa(["x"], ["y"], ["x", "y"]))
+    assert got == pytest.approx(0.0, abs=1e-12), (
+        "a single item is valid input and its kappa is wrong"
+    )
+
+
+def test_label_list_is_not_reordered():
+    # The label list is an input too: calling the function must not sort it.
+    labels = ["y", "x"]
+    checked(lambda: cohens_kappa(["x", "y"], ["x", "x"], labels))
+    assert labels == ["y", "x"], "the label list must not be reordered by the call"

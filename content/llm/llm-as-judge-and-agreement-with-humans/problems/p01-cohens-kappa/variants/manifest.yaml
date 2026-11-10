@@ -1,7 +1,58 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_reversed_chance_sum.py
+  origin: freedom
+  freedom: sums the chance term over the labels in reverse order, only the last digits differ
+reject:
+- file: reject_unused_label_rejected.py
+  mistake: rejects a label in the set that never occurs
+  clause: '`labels`: a non-empty sequence of distinct `str`. It is the full label set. Every value in
+    `rater_a` and `rater_b` must belong to it, and labels that never occur are allowed.'
+  killed_by: test_perfect_agreement_over_a_larger_label_set_is_one
+  visible: public
+- file: reject_pairs_drop_last_item.py
+  mistake: compares pairs without the last item
+  clause: 'Let `p_o` be the observed agreement: the fraction of items where the two labels are equal.'
+  killed_by: test_two_of_four_agree_on_yes_gives_half
+  visible: public
+- file: reject_last_label_dropped_from_chance.py
+  mistake: leaves the last label out of the chance term
+  clause: Let `p_a(l)` and `p_b(l)` be the fraction of items each rater gave label `l`. Expected agreement
+    is `p_e = sum over labels l of p_a(l) * p_b(l)`.
+  killed_by: test_two_of_four_agree_on_yes_gives_half
+  visible: public
+- file: reject_negative_kappa_clamped.py
+  mistake: clamps negative kappa to zero
+  clause: Returns `kappa = (p_o - p_e) / (1 - p_e)` as a `float`. It is `1.0` for perfect agreement and
+    can be negative.
+  killed_by: test_random_label_sequences_match_the_sklearn_oracle
+  visible: hidden
+- file: reject_zero_division_not_guarded.py
+  mistake: degenerate guard never fires, ZeroDivisionError instead
+  clause: '**Degenerate case.** When `p_e == 1`, both raters gave the same single label to every item,
+    so the denominator is zero. Raise `ValueError` with a message that says kappa is undefined. Do not
+    return `nan`.'
+  killed_by: test_one_label_for_every_item_is_undefined_not_nan
+  visible: public
+- file: reject_label_type_check_only_labels.py
+  mistake: type-checks the label set only, not the ratings
+  clause: Raises `TypeError` when a label is not a `str`, and `ValueError` when the sequences differ in
+    length, are empty, a label is outside `labels`, or `labels` is empty or has duplicates.
+  killed_by: test_mixed_str_and_non_str_labels_raise_type_error
+  visible: hidden
+- file: reject_single_item_rejected.py
+  mistake: rejects a single item
+  clause: '`rater_a`, `rater_b`: sequences of `str` of the same length `n >= 1`. Item `i` was labelled
+    `rater_a[i]` by one rater and `rater_b[i]` by the other.'
+  killed_by: test_single_item_is_a_valid_input
+  visible: hidden
+- file: reject_labels_sorted_in_place.py
+  mistake: sorts the caller label list in place
+  clause: Must not mutate inputs.
+  killed_by: test_label_list_is_not_reordered
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
