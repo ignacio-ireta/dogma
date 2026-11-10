@@ -7,6 +7,7 @@ behaviour it checks, and each failure message names the likely mistake first.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +17,8 @@ import pandas as pd  # type: ignore[import-untyped]
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+
+from dogma_data import rng, synth
 
 SHIPMENTS_DDL = (
     "CREATE TABLE shipments (shipment_id BIGINT, warehouse_code VARCHAR, shipped_on DATE)"
@@ -105,6 +108,46 @@ def _check_same_codes(
 ) -> None:
     problem = _first_problem(got, shipments, returns)
     assert problem is None, problem
+
+
+@pytest.fixture(scope="module")
+def event_log_tables() -> tuple[list[tuple[Any, ...]], list[tuple[Any, ...]]]:
+    generated = synth.event_log(
+        rng("sql/sql-joins-and-unions/p02-warehouses-with-a-shipment-or-a-return:event-log:0"),
+        1_200,
+        n_users=300,
+        categories=tuple(CODES),
+        start="2024-01-01",
+        days=45,
+        dirty_rate=0.2,
+    )
+    shipments: list[tuple[Any, ...]] = []
+    returns: list[tuple[Any, ...]] = []
+    for i, event_id in enumerate(generated["event_id"]):
+        row = (int(event_id), str(generated["category"][i]), date(2024, 1, 1))
+        (shipments if i % 2 == 0 else returns).append(row)
+    return shipments, returns
+
+
+def test_event_log_dirty_categories_match_the_pandas_union_oracle(
+    event_log_tables: tuple[list[tuple[Any, ...]], list[tuple[Any, ...]]],
+) -> None:
+    shipments, returns = event_log_tables
+    got = _run_learner_query(_connect(shipments, returns))
+    shipment_codes = pd.DataFrame(shipments, columns=["id", "warehouse_code", "day"])[
+        "warehouse_code"
+    ]
+    return_codes = pd.DataFrame(returns, columns=["id", "warehouse_code", "day"])["warehouse_code"]
+    want = (
+        pd.concat([shipment_codes, return_codes], ignore_index=True)
+        .dropna()
+        .drop_duplicates()
+        .sort_values()
+        .tolist()
+    )
+    assert got["warehouse_code"].tolist() == want, (
+        "the event_log category keys must be unioned exactly as stored, including case and spaces"
+    )
 
 
 def _random_rows(rng: np.random.Generator, n: int, first_id: int) -> list[tuple[Any, ...]]:

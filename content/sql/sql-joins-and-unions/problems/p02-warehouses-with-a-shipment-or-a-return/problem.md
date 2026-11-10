@@ -46,6 +46,9 @@ A
 B
 ```
 
+In the event_log dataset, category labels can include casing and spacing noise. If those labels
+are warehouse codes, each stored spelling is still its own code.
+
 ## Constraints
 
 - Allowed: standard `SELECT`, `FROM`, `WHERE`, `UNION` and `UNION ALL`, `ORDER BY`, and DuckDB's
@@ -57,6 +60,6 @@ B
 
 All public tests pass, then **Submit** runs the hidden tests. They build their own `shipments` and
 `returns` tables. The hidden tests cover these families: codes that appear in only one table, codes
-that appear in both, NULL codes in both tables, codes that differ only by case, sorted output with
-rows inserted out of order, one empty table, both tables empty, and random tables checked against
-an independent Python set computation.
+that appear in both, NULL codes, case and whitespace variants kept as separate keys, sorted output
+with rows inserted out of order, one empty table, both tables empty, and dirty `event_log` categories
+checked against a pandas union oracle.

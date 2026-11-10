@@ -6,6 +6,7 @@ the output, and the output is ordered so that the result is always the same.
 
 ## Contract
 
+- Partition by the exact category string. Case and whitespace differences make separate groups.
 - Input: a table `products` with `product_id` (BIGINT, unique), `category` (VARCHAR) and `revenue`
   (DOUBLE, may be NULL). One row per product.
 - Partition: `category`. Rankings never cross categories.
@@ -51,6 +52,9 @@ tools     307         NULL       4           3     2
 
 A `product_id` such as `905113208` is compared as a number, not as text.
 
+The event_log dataset can supply product ids, dirty category labels, and lognormal amounts. Its
+category spellings stay separate ranking groups.
+
 ## Constraints
 
 - Allowed: `SELECT`, `FROM`, `WHERE`, `WINDOW`, `ORDER BY`, common table expressions (`WITH`), and
@@ -63,5 +67,6 @@ All public tests pass, then **Submit** runs the hidden tests. They build their o
 The families they cover: ties on revenue with the tie-break decided by `product_id`; ids whose text order
 differs from their numeric order; NULL revenues after every number, including 0, and peers of each other;
 a category where every revenue is NULL; a single-product category; large, non-sequential ids; a table
-inserted in shuffled order, so an unordered result would show; an empty table; and random tables checked
-against an independent pandas computation with `groupby().rank()`.
+inserted in shuffled order, so an unordered result would show; an empty table; dirty category keys kept
+as stored, lognormal amounts, and `event_log` rows checked against an independent pandas computation
+with `groupby().rank()`.

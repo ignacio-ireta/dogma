@@ -91,6 +91,9 @@ See the multiple-tables chapters of Beaulieu, *Learning SQL*, and Molinaro, *SQL
   Swapped columns of the same type raise no error, and the result is wrong.
 - **Union cost.** `UNION` must find duplicates. Use `UNION ALL` when the sources cannot overlap.
 
+Event-log categories are dirty keys. In a 1,200-row draw, exact grouping has 31 labels; stripping
+spaces and folding case collapses them to 7, losing distinct warehouse codes.
+
 ## Interview angle
 
 "Every customer with their order total, including the customers with no orders." Answer shape: state the

@@ -14,6 +14,9 @@ from typing import Any
 import duckdb
 import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
+import pytest
+
+from dogma_data import rng, synth
 
 COLUMNS = ["category", "product_id", "revenue", "dense_rank"]
 PRODUCTS_DDL = "CREATE TABLE products (product_id BIGINT, category VARCHAR, revenue DOUBLE)"
@@ -133,6 +136,34 @@ def test_random_tables_match_the_pandas_oracle() -> None:
         rows = _random_rows(np.random.default_rng(seed))
         got = _run_learner_query(_connect(rows))
         _check_same_result(got, _oracle(rows))
+
+
+@pytest.fixture(scope="module")
+def event_log_products() -> list[tuple[Any, ...]]:
+    generated = synth.event_log(
+        rng("sql/sql-ranking-window-functions/p02-top-two-with-ties:event-log:0"),
+        1_500,
+        n_users=300,
+        categories=tuple(CATEGORIES),
+        start="2024-01-01",
+        days=90,
+        amount_median=30.0,
+        amount_sigma=1.0,
+        dirty_rate=0.15,
+    )
+    return [
+        (int(product_id), str(category), float(revenue))
+        for product_id, category, revenue in zip(
+            generated["event_id"], generated["category"], generated["amount"], strict=True
+        )
+    ]
+
+
+def test_event_log_amounts_and_dirty_categories_match_the_pandas_oracle(
+    event_log_products: list[tuple[Any, ...]],
+) -> None:
+    got = _run_learner_query(_connect(event_log_products))
+    _check_same_result(got, _oracle(event_log_products))
 
 
 def test_tie_at_the_cut_brings_in_more_than_two_rows() -> None:

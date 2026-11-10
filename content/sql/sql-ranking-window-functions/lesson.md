@@ -59,6 +59,10 @@ Top two by `DENSE_RANK`, including ties: products 101, 103 and 102, since 102 is
 - **Text ordering of ids.** Casting an id to text changes the order: `'9'` sorts after `'17'`. Compare numeric ids as numbers.
 - **Duplicates after a join.** A join before ranking can duplicate rows, and every rank then counts the copies.
 
+The event_log category labels split into 20 exact groups for rank-within-category and 15 for
+top-two-with-ties; normalizing them collapses those to 4 and 3 groups. In the fixed draws, that
+changes the dense rank of 1,478 and 1,497 rows. The category string is part of the partition key.
+
 ## Interview angle
 
 "Top two products per category." Answer shape: `DENSE_RANK` in a subquery, keep rank at most 2 outside it, and keep ties if the question asks for them. For "latest row per customer", use `ROW_NUMBER` with an explicit tie-breaker, and keep the row numbered 1. State where the NULLs sort. Follow-ups are in `interview.md`.
