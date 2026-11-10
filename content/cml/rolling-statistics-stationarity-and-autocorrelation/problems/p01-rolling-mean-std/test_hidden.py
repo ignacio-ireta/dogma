@@ -306,12 +306,12 @@ def test_property_agrees_with_per_window_statistics(values, window, partial):
         atol=1e-9 * scale,
         nan_mistake=MEAN_NAN,
     )
-    # The contract requires a running update (add the new value, remove the old one). After a large
-    # value M leaves the window, that update keeps rounding residue of about eps * M**2 in the sum of
-    # squared deviations, so a window of equal values reports a spread near sqrt(eps) * M, about
-    # 1.5e-8 * M, before any mistake. 1e-6 * scale bounds that residue with room for a few hundred
-    # updates (the repeated-pairs test uses the same bound), while every wrong divisor, look-ahead or
-    # centring is off by far more.
+    # The contract requires a running update (add the new value, remove the old one). After a
+    # large value M leaves the window, that update keeps rounding residue of about eps * M**2 in
+    # the sum of squared deviations, so a window of equal values reports a spread near
+    # sqrt(eps) * M, about 1.5e-8 * M, before any mistake. 1e-6 * scale bounds that residue with
+    # room for a few hundred updates (the repeated-pairs test uses the same bound), while every
+    # wrong divisor, look-ahead or centring is off by far more.
     _close(
         stds,
         ref_stds,
