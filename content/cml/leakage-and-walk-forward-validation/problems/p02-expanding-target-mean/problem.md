@@ -32,7 +32,8 @@ ValueError                     # the lengths differ
 
 On real `adult` (`load_frame`, 6000 rows in file order as the clock), `expanding_target_mean(df["native.country"],
 (df["income"] == ">50K").astype(float))` gives the 5350 United-States rows a mean over all earlier United-States rows.
-The first row of each of the 41 countries is NaN. The encoding of the last United-States row is the mean of its
+Here `?` is an ordinary category, not a missing value, so the 41 levels of `native.country` include `?`,
+and the first row of each of them is NaN. The encoding of the last United-States row is the mean of its
 5349 predecessors, not of the last 500.
 
 ## Constraints
@@ -46,7 +47,7 @@ The first row of each of the 41 countries is NaN. The encoding of the last Unite
 All public tests pass, then **Submit** passes the hidden tests. They compare the encoding with a brute-force
 reference and with pandas' `groupby`, `shift` and `expanding` on random integer and string categories,
 including alternating categories where a category's rows are never adjacent, and mixed integer and string
-labels. On real `adult` keys (`occupation` and `native.country`, with a dominant level and many rare ones) and
+labels. On real `adult` keys (`occupation` and `native.country`, with a dominant level and many rare ones; `?` is an ordinary level) and
 the real income target, in file order, they check the same idiom over a long history. They check that a row's
 encoding does not change when its own target or any later target changes, that a category's first row is NaN,
 that the second row of a category equals the first target, and that large and small magnitudes stay accurate,

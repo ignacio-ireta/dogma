@@ -21,8 +21,8 @@ quartiles are your own code, so the interpolation rule is part of the contract.
   and `1e308`, whose median is 0. The form `(1 - (h - lo)) * s[lo] + (h - lo) * s[hi]` does not. The quartiles are `q = 0.25` and `q = 0.75`.
 - `scale` is `Q3 - Q1` for each column. A column whose scale is below ten times the float64 machine
   epsilon gets scale `1.0`. This is the rule scikit-learn's `RobustScaler` uses. It applies to a
-  column that still varies but whose middle half is constant (most values equal), so its IQR is
-  zero: it gets scale `1.0` too, not its standard deviation.
+  column that still varies but whose middle half is constant (at least about half of its values
+  equal), so its IQR is zero: it gets scale `1.0` too, not its standard deviation.
 - Transform with `(values - center) / scale`. Never fit anything on `values`.
 - Raise `ValueError` for wrong ranks, empty training dimensions, mismatched feature counts, and
   nonfinite entries.

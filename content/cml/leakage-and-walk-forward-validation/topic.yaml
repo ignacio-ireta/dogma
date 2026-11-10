@@ -18,4 +18,4 @@ sources:
   - "book: Hyndman & Athanasopoulos, Forecasting: Principles and Practice, chapter on evaluating forecast accuracy (time series cross-validation)"
   - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter 7 (model assessment and selection)"
   - "source: library-refresh/01-Mathematics/06-Probability-and-Statistics/2020 -- Hernán and Robins -- Identification Before Estimation -- Study Note.md"
-status: verified
+status: reviewed
