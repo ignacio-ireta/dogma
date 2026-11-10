@@ -1,5 +1,5 @@
 id: cml/lagrange-multipliers/p01-constrained-quadratic-min
-version: 3
+version: 4
 title: Constrained quadratic minimum
 language: python
 runtime: py-numpy

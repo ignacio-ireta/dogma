@@ -1,7 +1,49 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_inverse_kkt.py
+  origin: freedom
+  freedom: solves the KKT system by forming the inverse and multiplying, not by a direct solve
+reject:
+- file: reject_det_for_definiteness.py
+  mistake: definiteness tested by the sign of det Q only, so a negative definite Q is accepted
+  clause: 'Raises `ValueError` when: a shape disagrees with the rules above; an entry is not finite; `Q`
+    is not symmetric; `Q` is not positive definite; or `A` is rank deficient.'
+  killed_by: test_negative_definite_q_raises_value_error
+  visible: hidden
+- file: reject_exact_symmetry_check.py
+  mistake: exact symmetry test rejects Q that is symmetric only up to rounding
+  clause: '`Q`: $n \times n$ real symmetric positive definite matrix, $n \ge 1$. Symmetric up to rounding.'
+  killed_by: test_rounding_level_asymmetry_is_accepted_as_symmetric
+  visible: hidden
+- file: reject_list_c_refused.py
+  mistake: refuses c given as a list
+  clause: '`c`: 1-D, length $n$.'
+  killed_by: test_equal_split_of_a_sum_constraint_with_unit_multiplier
+  visible: public
+- file: reject_square_a_sign.py
+  mistake: multiplier sign flipped when A is square
+  clause: '`A`: 2-D, shape $(m, n)$ with $m \ge 1$ and full row rank (the rows are linearly independent).'
+  killed_by: test_matches_independent_null_space_construction_on_random_problems
+  visible: hidden
+- file: reject_reversed_b.py
+  mistake: right-hand side b taken in reverse order, wrong for two or more constraints
+  clause: '`b`: 1-D, length $m$.'
+  killed_by: test_matches_independent_null_space_construction_on_random_problems
+  visible: hidden
+- file: reject_multiplier_without_c.py
+  mistake: multipliers fitted to Qx only, dropping c
+  clause: 'Returns: a tuple `(x, lam)`. `x` is a float64 array of shape `(n,)` and `lam` is a float64
+    array of shape `(m,)`. They satisfy $Q\mathbf{x} + \mathbf{c} = A^\top\boldsymbol\lambda$ and $A\mathbf{x}
+    = \mathbf{b}$.'
+  killed_by: test_linear_term_moves_the_minimiser_and_sets_the_multiplier_sign
+  visible: public
+- file: reject_asarray_mutation.py
+  mistake: symmetrised Q written back into the caller array
+  clause: Must not mutate inputs.
+  killed_by: test_invalid_inputs_raise_value_error
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

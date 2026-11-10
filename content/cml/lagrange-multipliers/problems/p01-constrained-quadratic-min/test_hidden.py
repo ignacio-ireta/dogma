@@ -365,3 +365,14 @@ def test_rounding_level_asymmetry_is_accepted_when_Q_has_a_zero_entry():
         atol=1e-9,
         err_msg="a Q symmetric up to rounding was rejected: scale the tolerance by the size of Q",
     )
+
+
+def test_negative_definite_q_raises_value_error():
+    # Q = -I has determinant +1, but both eigenvalues are negative, so Q is not positive
+    # definite. A sign test on det(Q) alone would accept it.
+    Q = -np.eye(2)
+    A = np.array([[1.0, 1.0]])
+    _raised_value_error(
+        lambda: constrained_quadratic_min(Q, np.zeros(2), A, np.array([1.0])),
+        "negative definite Q is not positive definite: raise ValueError",
+    )
