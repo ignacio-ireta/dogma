@@ -1,7 +1,49 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_numpy_scalars.py
+  origin: freedom
+  freedom: returns NumPy float64 scalars instead of Python floats
+- file: accept_manual_sum_of_squares.py
+  origin: freedom
+  freedom: computes the variance by a manual sum of squares rather than np.std
+reject:
+- file: reject_integer_input.py
+  mistake: integer samples are rejected although the Contract allows integers
+  clause: '`x`: 1-D sequence of real numbers (a list or a NumPy array) of length `n ≥ 2`. Integers are
+    allowed. Every value must be finite.'
+  killed_by: test_example_interval_for_one_to_five_uses_t_with_four_degrees_of_freedom
+  visible: public
+- file: reject_default_confidence_090.py
+  mistake: default confidence changed from 0.95 to 0.90
+  clause: '`confidence`: a float strictly between 0 and 1. Default `0.95`.'
+  killed_by: test_example_interval_for_one_to_five_uses_t_with_four_degrees_of_freedom
+  visible: public
+- file: reject_n_below_three.py
+  mistake: 'guard too narrow: n of two is refused'
+  clause: Raises `ValueError` when `x` is not 1-D, when it has fewer than two values, when a value is
+    NaN or infinite, or when `confidence` is not strictly between 0 and 1. A constant sample is valid
+    and gives `lo == hi == mean`.
+  killed_by: test_matches_student_t_reference_on_seeded_samples
+  visible: hidden
+- file: reject_nan_only_guard.py
+  mistake: guard checks NaN only and lets infinite values through
+  clause: Raises `ValueError` when `x` is not 1-D, when it has fewer than two values, when a value is
+    NaN or infinite, or when `confidence` is not strictly between 0 and 1. A constant sample is valid
+    and gives `lo == hi == mean`.
+  killed_by: test_invalid_input_raises_value_error
+  visible: hidden
+- file: reject_sorts_input_in_place.py
+  mistake: sorts the caller's float array in place
+  clause: Must not mutate its input.
+  killed_by: test_input_array_is_not_mutated
+  visible: hidden
+- file: reject_returns_list_not_tuple.py
+  mistake: returns a list where the Contract says a tuple
+  clause: 'Returns: a tuple `(mean, lo, hi)` of three floats, with `lo ≤ mean ≤ hi`.'
+  killed_by: test_result_is_a_tuple_of_three_values
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

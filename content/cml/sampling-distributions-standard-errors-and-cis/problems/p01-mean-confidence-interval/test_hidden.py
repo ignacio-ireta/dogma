@@ -197,3 +197,11 @@ def test_input_array_is_not_mutated():
         before,
         err_msg="the input array was modified in place: sort or centre a copy instead",
     )
+
+
+def test_result_is_a_tuple_of_three_values():
+    result = mean_confidence_interval([1.0, 2.0, 3.0, 4.0])
+    assert isinstance(result, tuple), (
+        "the return value must be a tuple (mean, lo, hi), not another sequence type"
+    )
+    assert len(result) == 3, "the tuple must hold exactly three values: mean, lo and hi"
