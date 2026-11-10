@@ -2,6 +2,92 @@ problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_logsumexp_softmax.py
+  origin: freedom
+  freedom: softmax computed as exp of z minus logsumexp of z instead of max subtraction then divide by
+    sum
+reject:
+- file: reject_bool_temperature_accepted.py
+  mistake: bool temperature accepted as a number
+  clause: '`temperature`: a finite real number with `temperature > 0`. A `bool` is rejected. Temperature
+    `0` is rejected, because `logits / 0` is undefined. Greedy decoding (argmax) is a separate rule and
+    is not this function.'
+  killed_by: test_bad_temperature_raises_value_error
+  visible: hidden
+- file: reject_bool_top_k_accepted.py
+  mistake: bool top_k accepted as an int
+  clause: '`top_k`: `None`, or an `int` with `top_k >= 1`. `None` disables top-k. A `bool` is rejected.
+    If `top_k >= V`, nothing is removed.'
+  killed_by: test_bad_top_k_raises_value_error
+  visible: hidden
+- file: reject_float32_result.py
+  mistake: result returned as float32 not float64
+  clause: 'Returns: `torch.float64` tensor of shape `(V,)`. Every entry is `>= 0`, and the entries sum
+    to `1`. Removed tokens are exactly `0`.'
+  killed_by: test_uniform_logits_give_uniform_distribution
+  visible: public
+- file: reject_inplace_temperature.py
+  mistake: temperature divide done in place on the input logits
+  clause: Must not mutate `logits`.
+  killed_by: test_random_logits_match_reference_across_filter_combinations
+  visible: hidden
+- file: reject_no_finite_check.py
+  mistake: non-finite logits not rejected
+  clause: 'Raises `ValueError` when: `logits` is not a non-empty 1-D `float64` tensor; it contains a non-finite
+    value; `temperature` is not a finite positive number; `top_k` is neither `None` nor an `int >= 1`;
+    or `top_p` is neither `None` nor a number in `(0, 1]`.'
+  killed_by: test_non_finite_logits_raise_value_error
+  visible: hidden
+- file: reject_no_renorm_after_top_k.py
+  mistake: top-k survivors not renormalised before top-p
+  clause: 'Steps: 1. `z = logits / temperature`, then `p = softmax(z)`. Use a stable softmax. 2. Top-k.
+    Sort the tokens by `p`, descending. Ties go to the lower token index. Keep the first `top_k` tokens
+    and set the rest to probability `0`. Renormalise the kept tokens to sum to `1`. 3. Top-p. Use the
+    probabilities **after step 2''s renormalisation**, so the survivors of top-k sum to `1`. Sort the
+    kept tokens by those probabilities, descending, with ties again going to the lower index. Let `c_j`
+    be the cumulative sum of the sorted probabilities, in float64, and compare it to `top_p` directly,
+    with no tolerance. Keep the smallest prefix whose cumulative sum satisfies `c_j >= top_p`, including
+    the token that reaches it. The prefix always holds at least one token. Set the rest to `0` and renormalise.
+    With `top_k` absent, step 3 runs on the full softmax.'
+  killed_by: test_top_k_tie_at_the_boundary_keeps_the_lower_index
+  visible: public
+- file: reject_single_token_vocab_rejected.py
+  mistake: single entry vocabulary wrongly rejected
+  clause: '`logits`: `torch.float64` tensor of shape `(V,)`, `V >= 1`. Every entry is finite.'
+  killed_by: test_single_entry_vocabulary_returns_probability_one
+  visible: hidden
+- file: reject_ties_to_higher_index.py
+  mistake: ties ordered to the higher index
+  clause: 'Steps: 1. `z = logits / temperature`, then `p = softmax(z)`. Use a stable softmax. 2. Top-k.
+    Sort the tokens by `p`, descending. Ties go to the lower token index. Keep the first `top_k` tokens
+    and set the rest to probability `0`. Renormalise the kept tokens to sum to `1`. 3. Top-p. Use the
+    probabilities **after step 2''s renormalisation**, so the survivors of top-k sum to `1`. Sort the
+    kept tokens by those probabilities, descending, with ties again going to the lower index. Let `c_j`
+    be the cumulative sum of the sorted probabilities, in float64, and compare it to `top_p` directly,
+    with no tolerance. Keep the smallest prefix whose cumulative sum satisfies `c_j >= top_p`, including
+    the token that reaches it. The prefix always holds at least one token. Set the rest to `0` and renormalise.
+    With `top_k` absent, step 3 runs on the full softmax.'
+  killed_by: test_top_k_tie_at_the_boundary_keeps_the_lower_index
+  visible: public
+- file: reject_top_p_one_rejected.py
+  mistake: top_p equal to one wrongly rejected
+  clause: '`top_p`: `None`, or a real number with `0 < top_p <= 1`. `None` and `1.0` both disable top-p.
+    A `bool` is rejected.'
+  killed_by: test_top_p_one_leaves_every_token_in_play
+  visible: hidden
+- file: reject_top_p_strictly_greater.py
+  mistake: top-p boundary uses strict greater than
+  clause: 'Steps: 1. `z = logits / temperature`, then `p = softmax(z)`. Use a stable softmax. 2. Top-k.
+    Sort the tokens by `p`, descending. Ties go to the lower token index. Keep the first `top_k` tokens
+    and set the rest to probability `0`. Renormalise the kept tokens to sum to `1`. 3. Top-p. Use the
+    probabilities **after step 2''s renormalisation**, so the survivors of top-k sum to `1`. Sort the
+    kept tokens by those probabilities, descending, with ties again going to the lower index. Let `c_j`
+    be the cumulative sum of the sorted probabilities, in float64, and compare it to `top_p` directly,
+    with no tolerance. Keep the smallest prefix whose cumulative sum satisfies `c_j >= top_p`, including
+    the token that reaches it. The prefix always holds at least one token. Set the rest to `0` and renormalise.
+    With `top_k` absent, step 3 runs on the full softmax.'
+  killed_by: test_top_p_exact_boundary_keeps_the_token_that_reaches_p
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

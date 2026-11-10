@@ -2,6 +2,58 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_float32_draw.py
+  origin: freedom
+  freedom: draws the one uniform value in float32 and converts it to float64
+- file: accept_uniform_draw.py
+  origin: freedom
+  freedom: draws the one uniform value with uniform on an empty float64 tensor
+reject:
+- file: reject_single_token_vocab_rejected.py
+  mistake: single entry vocabulary wrongly rejected
+  clause: '`probs`: `torch.float64` tensor of shape `(V,)`, `V >= 1`. Every entry is finite and `>= 0`.
+    The entries sum to `1` within `1e-9`.'
+  killed_by: test_single_entry_vocabulary_returns_zero
+  visible: public
+- file: reject_none_generator_accepted.py
+  mistake: generator None accepted instead of rejected
+  clause: '`generator`: a `torch.Generator` instance. `None` and other types are rejected.'
+  killed_by: test_missing_generator_raises_value_error
+  visible: hidden
+- file: reject_returns_tensor_not_int.py
+  mistake: returns a tensor instead of a Python int
+  clause: 'Returns: a Python `int` in `[0, V)`. Over many draws, index `i` appears with frequency `probs[i]`.'
+  killed_by: test_zero_probability_tokens_are_never_drawn_at_either_end
+  visible: hidden
+- file: reject_nan_probs_accepted.py
+  mistake: nan probabilities accepted instead of rejected
+  clause: 'Raises `ValueError` when: `probs` is not a non-empty 1-D `float64` tensor; it has a non-finite
+    or negative entry; its sum differs from `1` by more than `1e-9`; or `generator` is not a `torch.Generator`.'
+  killed_by: test_invalid_probabilities_raise_value_error
+  visible: hidden
+- file: reject_inplace_cumsum_mutates_probs.py
+  mistake: cumsum done in place so the input probs is changed
+  clause: Must not mutate `probs`. The function must not change the global random state.
+  killed_by: test_zero_probability_token_is_never_returned
+  visible: public
+- file: reject_sum_tolerance_widened.py
+  mistake: sum tolerance widened so a sum off by 1e-6 is accepted
+  clause: 'Raises `ValueError` when: `probs` is not a non-empty 1-D `float64` tensor; it has a non-finite
+    or negative entry; its sum differs from `1` by more than `1e-9`; or `generator` is not a `torch.Generator`.'
+  killed_by: test_sum_off_by_more_than_one_e_minus_nine_is_rejected
+  visible: hidden
+uncovered:
+- clause: 'Method: draw one uniform value `u` in `[0, 1)` from `generator`. Let `cdf = cumsum(probs)`.
+    Return the first index `i` with `cdf[i] > u`, with the **strict** inequality. In PyTorch that is `torch.searchsorted(cdf,
+    u, right=True)`. Do not use `right=False` (`cdf[i] >= u`): when `u` is exactly `0` and `probs[0] =
+    0`, it returns index `0`, which has probability `0`. Rounding can leave `cdf[-1]` a hair below `u`,
+    and the search then returns `V`. In that case return the last index with `probs > 0`, never an index
+    whose probability is `0`. The sum check allows a deficit of up to `1e-9`, so this case has probability
+    at most about `1e-9` per draw. A seeded test cannot hit it reliably, so the rule is pinned here rather
+    than tested by draws.'
+  reason: wrong solution survives, see notes
+- clause: 'Consequence: a token with probability `0` is never returned. Each call uses exactly one draw
+    from the generator, so a generator seeded the same way gives the same sequence of tokens.'
+  reason: wrong solution survives, see notes
+sweeps:
+- reject
