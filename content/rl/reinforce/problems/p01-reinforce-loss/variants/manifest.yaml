@@ -2,6 +2,51 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_log_of_softmax.py
+  mistake: log of softmax instead of log_softmax with no max shift
+  clause: '`logits`: floating-point `torch.Tensor` of shape `(B, T, A)`, with `B >= 1`, `T >= 1`, `A >=
+    1`. Values can be large; the loss must stay finite for logits up to about `1e3` in magnitude.'
+  killed_by: test_extreme_logits_stay_finite_and_match_the_reference
+  visible: hidden
+- file: reject_squeezed_actions.py
+  mistake: squeezes actions so a batch of one or a single step fails
+  clause: '`actions`: integer `torch.Tensor` of shape `(B, T)` with entries in `0 .. A-1`.'
+  killed_by: test_worked_example_matches_minus_two_log_half
+  visible: public
+- file: reject_reward_read_before_action.py
+  mistake: reads rewards at t-1 as the reward of step t
+  clause: '`rewards`: floating-point `torch.Tensor` of shape `(B, T)`, every entry finite. `rewards[b,
+    t]` is the reward received after the action at step `t`.'
+  killed_by: test_worked_example_matches_minus_two_log_half
+  visible: public
+- file: reject_gamma_zero_is_one.py
+  mistake: gamma zero becomes one through a falsy default
+  clause: '`gamma`: real number in `[0, 1]`. `bool` and NaN are invalid.'
+  killed_by: test_loss_matches_cross_entropy_reference_on_random_batches
+  visible: hidden
+- file: reject_baseline_accepts_ints.py
+  mistake: accepts 0 and 1 as the baseline argument
+  clause: '`baseline`: `bool`. Other types are invalid.'
+  killed_by: test_invalid_arguments_are_rejected
+  visible: hidden
+- file: reject_returns_default_dtype.py
+  mistake: returns buffer built without the logits dtype
+  clause: 'Returns: a 0-dimensional tensor with the dtype of `logits`. When `logits` requires grad, the
+    result must too, so that `backward()` gives gradients with respect to the logits.'
+  killed_by: test_loss_matches_cross_entropy_reference_on_random_batches
+  visible: hidden
+- file: reject_empty_episode_allowed.py
+  mistake: accepts zero length episodes and returns zero
+  clause: Raises `ValueError` for any shape, dtype, range, `gamma` or `baseline` violation, including
+    empty batches or episodes.
+  killed_by: test_empty_episodes_are_rejected
+  visible: hidden
+- file: reject_inplace_rewards_scale.py
+  mistake: scales the rewards input in place by its largest magnitude
+  clause: Must not mutate any input tensor.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
