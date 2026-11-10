@@ -360,3 +360,20 @@ def test_inf_in_rejected_rewards_raises_value_error_even_with_finite_entries():
         lambda: bradley_terry_loss_and_accuracy(chosen, rejected),
         "an infinite rejected reward must raise ValueError, even when other entries are finite",
     )
+
+
+def test_half_precision_rewards_are_accepted_and_keep_float16():
+    """Float16 is a floating-point dtype, so the Contract accepts it and returns float16."""
+    chosen = torch.tensor([2.0, 0.0], dtype=torch.float16)
+    rejected = torch.tensor([0.0, 1.0], dtype=torch.float16)
+    loss, acc = _call(chosen, rejected)
+    import math  # noqa: PLC0415
+
+    # margins are +2 and -1, so loss = (log(1 + e^-2) + log(1 + e^1)) / 2, about 0.7200948
+    expected = (math.log1p(math.exp(-2.0)) + math.log1p(math.exp(1.0))) / 2
+    assert abs(float(loss) - expected) < 2e-3, (
+        "half precision loss is wrong: float16 is floating-point and must be computed, not refused"
+    )
+    assert acc.item() == 0.5, (
+        "half precision accuracy is wrong: count pairs with r_c > r_r and divide by B"
+    )

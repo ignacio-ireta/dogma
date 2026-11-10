@@ -1,7 +1,66 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_where_for_clamp.py
+  origin: freedom
+  freedom: uses torch.where to choose the positive part instead of clamp
+- file: accept_sum_over_count.py
+  origin: freedom
+  freedom: divides the sum by the element count instead of calling mean
+reject:
+- file: reject_float16_rejected.py
+  mistake: refuses float16 rewards, which the Contract allows
+  clause: '`reward_chosen`: floating-point tensor, shape `(B,)`, `B >= 1`. Element `i` is the reward of
+    the chosen response in pair `i`.'
+  killed_by: test_half_precision_rewards_are_accepted_and_keep_float16
+  visible: hidden
+- file: reject_pairs_misaligned.py
+  mistake: pairs chosen rewards with rejected rewards in reverse order
+  clause: '`reward_rejected`: floating-point tensor with the same shape and dtype as `reward_chosen`.
+    Element `i` is the reward of the rejected response in pair `i`.'
+  killed_by: test_two_pairs_give_mean_loss_and_half_accuracy
+  visible: public
+- file: reject_ties_counted_correct.py
+  mistake: counts a tied pair as correct
+  clause: 'Returns a tuple `(loss, accuracy)`: - `loss`: 0-dimensional tensor with the dtype of the inputs.
+    It is the mean over pairs of $-\log \sigma(d_i)$. - `accuracy`: 0-dimensional tensor with the dtype
+    of the inputs. It is the fraction of pairs with $r_{c,i} > r_{r,i}$ **strictly**. A tie counts as
+    incorrect.'
+  killed_by: test_tied_rewards_give_log_two_and_count_as_incorrect
+  visible: public
+- file: reject_accuracy_wrong_dtype.py
+  mistake: returns accuracy in float64 whatever the input dtype
+  clause: 'Returns a tuple `(loss, accuracy)`: - `loss`: 0-dimensional tensor with the dtype of the inputs.
+    It is the mean over pairs of $-\log \sigma(d_i)$. - `accuracy`: 0-dimensional tensor with the dtype
+    of the inputs. It is the fraction of pairs with $r_{c,i} > r_{r,i}$ **strictly**. A tie counts as
+    incorrect.'
+  killed_by: test_float32_inputs_keep_dtype_and_match_reference
+  visible: hidden
+- file: reject_rejected_detached.py
+  mistake: detaches rejected rewards so they get no gradient
+  clause: '`loss` must stay connected to autograd: gradients flow into both reward tensors.'
+  killed_by: test_gradient_matches_the_analytic_form_in_float64
+  visible: hidden
+- file: reject_nonfinite_chosen_only.py
+  mistake: finiteness check looks only at chosen rewards
+  clause: 'Raises `ValueError` when: an argument is not a `torch.Tensor`; either argument is not 1-D;
+    the shapes differ; `B == 0`; the dtype is not floating-point; the two dtypes differ; any value is
+    not finite (NaN or inf).'
+  killed_by: test_nan_in_rejected_rewards_raises_value_error_even_with_finite_entries
+  visible: hidden
+- file: reject_dtype_check_dropped.py
+  mistake: accepts chosen and rejected rewards with different dtypes
+  clause: 'Raises `ValueError` when: an argument is not a `torch.Tensor`; either argument is not 1-D;
+    the shapes differ; `B == 0`; the dtype is not floating-point; the two dtypes differ; any value is
+    not finite (NaN or inf).'
+  killed_by: test_mixed_dtypes_raise_value_error
+  visible: hidden
+- file: reject_inplace_clamp_rejected.py
+  mistake: clamps the caller rejected rewards in place
+  clause: Must not mutate inputs.
+  killed_by: test_gradient_matches_the_analytic_form_in_float64
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

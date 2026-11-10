@@ -1,5 +1,5 @@
 id: llm/bradley-terry-reward-models/p01-reward-pair-loss-and-accuracy
-version: 3                      # bump when tests, tolerances or the contract change
+version: 4                      # bump when tests, tolerances or the contract change
 title: Bradley-Terry pair loss and pair accuracy
 language: python                # python | sql
 runtime: py-torch               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
