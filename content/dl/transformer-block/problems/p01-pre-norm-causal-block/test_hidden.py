@@ -319,6 +319,9 @@ def _params_with(override, *, d=4, ff=6):
     ["heads-do-not-divide", "zero-heads", "bool-heads", "missing-key", "extra-key",
      "wrong-projection-shape", "wrong-feed-forward-shape", "two-dimensional-x",
      "zero-tokens", "integer-x", "param-dtype-mismatch", "param-not-a-tensor"],
+    ids=["heads-do-not-divide", "zero-heads", "bool-heads", "missing-key", "extra-key",
+         "wrong-projection-shape", "wrong-feed-forward-shape", "two-dimensional-x",
+         "zero-tokens", "integer-x", "param-dtype-mismatch", "param-not-a-tensor"],
 )  # fmt: skip
 def test_invalid_inputs_raise_value_error(case):
     x = torch.ones(2, 3, 4, dtype=torch.float64)
