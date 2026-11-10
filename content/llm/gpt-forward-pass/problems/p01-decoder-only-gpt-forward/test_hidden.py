@@ -382,7 +382,7 @@ INVALID_CASES = {
 }
 
 
-@pytest.mark.parametrize("case", list(INVALID_CASES))
+@pytest.mark.parametrize("case", list(INVALID_CASES), ids=list(INVALID_CASES))
 def test_invalid_inputs_raise_value_error(case):
     idx, p = _valid()
     call_idx, call_p, heads = INVALID_CASES[case](idx, p)
