@@ -93,7 +93,7 @@ def _assert_conv(out, x, w, b, s, p, atol=ATOL, rtol=RTOL):  # noqa: PLR0917
         (3, 4, 9, 8, 5, 2, 3, 3, 2),
         (2, 2, 3, 7, 2, 3, 1, 1, 2),
     ],
-    ids=["square", "stride2-pad1", "same-padding", "stride2-no-pad", "stride3-rect",
+    ids=["square", "stride-two-pad-one", "same-padding", "stride-two-no-pad", "stride-three-rect",
          "tall-kernel-big-pad"],
 )  # fmt: skip
 def test_matches_torch_conv2d_on_seeded_configurations(  # noqa: PLR0917
@@ -109,7 +109,7 @@ def test_matches_torch_conv2d_on_seeded_configurations(  # noqa: PLR0917
 @pytest.mark.parametrize(
     "h, k, s, p",
     [(6, 3, 2, 0), (8, 3, 2, 0), (5, 2, 2, 0), (7, 3, 3, 1)],
-    ids=["six-wide", "eight-wide", "five-wide", "padded-stride3"],
+    ids=["six-wide", "eight-wide", "five-wide", "padded-stride-three"],
 )
 def test_output_size_rounds_down_when_the_last_window_is_partial(h, k, s, p):
     gen = torch.Generator().manual_seed(h)
@@ -232,7 +232,25 @@ def _invalid_cases():
     }
 
 
-@pytest.mark.parametrize("case", list(_invalid_cases()))
+@pytest.mark.parametrize(
+    "case",
+    list(_invalid_cases()),
+    ids=[
+        "x-is-rank-three",
+        "weight-is-rank-three",
+        "channel-mismatch",
+        "bias-wrong-length",
+        "bias-dtype",
+        "stride-zero",
+        "stride-bool",
+        "padding-negative",
+        "padding-float",
+        "kernel-too-big",
+        "integer-x",
+        "weight-dtype",
+        "zero-channels-in-x",
+    ],
+)
 def test_invalid_inputs_raise_value_error(case):
     x, weight, bias, stride, padding = _invalid_cases()[case]
     try:
