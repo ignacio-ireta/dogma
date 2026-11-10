@@ -122,7 +122,7 @@ cards:
 <≥2 examples as code blocks with input → output>
 
 ## Constraints
-- Allowed: …   Not allowed: … (mirrors meta.yaml banned_imports)
+- Allowed: …   Not allowed: … (mirrors meta.yaml banned_imports; "Allowed" stays inside the runtime, §6.2)
 
 ## Done looks like
 <What passing means, and which edge-case families the hidden tests cover. Name the families, not the values.>
@@ -150,6 +150,12 @@ The default environment supplies `py-stdlib`, `py-numpy`, `py-data` and `sql-duc
 `py-torch`, select the optional group on grading and verification commands:
 `uv run --frozen --group torch dogma content verify <topic-id>`. Other runtime stacks in
 the architecture remain planned; a runtime name in metadata does not install dependencies.
+
+The runtime also sets what a submission may import (ADR-0021). `py-stdlib`: the standard library
+only. `py-numpy`: plus NumPy. `py-data`: plus SciPy, pandas, scikit-learn and statsmodels.
+`py-torch`: plus PyTorch. The static check rejects any other import before the code runs (rule
+`runtime-import`); `banned_imports` narrows a runtime further, for a library that would do the
+problem's job. Tests are not bound by the runtime: §6.4 lists what they may import.
 
 ### 6.3 Starter and solution
 

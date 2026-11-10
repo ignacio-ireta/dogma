@@ -82,9 +82,12 @@ def describe_finding(finding: StaticFinding) -> str:
     """A static finding in plain words, e.g. 'line 3 uses numpy.linalg, which this problem bans'."""
     if finding.rule == "banned-import":
         match = _BACKTICKED.search(finding.message)
-        name = match.group(1) if match else finding.message
+        if match is None:  # the platform-wide ban (test-data helpers) explains itself
+            return finding.message
         where = f"line {finding.line} " if finding.line is not None else ""
-        return f"{where}uses {name}, which this problem bans"
+        return f"{where}uses {match.group(1)}, which this problem bans"
+    if finding.rule == "runtime-import":
+        return finding.message.replace("`", "")
     if finding.rule == "missing-entry":
         return f"the file must {finding.message}"
     if finding.rule == "syntax":

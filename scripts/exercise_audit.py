@@ -84,6 +84,7 @@ class Problem:
     entry: str
     timeout_s: int
     banned: tuple[str, ...]
+    runtime: str | None = None
 
     @property
     def suffix(self) -> str:
@@ -127,6 +128,7 @@ def discover(repo: Path, only: Sequence[str]) -> list[Problem]:
                 entry=meta.entry,
                 timeout_s=meta.timeout_s if meta.timeout_s is not None else 30,
                 banned=tuple(meta.banned_imports),
+                runtime=meta.runtime,
             )
         )
     return found
@@ -521,6 +523,7 @@ def _passes_static(problem: Problem, source: str) -> bool:
             language="sql" if problem.language == "sql" else "python",
             entry=problem.entry,
             banned_imports=problem.banned,
+            runtime=problem.runtime,
         )
     return not findings
 
@@ -1007,9 +1010,7 @@ def _with_extra_tests(problem: Problem, extra: str, root: Path) -> Problem:
     shutil.copytree(problem.path, copied, ignore=shutil.ignore_patterns("__pycache__"))
     hidden = copied / "test_hidden.py"
     hidden.write_text(hidden.read_text(encoding="utf-8") + "\n\n" + extra, encoding="utf-8")
-    return Problem(
-        problem.id, copied, problem.language, problem.entry, problem.timeout_s, problem.banned
-    )
+    return replace(problem, path=copied)
 
 
 def cmd_witness(problems: Sequence[Problem], out: Path, problem_id: str, file: Path) -> int:

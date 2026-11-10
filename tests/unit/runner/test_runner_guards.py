@@ -64,6 +64,13 @@ def test_rejected_report_carries_the_problem_identity(tmp_path, settings, no_spa
     assert report.message
 
 
+def test_an_import_outside_the_runtime_is_rejected_before_running(tmp_path, settings, no_spawn):
+    sub = _submission(tmp_path, "import sklearn\ndef add(a, b):\n    return a + b\n")
+    report = run(PY_ADD, sub, include_hidden=True, settings=settings)
+    assert report.status is RunStatus.REJECTED
+    assert [finding.rule for finding in report.static] == ["runtime-import"]
+
+
 def test_empty_sql_is_rejected_before_running(tmp_path, settings, no_spawn):
     sub = _submission(tmp_path, "\n", name="submission.sql")
     report = run(SQL_ORDERS, sub, include_hidden=True, settings=settings)

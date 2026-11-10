@@ -128,6 +128,7 @@ def run(
         language=meta.language,
         entry=meta.entry,
         banned_imports=meta.banned_imports,
+        runtime=meta.runtime,
     )
     if findings:
         return _report(

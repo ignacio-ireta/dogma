@@ -16,6 +16,7 @@ def _check(
     entry: str = "add",
     banned: tuple[str, ...] = ("numpy.linalg",),
     name: str = "submission.py",
+    runtime: str | None = None,
 ):
     path = tmp_path / name
     if isinstance(source, bytes):
@@ -27,6 +28,7 @@ def _check(
         language=language,
         entry=entry,
         banned_imports=banned,  # type: ignore[arg-type]
+        runtime=runtime,
     )
 
 
@@ -242,3 +244,95 @@ def test_platform_ban_does_not_apply_to_sql(tmp_path):
         tmp_path, "SELECT 1;\n", language="sql", entry="query", name="submission.sql", banned=()
     )
     assert findings == []
+
+
+# --- runtime import rule (ADR-0021) ---------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("runtime", "source"),
+    [
+        ("py-stdlib", "import math, collections\nfrom typing import Any\nimport heapq as hq\n"),
+        ("py-numpy", "import numpy as np\nfrom numpy.typing import NDArray\n"),
+        (
+            "py-data",
+            "import pandas as pd\nfrom sklearn.linear_model import Ridge\nimport scipy.stats\n",
+        ),
+        ("py-torch", "import torch\nimport numpy as np\nfrom torch import nn\n"),
+    ],
+    ids=["stdlib", "numpy", "data", "torch"],
+)
+def test_imports_inside_the_runtime_are_accepted(tmp_path, runtime, source):
+    body = "from __future__ import annotations\n" + source + "def add(a, b):\n    return a + b\n"
+    assert _check(tmp_path, body, banned=(), runtime=runtime) == []
+
+
+@pytest.mark.parametrize(
+    ("runtime", "source", "module"),
+    [
+        ("py-stdlib", "import numpy as np\n", "numpy"),
+        ("py-numpy", "import scipy.special\n", "scipy"),
+        ("py-numpy", "from sklearn.preprocessing import MaxAbsScaler\n", "sklearn"),
+        ("py-numpy", "import pandas\n", "pandas"),
+        ("py-data", "import torch\n", "torch"),
+        ("py-numpy", "import dogma.content\n", "dogma"),
+    ],
+    ids=[
+        "numpy-in-stdlib",
+        "scipy-in-numpy",
+        "sklearn-in-numpy",
+        "pandas-in-numpy",
+        "torch-in-data",
+        "app",
+    ],
+)
+def test_imports_outside_the_runtime_are_rejected_and_name_it(tmp_path, runtime, source, module):
+    findings = _check(
+        tmp_path, source + "def add(a, b):\n    return a + b\n", banned=(), runtime=runtime
+    )
+    assert _rules(findings) == ["runtime-import"]
+    assert f"`{module}`" in findings[0].message
+    assert runtime in findings[0].message
+    assert findings[0].line == 1
+
+
+def test_no_runtime_or_an_unknown_runtime_skips_the_rule(tmp_path):
+    source = "import sklearn\ndef add(a, b):\n    return a + b\n"
+    assert _check(tmp_path, source, banned=()) == []
+    assert _check(tmp_path, source, banned=(), runtime="py-jax") == []
+
+
+def test_a_module_banned_by_the_problem_is_reported_once(tmp_path):
+    source = "import torch\ndef add(a, b):\n    return a + b\n"
+    findings = _check(tmp_path, source, banned=("torch",), runtime="py-numpy")
+    assert _rules(findings) == ["banned-import"]
+
+
+def test_a_platform_banned_module_gets_only_the_platform_message(tmp_path):
+    source = "import dogma_data\ndef add(a, b):\n    return a + b\n"
+    findings = _check(tmp_path, source, banned=(), runtime="py-stdlib")
+    assert _rules(findings) == ["banned-import"]
+    assert "test-data helpers" in findings[0].message
+
+
+def test_each_outside_import_is_listed_with_its_line(tmp_path):
+    source = (
+        "import os\nimport scipy\nimport pandas as pd, numpy\ndef add(a, b):\n    return a + b\n"
+    )
+    findings = _check(tmp_path, source, banned=(), runtime="py-numpy")
+    assert [(f.rule, f.line) for f in findings] == [("runtime-import", 2), ("runtime-import", 3)]
+    assert "`pandas`" in findings[1].message
+
+
+def test_every_runtime_in_use_has_a_rule():
+    import yaml  # noqa: PLC0415
+
+    from dogma.grading.static import RUNTIME_IMPORTS  # noqa: PLC0415
+
+    repo = Path(__file__).resolve().parents[3]
+    used = {
+        yaml.safe_load(meta.read_text(encoding="utf-8"))["runtime"]
+        for meta in repo.glob("content/*/*/problems/*/meta.yaml")
+    }
+    python_runtimes = {name for name in used if name.startswith("py-")}
+    assert python_runtimes <= set(RUNTIME_IMPORTS), python_runtimes - set(RUNTIME_IMPORTS)

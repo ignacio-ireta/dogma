@@ -115,3 +115,29 @@ def test_findings_are_plain_words_in_report_order() -> None:
 def test_describe_finding_falls_back_to_the_message_for_unknown_rules() -> None:
     finding = StaticFinding(rule="other", message="something plain")
     assert describe_finding(finding) == "something plain"
+
+
+def test_platform_ban_keeps_its_own_explanation():
+    finding = StaticFinding(
+        rule="banned-import",
+        message=(
+            "submissions may not import test-data helpers (dogma_data) or download datasets "
+            "(line 2)"
+        ),
+        line=2,
+    )
+    assert describe_finding(finding) == finding.message
+
+
+def test_runtime_import_is_described_in_plain_words():
+    finding = StaticFinding(
+        rule="runtime-import",
+        message=(
+            "`sklearn` is outside this problem's runtime "
+            "(py-numpy: the Python standard library and NumPy) (line 1)"
+        ),
+        line=1,
+    )
+    words = describe_finding(finding)
+    assert words.startswith("sklearn is outside this problem's runtime (py-numpy")
+    assert "`" not in words

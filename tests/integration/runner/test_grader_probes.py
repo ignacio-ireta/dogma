@@ -115,8 +115,17 @@ def test_known_limit_a_deliberate_ban_bypass_is_not_caught(settings, submit, lab
     assert report.status is RunStatus.PASSED, label
 
 
+def test_importing_pytest_to_disable_its_failure_helper_is_rejected(settings, submit):
+    # pytest is outside every runtime (ADR-0021), so the plain import is refused before running.
+    source = "import pytest\n\npytest.fail = lambda *a, **k: None\n\n" + GOOD
+    report = run(PY_ADD, submit(source), include_hidden=True, settings=settings)
+    assert report.status is RunStatus.REJECTED
+    assert [finding.rule for finding in report.static] == ["runtime-import"]
+
+
 def test_known_limit_a_submission_can_disable_the_tests_failure_helper(settings, submit):
     # Tests run in the submission's process. Replacing pytest.fail neutralises any test that signals
     # failure through it. This is deliberate cheating, not something a learner does by accident.
-    source = "import pytest\n\npytest.fail = lambda *a, **k: None\n\n" + GOOD
+    # The static rules see imports only, so reaching pytest through sys.modules still works.
+    source = "import sys\n\nsys.modules['pytest'].fail = lambda *a, **k: None\n\n" + GOOD
     assert run(PY_ADD, submit(source), include_hidden=True, settings=settings).passed

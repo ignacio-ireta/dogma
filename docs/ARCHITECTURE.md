@@ -206,8 +206,9 @@ adversary.
 
 | Runtime | Stack | Used by | Status |
 |---|---|---|---|
-| `py-numpy` | numpy, scipy | most cml/dl/llm/rl/inf/math problems | Phase 0 |
-| `py-data` | + pandas, scikit-learn, statsmodels | oracles, pandas problems | Phase 0 |
+| `py-stdlib` | the standard library only | algo and arithmetic problems | Phase 0 |
+| `py-numpy` | + numpy | most cml/dl/llm/rl/inf/math problems | Phase 0 |
+| `py-data` | + scipy, pandas, scikit-learn, statsmodels | oracles, pandas problems | Phase 0 |
 | `py-torch` | + torch (MPS/CPU) | framework-level dl/llm | Optional `torch` group; I-19 acceptance pending |
 | `py-jax` | + jax (CPU) | `dl/jax-*`, `dl/jit-and-vmap` | Phase 4 |
 | `py-tinygrad` | + tinygrad | `dl/tensors-in-pytorch-and-tinygrad`, mlc track | Phase 4 |
@@ -216,6 +217,8 @@ adversary.
 | `triton-shim` | small numpy implementation of `tl.program_id/arange/load/store` | gpu Triton topics | **spike** (Triton has no macOS wheels) |
 | `py-rl` | + gymnasium | rl track | Phase 4 |
 
+  The stack is also what a submission may import (ADR-0021): the static check rejects any import
+  outside the problem's runtime (rule `runtime-import`), and `banned_imports` narrows it further.
   All runtimes share one uv-managed environment with optional dependency groups, so the harness
   imports only what a problem needs. Currently only `torch` is an optional runtime group. Use
   `uv run --frozen --group torch dogma …` (including `serve` for browser grading); the runner
