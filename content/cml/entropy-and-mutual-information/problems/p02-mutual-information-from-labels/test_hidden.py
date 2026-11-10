@@ -247,3 +247,11 @@ def test_shorter_first_sequence_raises_value_error_instead_of_truncating():
     _expect_value_error(
         [0, 1], [0, 1, 1], "a shorter first sequence must raise ValueError, not be truncated"
     )
+
+
+def test_zero_dimensional_array_raises_value_error():
+    _expect_value_error(
+        np.array(1),
+        [0, 1],
+        "a zero-dimensional array is not one-dimensional: it must raise ValueError",
+    )

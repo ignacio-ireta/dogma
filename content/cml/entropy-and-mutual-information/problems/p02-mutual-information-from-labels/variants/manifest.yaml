@@ -36,6 +36,13 @@ reject:
   clause: Must not mutate its inputs.
   killed_by: test_inputs_are_not_mutated
   visible: hidden
+- file: reject_no_ndim_guard.py
+  mistake: an array that is not one-dimensional is not checked before its elements are read
+  clause: 'Raises: `ValueError` when either sequence is empty, when a sequence is not one-dimensional,
+    or when the two lengths differ.'
+  killed_by: test_zero_dimensional_array_raises_value_error
+  visible: hidden
 uncovered: []
 sweeps:
 - reject
+- mutants
