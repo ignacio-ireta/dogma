@@ -49,7 +49,7 @@ customer_id  completed_orders  total_amount
 2            3                 NULL
 ```
 
-The event_log dataset can be mapped to orders, with its dirty category values used as statuses
+A generated event log can be mapped to orders, with its dirty category values used as statuses
 and its lognormal amounts retained. Only the exact completed label qualifies.
 
 ## Constraints
@@ -64,5 +64,5 @@ All public tests pass, then **Submit** runs the hidden tests. They build their o
 tables. The hidden tests cover these families: a group of exactly three and of two, non-completed
 orders (and other capitalisations of `completed`) that must not count toward the threshold, NULL amounts that count as orders but are
 skipped by the sum, a group whose total is NULL, totals that tie, one customer with many orders,
-no qualifying customers, Zipf-skewed customers, lognormal amounts, and `event_log` rows checked
+no qualifying customers, Zipf-skewed customers, lognormal amounts, and generated event-log rows checked
 against an independent pandas computation.

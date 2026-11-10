@@ -65,7 +65,7 @@ podcast   2         1                   0.5              0.0             12.5
 referral  3         1                   0.3333           80.0            0.0
 ```
 
-The event_log dataset supplies dirty channel labels and lognormal amounts. Exact stored labels
+A generated event log supplies dirty channel labels and lognormal amounts. Exact stored labels
 form separate groups, and each group's revenue can have a long right tail.
 
 ## Constraints
@@ -81,5 +81,5 @@ tables, so a query tuned to the fixture fails. The hidden tests cover these fami
 with no conversions, a channel that has sessions on one device only, revenue that is NULL on every
 session of a device, a converted session with no revenue, a rate that must be a fraction (not a
 whole number or a percentage) rounded to 4 places, revenue counted on non-converted sessions, an
-empty table, the row order, dirty channel keys kept as stored, lognormal revenue, and `event_log`
+empty table, the row order, dirty channel keys kept as stored, lognormal revenue, and generated event-log
 rows checked against an independent pandas computation.

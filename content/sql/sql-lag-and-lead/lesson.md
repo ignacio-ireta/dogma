@@ -63,9 +63,9 @@ sequence unique. In a sessionization problem the tiebreaker decides which tied r
 - **Integer sums.** A `SUM` of integer flags can return a wider type than `BIGINT` in DuckDB. Cast
   it when the contract names a type.
 
-**Milliseconds.** On 1,200 views from 40 visitors, about one gap in six sits at 30 minutes give or
-take up to a second. A gap counted in whole seconds, with `DATE_DIFF('second', ...)`, gets 60 views
-(5%) wrong, because the truncated count drops the fraction. It finds 233 session starts where the
+**Milliseconds.** On 1,200 views from 40 visitors, about one gap in seven (14%) sits at 30 minutes give or
+take up to a second. A gap measured with `DATE_DIFF('second', ...)` counts whole-second boundaries
+crossed, not the exact gap, so it gets 60 views (5%) wrong: the fraction decides the answer. It finds 233 session starts where the
 answer has 293. Measure the gap as an exact interval: `viewed_at - previous_at > INTERVAL 30
 MINUTE`.
 

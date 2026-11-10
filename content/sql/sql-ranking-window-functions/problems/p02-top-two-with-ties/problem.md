@@ -50,7 +50,7 @@ lenses    44          60.00    2
 For `mounts`, every revenue is NULL. The three products are peers at dense rank 1, so all three come back.
 For `video`, the two NULL products are dense rank 3 (after 80.00 and 10.00), so they are not returned.
 
-The event_log dataset can supply product ids, dirty category labels, and lognormal amounts. Rank
+A generated event log can supply product ids, dirty category labels, and lognormal amounts. Rank
 each exact stored category independently before keeping its first two dense ranks.
 
 ## Constraints
@@ -66,5 +66,5 @@ All public tests pass, then **Submit** runs the hidden tests. They build their o
 families they cover: a tie at the cut that brings in more than two rows; a tie that straddles the second
 rank; NULL revenues that rank below every number and are kept only when nothing else fills the top two;
 an all-NULL category; a single-product category; large, non-sequential ids; a result with no row; a table
-inserted in shuffled order; dirty category keys kept as stored, lognormal amounts, and `event_log` rows
+inserted in shuffled order; dirty category keys kept as stored, lognormal amounts, and generated event-log rows
 checked against an independent pandas computation with `groupby().rank(method="dense")`.

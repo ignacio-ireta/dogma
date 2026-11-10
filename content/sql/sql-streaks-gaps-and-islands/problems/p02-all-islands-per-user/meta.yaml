@@ -10,4 +10,4 @@ core: false                      # p01 is the core problem: exactly one per topi
 tolerance: {atol: 0.0, rtol: 0.0}  # results are compared exactly; no tolerance applies
 banned_imports: []               # SQL is graded on results only
 timeout_s: 30
-status: verified
+status: reviewed

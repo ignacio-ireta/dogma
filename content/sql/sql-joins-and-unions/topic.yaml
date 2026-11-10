@@ -15,4 +15,4 @@ interview_angle: >-
 sources:
   - "book: Beaulieu, Learning SQL (3rd ed.), chapters on querying multiple tables and on working with sets"
   - "book: Molinaro, SQL Cookbook, chapter on working with multiple tables"
-status: verified
+status: reviewed
