@@ -2,6 +2,27 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_unit_length_direction.py
+  origin: freedom
+  freedom: projects onto a unit-length direction, so the last digits differ
+reject:
+- file: reject_no_zero_guard.py
+  mistake: no check for an all-zero b
+  clause: Raises `ValueError` when `a` or `b` is not 1-D, when their lengths differ, when they are empty,
+    or when every entry of `b` is zero. A nonzero `b` with tiny or huge entries is valid input.
+  killed_by: test_zero_vector_b_raises_value_error
+  visible: public
+- file: reject_squared_length_overflow.py
+  mistake: forms b dot b directly, which overflows or underflows
+  clause: Raises `ValueError` when `a` or `b` is not 1-D, when their lengths differ, when they are empty,
+    or when every entry of `b` is zero. A nonzero `b` with tiny or huge entries is valid input.
+  killed_by: test_huge_nonzero_b_does_not_overflow_in_its_squared_length
+  visible: hidden
+- file: reject_no_dimension_check.py
+  mistake: no check that the inputs are 1-D
+  clause: Raises `ValueError` when `a` or `b` is not 1-D, when their lengths differ, when they are empty,
+    or when every entry of `b` is zero. A nonzero `b` with tiny or huge entries is valid input.
+  killed_by: test_two_dimensional_input_raises_value_error
+  visible: hidden
 uncovered: []
 sweeps: []
