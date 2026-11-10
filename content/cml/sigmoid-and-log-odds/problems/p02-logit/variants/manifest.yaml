@@ -1,7 +1,39 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_negative_zero.py
+  origin: freedom
+  freedom: returns negative zero at one half by flipping the sign at p less than or equal to one half
+reject:
+- file: reject_float32_cast.py
+  mistake: rounds the probability to float32 before the formula
+  clause: '`p`: array-like of real numbers, any shape. Every entry must be finite and strictly between
+    0 and 1.'
+  killed_by: test_random_probabilities_match_an_independent_reference
+  visible: hidden
+- file: reject_no_nan_check.py
+  mistake: does not reject NaN entries, so NaN passes silently
+  clause: 'Raises: `ValueError` when any entry is NaN, infinite, $\le 0$ or $\ge 1$, including $0$ and
+    $1$ themselves.'
+  killed_by: test_out_of_range_probabilities_raise_value_error
+  visible: hidden
+- file: reject_sign_threshold.py
+  mistake: flips the sign at a quarter instead of one half
+  clause: 'Accuracy: $\operatorname{logit}(\tfrac12) = 0$ exactly. The result is odd about one half, $\operatorname{logit}(1
+    - p) = -\operatorname{logit}(p)$.'
+  killed_by: test_random_probabilities_match_an_independent_reference
+  visible: hidden
+- file: reject_mutates_input_half.py
+  mistake: writes the folded values back into the caller's array
+  clause: Must not mutate its input. Must not emit a NumPy warning for any valid input.
+  killed_by: test_input_array_is_not_mutated
+  visible: hidden
+- file: reject_atleast_1d_scalar.py
+  mistake: returns a scalar probability as shape (1,)
+  clause: 'Returns: `float64` NumPy array with the same shape as `p` (a 0-d array for a scalar).'
+  killed_by: test_scalar_probability_gives_a_zero_dimensional_array
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

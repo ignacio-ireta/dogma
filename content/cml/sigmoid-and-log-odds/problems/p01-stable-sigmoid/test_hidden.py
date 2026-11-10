@@ -165,3 +165,16 @@ def test_input_array_is_not_mutated():
     before = z.copy()
     _evaluate(z)
     np.testing.assert_array_equal(z, before, err_msg="the input array was modified in place")
+
+
+def test_input_with_huge_logits_is_not_mutated():
+    z = np.array([2e5, -3.0, 0.5])
+    before = z.copy()
+    _evaluate(z)
+    # Every entry is finite, so the caller's array must come back with the same values, even
+    # where |z| is far beyond the saturation range.
+    np.testing.assert_array_equal(
+        z,
+        before,
+        err_msg="the input array was modified in place for a large finite logit",
+    )

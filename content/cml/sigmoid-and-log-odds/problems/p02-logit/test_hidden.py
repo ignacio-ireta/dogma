@@ -172,3 +172,14 @@ def test_input_array_is_not_mutated():
     before = p.copy()
     _call(p)
     np.testing.assert_array_equal(p, before, err_msg="the input array was modified in place")
+
+
+def test_scalar_probability_gives_a_zero_dimensional_array():
+    got = _call(0.25)
+    assert got.ndim == 0, "shape mismatch: a scalar input must give a 0-d array, not a 1-d one"
+    np.testing.assert_allclose(
+        got,
+        -np.log(3.0),
+        rtol=1e-12,
+        err_msg="wrong value for a scalar probability",
+    )

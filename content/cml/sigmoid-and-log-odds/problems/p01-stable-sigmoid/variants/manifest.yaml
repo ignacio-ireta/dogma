@@ -1,7 +1,44 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_log_space.py
+  origin: freedom
+  freedom: computes sigma through log space with logaddexp instead of the two-branch exp form
+reject:
+- file: reject_clip_infinite_limits.py
+  mistake: clamps the logit to plus or minus 700, so sigma of minus infinity is not exactly 0
+  clause: '`z`: array-like of real numbers, any shape. A scalar, an empty array and `+inf` / `-inf` are
+    valid. The limits are $\sigma(+\infty) = 1$ and $\sigma(-\infty) = 0$.'
+  killed_by: test_extreme_logits_saturate_without_overflow_warnings
+  visible: public
+- file: reject_float32_output.py
+  mistake: returns float32 instead of float64
+  clause: 'Returns: `float64` NumPy array with the same shape as `z` (a 0-d array for a scalar). Every
+    value lies in $[0, 1]$.'
+  killed_by: test_plain_vector_matches_logistic_values
+  visible: public
+- file: reject_tail_one_minus.py
+  mistake: uses 1 minus 1 over 1 plus e on the negative branch, which rounds the tail away
+  clause: 'Accuracy: $\sigma(0) = 0.5$ exactly. For $z < 0$ the result keeps its relative precision, so
+    a tiny value such as $\sigma(-36)$ is not rounded to zero or to a value that is off by a large factor.'
+  killed_by: test_negative_tail_keeps_relative_precision
+  visible: hidden
+- file: reject_nan_all_check.py
+  mistake: raises for NaN only when every entry is NaN
+  clause: 'Raises: `ValueError` when `z` contains NaN.'
+  killed_by: test_nan_input_raises_value_error
+  visible: hidden
+- file: reject_naive_overflow.py
+  mistake: uses the naive exp of minus z, which overflows with a warning for large negative z
+  clause: Must not emit a NumPy overflow, invalid-value or divide warning for any non-NaN input.
+  killed_by: test_extreme_logits_saturate_without_overflow_warnings
+  visible: public
+- file: reject_mutates_input_extreme.py
+  mistake: clamps huge logits in place in the caller's array
+  clause: Must not mutate its input.
+  killed_by: test_input_with_huge_logits_is_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
