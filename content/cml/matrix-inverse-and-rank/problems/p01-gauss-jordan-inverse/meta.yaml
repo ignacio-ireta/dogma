@@ -1,5 +1,5 @@
 id: cml/matrix-inverse-and-rank/p01-gauss-jordan-inverse
-version: 4
+version: 5
 title: Gauss-Jordan inverse
 language: python
 runtime: py-numpy

@@ -302,3 +302,33 @@ def test_partial_pivoting_chooses_the_largest_magnitude_not_the_largest_value():
         atol=1e-9,
         err_msg="inaccurate inverse: choose the largest-magnitude entry in each column as pivot",
     )
+
+
+def test_tuple_of_tuples_is_inverted_like_a_list():
+    # The Contract says A is any 2-D array-like. A tuple of tuples is one, so it must be accepted.
+    A = ((4.0, 7.0), (2.0, 6.0))
+    try:
+        inv = gauss_jordan_inverse(A)
+    except ValueError as exc:
+        raise AssertionError(
+            "a tuple of tuples is a valid 2-D array-like: it must be inverted, not refused"
+        ) from exc
+    np.testing.assert_allclose(
+        inv,
+        np.linalg.inv(np.array(A, dtype=np.float64)),
+        rtol=1e-9,
+        atol=1e-9,
+        err_msg="inverse of a tuple of tuples differs from the reference: check the row operations",
+    )
+
+
+def test_tiny_entries_of_a_float64_input_are_left_unchanged():
+    # A float64 array passed in must come back unchanged, including an entry below 1e-300.
+    A = np.array([[1.0, 1e-310], [0.0, 1.0]])
+    A_copy = A.copy()
+    gauss_jordan_inverse(A)
+    np.testing.assert_array_equal(
+        A,
+        A_copy,
+        err_msg="input matrix was modified in place: a tiny entry was changed",
+    )

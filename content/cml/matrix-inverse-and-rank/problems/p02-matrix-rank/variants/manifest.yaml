@@ -2,6 +2,58 @@ problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_dot_norm.py
+  origin: freedom
+  freedom: computes the Frobenius norm with a dot product over the flattened array, another rounding path
+reject:
+- file: reject_single_row_shortcut.py
+  mistake: one-row matrix compared with >= against tol
+  clause: '`A`: 2-D array-like of real numbers, shape `(m, n)` with `m >= 1` and `n >= 1`. Integers allowed.'
+  killed_by: test_rank_of_transpose_equals_rank
+  visible: hidden
+- file: reject_default_tol_uses_min_size.py
+  mistake: default tolerance scales with min(m, n) instead of max(m, n)
+  clause: '`tol`: optional non-negative float. If omitted, use `tol = 1000 * max(m, n) * eps * ||A||_F`,
+    where `eps` is float64 machine epsilon and `||A||_F` is the Frobenius norm, the square root of the
+    sum of squared entries.'
+  killed_by: test_tall_nearly_collinear_pair_is_rank_one_under_the_default_tolerance
+  visible: hidden
+- file: reject_strict_skip_at_tol.py
+  mistake: pivot exactly equal to tol is kept instead of skipped
+  clause: 'Algorithm: for each column, left to right, find the largest-magnitude entry among the rows
+    that are not yet pivot rows. If its magnitude is `<= tol`, skip the column. Otherwise swap that row
+    into the next pivot position and eliminate the entries below it. The rank is the number of pivot rows.'
+  killed_by: test_zero_matrix_has_rank_zero_and_wide_shape_is_handled
+  visible: public
+- file: reject_full_column_pivot_search.py
+  mistake: pivot search includes rows already used as pivots
+  clause: 'Algorithm: for each column, left to right, find the largest-magnitude entry among the rows
+    that are not yet pivot rows. If its magnitude is `<= tol`, skip the column. Otherwise swap that row
+    into the next pivot position and eliminate the entries below it. The rank is the number of pivot rows.'
+  killed_by: test_proportional_rows_have_rank_one
+  visible: public
+- file: reject_rejects_zero_tol_explicitly.py
+  mistake: raises for tol equal to zero, which the Contract allows
+  clause: Raises `ValueError` when `A` is not 2-D, when it is empty, when it contains NaN or infinity,
+    or when `tol` is negative.
+  killed_by: test_zero_matrix_has_rank_zero_and_wide_shape_is_handled
+  visible: public
+- file: reject_no_finite_check.py
+  mistake: no check for NaN or infinite entries
+  clause: Raises `ValueError` when `A` is not 2-D, when it is empty, when it contains NaN or infinity,
+    or when `tol` is negative.
+  killed_by: test_nan_entry_raises_value_error
+  visible: hidden
+- file: reject_returns_float_rank.py
+  mistake: returns the rank as a float
+  clause: 'Returns: the rank as an `int`, with `0 <= rank <= min(m, n)`.'
+  killed_by: test_rank_is_returned_as_an_integer_not_a_float
+  visible: hidden
+- file: reject_asarray_mutates_input.py
+  mistake: elimination runs on the caller's float64 array
+  clause: Must not mutate its input.
+  killed_by: test_input_matrix_is_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

@@ -1,7 +1,45 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_row_loop.py
+  origin: freedom
+  freedom: eliminates with an explicit loop over the other rows, not a vectorised outer product
+reject:
+- file: reject_returns_float32.py
+  mistake: returns float32 values instead of float64
+  clause: 'Returns: NumPy array of shape `(n, n)` and dtype `float64`, equal to `A⁻¹`.'
+  killed_by: test_matches_numpy_inverse_on_random_well_conditioned_matrices
+  visible: hidden
+- file: reject_pivot_by_signed_value.py
+  mistake: pivots on the largest signed value instead of the largest magnitude
+  clause: 'Partial pivoting: in each column, before eliminating, swap in the row at or below the current
+    pivot row whose entry has the largest absolute value.'
+  killed_by: test_partial_pivoting_chooses_the_largest_magnitude_not_the_largest_value
+  visible: hidden
+- file: reject_strict_singular_threshold.py
+  mistake: pivot exactly at the singularity threshold is accepted
+  clause: 'Singularity: at any step, if the pivot satisfies `|p| <= 1e-12 * max|A|`, where `max|A|` is
+    the largest absolute entry of the original `A`, raise `ValueError("matrix is singular or numerically
+    singular")`. The zero matrix is singular.'
+  killed_by: test_zero_matrix_raises_value_error
+  visible: hidden
+- file: reject_no_finite_check.py
+  mistake: no check for NaN or infinite entries
+  clause: Raises `ValueError` when `A` is not 2-D, when it is not square, when it is empty, when it contains
+    NaN or infinity, or when it is singular as defined above.
+  killed_by: test_nan_entry_raises_value_error
+  visible: hidden
+- file: reject_rejects_tuple_input.py
+  mistake: refuses tuple input, which is a valid array-like
+  clause: '`A`: 2-D array-like of real numbers, shape `(n, n)` with `n >= 1`. Integers allowed.'
+  killed_by: test_tuple_of_tuples_is_inverted_like_a_list
+  visible: hidden
+- file: reject_zeroes_tiny_input_entries.py
+  mistake: zeroes tiny entries of the caller's float64 input array
+  clause: Must not mutate its input.
+  killed_by: test_tiny_entries_of_a_float64_input_are_left_unchanged
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
