@@ -8,6 +8,9 @@ compared with its own customer's average, not with one average for everyone.
 
 - Input: a table `orders` with `order_id` (BIGINT), `customer_id` (BIGINT, may be NULL),
   `order_date` (DATE), `status` (VARCHAR) and `amount` (DOUBLE, may be NULL).
+- Amounts are multiples of 0.25, which DOUBLE stores exactly, so sums and averages of equal
+  amounts are exact and "strictly greater" has no rounding ambiguity. With arbitrary cents it
+  does; the lesson shows why.
 - A **candidate** is an order whose `status` is exactly `'completed'`, whose `amount` is not NULL,
   and whose `customer_id` is not NULL. Capitalisation matters.
 - `customer_average` of a candidate: the average `amount` over all completed orders of the same

@@ -9,6 +9,9 @@ customer's region, their total and the average. Order the rows by total, largest
 - Input: a table `customers` with `customer_id` (BIGINT) and `region` (VARCHAR), one row per
   customer. A table `orders` with `order_id` (BIGINT), `customer_id` (BIGINT, may be NULL),
   `order_date` (DATE), `status` (VARCHAR) and `amount` (DOUBLE, may be NULL).
+- Amounts are multiples of 0.25, which DOUBLE stores exactly, so sums and averages of equal
+  amounts are exact and "strictly greater" has no rounding ambiguity. With arbitrary cents it
+  does; the lesson shows why.
 - A **buyer** is a customer with at least one order whose `status` is exactly `'completed'`.
   Capitalisation matters.
 - `total_spend` of a buyer: the sum of `amount` over the buyer's completed orders. NULL amounts are

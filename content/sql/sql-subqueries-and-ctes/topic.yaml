@@ -14,4 +14,4 @@ interview_angle: >-
   population, and that a NULL does not silently empty a NOT IN.
 sources:
   - "book: Beaulieu, Learning SQL (3rd ed.), chapter on subqueries"
-status: reviewed
+status: verified

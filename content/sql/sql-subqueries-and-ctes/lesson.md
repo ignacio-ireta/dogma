@@ -86,6 +86,12 @@ nothing. That is three-valued logic (TRUE, FALSE, NULL) at work.
   Join first, then aggregate, so the population of the average is the population of the question.
 - **Window functions in `WHERE`.** Not allowed. Compute them in a CTE and filter in the outer
   query. A `SELECT` alias in `WHERE` is not standard SQL, though DuckDB accepts it.
+- **Cents in DOUBLE and a strict `>`.** Three orders of 12.34 average to 12.339999999999998 in
+  DOUBLE, so `amount > AVG(amount)` calls all three above their own average. Over the 8,094
+  distinct cent amounts in the vendored orders file, each repeated 2 to 11 times, DuckDB's average
+  lands below the value in 4.4% of cases. `AVG` of a DECIMAL column still returns DOUBLE; the exact
+  test is `amount * COUNT(*) > SUM(amount)` on DECIMAL or integer cents. The problems here use
+  amounts in multiples of 0.25, which DOUBLE holds exactly.
 
 **Preview.** `AVG(amount) OVER (PARTITION BY customer_id)` keeps every row and adds the group's
 value beside it. You still filter on that value in a later query.
