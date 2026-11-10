@@ -1,0 +1,13 @@
+id: fixtures/py-variants/p01-add
+version: 1
+title: Add two numbers
+language: python
+runtime: py-stdlib
+entry: add
+difficulty: easy
+minutes: 5
+core: true
+tolerance: {atol: 0.0, rtol: 0.0}
+banned_imports: []
+timeout_s: 30
+status: draft
