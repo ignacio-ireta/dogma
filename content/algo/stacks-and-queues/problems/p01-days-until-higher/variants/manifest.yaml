@@ -2,6 +2,49 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_empty_list_returns_one_entry.py
+  mistake: empty list returns a one entry list
+  clause: '`values`: a `list` of `float`, possibly empty. Every entry is a finite number. Negative values
+    are allowed.'
+  killed_by: test_examples_from_problem_md
+  visible: public
+- file: reject_leftover_waits_to_end.py
+  mistake: readings never followed by a higher one get the distance to the end instead of 0
+  clause: 'Returns: a `list` of `int` with the same length as `values`. For position `i`, the entry is
+    `j - i`, where `j` is the smallest index greater than `i` with `values[j] > values[i]`. It is `0`
+    when no such `j` exists.'
+  killed_by: test_examples_from_problem_md
+  visible: public
+- file: reject_equal_ends_wait.py
+  mistake: an equal later reading ends the wait because the pop test uses less or equal
+  clause: A later reading that is equal to `values[i]` is not larger, so it does not end the wait.
+  killed_by: test_examples_from_problem_md
+  visible: public
+- file: reject_zero_reading_raises.py
+  mistake: a zero reading raises ValueError
+  clause: 'Raises: nothing for a list of finite numbers.'
+  killed_by: test_small_random_lists_match_brute_force
+  visible: hidden
+- file: reject_mutates_negative_last.py
+  mistake: a negative last reading is overwritten with zero in the input
+  clause: Must not mutate `values`.
+  killed_by: test_examples_from_problem_md
+  visible: public
+- file: reject_compares_magnitude.py
+  mistake: readings compared by absolute value instead of signed value
+  clause: 'Returns: a `list` of `int` with the same length as `values`. For position `i`, the entry is
+    `j - i`, where `j` is the smallest index greater than `i` with `values[j] > values[i]`. It is `0`
+    when no such `j` exists.'
+  killed_by: test_examples_from_problem_md
+  visible: public
+- file: reject_quadratic_scan.py
+  mistake: nested scan over every later position, quadratic time
+  clause: 'Complexity: **O(n) time** and O(n) extra space, for `n = len(values)`. The hidden tests include
+    a list of 200,000 readings. Checking every later position for every index does about `n**2 / 2` comparisons
+    there, and it will not finish in time.'
+  killed_by: test_large_list_of_200000_readings_finishes_within_the_time_limit
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

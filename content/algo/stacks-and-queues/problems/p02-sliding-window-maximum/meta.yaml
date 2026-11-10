@@ -1,5 +1,5 @@
 id: algo/stacks-and-queues/p02-sliding-window-maximum
-version: 2                      # bump when tests, tolerances or the contract change
+version: 3                      # bump when tests, tolerances or the contract change
 title: Largest value in each window
 language: python
 runtime: py-stdlib

@@ -311,3 +311,16 @@ def test_large_list_of_200000_values_finishes_within_the_time_limit() -> None:
             "the window maxima on the large input do not add up: check the window bounds and the "
             "front"
         )
+
+
+def test_full_width_window_does_not_reorder_the_input() -> None:
+    values = [4.0, 2.0, 12.0, 11.0, -5.0]
+    before = list(values)
+    _, problem = _call(values, len(values))
+    if problem is not None:
+        _fail(problem)
+    if values != before:
+        _fail(
+            "the input list was changed when the window is as wide as the list: do not sort or "
+            "reorder values, even in that case"
+        )

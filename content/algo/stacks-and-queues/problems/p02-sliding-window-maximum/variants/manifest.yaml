@@ -1,7 +1,46 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_sorts_when_full_window.py
+  mistake: a full width window sorts the input list in place
+  clause: Must not mutate `values`.
+  killed_by: test_full_width_window_does_not_reorder_the_input
+  visible: hidden
+- file: reject_negatives_clamped_to_zero.py
+  mistake: negative readings compared as if they were zero
+  clause: '`values`: a `list` of `float`, possibly empty. Every entry is a finite number.'
+  killed_by: test_small_random_lists_match_brute_force
+  visible: hidden
+- file: reject_window_keeps_expired.py
+  mistake: front index kept one step past the window edge
+  clause: 'Returns: a `list` of `float` with `len(values) - k + 1` entries. Entry `i` is the largest value
+    among `values[i]` through `values[i + k - 1]`. Each entry is one of the input values, unchanged.'
+  killed_by: test_examples_from_problem_md
+  visible: public
+- file: reject_k_equal_length_raises.py
+  mistake: raises when the window is as wide as the list
+  clause: 'Raises: `ValueError` when `k < 1` or `k > len(values)`. An empty list is covered: every `k
+    >= 1` is larger than 0.'
+  killed_by: test_examples_from_problem_md
+  visible: public
+- file: reject_empty_list_accepted.py
+  mistake: empty list accepted instead of raising
+  clause: 'Raises: `ValueError` when `k < 1` or `k > len(values)`. An empty list is covered: every `k
+    >= 1` is larger than 0.'
+  killed_by: test_empty_list_raises_value_error
+  visible: hidden
+- file: reject_naive_window_max.py
+  mistake: maximum of every window taken from scratch, O of n times k
+  clause: 'Complexity: **O(n) time** for `n = len(values)`, using a double-ended queue (`collections.deque`)
+    or another linear-time method. The hidden tests include a list of 200,000 values with `k = 50,000`.
+    Taking the maximum of every window from scratch does about `n * k` comparisons there, and it will
+    not finish in time.'
+  killed_by: test_large_list_of_200000_values_finishes_within_the_time_limit
+  visible: hidden
+uncovered:
+- clause: '`k`: an `int`. It must satisfy `1 <= k <= len(values)`.'
+  reason: k outside its range is caught by the C4 raise check, so a k-only mistake would break C4 too
+sweeps:
+- reject
