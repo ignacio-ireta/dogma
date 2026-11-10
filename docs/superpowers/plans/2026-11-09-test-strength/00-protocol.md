@@ -107,7 +107,11 @@ uv run --frozen --group torch python scripts/exercise_gate.py ledger --out <OUT>
 ```
 
 `git status --short` must list only paths you own. If it lists anything else that you changed,
-undo it with `git checkout -- <file>` and say so.
+undo it with `git checkout -- <file>` and say so. Paths another executor owns may show up too:
+leave them alone and name them in your report.
+
+Runbooks a1, a2 and a3a run before `scripts/exercise_gate.py` has a `ledger` command. There,
+skip the second command and write "ledger: not available yet" in the report.
 
 End with this report and nothing after it:
 
