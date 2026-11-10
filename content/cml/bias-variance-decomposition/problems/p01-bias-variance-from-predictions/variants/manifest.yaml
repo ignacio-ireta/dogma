@@ -2,6 +2,60 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_plain_mean_bias.py
+  origin: freedom
+  freedom: bias2 is a plain NumPy mean instead of the scaled mean, only last digits differ
+reject:
+- file: reject_list_input_rejected.py
+  mistake: rejects plain lists as predictions
+  clause: '`predictions`: 2-D array-like of shape `(B, m)`, with `B >= 1` and `m >= 1`. Row `b` holds
+    model `b`''s predictions at the `m` test points. All values are finite.'
+  killed_by: test_spread_without_bias_gives_variance_and_the_noise_term
+  visible: public
+- file: reject_truth_cast_to_int.py
+  mistake: truncates f_true to integers
+  clause: '`f_true`: 1-D array-like of length `m`, finite. The noise-free target at each test point.'
+  killed_by: test_matches_the_direct_formula_on_random_predictions
+  visible: hidden
+- file: reject_noise_squared.py
+  mistake: adds the square of noise_var
+  clause: '`noise_var`: a finite, non-negative number. The variance of the label noise, so a test label
+    is `f_true + noise`.'
+  killed_by: test_spread_without_bias_gives_variance_and_the_noise_term
+  visible: public
+- file: reject_variance_divisor_b_minus_1.py
+  mistake: variance uses divisor B minus 1
+  clause: 'For each test point `j`, with `pbar_j` the mean of `predictions[:, j]` over the `B` models:
+    - squared bias: `bias2_j = (pbar_j - f_true[j]) ** 2` - variance: `var_j` = the mean over the models
+    of `(predictions[b, j] - pbar_j) ** 2`, divisor `B`, not `B - 1`'
+  killed_by: test_spread_without_bias_gives_variance_and_the_noise_term
+  visible: public
+- file: reject_noise_dropped_single_point.py
+  mistake: drops noise_var when there is one test point
+  clause: 'Returns `(bias2, variance, expected_mse)`, each averaged over the `m` test points: - `bias2`
+    is the mean of `bias2_j` - `variance` is the mean of `var_j` - `expected_mse` is the mean of `bias2_j
+    + var_j + noise_var`, which equals `bias2 + variance + noise_var`'
+  killed_by: test_expected_mse_is_the_sum_of_bias_variance_and_noise
+  visible: hidden
+- file: reject_float32_predictions.py
+  mistake: rounds predictions through float32
+  clause: Returns Python floats. Use float64 arithmetic, preserving representable errors even when the
+    predictions share a very large common offset. Squared quantities genuinely beyond float64 range may
+    return positive infinity; underflow below the smallest float64 subnormal may return zero.
+  killed_by: test_matches_the_direct_formula_on_random_predictions
+  visible: hidden
+- file: reject_nonfinite_predictions_unchecked.py
+  mistake: does not reject non-finite predictions
+  clause: Raises `ValueError` when `predictions` is not 2-D or has no model or no test point; when `f_true`
+    is not 1-D or its length is not `m`; when any value in `predictions` or `f_true` is not finite; or
+    when `noise_var` is negative or not finite.
+  killed_by: test_invalid_input_raises_value_error
+  visible: hidden
+- file: reject_mutates_predictions.py
+  mistake: rounds the caller first column in place
+  clause: Must not mutate inputs.
+  killed_by: test_invalid_input_raises_value_error
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
