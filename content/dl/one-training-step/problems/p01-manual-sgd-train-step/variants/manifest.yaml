@@ -1,7 +1,57 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_add_with_alpha.py
+  origin: freedom
+  freedom: update written as add_ with alpha equal to minus lr, same value up to roundoff
+reject:
+- file: reject_clamps_target_in_place.py
+  mistake: clamps y in place after the loss, so targets below minus 100 are changed
+  clause: Must not mutate `x` or `y`.
+  killed_by: test_targets_far_below_minus_one_hundred_are_not_modified
+  visible: hidden
+- file: reject_only_first_parameter_updated.py
+  mistake: Only the first parameter is updated
+  clause: '`model`: a `torch.nn.Module` whose parameters are floating tensors with `requires_grad=True`.'
+  killed_by: test_one_step_updates_weight_and_bias_by_minus_lr_times_gradient
+  visible: public
+- file: reject_loss_against_input_not_target.py
+  mistake: The loss is computed against x instead of y
+  clause: '`x`, `y`: the batch inputs and targets. `loss_fn(prediction, y)` returns a 0-dimensional tensor.'
+  killed_by: test_one_step_updates_weight_and_bias_by_minus_lr_times_gradient
+  visible: public
+- file: reject_lr_bool_accepted.py
+  mistake: The bool check on lr is dropped so True is accepted
+  clause: '`lr`: a finite `int` or `float` greater than zero. Booleans are invalid.'
+  killed_by: test_scalar_lr_bounds_and_bad_values_raise_value_error
+  visible: hidden
+- file: reject_stale_gradient_not_cleared.py
+  mistake: Step 1 is skipped so old gradients are added to
+  clause: 'Procedure, in this order: 1. Clear every parameter''s `.grad` (set it to `None`). 2. Compute
+    `prediction = model(x)` and `loss = loss_fn(prediction, y)`. 3. Call `loss.backward()`, so each parameter''s
+    `.grad` holds the gradient for this batch. 4. Under `torch.no_grad()`, update each parameter in place:
+    `p <- p - lr * p.grad`. Parameters whose `.grad` is `None` stay unchanged. 5. Return `float(loss)`
+    computed before step 4.'
+  killed_by: test_five_steps_match_torch_optim_sgd_in_parameters_and_losses
+  visible: hidden
+- file: reject_grad_cleared_after_update.py
+  mistake: The gradients are cleared after the update
+  clause: After the call, every parameter is still the same object, still a leaf, still has `requires_grad=True`,
+    and its `.grad` still holds the gradient used for the update.
+  killed_by: test_gradient_left_on_parameters_is_the_one_used_for_the_update
+  visible: hidden
+- file: reject_returns_tensor_not_float.py
+  mistake: Returns a detached tensor instead of a Python float
+  clause: 'Returns: a Python `float`.'
+  killed_by: test_returns_the_loss_from_before_the_update_as_a_float
+  visible: public
+- file: reject_no_scalar_check_backward_raises_other_error.py
+  mistake: The scalar check on loss_fn output is dropped so backward raises another error type
+  clause: 'Raises: `ValueError` when `lr` is not a finite number greater than zero, or when `loss_fn`
+    returns a tensor that is not 0-dimensional.'
+  killed_by: test_non_scalar_loss_is_rejected_as_value_error
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

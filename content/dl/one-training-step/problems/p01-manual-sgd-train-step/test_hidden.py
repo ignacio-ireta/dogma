@@ -227,3 +227,11 @@ def test_short_runs_match_reference_for_different_step_counts(steps):
         assert torch.allclose(got, want, atol=ATOL, rtol=RTOL), (
             "parameters differ from the reference after a short run"
         )
+
+
+def test_targets_far_below_minus_one_hundred_are_not_modified():
+    x, _ = batch(21)
+    y = torch.full((5, 1), -250.0, dtype=torch.float64)
+    y_before = y.clone()
+    checked_step(make_model(22), x, y, 0.1)
+    assert torch.equal(y, y_before), "the targets were modified: the step must not write to y"

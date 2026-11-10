@@ -1,5 +1,5 @@
 id: dl/one-training-step/p01-manual-sgd-train-step
-version: 2                      # bump when tests, tolerances or the contract change
+version: 3                      # bump when tests, tolerances or the contract change
 title: One manual SGD step
 language: python                # python | sql
 runtime: py-torch               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
