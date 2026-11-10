@@ -2,6 +2,52 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_fit_once.py
+  mistake: fits once on the first fold and reuses those predictions for every fold
+  clause: '`fit_predict(X_train, y_train, X_test)`: a callable. It receives the training rows and targets
+    and the test rows, and returns a 1-D array-like with one prediction per test row. It is called once
+    per fold, in fold order.'
+  killed_by: test_two_folds_give_per_fold_scores_with_zero_spread
+  visible: public
+- file: reject_train_recomputed_from_test.py
+  mistake: ignores the given training indices and uses the complement of the test indices
+  clause: '`folds`: a sequence of at least two `(train_idx, test_idx)` pairs. Each index array is a non-empty
+    1-D array of integers in `0 .. n - 1`. Folds are used exactly as given: they need not be a partition,
+    and they need not be contiguous or equal in size.'
+  killed_by: test_per_fold_scores_mean_and_std_match_sklearn_cross_val_score
+  visible: hidden
+- file: reject_metric_args_swapped.py
+  mistake: passes the predictions first and the true targets second to the metric
+  clause: '`metric(y_true, y_pred)`: a callable returning one float. Its first argument is the test targets
+    of the fold, its second is that fold''s predictions. The argument order is fixed: targets first.'
+  killed_by: test_per_fold_scores_mean_and_std_match_sklearn_cross_val_score
+  visible: hidden
+- file: reject_std_population.py
+  mistake: standard deviation uses ddof zero instead of one
+  clause: 'Returns: a tuple `(scores, mean, std)`. - `scores`: a list of floats, one per fold, in fold
+    order. - `mean`: the unweighted mean of `scores`, a float. - `std`: the sample standard deviation
+    of `scores` with one degree of freedom (`ddof = 1`), a float.'
+  killed_by: test_three_folds_standard_deviation_uses_one_degree_of_freedom
+  visible: public
+- file: reject_no_prediction_count_check.py
+  mistake: does not check that fit_predict returns one prediction per test row
+  clause: Raises `ValueError` when `len(X) != len(y)`, when `y` is not 1-D, when fewer than two folds
+    are given (a standard deviation needs two scores), when an index array is empty, non-integer, or out
+    of range, or when `fit_predict` returns a number of predictions different from the number of test
+    rows.
+  killed_by: test_wrong_number_of_predictions_raises_value_error
+  visible: hidden
+- file: reject_centres_y_in_place.py
+  mistake: centres the caller's y array in place
+  clause: Must not mutate inputs.
+  killed_by: test_metric_receives_the_true_test_targets_first_then_the_predictions
+  visible: hidden
+uncovered:
+- clause: '`X`: array-like with `n` rows (first axis = samples). `X` is indexed by row.'
+  reason: every wrong row indexing of X either crashes or breaks the fold rules in C4 and C6
+- clause: '`y`: 1-D array-like of length `n`.'
+  reason: a wrong handling of y either fails the length check or changes the targets the metric sees,
+    which C5 and C7 cover
+sweeps:
+- reject

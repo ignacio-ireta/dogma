@@ -2,6 +2,57 @@ problem_version: 1
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_k_min_one.py
+  mistake: accepts k equal to 1 and returns a single fold
+  clause: '`k`: int, the number of folds. Must satisfy `2 <= k <= n`.'
+  killed_by: test_fewer_than_two_folds_raises_value_error
+  visible: hidden
+- file: reject_default_shuffle_on.py
+  mistake: default shuffle is true so unshuffled calls need a seed
+  clause: '`shuffle`: bool, default `False`.'
+  killed_by: test_ten_positions_in_three_folds_give_consecutive_blocks_with_the_remainder_first
+  visible: public
+- file: reject_seed_used_without_shuffle.py
+  mistake: seed shuffles the folds even when shuffle is false
+  clause: '`seed`: int or `None`. Used only when `shuffle` is true.'
+  killed_by: test_seed_is_ignored_when_not_shuffling
+  visible: hidden
+- file: reject_remainder_last_fold.py
+  mistake: remainder positions go to the last fold instead of the first
+  clause: '**Fold sizes.** Let `q, r = divmod(n, k)`. The first `r` folds have `q + 1` test positions
+    and the remaining folds have `q`.'
+  killed_by: test_ten_positions_in_three_folds_give_consecutive_blocks_with_the_remainder_first
+  visible: public
+- file: reject_unshuffled_reversed_blocks.py
+  mistake: unshuffled blocks are taken from the end of the positions
+  clause: '**Unshuffled (`shuffle=False`).** Fold test sets are consecutive blocks of positions in increasing
+    order. Fold 0 starts at position 0. `seed` is ignored.'
+  killed_by: test_ten_positions_in_three_folds_give_consecutive_blocks_with_the_remainder_first
+  visible: public
+- file: reject_inverse_permutation.py
+  mistake: uses the inverse of the seeded permutation
+  clause: '**Shuffled (`shuffle=True`).** `seed` must be an int. Let `perm = np.random.default_rng(seed).permutation(n)`.
+    The blocks above, taken in order, become consecutive chunks of `perm`: fold `j`''s test set is `perm[start_j:stop_j]`.
+    The shuffled folds are not guaranteed to match any library''s shuffled folds. This protocol is the
+    contract.'
+  killed_by: test_shuffled_folds_follow_the_seeded_permutation_protocol
+  visible: public
+- file: reject_test_not_sorted.py
+  mistake: shuffled test indices are left in draw order
+  clause: 'Returns: a list of `k` pairs `(train_idx, test_idx)` in fold order. Both are 1-D `np.intp`
+    arrays. Each array is sorted in ascending order. `train_idx` is the complement of `test_idx` in `range(n)`.'
+  killed_by: test_shuffled_folds_follow_the_seeded_permutation_protocol
+  visible: public
+- file: reject_no_seed_check.py
+  mistake: shuffle without a seed is allowed and gives a random split
+  clause: Raises `ValueError` when `k < 2`, when `k > n`, or when `shuffle` is true and `seed` is `None`.
+  killed_by: test_shuffle_without_a_seed_raises_value_error
+  visible: hidden
+uncovered:
+- clause: '`n`: int, the number of samples.'
+  reason: n is a plain int, any wrong handling of it also breaks the fold size rule C5
+- clause: Must not mutate inputs.
+  reason: all inputs are plain ints, so there is no input that can be mutated
+sweeps:
+- reject
