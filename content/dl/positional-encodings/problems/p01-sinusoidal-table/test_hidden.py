@@ -181,3 +181,14 @@ def test_non_positive_width_raises_value_error(width):
 def test_zero_length_table_has_zero_rows_and_requested_width():
     got = _table(0, 4)
     assert tuple(got.shape) == (0, 4), "max_len = 0 must return an empty table with d_model columns"
+
+
+def test_zero_length_table_is_float64():
+    got = _table(0, 4)
+    assert got.dtype == torch.float64, "an empty table must still be torch.float64"
+
+
+def test_each_call_returns_a_new_tensor():
+    first = _table(3, 4)
+    second = _table(3, 4)
+    assert first is not second, "each call must create a new tensor, not return an existing one"

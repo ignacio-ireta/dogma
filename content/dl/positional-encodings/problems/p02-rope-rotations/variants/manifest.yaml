@@ -2,6 +2,49 @@ problem_version: 1
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_empty_like_assign.py
+  origin: freedom
+  freedom: output built with empty_like and column assignment instead of stack
+reject:
+- file: reject_batch_axis_taken_as_length.py
+  mistake: takes the sequence length from the first axis instead of the second to last
+  clause: '`x`: `torch.Tensor` with shape `(..., L, d)`, where `...` is any number of leading batch axes
+    (zero or more), `L >= 0` is the sequence length and `d` is the feature width. `d` must be **even and
+    at least 2**. Values are real. Float64 is the tested dtype.'
+  killed_by: test_matches_complex_multiplication_reference_on_seeded_batches
+  visible: hidden
+- file: reject_position_counted_from_one.py
+  mistake: counts positions from one instead of zero
+  clause: Position `t` is the index along the second-to-last axis, counted from 0.
+  killed_by: test_first_row_unchanged_and_second_row_rotated_by_one_radian
+  visible: public
+- file: reject_theta_exponent_i_over_d.py
+  mistake: uses i over d instead of 2i over d in the frequency exponent
+  clause: 'Output: `(t, pair i)` rotation, written out: - `out[..., t, 2i] = x[..., t, 2i] * cos(t * theta_i)
+    - x[..., t, 2i+1] * sin(t * theta_i)` - `out[..., t, 2i+1] = x[..., t, 2i] * sin(t * theta_i) + x[...,
+    t, 2i+1] * cos(t * theta_i)`'
+  killed_by: test_matches_complex_multiplication_reference_on_seeded_batches
+  visible: hidden
+- file: reject_output_flattened_to_2d.py
+  mistake: returns the output flattened to two axes instead of the input shape
+  clause: 'Returns: a tensor with the same shape and dtype as `x`.'
+  killed_by: test_matches_complex_multiplication_reference_on_seeded_batches
+  visible: hidden
+- file: reject_zero_width_allowed.py
+  mistake: accepts zero feature width instead of raising
+  clause: 'Raises `ValueError` when: `x` has fewer than 2 dimensions; `d` is odd; `d` is zero.'
+  killed_by: test_zero_feature_width_raises_value_error
+  visible: hidden
+- file: reject_mutates_input_rows.py
+  mistake: writes the rotated rows back into the input tensor
+  clause: Must not mutate `x`.
+  killed_by: test_matches_complex_multiplication_reference_on_seeded_batches
+  visible: hidden
+uncovered:
+- clause: 'Consequences you can check: position 0 is the identity; every row keeps its Euclidean norm;
+    for two rotated vectors `q` at position `m` and `k` at position `n`, the dot product `q·k` depends
+    only on `m - n`.'
+  reason: the consequences norm preservation, identity at position 0 and relative offset all follow from
+    the C3 rotation, so any break of them breaks C3
+sweeps:
+- reject

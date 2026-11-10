@@ -1,7 +1,43 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_pow_for_frequency.py
+  origin: freedom
+  freedom: frequencies computed with torch.pow instead of exp and log
+reject:
+- file: reject_max_len_one_zeros.py
+  mistake: returns zeros for a table of one position instead of the first row
+  clause: '`max_len`: Python `int`, `max_len >= 0`. Number of positions (rows).'
+  killed_by: test_each_sine_cosine_pair_has_unit_norm
+  visible: hidden
+- file: reject_d_model_two_drops_pair.py
+  mistake: drops the last column pair for every width
+  clause: '`d_model`: Python `int`. It must be a **positive even** integer. An odd value is rejected,
+    not truncated or padded.'
+  killed_by: test_worked_example_three_positions_four_columns
+  visible: public
+- file: reject_table_float32_dtype.py
+  mistake: returns a float32 table instead of float64
+  clause: 'Returns: `torch.float64` tensor of shape `(max_len, d_model)`.'
+  killed_by: test_worked_example_three_positions_four_columns
+  visible: public
+- file: reject_zero_width_allowed.py
+  mistake: accepts zero width and returns an empty table instead of raising
+  clause: 'Raises `ValueError` when: `max_len` is negative or not an integer; `d_model` is zero, negative
+    or odd.'
+  killed_by: test_non_positive_width_raises_value_error
+  visible: hidden
+- file: reject_empty_table_default_dtype.py
+  mistake: empty table returned in the default float32 dtype
+  clause: '`max_len = 0` returns an empty tensor of shape `(0, d_model)`.'
+  killed_by: test_zero_length_table_is_float64
+  visible: hidden
+- file: reject_shared_table_cache.py
+  mistake: table cached and the same tensor returned on every call
+  clause: Creates a new tensor; takes no tensor inputs, so there is nothing to mutate.
+  killed_by: test_each_call_returns_a_new_tensor
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
