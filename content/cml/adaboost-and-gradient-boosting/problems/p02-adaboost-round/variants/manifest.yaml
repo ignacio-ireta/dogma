@@ -1,7 +1,62 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_numpy_alpha.py
+  origin: freedom
+  freedom: alpha returned as a NumPy float64 scalar, a subclass of float
+reject:
+- file: reject_tiny_negative_weight_allowed.py
+  mistake: a tiny negative weight is accepted
+  clause: 'Raises: `ValueError` for empty input, mismatched lengths, labels or predictions outside $\{-1,+1\}$,
+    negative or non-finite weights, a zero weight sum, and the perfect-classifier case $\varepsilon=0$.'
+  killed_by: test_tiny_negative_weight_with_positive_sum_raises_value_error
+  visible: hidden
+- file: reject_single_row_rejected.py
+  mistake: a single sample round is rejected
+  clause: '`y`: 1-D array-like of labels, each exactly $-1$ or $+1$, length $n\ge1$.'
+  killed_by: test_single_sample_round_is_accepted_and_rejected_at_chance
+  visible: hidden
+- file: reject_pred_zero_allowed.py
+  mistake: predictions outside minus one and plus one are accepted
+  clause: '`pred`: 1-D array-like of predictions, each exactly $-1$ or $+1$, same length as `y`.'
+  killed_by: test_invalid_round_raises_value_error
+  visible: hidden
+- file: reject_error_ignores_normalisation.py
+  mistake: weighted error uses the rescaled weights without normalising them
+  clause: '`weights`: 1-D array-like of finite, non-negative numbers with a positive sum, same length.
+    They need not be normalised.'
+  killed_by: test_quarter_error_gives_half_log_three_and_the_reweighted_sample
+  visible: public
+- file: reject_unnormalised_output.py
+  mistake: returned weights are not normalised to sum to one
+  clause: 'Returns: `(alpha, new_weights)`: a Python `float` and a `float64` array of length $n$ that
+    sums to 1.'
+  killed_by: test_quarter_error_gives_half_log_three_and_the_reweighted_sample
+  visible: public
+- file: reject_zero_sum_not_checked.py
+  mistake: a zero weight sum is not rejected
+  clause: 'Raises: `ValueError` for empty input, mismatched lengths, labels or predictions outside $\{-1,+1\}$,
+    negative or non-finite weights, a zero weight sum, and the perfect-classifier case $\varepsilon=0$.'
+  killed_by: test_zero_weight_sum_is_rejected_even_when_the_classifier_is_not_perfect
+  visible: hidden
+- file: reject_alpha_ratio_overflow.py
+  mistake: vote computed as a ratio of weights that overflows for tiny error
+  clause: Weights may be as large as `1e308`, and the weighted error may be as small as `1e-320`. Normalise
+    without overflowing the sum, and keep `alpha` finite for any positive error.
+  killed_by: test_tiny_positive_weighted_error_has_a_finite_vote
+  visible: hidden
+- file: reject_normalise_overflow.py
+  mistake: weights summed without rescaling, so large weights overflow
+  clause: Weights may be as large as `1e308`, and the weighted error may be as small as `1e-320`. Normalise
+    without overflowing the sum, and keep `alpha` finite for any positive error.
+  killed_by: test_large_finite_weight_scale_does_not_change_the_round
+  visible: hidden
+- file: reject_inplace_weights.py
+  mistake: caller weights normalised in place
+  clause: Must not mutate its inputs.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

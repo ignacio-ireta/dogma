@@ -435,3 +435,27 @@ def test_a_split_is_only_placed_between_distinct_feature_values():
         err_msg="a split was placed between two equal feature values: thresholds are midpoints "
         "between consecutive distinct values only",
     )
+
+
+def test_infinite_learning_rate_raises_value_error():
+    X = np.array([[1.0], [2.0], [3.0], [4.0]])
+    y = np.array([0.0, 0.0, 1.0, 1.0])
+    try:
+        boost_stumps_mse(X, y, n_estimators=1, learning_rate=math.inf)
+    except ValueError:
+        return
+    except Exception as exc:
+        pytest.fail(f"an infinite learning rate must raise ValueError; raised {type(exc).__name__}")
+    pytest.fail("an infinite learning rate must raise ValueError, not return a model")
+
+
+def test_one_target_for_many_rows_raises_value_error():
+    X = np.array([[0.0], [1.0], [2.0], [3.0]])
+    y = np.array([1.0])  # one target for four rows
+    try:
+        boost_stumps_mse(X, y, n_estimators=1, learning_rate=0.5)
+    except ValueError:
+        return
+    except Exception as exc:
+        pytest.fail(f"y needs one target per row of X; raised {type(exc).__name__} instead")
+    pytest.fail("y needs one target per row of X; the function returned a model instead")

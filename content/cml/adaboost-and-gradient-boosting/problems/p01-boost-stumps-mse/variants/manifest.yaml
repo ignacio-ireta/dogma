@@ -1,7 +1,61 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_reverse_order.py
+  origin: freedom
+  freedom: predict adds the stump values in reverse order, which changes only the last digits
+reject:
+- file: reject_learning_rate_not_checked.py
+  mistake: learning rate of infinity is accepted
+  clause: 'Raises: `ValueError` for bad shapes, non-finite values, a non-integer or too-small `n_estimators`,
+    a `learning_rate` that is not finite and positive, and, inside `predict`, the wrong number of columns
+    or non-finite values.'
+  killed_by: test_infinite_learning_rate_raises_value_error
+  visible: hidden
+- file: reject_y_length_unchecked.py
+  mistake: one target for many rows is broadcast
+  clause: '`y`: 1-D array-like of finite numbers, length `n`.'
+  killed_by: test_one_target_for_many_rows_raises_value_error
+  visible: hidden
+- file: reject_midpoint_overflow.py
+  mistake: threshold midpoint computed as a sum overflows for very large features
+  clause: Feature values may be as large as `1e308`. Compute each midpoint without overflow, so that a
+    stump still separates the two values.
+  killed_by: test_large_finite_features_preserve_the_stump_partition
+  visible: hidden
+- file: reject_predict_skips_finite_check.py
+  mistake: predict does not reject non-finite new rows
+  clause: 'Raises: `ValueError` for bad shapes, non-finite values, a non-integer or too-small `n_estimators`,
+    a `learning_rate` that is not finite and positive, and, inside `predict`, the wrong number of columns
+    or non-finite values.'
+  killed_by: test_predict_rejects_a_nan_in_an_otherwise_finite_batch
+  visible: hidden
+- file: reject_predict_too_few_columns.py
+  mistake: predict accepts new rows with too few columns
+  clause: 'Raises: `ValueError` for bad shapes, non-finite values, a non-integer or too-small `n_estimators`,
+    a `learning_rate` that is not finite and positive, and, inside `predict`, the wrong number of columns
+    or non-finite values.'
+  killed_by: test_predict_rejects_the_wrong_number_of_columns
+  visible: hidden
+- file: reject_float_n_estimators.py
+  mistake: float number of estimators accepted and truncated
+  clause: '`n_estimators`: keyword-only integer, at least 1. `learning_rate`: keyword-only finite number
+    greater than 0.'
+  killed_by: test_invalid_inputs_raise_value_error
+  visible: hidden
+- file: reject_inplace_x_clip.py
+  mistake: negative features overwritten in place in the caller array
+  clause: Must not mutate `X` or `y`.
+  killed_by: test_matches_a_brute_force_implementation_at_train_and_new_points
+  visible: hidden
+uncovered:
+- clause: 'Returns: `(predict, train_pred)`. - `predict(X_new)` takes a 2-D array with `d` columns and
+    returns a `float64` array of shape `(m,)`, equal to $F_M$ at each row. - `train_pred` is a `float64`
+    array of shape `(n,)`, equal to $F_M(X)$.'
+  reason: wrong solution survives, see notes
+- clause: '`X`: 2-D array-like of finite numbers, shape `(n, d)`, with $n\ge1$ and $d\ge1$.'
+  reason: a wrong solution for a valid 2-D input has no second path, so any break also raises or breaks
+    C5 or C6
+sweeps:
+- reject

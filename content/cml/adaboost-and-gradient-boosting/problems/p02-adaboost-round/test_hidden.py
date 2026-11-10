@@ -289,3 +289,16 @@ def test_zero_weight_sum_is_rejected_even_when_the_classifier_is_not_perfect():
         [1, 1],
         [0.0, 0.0],
     )
+
+
+def test_tiny_negative_weight_with_positive_sum_raises_value_error():
+    y = np.array([1.0, -1.0, 1.0, -1.0])
+    pred = np.array([1.0, 1.0, 1.0, -1.0])
+    weights = np.array([1.0, 1.0, 1.0, -1e-300])  # negative, though the sum is positive
+    try:
+        adaboost_round(y, pred, weights)
+    except ValueError:
+        return
+    except Exception as exc:
+        pytest.fail(f"a negative weight must raise ValueError; raised {type(exc).__name__}")
+    pytest.fail("a negative weight must raise ValueError, not return a round")
