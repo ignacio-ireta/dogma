@@ -1044,7 +1044,10 @@ def test_gate_add_mode_fails_on_a_new_parametrize_id_with_digits(
 ):
     _append(
         gate_repo / "test_hidden.py",
-        '\n\n@pytest.mark.parametrize("a, b", [(1.5, 2)])\n'
+        # The decorator starts its own literal: an "n" from "\n" directly before "@name.name"
+        # reads as an e-mail address to the privacy audit.
+        "\n\n"
+        '@pytest.mark.parametrize("a, b", [(1.5, 2)])\n'
         "def test_new_case(a, b):\n"
         '    assert add(a, b) == a + b, "adds the pair"\n',
     )
