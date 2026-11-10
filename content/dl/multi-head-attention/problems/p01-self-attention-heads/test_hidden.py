@@ -408,3 +408,26 @@ def test_inputs_are_not_mutated():
     _run(x, w, 2)
     assert torch.equal(x, before_x), "the input X must not be modified"
     assert torch.equal(w["W_q"], before_wq), "weights must not be modified in place"
+
+
+def test_head_count_that_does_not_divide_d_model_raises_value_error():
+    gen = torch.Generator().manual_seed(37)
+    x = torch.randn(1, 2, 3, generator=gen, dtype=torch.float64)
+    w = _weights(gen, 3)
+    # 2 is at most d_model = 3 but does not divide it, so the contract requires ValueError.
+    _invalid(x, w["W_q"], w["W_k"], w["W_v"], w["W_o"], w["b_q"], w["b_k"], w["b_v"], w["b_o"], 2)
+
+
+def test_single_token_sequence_gets_output_bias():
+    gen = torch.Generator().manual_seed(38)
+    x = torch.randn(2, 1, 4, generator=gen, dtype=torch.float64)
+    w = _weights(gen, 4)
+    out = _run(x, w, 2)
+    want = _oracle(x, w, 2)
+    torch.testing.assert_close(
+        out,
+        want,
+        atol=1e-9,
+        rtol=1e-9,
+        msg="a one-token sequence must get the output bias: check the output projection",
+    )

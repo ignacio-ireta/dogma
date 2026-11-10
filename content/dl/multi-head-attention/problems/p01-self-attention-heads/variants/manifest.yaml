@@ -1,7 +1,59 @@
-problem_version: 1
+problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_einsum_projections.py
+  origin: freedom
+  freedom: projections written with einsum, merge heads with contiguous and view
+reject:
+- file: reject_head_check_size_only.py
+  mistake: head count checked against size not divisibility
+  clause: '`num_heads`: Python `int`, `>= 1`. It must divide `d_model` exactly.'
+  killed_by: test_head_count_that_does_not_divide_d_model_raises_value_error
+  visible: hidden
+- file: reject_single_token_drops_bias.py
+  mistake: single token sequence drops output bias
+  clause: '`X`: `torch.float64` tensor, shape `(B, L, d_model)`. `B >= 1` sequences, `L >= 1` tokens each.'
+  killed_by: test_single_token_sequence_gets_output_bias
+  visible: hidden
+- file: reject_value_projection_transposed.py
+  mistake: value projection uses W_v without transpose
+  clause: '`W_q`, `W_k`, `W_v`, `W_o`: `torch.float64`, shape `(d_model, d_model)`, in **PyTorch `nn.Linear`
+    layout**: a projection is `y = x @ W.T + b`. Row `o` of `W` holds the weights of output feature `o`.
+    `W_o` projects the concatenated heads back to `d_model`.'
+  killed_by: test_swapping_head_blocks_consistently_leaves_output_unchanged
+  visible: hidden
+- file: reject_value_bias_scalar.py
+  mistake: value bias collapsed to one scalar mean
+  clause: '`b_q`, `b_k`, `b_v`, `b_o`: `torch.float64`, shape `(d_model,)`.'
+  killed_by: test_each_head_reads_its_own_contiguous_feature_block
+  visible: hidden
+- file: reject_mask_first_head_only.py
+  mistake: mask applied to the first head only
+  clause: '`mask`: `None`, or a `torch.bool` tensor of shape `(L, L)`. Entry `[i, j]` is `True` when query
+    token `i` may attend to key token `j`, and `False` when it may not. The same mask applies to every
+    sequence and every head. A `False` entry gets zero attention weight. `True` means "allowed", the opposite
+    of `torch.nn.MultiheadAttention`.'
+  killed_by: test_matches_reference_with_mask_on_seeded_batches
+  visible: hidden
+- file: reject_output_rounded_float32.py
+  mistake: output rounded through float32
+  clause: 'Returns: `torch.float64` tensor of shape `(B, L, d_model)`.'
+  killed_by: test_identity_weights_give_softmax_of_scaled_dot_products
+  visible: public
+- file: reject_fully_masked_row_unchecked.py
+  mistake: fully masked rows not rejected
+  clause: 'Raises `ValueError` when: `X` is not 3-D; any weight is not `(d_model, d_model)`; any bias
+    is not `(d_model,)`; `num_heads` is not a positive integer that divides `d_model`; `mask` is given
+    but is not a `torch.bool` tensor of shape `(L, L)`; or some query row of `mask` has no `True` entry
+    (its softmax would be undefined).'
+  killed_by: test_fully_masked_row_raises_value_error
+  visible: hidden
+- file: reject_input_scaled_in_place.py
+  mistake: input rescaled in place and restored by rounding
+  clause: Must not mutate inputs.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
