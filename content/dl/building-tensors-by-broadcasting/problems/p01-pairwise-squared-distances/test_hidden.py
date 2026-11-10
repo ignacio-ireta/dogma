@@ -93,7 +93,7 @@ def test_points_far_from_origin_keep_their_small_distances():
     )
 
 
-@settings(max_examples=80, deadline=None)
+@settings(max_examples=80, deadline=None, report_multiple_bugs=False)
 @given(point_clouds())
 def test_self_distance_matrix_is_symmetric_with_zero_diagonal(X):
     D = pairwise_sq_distances(X, X)
@@ -107,7 +107,7 @@ def test_self_distance_matrix_is_symmetric_with_zero_diagonal(X):
     )
 
 
-@settings(max_examples=80, deadline=None)
+@settings(max_examples=80, deadline=None, report_multiple_bugs=False)
 @given(cloud_pairs())
 def test_every_entry_is_non_negative(pair):
     X, Y = pair
