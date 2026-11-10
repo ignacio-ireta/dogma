@@ -51,3 +51,4 @@ uncovered:
   reason: every test checks the column types first, so a wrong solution fails all of them
 sweeps:
 - reject
+- mutants
