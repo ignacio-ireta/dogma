@@ -39,3 +39,4 @@ uncovered:
     it without also breaking the length in C4 or the draws in C3
 sweeps:
 - reject
+- mutants
