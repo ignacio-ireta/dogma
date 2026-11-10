@@ -66,6 +66,11 @@ Work stops and resumes across sessions through the status table and the handoff 
 | I-31a | Data realism platform: `dogma_data` (real offline datasets, frozen realistic generators, seeds), `hf` dependency group + HF snapshot sync, submission ban, test-import allowlist, `exercise_audit realism` (plan `2026-11-09-data-realism.md`) | — | I-03, I-28 | done |
 | I-31b | Data realism content sweep: real and realistic data in the tests, statements and lessons of the affected problems (slices S1–S7) | — | I-31a | done |
 | I-31c | Data realism review: second-agent review per slice, fresh exercise audit, statuses back to `reviewed` | — | I-31b | todo |
+| I-32a | Test-strength platform: hidden-test lint, `variants/` manifest, `scripts/exercise_gate.py`, docs and variants for the example problem (plan `2026-11-09-test-strength.md`; a1–a4) | — | I-31a | todo |
+| I-32b | Hygiene sweep: messages, ids, Hypothesis flags and `pytest.raises` in hidden tests, outcomes unchanged | — | I-32a, I-31c | todo |
+| I-32c | One blind solution per problem, committed as `variants/accept_blind` | — | I-32a, I-31c | todo |
+| I-32d | Reject sweep and mutant triage: one wrong solution per Contract bullet, gaps closed by gated tests | — | I-32b, I-32c | todo |
+| I-32e | Test-strength close-out: enforce the rules in the gate, re-audit, report | — | I-32d | todo |
 
 ### Content runway (one wave per path week; ARCHITECTURE §7)
 
@@ -265,6 +270,23 @@ shape, hash and quirks are pinned by unit tests; each new realism test maps to a
 fails a hand-written realistic wrong solution that passes the old tests (`exercise_audit
 realism`), passes the blind solution in under 10 s and survives `exercise_audit seeds` with the
 data salt; versions are bumped. `make test-all` passes.
+
+### I-32a–e · Test strength
+
+Plan: `docs/superpowers/plans/2026-11-09-test-strength.md`. Design:
+`docs/superpowers/specs/2026-11-09-test-strategy-design.md`. One runbook per step in
+`docs/superpowers/plans/2026-11-09-test-strength/`; the coordinator starts at `01-coordinator.md`.
+Not started: the plan is written, nothing is implemented.
+**Owns:** per runbook, listed in the plan's increment table. The sweeps (I-32b–d) own topic
+directories only: `test_hidden.py`, `variants/` and the version in `meta.yaml`.
+**Do:** give every problem committed proof for its tests (`variants/`: solutions that must pass
+and wrong solutions that must fail), a lint for the hidden-test rules, and one gate command for
+any test edit. Then sweep every problem: fix the lint findings, add one blind solution, write one
+wrong solution per Contract bullet and close the gaps they expose with gated tests.
+**Accept:** as listed per runbook. Each sweep's `worklist` is empty or every problem left has a
+note in `docs/audits/test-strength-decisions.md`; the report is in `docs/audits/`;
+`make test-all` passes. Hidden tests are only added to, apart from message-only edits the gate
+proves equal.
 
 ## 3. Milestones
 
