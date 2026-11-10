@@ -11,6 +11,17 @@ from hypothesis import strategies as st
 from submission import grouped_query_attention
 from torch.nn.functional import scaled_dot_product_attention
 
+
+def _raises(expected, call, mistake):
+    try:
+        call()
+    except expected:
+        return
+    except Exception as exc:
+        pytest.fail(f"{mistake}; raised {type(exc).__name__} instead")
+    pytest.fail(mistake)
+
+
 CONFIGS = {
     "multi-query": (4, 1, 2),
     "grouped-two-of-four": (4, 2, 3),
@@ -170,8 +181,11 @@ def test_nonsymmetric_weights_use_x_times_transpose():
 def test_fully_masked_query_row_raises_value_error():
     X, W_q, W_k, W_v, W_o = _random_case(3, 1, 3, 2, 1, 2)
     mask = torch.tensor([[True, False, False], [False, False, False], [True, True, True]])
-    with pytest.raises(ValueError):
-        grouped_query_attention(X, W_q, W_k, W_v, W_o, 2, 1, mask)
+    _raises(
+        ValueError,
+        lambda: grouped_query_attention(X, W_q, W_k, W_v, W_o, 2, 1, mask),
+        "a fully masked query row must raise ValueError",
+    )
 
 
 def _problem_or_none(call) -> str | None:
