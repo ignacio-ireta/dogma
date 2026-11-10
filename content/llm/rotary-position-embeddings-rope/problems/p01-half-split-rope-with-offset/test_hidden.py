@@ -243,6 +243,18 @@ def test_inputs_are_not_mutated():
         "bool-offset",
         "not-a-tensor",
     ],
+    ids=[
+        "odd-width",
+        "zero-width",
+        "three-dimensional",
+        "shape-mismatch",
+        "dtype-mismatch",
+        "integer-input",
+        "negative-offset",
+        "float-offset",
+        "bool-offset",
+        "not-a-tensor",
+    ],
 )
 def test_invalid_inputs_raise_value_error(case):
     q = torch.ones(1, 2, 3, 4, dtype=torch.float64)
