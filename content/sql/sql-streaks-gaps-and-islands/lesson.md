@@ -69,6 +69,8 @@ output is right. Interviewers ask for both views, so know both.
 - **Unintended bridging.** "At most two days apart" is a different query. Put the threshold in the flag.
 - **Time zones.** A timestamp converted to a date in the wrong zone moves visits across midnight. Convert before the distinct step.
 
+A key that looks like a date number can pass the small examples and still fail on real logs. `year * 365 + day of year`, minus the row number, ignores that a leap year has 366 days, so it splits any run that crosses 31 December of a leap year. On a holiday burst of 40 users, 28 users get the wrong longest streak. User 1 has a 20-day streak from 20 December 2028 to 8 January 2029, and the key reports 12 days ending 31 December. Subtracting the row number from a real `DATE` avoids this, because the calendar does the counting.
+
 ## Interview angle
 
 Sixty-second answer: a streak is a run of consecutive calendar days per user. Remove duplicate user-day pairs first.

@@ -10,6 +10,8 @@ from pathlib import Path
 import duckdb
 import pytest
 
+from dogma_data import rng, synth
+
 COLUMNS = ["user_id", "island_start", "island_end", "island_days"]
 TYPES = ["BIGINT", "DATE", "DATE", "BIGINT"]
 SQL = Path(__file__).with_name("submission.sql").read_text(encoding="utf-8")
@@ -137,3 +139,40 @@ def test_insertion_order_does_not_change_the_streaks():
 
 def test_empty_table_returns_no_rows_with_the_declared_schema():
     _same(_run([]), [])
+
+
+def _visits_from_log(log) -> list[tuple[int, date]]:
+    days = log["ts"].astype("datetime64[D]")
+    return [
+        (int(user), date.fromisoformat(str(day)))
+        for user, day in zip(log["user_id"], days, strict=True)
+    ]
+
+
+@pytest.fixture(scope="module")
+def holiday_burst() -> list[tuple[int, date]]:
+    """Dense activity across 31 Dec 2028, a leap-year end: heavy-tailed users, duplicate rows."""
+    log = synth.event_log(
+        rng("sql/sql-streaks-gaps-and-islands/p02-all-islands-per-user:holiday_burst:0"),
+        3000,
+        n_users=40,
+        zipf_a=1.1,
+        start="2028-12-20",
+        days=20,
+        duplicate_rate=0.2,
+    )
+    return _visits_from_log(log)
+
+
+def test_matches_the_oracle_on_a_holiday_burst_across_a_leap_year_end(holiday_burst):
+    got = _run(holiday_burst)
+    if got != _oracle(holiday_burst):
+        pytest.fail(
+            "islands differ on dense activity across a leap-year end: check how a run "
+            "continues across a year end, where the day count restarts"
+        )
+
+
+def test_island_across_a_leap_year_end_is_one_island():
+    rows = [(6, date(2028, 12, 30)), (6, date(2028, 12, 31)), (6, date(2029, 1, 1))]
+    _same(_run(rows), [(6, date(2028, 12, 30), date(2029, 1, 1), 3)])

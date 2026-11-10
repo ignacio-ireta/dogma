@@ -19,6 +19,7 @@ Table `visits` has columns:
 - Output columns, in order, with these types: `user_id BIGINT`, `island_start DATE`, `island_end DATE`,
   `island_days BIGINT`. `island_start` and `island_end` are inclusive and `island_days` counts the active days.
 - Final output order is `user_id ASC, island_start ASC`.
+- A run continues from one calendar date to the next across month ends, year ends and leap days: 31 December 2028 is followed by 1 January 2029, and 28 February 2028 by 29 February.
 - Users with no visits do not appear. An empty table returns no rows, with the stated columns and types.
 - Do not change the `visits` table.
 
@@ -48,6 +49,14 @@ user_id visit_date
    (4, 2026-01-10, 2026-01-11, 2)
 ```
 
+```text
+user_id visit_date
+5       2028-12-30
+5       2028-12-31
+5       2029-01-01
+=> (5, 2028-12-30, 2029-01-01, 3)
+```
+
 ## Constraints
 
 - Allowed: a read-only DuckDB SQL query. CTEs, subqueries, window functions, `DISTINCT`, `GROUP BY` and
@@ -59,5 +68,5 @@ user_id visit_date
 
 The result matches an independent oracle that takes each user's distinct dates, sorts them, and splits them
 at every gap of more than one day. The seeded fixture and the hidden cases cover: one streak per user; many
-streaks per user; duplicate visits; single-day streaks; a gap of exactly one day; a run across a leap day;
+streaks per user; duplicate visits; single-day streaks; a gap of exactly one day; a run across a leap day and a leap-year end; a dense holiday burst across a leap-year end, with heavy-tailed users and duplicate visits;
 consecutive days of two different users, which must not join; users with no visits absent; an empty table; the exact output types; and the final ordering.

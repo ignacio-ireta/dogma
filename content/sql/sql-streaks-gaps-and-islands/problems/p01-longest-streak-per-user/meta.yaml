@@ -1,5 +1,5 @@
 id: sql/sql-streaks-gaps-and-islands/p01-longest-streak-per-user
-version: 1                       # bump when tests, tolerances or the contract change
+version: 2                       # bump when tests, tolerances or the contract change
 title: Longest streak of consecutive active days per user
 language: sql                    # python | sql
 runtime: sql-duckdb              # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
@@ -10,4 +10,4 @@ core: true                       # p01 is the core problem: exactly one per topi
 tolerance: {atol: 0.0, rtol: 0.0}  # results are compared exactly; no tolerance applies
 banned_imports: []               # SQL is graded on results only
 timeout_s: 30
-status: reviewed
+status: verified

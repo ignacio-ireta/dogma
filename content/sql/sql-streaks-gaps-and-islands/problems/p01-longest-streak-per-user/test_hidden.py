@@ -10,6 +10,8 @@ from pathlib import Path
 import duckdb
 import pytest
 
+from dogma_data import rng, synth
+
 COLUMNS = ["user_id", "streak_days", "streak_start", "streak_end"]
 TYPES = ["BIGINT", "BIGINT", "DATE", "DATE"]
 SQL = Path(__file__).with_name("submission.sql").read_text(encoding="utf-8")
@@ -142,3 +144,41 @@ def test_one_row_per_user_even_with_many_equal_length_runs():
 
 def test_empty_table_returns_no_rows_with_the_declared_schema():
     _same(_run([]), [])
+
+
+def _visits_from_log(log) -> list[tuple[int, date]]:
+    days = log["ts"].astype("datetime64[D]")
+    return [
+        (int(user), date.fromisoformat(str(day)))
+        for user, day in zip(log["user_id"], days, strict=True)
+    ]
+
+
+@pytest.fixture(scope="module")
+def holiday_burst() -> list[tuple[int, date]]:
+    """Dense activity across 31 Dec 2028, a leap-year end: heavy-tailed users, duplicate rows."""
+    log = synth.event_log(
+        rng("sql/sql-streaks-gaps-and-islands/p01-longest-streak-per-user:holiday_burst:0"),
+        3000,
+        n_users=40,
+        zipf_a=1.1,
+        start="2028-12-20",
+        days=20,
+        duplicate_rate=0.2,
+    )
+    return _visits_from_log(log)
+
+
+def test_matches_the_oracle_on_a_holiday_burst_across_a_leap_year_end(holiday_burst):
+    got = _run(holiday_burst)
+    if got != _oracle(holiday_burst):
+        pytest.fail(
+            "longest streak differs on dense activity across a leap-year end: check how a run "
+            "continues across a year end, where the day count restarts"
+        )
+
+
+def test_run_across_a_leap_year_end_is_one_streak():
+    first = date(2028, 12, 29)
+    rows = [(5, first + timedelta(days=offset)) for offset in range(6)]  # to 3 January 2029
+    _same(_run(rows), [(5, 6, first, date(2029, 1, 3))])

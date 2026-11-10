@@ -25,6 +25,7 @@ Table `visits` has columns:
 - Output columns, in order, with these types: `user_id BIGINT`, `streak_days BIGINT`, `streak_start DATE`,
   `streak_end DATE`.
 - Final output order is `user_id ASC`.
+- A run continues from one calendar date to the next across month ends, year ends and leap days: 31 December 2028 is followed by 1 January 2029, and 28 February 2028 by 29 February.
 - Users with no visits do not appear. An empty table returns no rows, with the stated columns and types.
 - Do not change the `visits` table.
 
@@ -61,6 +62,19 @@ user_id visit_date
 => (9, 1, 2026-07-04, 2026-07-04)
 ```
 
+```text
+user_id visit_date
+5       2028-12-29
+5       2028-12-30
+5       2028-12-31
+5       2029-01-01
+5       2029-01-02
+5       2029-01-03
+=> (5, 6, 2028-12-29, 2029-01-03)
+```
+
+A run that crosses 31 December 2028 is one streak. The year end does not restart the count.
+
 ## Constraints
 
 - Allowed: a read-only DuckDB SQL query. CTEs, subqueries, window functions, `DISTINCT`, `GROUP BY` and
@@ -74,4 +88,4 @@ The result matches an independent oracle that takes each user's distinct dates, 
 runs in Python. The seeded fixture and the hidden cases cover: duplicate visits on one day; a single-day
 user; a gap of exactly one day that breaks a run; a run across a month end and a year end; a leap day; ties
 in length, where the earliest start must win; a user whose longest run comes after a shorter one; many users
-in shuffled insertion order; an empty table; the exact output types; and the final ordering.
+in shuffled insertion order; an empty table; the exact output types; and the final ordering. A dense holiday burst across a leap-year end, with heavy-tailed users and duplicate visits, is the realistic family.
