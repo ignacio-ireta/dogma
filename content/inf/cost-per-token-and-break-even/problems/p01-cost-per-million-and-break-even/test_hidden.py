@@ -219,3 +219,22 @@ def test_out_of_range_money_or_count_raises_value_error(
         "a price that is not finite, negative or zero where it divides, or a count out of range, "
         "must raise ValueError",
     )
+
+
+def test_negative_gpu_price_just_below_zero_raises_value_error() -> None:
+    _expect_error(
+        ValueError,
+        lambda: cost_and_break_even(Decimal("-0.01"), 1, 1000, 100, Decimal("0.60")),
+        "a GPU price below zero must raise ValueError: the price must be at least 0",
+    )
+
+
+def test_tiny_positive_api_price_is_accepted() -> None:
+    # Hand worked: daily cost 2.50 * 1 * 24 = 60 USD; 60 * 10**6 / 0.0000005 = 1.2e14 tokens
+    try:
+        got = cost_and_break_even(Decimal("2.50"), 1, 1000, 100, Decimal("0.0000005"))
+    except ValueError:
+        pytest.fail("a tiny positive API price is valid: it must not raise ValueError")
+    assert got["break_even_tokens_per_day"] == 120_000_000_000_000, (
+        "wrong break-even volume for a tiny positive API price: divide by that price"
+    )

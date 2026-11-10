@@ -1,7 +1,57 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_price_allows_small_negative.py
+  mistake: accepts a small negative GPU price
+  clause: '`gpu_hour_price`: `decimal.Decimal`, USD per GPU-hour, finite and at least 0. `int`, `float`
+    and `str` are rejected with `TypeError`, because money is exact only as `Decimal`.'
+  killed_by: test_negative_gpu_price_just_below_zero_raises_value_error
+  visible: hidden
+- file: reject_api_price_rejects_tiny.py
+  mistake: rejects a tiny but valid API price below a millionth
+  clause: '`api_price_per_million`: `decimal.Decimal`, USD per million output tokens, finite and greater
+    than 0.'
+  killed_by: test_tiny_positive_api_price_is_accepted
+  visible: hidden
+- file: reject_gpus_accepts_zero.py
+  mistake: accepts zero GPUs
+  clause: '`gpus`: Python `int`, at least 1. GPUs billed for one replica.'
+  killed_by: test_out_of_range_money_or_count_raises_value_error
+  visible: hidden
+- file: reject_tokens_per_second_accepts_float.py
+  mistake: converts tokens per second with int so floats pass
+  clause: '`tokens_per_second`: Python `int`, at least 1. Sustained output tokens per second of one replica
+    at full load.'
+  killed_by: test_wrong_type_raises_type_error
+  visible: hidden
+- file: reject_utilization_accepts_101.py
+  mistake: accepts utilization up to 101 percent
+  clause: '`utilization_percent`: Python `int` from 1 to 100 inclusive. Share of the day the replica serves
+    at that rate.'
+  killed_by: test_out_of_range_money_or_count_raises_value_error
+  visible: hidden
+- file: reject_breakeven_floor_not_ceiling.py
+  mistake: rounds the break-even volume down instead of up
+  clause: Returns a `dict` with exactly the keys `"self_host_usd_per_million"` (a `Decimal` with two places)
+    and `"break_even_tokens_per_day"` (an `int`).
+  killed_by: test_seeded_random_inputs_match_independent_decimal_computation
+  visible: hidden
+- file: reject_cost_rounds_through_float.py
+  mistake: rounds the cost through a binary float
+  clause: Returns a `dict` with exactly the keys `"self_host_usd_per_million"` (a `Decimal` with two places)
+    and `"break_even_tokens_per_day"` (an `int`).
+  killed_by: test_half_cent_that_binary_floats_cannot_represent_rounds_up
+  visible: hidden
+- file: reject_gpus_accepts_bool.py
+  mistake: counts a True GPU flag as one GPU
+  clause: 'Raises `TypeError` when a value has the wrong type (`bool` is rejected for the integer arguments,
+    and the `Decimal` arguments reject `int`, `float` and `str`). Raises `ValueError` when a value is
+    out of range: a price that is not finite or is negative, an API price of 0 or less, `gpus` or `tokens_per_second`
+    below 1, or a utilization outside 1 to 100.'
+  killed_by: test_wrong_type_raises_type_error
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

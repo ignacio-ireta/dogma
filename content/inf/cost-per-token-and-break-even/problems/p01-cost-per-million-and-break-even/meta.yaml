@@ -1,5 +1,5 @@
 id: inf/cost-per-token-and-break-even/p01-cost-per-million-and-break-even
-version: 2                      # bump when tests, tolerances or the contract change
+version: 3                      # bump when tests, tolerances or the contract change
 title: Self-hosted cost per million output tokens and the break-even volume
 language: python
 runtime: py-stdlib
