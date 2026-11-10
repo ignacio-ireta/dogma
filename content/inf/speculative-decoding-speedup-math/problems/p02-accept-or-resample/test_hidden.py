@@ -73,7 +73,7 @@ def test_resample_picks_first_index_whose_cumulative_mass_exceeds_u2():
     # so equality moves on.
     p = np.array([0.5, 0.25, 0.25, 0.0])
     q = np.array([0.0, 0.0, 0.0, 1.0])
-    assert run(p, q, 3, 0.5, 0.49)[0] == 0
+    assert run(p, q, 3, 0.5, 0.49)[0] == 0, "u2 below the first cumulative mass must pick index 0"
     assert run(p, q, 3, 0.5, 0.5)[0] == 1, (
         "u2 equal to the cumulative mass 0.5 must move to index 1"
     )
@@ -138,7 +138,7 @@ def test_tiny_draft_probability_gives_a_finite_valid_result():
         "q-negative",
         "p-nan",
         "empty",
-        "not-1d",
+        "not-one-dimensional",
         "length-mismatch",
         "draft-token-too-large",
         "draft-token-negative",
