@@ -37,3 +37,4 @@ uncovered:
   reason: a read-only query cannot change the input table, so no wrong solution can break this
 sweeps:
 - reject
+- mutants
