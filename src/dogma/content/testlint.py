@@ -30,7 +30,7 @@ _ASSERT_CALL_NAMES: frozenset[str] = frozenset(
 )
 _MESSAGE_KEYWORDS: frozenset[str] = frozenset({"err_msg", "msg"})
 _DEFINITIONS = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
-_DTYPE_NAME = re.compile(r"(?i)\b(?:u?int|float|complex|bool)(?:8|16|32|64|128)\b")
+_DTYPE_NAME = re.compile(r"(?i)\b(?:u?int|float|complex|bool|fp|bf)(?:8|16|32|64|128)\b")
 
 
 @dataclass(frozen=True)
