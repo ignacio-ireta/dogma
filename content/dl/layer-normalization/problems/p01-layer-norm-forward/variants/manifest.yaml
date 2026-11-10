@@ -63,3 +63,4 @@ uncovered:
   reason: ban on library routines, not a complexity promise, runbook gives no wrong solution for a ban
 sweeps:
 - reject
+- mutants
