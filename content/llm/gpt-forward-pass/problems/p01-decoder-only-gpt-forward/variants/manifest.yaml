@@ -2,6 +2,67 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_rsqrt_layer_norm.py
+  origin: freedom
+  freedom: layer norm multiplies by reciprocal square root instead of dividing by square root
+- file: accept_view_split_heads.py
+  origin: freedom
+  freedom: head split makes the tensor contiguous before a view instead of a reshape
+reject:
+- file: reject_skip_position_for_single_token.py
+  mistake: position embedding skipped when T is 1
+  clause: '`idx`: `torch.int64` tensor of shape `(B, T)`, with `B >= 1` and `T >= 1`. Entry `(b, t)` is
+    the token id at position `t` of row `b`. Ids lie in `[0, V)`.'
+  killed_by: test_matches_gpt_reference_on_seeded_batches
+  visible: hidden
+- file: reject_ignores_num_heads.py
+  mistake: attention runs as one head whatever num_heads is
+  clause: '`num_heads`: positive `int` (not `bool`) that divides `D`. Each head has width `D / num_heads`.'
+  killed_by: test_matches_gpt_reference_on_seeded_batches
+  visible: hidden
+- file: reject_always_tied_head.py
+  mistake: head is always tied even when lm_head is given
+  clause: '`params`: a mapping with these keys. `V`, `D`, `C` and the block feed-forward width `F` are
+    read from the shapes given here. | key | shape | role | |---|---|---| | `tok_emb` | `(V, D)` | token
+    embedding table | | `pos_emb` | `(C, D)` | position embedding table; row `t` is position `t` | | `blocks`
+    | list of `N` mappings, `N >= 0` | one block per entry, each with the 16 keys below | | `ln_f_gamma`,
+    `ln_f_beta` | `(D,)` | final LayerNorm scale and shift | | `lm_head` | `(D, V)` | **optional.** Present
+    means untied. Absent means tied | Each block mapping has exactly these 16 keys, with the shapes of
+    `dl/transformer-block`: `ln1_gamma`, `ln1_beta` `(D,)`; `W_q`, `W_k`, `W_v`, `W_o` `(D, D)`; `b_q`,
+    `b_k`, `b_v`, `b_o` `(D,)`; `ln2_gamma`, `ln2_beta` `(D,)`; `W_1` `(D, F)`; `b_1` `(F,)`; `W_2` `(F,
+    D)`; `b_2` `(D,)`. Each block''s feed-forward width `F >= 1` is read from its own `W_1`. Every tensor
+    in `params` has the dtype of `tok_emb`, which is a floating-point dtype.'
+  killed_by: test_matches_gpt_reference_on_seeded_batches
+  visible: hidden
+- file: reject_epsilon_outside_root.py
+  mistake: LayerNorm epsilon added after the square root
+  clause: 'Definitions, with $\varepsilon = 10^{-5}$: - Embedding: $x_{b,t} = \mathrm{tok\_emb}[idx_{b,t}]
+    + \mathrm{pos\_emb}[t]$. Shape $(B, T, D)$. - LayerNorm over the last axis with **biased** variance,
+    $\mathrm{LN}(u)=\gamma\odot(u-\mu)/\sqrt{\sigma^2+\varepsilon}+\beta$. - Exact GELU: $\mathrm{gelu}(z)=\tfrac12
+    z\,(1+\operatorname{erf}(z/\sqrt2))$. - Causal attention: query $i$ may not attend to any key $j>i$.
+    Scores are scaled by $1/\sqrt{d_\text{head}}$. - Tied head: logits $=h\,\mathrm{tok\_emb}^\top$, with
+    $h$ the final LayerNorm output. - Untied head: logits $=h\,\mathrm{lm\_head}$.'
+  killed_by: test_matches_gpt_reference_on_seeded_batches
+  visible: hidden
+- file: reject_float64_output.py
+  mistake: logits always returned as float64
+  clause: 'Returns: `(B, T, V)` tensor, the logits. Same dtype as `tok_emb`.'
+  killed_by: test_float32_parameters_return_float32_close_to_reference
+  visible: hidden
+- file: reject_context_off_by_one.py
+  mistake: T equal to the context length is wrongly rejected
+  clause: 'Raises `ValueError` when: `idx` is not a 2-D `int64` tensor, or has a zero-size axis; any id
+    is negative or at least `V`; `T > C`; `num_heads` is not a positive `int` or does not divide `D`;
+    `params` is not a mapping, is missing a required key, has a key other than the allowed ones, or has
+    a value of the wrong type; any table, block or LayerNorm has the wrong shape; any tensor''s dtype
+    differs from `tok_emb`; `tok_emb` is not floating-point.'
+  killed_by: test_tied_head_worked_example_gives_expected_logits
+  visible: public
+- file: reject_mutates_ln_f_gamma.py
+  mistake: final LayerNorm gamma scaled in place on each call
+  clause: Must not mutate `idx` or any tensor in `params`.
+  killed_by: test_inputs_and_parameters_are_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
