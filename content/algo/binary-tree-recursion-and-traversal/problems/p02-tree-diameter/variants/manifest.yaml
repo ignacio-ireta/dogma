@@ -1,7 +1,47 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_iterative.py
+  origin: freedom
+  freedom: walks the tree with an explicit post-order stack instead of recursion
+reject:
+- file: reject_full_height_rescan.py
+  mistake: rescans subtree heights at each node, quadratic time
+  clause: Time O(n) for n nodes; the extra space may be O(h) for a height h.
+  killed_by: test_child_reads_grow_linearly_with_the_number_of_nodes
+  visible: hidden
+- file: reject_rejects_valid_tree_by_class.py
+  mistake: validation only accepts TreeNode instances and rejects valid duck-typed nodes
+  clause: '`root`: a `TreeNode` or `None`. Any object with the attributes `val`, `left` and `right` is
+    accepted. The tree is acyclic and its values are ignored.'
+  killed_by: test_empty_tree_and_single_node_have_diameter_zero
+  visible: public
+- file: reject_counts_nodes_not_edges.py
+  mistake: counts nodes on the path instead of edges
+  clause: 'Returns: a Python `int`, the number of edges on the longest path. A tree with one node has
+    diameter 0. The empty tree has diameter 0.'
+  killed_by: test_empty_tree_and_single_node_have_diameter_zero
+  visible: public
+- file: reject_height_as_diameter.py
+  mistake: returns the height of the tree instead of the longest path
+  clause: 'Returns: a Python `int`, the number of edges on the longest path. A tree with one node has
+    diameter 0. The empty tree has diameter 0.'
+  killed_by: test_empty_tree_and_single_node_have_diameter_zero
+  visible: public
+- file: reject_returns_zero_for_invalid_input.py
+  mistake: returns zero for invalid input instead of raising TypeError
+  clause: Raises `TypeError` when `root` is neither `None` nor an object with `val`, `left` and `right`.
+  killed_by: test_wrong_root_type_raises_type_error
+  visible: hidden
+- file: reject_detaches_right_child.py
+  mistake: detaches the right child while measuring heights
+  clause: Must not mutate the tree.
+  killed_by: test_tree_is_unchanged_after_the_call
+  visible: hidden
+uncovered:
+- clause: Recursion is allowed. The hidden trees have height at most 900, which fits in Python's default
+    recursion limit, so one recursive call per level is fine.
+  reason: 'states a permission: recursion is allowed, so no wrong solution can break it'
+sweeps:
+- reject

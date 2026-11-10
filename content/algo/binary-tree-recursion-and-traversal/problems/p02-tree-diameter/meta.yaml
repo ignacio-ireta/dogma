@@ -1,5 +1,5 @@
 id: algo/binary-tree-recursion-and-traversal/p02-tree-diameter
-version: 2
+version: 3
 title: Diameter of a binary tree
 language: python
 runtime: py-stdlib

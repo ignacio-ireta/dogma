@@ -248,3 +248,24 @@ def test_object_missing_one_tree_attribute_raises_type_error() -> None:
             "a root missing one of val, left or right was accepted: check all three attributes "
             "before measuring the tree"
         )
+
+
+def test_child_reads_grow_linearly_with_the_number_of_nodes():
+    # Contract: time O(n). Count the reads of the child attributes on a chain of 300 nodes.
+    # A linear walk reads each child a bounded number of times; 50 reads per node is generous.
+    # A walk that rescans subtrees reads on the order of n squared times.
+    reads = [0]
+
+    class _Counted(_Node):
+        def __getattribute__(self, name):
+            if name in ("left", "right"):
+                reads[0] += 1
+            return object.__getattribute__(self, name)
+
+    root = None
+    for value in range(299, -1, -1):
+        root = _Counted(value, None, root)
+    assert _call(root) == 299, "the diameter of a chain is the number of edges between its two ends"
+    assert reads[0] <= 50 * 300, (
+        "the diameter must be found in one linear pass: child attributes were read too often"
+    )
