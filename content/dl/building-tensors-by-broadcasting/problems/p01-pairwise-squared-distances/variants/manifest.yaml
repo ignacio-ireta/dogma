@@ -2,6 +2,43 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_einsum_sum.py
+  origin: freedom
+  freedom: sums the squared coordinates with einsum instead of np.sum, a different rounding path
+reject:
+- file: reject_empty_input_refused.py
+  mistake: refuses empty point sets, which the Contract allows
+  clause: '`X`: shape $(n, d)$; `Y`: shape $(m, d)$. Real numbers; integer arrays are allowed. $n$ and
+    $m$ may be 0. $d \geq 1$. Both are 2-D NumPy arrays (or array-likes that become 2-D arrays).'
+  killed_by: test_empty_point_sets_give_matrices_with_the_right_shape
+  visible: hidden
+- file: reject_result_transposed.py
+  mistake: returns the transpose of the n by m matrix
+  clause: 'Returns: a `float64` array of shape $(n, m)$ with `D[i, j]` equal to $\lVert x_i - y_j \rVert^2$.'
+  killed_by: test_example_two_points_against_one_point
+  visible: public
+- file: reject_negative_zero_epsilon.py
+  mistake: subtracts a tiny epsilon from near-zero entries so rounding-level zeros go negative
+  clause: Every entry is $\geq 0$. Rounding must never produce a negative distance.
+  killed_by: test_every_entry_is_non_negative
+  visible: hidden
+- file: reject_expansion_without_centring.py
+  mistake: uses the norm expansion with a clamp, which cancels when points are far from the origin
+  clause: 'Accuracy: when all points share a large offset (for example $10^8$ in every coordinate), the
+    distances between them must still match the direct computation to a relative $10^{-6}$.'
+  killed_by: test_points_far_from_origin_keep_their_small_distances
+  visible: hidden
+- file: reject_narrow_feature_check.py
+  mistake: skips the feature-count check when one side has a single feature
+  clause: Raises `ValueError` when `X` or `Y` is not 2-D, or when the feature counts differ ($d_X \neq
+    d_Y$).
+  killed_by: test_feature_counts_must_match_even_when_one_side_has_a_single_feature
+  visible: hidden
+- file: reject_input_nudged_in_place.py
+  mistake: nudges X one ulp in place after the result is formed
+  clause: Must not mutate its inputs.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
