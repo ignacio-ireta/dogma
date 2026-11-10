@@ -77,8 +77,10 @@ def random_workload(rng: random.Random):
     return arrivals, prompts, outputs, rng.randint(1, 4), budget
 
 
-@pytest.mark.parametrize("policy", ["static", "continuous"])
-@pytest.mark.parametrize("seed", range(40), ids=[f"seed-{s}" for s in range(40)])
+@pytest.mark.parametrize("policy", ["static", "continuous"], ids=["static", "continuous"])
+@pytest.mark.parametrize(
+    "seed", range(40), ids=[chr(97 + s // 26) + chr(97 + s % 26) for s in range(40)]
+)
 def test_random_workloads_match_the_independent_step_model(seed, policy):
     arrivals, prompts, outputs, max_batch, budget = random_workload(random.Random(seed))  # noqa: S311
     want = step_model(arrivals, prompts, outputs, max_batch, budget, policy)
@@ -133,8 +135,12 @@ def test_prefill_budget_is_per_step_not_per_queue():
 
 
 def test_empty_workload_returns_an_empty_list_for_both_policies():
-    assert run([], [], [], 2, 8, "static") == []
-    assert run([], [], [], 2, 8, "continuous") == []
+    assert run([], [], [], 2, 8, "static") == [], (
+        "an empty workload must return an empty list under static"
+    )
+    assert run([], [], [], 2, 8, "continuous") == [], (
+        "an empty workload must return an empty list under continuous"
+    )
 
 
 def test_invalid_arguments_raise_value_error():
