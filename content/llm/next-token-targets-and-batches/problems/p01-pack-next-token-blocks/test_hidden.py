@@ -260,3 +260,14 @@ def test_token_id_above_int64_raises_even_when_no_block_is_formed():
         lambda: pack_next_token_blocks([[2**63]], 4, 0),  # stream too short for one block
         "a token id above 2**63 - 1 must raise ValueError even when no block is returned",
     )
+
+
+def test_tuple_documents_are_accepted_like_list_documents():
+    """Contract: each document is a list or a tuple of int token ids."""
+    # Stream: (1, 2) + EOS 0 + (3,) + EOS 0 = [1, 2, 0, 3, 0], N = 5, B = (5 - 1) // 2 = 2.
+    # Inputs are windows of two tokens starting every two tokens; targets shift them by one.
+    inputs, targets = _call([(1, 2), (3,)], 2, 0)
+    if inputs.tolist() != [[1, 2], [0, 3]]:
+        raise AssertionError("a document given as a tuple must contribute its ids, as a list does")
+    if targets.tolist() != [[2, 0], [3, 0]]:
+        raise AssertionError("a document given as a tuple must give the same targets as a list")

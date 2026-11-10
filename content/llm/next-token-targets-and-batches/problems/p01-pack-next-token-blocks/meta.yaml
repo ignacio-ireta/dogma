@@ -1,5 +1,5 @@
 id: llm/next-token-targets-and-batches/p01-pack-next-token-blocks
-version: 2
+version: 3
 title: Pack documents into next-token (inputs, targets) blocks
 language: python
 runtime: py-torch

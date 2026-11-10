@@ -1,7 +1,67 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_cloned_outputs.py
+  origin: freedom
+  freedom: copies the two outputs with clone instead of contiguous
+- file: accept_stacked_slices.py
+  origin: freedom
+  freedom: builds each window by slicing the stream list instead of index arithmetic
+reject:
+- file: reject_tuple_documents_refused.py
+  mistake: rejects a document given as a tuple
+  clause: '`documents`: a `list` or `tuple` of documents. Each document is a `list` or `tuple` of Python
+    `int` token ids. A document may be empty, and the list may be empty. Every id is `0 <= id <= 2**63
+    - 1`.'
+  killed_by: test_tuple_documents_are_accepted_like_list_documents
+  visible: hidden
+- file: reject_bool_block_size_accepted.py
+  mistake: accepts a bool as block_size
+  clause: '`block_size` (`T`): Python `int`, `>= 1`. A `bool` is invalid.'
+  killed_by: test_invalid_block_size_raises_value_error
+  visible: hidden
+- file: reject_negative_eos_accepted.py
+  mistake: accepts a negative eos_id
+  clause: '`eos_id`: Python `int`, `>= 0`. A `bool` is invalid. It may equal a token id that occurs in
+    a document.'
+  killed_by: test_negative_eos_id_raises_value_error
+  visible: hidden
+- file: reject_eos_skipped_for_empty_document.py
+  mistake: empty document adds no EOS
+  clause: 'Stream: `S` is the concatenation of `doc_1 + [eos_id] + doc_2 + [eos_id] + ...`, one EOS after
+    every document, including the last. Its length is `N = sum(len(doc) + 1)`. An empty document contributes
+    only its EOS.'
+  killed_by: test_random_corpora_match_plain_python_reference
+  visible: hidden
+- file: reject_block_count_from_stream_length.py
+  mistake: block count uses N not N minus 1
+  clause: 'Blocks: there are `B = max(0, (N - 1) // T)` blocks. Block `b` (from 0) is - `inputs[b] = S[b*T
+    : b*T + T]` - `targets[b] = S[b*T + 1 : b*T + T + 1]`'
+  killed_by: test_random_corpora_match_plain_python_reference
+  visible: hidden
+- file: reject_partial_tail_padded.py
+  mistake: short tail padded into a block
+  clause: 'Remainder rule: the last `N - 1 - B*T` tokens of the stream are dropped. Nothing is padded.
+    A block that is not full is never returned.'
+  killed_by: test_leftover_tokens_are_dropped_not_padded
+  visible: public
+- file: reject_empty_result_float_dtype.py
+  mistake: empty result has float dtype
+  clause: 'Returns: `(inputs, targets)`, both `torch.int64` tensors of shape `(B, T)`. When `B = 0`, both
+    have shape `(0, T)`.'
+  killed_by: test_random_corpora_match_plain_python_reference
+  visible: hidden
+- file: reject_int64_upper_bound_unchecked.py
+  mistake: token id above int64 max not checked
+  clause: 'Raises `ValueError` when: `documents` is not a list or tuple; a document is not a list or tuple;
+    a token id is not a Python `int`, is negative, or exceeds `2**63 - 1`; `block_size` or `eos_id` is
+    not a valid Python `int`; `block_size < 1`; `eos_id < 0`.'
+  killed_by: test_token_id_above_int64_raises_even_when_no_block_is_formed
+  visible: hidden
+uncovered:
+- clause: Must not mutate `documents` or any document. In particular, do not append the EOS to the caller's
+    lists.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject
