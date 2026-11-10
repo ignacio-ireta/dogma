@@ -1,7 +1,51 @@
-problem_version: 1
+problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_loop_fsum.py
+  origin: freedom
+  freedom: a loop with math.fsum over the ratios where the reference is vectorised, another rounding path
+reject:
+- file: reject_integers_cast_to_int32.py
+  mistake: integer entries are squeezed into int32 and wrap
+  clause: '`x`: a one-dimensional sequence (list or NumPy array) of finite real numbers, length $n \geq
+    1$. Integers are allowed.'
+  killed_by: test_integer_entries_keep_their_full_value
+  visible: hidden
+- file: reject_reciprocal_scale_overflows_tiny.py
+  mistake: reciprocal of a subnormal scale overflows to inf
+  clause: Entries anywhere in the float64 range must give the correct finite result when the norm itself
+    is representable. For example, `[3e200, 4e200]` has L2 norm $5\cdot10^{200}$ and `[3e-200, 4e-200]`
+    has L2 norm $5\cdot10^{-200}$.
+  killed_by: test_subnormal_entries_give_a_finite_correct_norm
+  visible: hidden
+- file: reject_exponent_truncated_to_int.py
+  mistake: exponent p is truncated to an integer
+  clause: '`p`: a real number with $p \geq 1$, or infinity (`math.inf` or `np.inf`).'
+  killed_by: test_matches_numpy_norm_on_random_vectors_for_common_exponents
+  visible: hidden
+- file: reject_nan_p_passes_guard.py
+  mistake: NaN exponent passes the p check and returns NaN
+  clause: 'Raises `ValueError` when: - `p` is below 1, or is NaN. Exponents below 1 do not define a norm.
+    - `x` is not one-dimensional, or is empty.'
+  killed_by: test_exponent_below_one_or_nan_raises_value_error
+  visible: hidden
+- file: reject_zero_guard_dropped.py
+  mistake: zero-vector guard dropped so zero vector gives NaN
+  clause: 'Returns: a Python `float` that is at least 0. The zero vector has norm 0 for every `p`.'
+  killed_by: test_zero_vector_has_zero_norm_for_every_exponent
+  visible: hidden
+- file: reject_drops_ndim_check.py
+  mistake: two-dimensional input is flattened instead of rejected
+  clause: 'Raises `ValueError` when: - `p` is below 1, or is NaN. Exponents below 1 do not define a norm.
+    - `x` is not one-dimensional, or is empty.'
+  killed_by: test_matrix_input_raises_value_error
+  visible: hidden
+- file: reject_abs_writes_into_input.py
+  mistake: absolute values written back into a float64 input array
+  clause: Must not mutate its input.
+  killed_by: test_input_vector_is_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

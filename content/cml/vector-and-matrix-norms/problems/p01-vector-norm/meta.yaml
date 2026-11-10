@@ -1,5 +1,5 @@
 id: cml/vector-and-matrix-norms/p01-vector-norm
-version: 1
+version: 2
 title: Vector p-norm
 language: python
 runtime: py-numpy

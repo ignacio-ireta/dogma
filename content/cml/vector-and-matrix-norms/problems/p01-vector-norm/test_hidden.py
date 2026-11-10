@@ -172,3 +172,25 @@ def test_input_vector_is_not_mutated():
     before = x.copy()
     vector_norm(x, 2)
     _assert_equal(x, before, err_msg="input vector was modified in place")
+
+
+def test_integer_entries_keep_their_full_value():
+    # Contract: "Integers are allowed." 3 * 2**40 and 4 * 2**40 are exact integers that
+    # overflow int32; the L2 norm is 5 * 2**40, exactly representable in float64.
+    result = vector_norm([3 * 2**40, 4 * 2**40], 2)
+    assert result == pytest.approx(5 * 2**40, rel=1e-12), (
+        "integer entries are real numbers: large integers must keep their full value"
+    )
+
+
+def test_subnormal_entries_give_a_finite_correct_norm():
+    # Contract: "Entries anywhere in the float64 range must give the correct finite result".
+    # 3e-310 and 4e-310 are subnormal floats. Their L2 norm 5e-310 is representable.
+    # abs=0.0 so that a result of 0 cannot pass the approximation.
+    result = vector_norm([3e-310, 4e-310], 2)
+    assert math.isfinite(result), (
+        "subnormal entries gave a non-finite norm: do not take the reciprocal of the largest entry"
+    )
+    assert result == pytest.approx(5e-310, rel=1e-9, abs=0.0), (
+        "the norm of subnormal entries is wrong: scaling must stay accurate when subnormal"
+    )
