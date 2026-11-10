@@ -248,3 +248,27 @@ def test_batch_size_below_one_raises_even_with_zero_epochs():
         "a batch size below 1 must raise ValueError even when there are no epochs: "
         "validate batch_size before the epoch loop",
     )
+
+
+def test_tiny_positive_learning_rate_is_accepted_and_used():
+    # One full-batch step from zero: the gradient is -15 (sum of x*y over the 4 rows, divided by 4),
+    # so w = lr * 15 = 1e-7 * 15.
+    try:
+        w = minibatch_sgd(
+            [[1.0], [2.0], [3.0], [4.0]],
+            [2.0, 4.0, 6.0, 8.0],
+            lr=1e-7,
+            batch_size=4,
+            epochs=1,
+            seed=0,
+        )
+    except ValueError:
+        pytest.fail(
+            "a positive learning rate, however small, must be accepted; it raised ValueError"
+        )
+    np.testing.assert_allclose(
+        w,
+        [1.5e-6],
+        rtol=1e-9,
+        err_msg="a positive learning rate, however small, must be accepted and used",
+    )

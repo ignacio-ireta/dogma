@@ -1,7 +1,75 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_row_loop_gradient.py
+  origin: freedom
+  freedom: accumulates each batch gradient row by row in a Python loop instead of one matrix product
+- file: accept_expanded_gradient.py
+  origin: freedom
+  freedom: expands the batch gradient as X transpose X w minus X transpose y, another rounding path
+reject:
+- file: reject_tiny_learning_rate.py
+  mistake: rejects tiny positive learning rates
+  clause: '`lr`: learning rate, a number > 0.'
+  killed_by: test_tiny_positive_learning_rate_is_accepted_and_used
+  visible: hidden
+- file: reject_rejects_single_row.py
+  mistake: rejects a single row, which the Contract allows
+  clause: '`X`: 2-D array-like, shape (n, d), n ≥ 1, finite real numbers. Integers allowed.'
+  killed_by: test_any_batch_size_matches_the_reference
+  visible: hidden
+- file: reject_excludes_full_batch.py
+  mistake: excludes batch_size equal to n
+  clause: '`batch_size`: integer with 1 ≤ `batch_size` ≤ n.'
+  killed_by: test_single_full_batch_step_matches_hand_computation
+  visible: public
+- file: reject_rejects_zero_epochs.py
+  mistake: rejects zero epochs
+  clause: '`epochs`: integer ≥ 0.'
+  killed_by: test_zero_epochs_returns_zero_weights
+  visible: public
+- file: reject_seed_shifts_start.py
+  mistake: the seed also shifts the starting weights
+  clause: '`seed`: integer, keyword-only. It is used only to build the random generator.'
+  killed_by: test_matches_row_by_row_reference_of_the_protocol
+  visible: hidden
+- file: reject_returns_float32.py
+  mistake: returns float32 weights
+  clause: 'Returns: `w`, a float64 array of shape (d,), the weights after the last epoch.'
+  killed_by: test_matches_row_by_row_reference_of_the_protocol
+  visible: hidden
+- file: reject_no_y_length_check.py
+  mistake: does not check that y has n entries
+  clause: Raises `ValueError` when `X` is not 2-D; when `y` is not 1-D or its length differs from n; when
+    `batch_size` is outside 1..n; when `lr` is not positive; when `epochs` is negative.
+  killed_by: test_shape_mismatches_raise_value_error
+  visible: hidden
+- file: reject_divide_by_batch_size.py
+  mistake: divides each gradient by batch_size instead of the slice size
+  clause: 'Must not mutate `X` or `y`. **Protocol (exact).** 1. Start with `w = zeros(d)`. 2. Create `rng
+    = np.random.default_rng(seed)` once, before the first epoch. 3. Each epoch, draw `perm = rng.permutation(n)`:
+    exactly one draw per epoch. 4. The batches are consecutive slices of `perm`: `perm[0:B]`, `perm[B:2B]`,
+    …, where `B = batch_size`. The last slice may be smaller, and it is kept. Let `idx` be the rows of
+    a slice and `m = |idx|`. 5. For each slice, compute the gradient `g = X[idx]ᵀ (X[idx] w − y[idx])
+    / m` and update `w ← w − lr · g`. One update per slice, so an epoch makes ⌈n/B⌉ updates. 6. After
+    the last epoch, return `w`.'
+  killed_by: test_matches_row_by_row_reference_of_the_protocol
+  visible: hidden
+- file: reject_rebuilds_rng_each_epoch.py
+  mistake: rebuilds the generator every epoch, repeating the shuffle
+  clause: 'Must not mutate `X` or `y`. **Protocol (exact).** 1. Start with `w = zeros(d)`. 2. Create `rng
+    = np.random.default_rng(seed)` once, before the first epoch. 3. Each epoch, draw `perm = rng.permutation(n)`:
+    exactly one draw per epoch. 4. The batches are consecutive slices of `perm`: `perm[0:B]`, `perm[B:2B]`,
+    …, where `B = batch_size`. The last slice may be smaller, and it is kept. Let `idx` be the rows of
+    a slice and `m = |idx|`. 5. For each slice, compute the gradient `g = X[idx]ᵀ (X[idx] w − y[idx])
+    / m` and update `w ← w − lr · g`. One update per slice, so an epoch makes ⌈n/B⌉ updates. 6. After
+    the last epoch, return `w`.'
+  killed_by: test_matches_row_by_row_reference_of_the_protocol
+  visible: hidden
+uncovered:
+- clause: '`y`: 1-D array-like, shape (n,).'
+  reason: every valid 1-D y is already read correctly by np.asarray, and any single edit that mishandles
+    it also breaks the length check in C8
+sweeps:
+- reject

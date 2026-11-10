@@ -1,5 +1,5 @@
 id: cml/stochastic-and-mini-batch-gradient-descent/p01-minibatch-sgd
-version: 2
+version: 3
 title: Mini-batch gradient descent
 language: python
 runtime: py-numpy
