@@ -47,6 +47,7 @@ def _must_raise_value_error(call, mistake, match=None):
 @pytest.mark.parametrize(
     ("n", "seed", "sign"),
     [(1, 1, 1.0), (2, 2, -1.0), (3, 3, 1.0), (4, 4, -1.0), (6, 5, 1.0), (8, 6, -1.0)],
+    ids=["case-a", "case-b", "case-c", "case-d", "case-e", "case-f"],
 )
 def test_matches_eigh_dominant_pair_on_random_symmetric_matrices(n, seed, sign):
     A = _symmetric_with_gap(seed, n, dominant_sign=sign)
@@ -63,7 +64,7 @@ def test_matches_eigh_dominant_pair_on_random_symmetric_matrices(n, seed, sign):
     )
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, SIZES, SIGNS)
 def test_returned_pair_is_an_eigenpair_with_unit_eigenvector(seed, n, sign):
     A = _symmetric_with_gap(seed, n, dominant_sign=sign)
@@ -75,7 +76,7 @@ def test_returned_pair_is_an_eigenpair_with_unit_eigenvector(seed, n, sign):
     )
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, SIZES, SIGNS)
 def test_largest_entry_of_eigenvector_is_positive(seed, n, sign):
     A = _symmetric_with_gap(seed, n, dominant_sign=sign)
@@ -169,7 +170,7 @@ def test_nan_entry_raises_value_error():
     )
 
 
-@pytest.mark.parametrize("num_iters", [0, -5])
+@pytest.mark.parametrize("num_iters", [0, -5], ids=["case-a", "case-b"])
 def test_non_positive_iteration_budget_raises_value_error(num_iters):
     _must_raise_value_error(
         lambda: power_iteration(np.eye(2), num_iters=num_iters),
@@ -177,7 +178,7 @@ def test_non_positive_iteration_budget_raises_value_error(num_iters):
     )
 
 
-@pytest.mark.parametrize("tol", [0.0, -1e-6, float("nan")])
+@pytest.mark.parametrize("tol", [0.0, -1e-6, float("nan")], ids=["case-a", "case-b", "case-c"])
 def test_non_positive_or_nan_tolerance_raises_value_error(tol):
     _must_raise_value_error(
         lambda: power_iteration(np.eye(2), tol=tol),
