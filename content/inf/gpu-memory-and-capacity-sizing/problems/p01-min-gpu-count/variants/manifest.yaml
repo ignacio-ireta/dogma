@@ -1,7 +1,56 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_weights_truncated_to_gib.py
+  mistake: weights counted in whole GiB of parameters
+  clause: '`params`: Python `int`, at least 1. Total parameters, all of which are stored.'
+  killed_by: test_seeded_random_deployments_match_independent_computation
+  visible: hidden
+- file: reject_batch_capped.py
+  mistake: KV cache counts at most 32 sequences
+  clause: '`batch`: Python `int`, at least 1. Concurrent sequences.'
+  killed_by: test_no_allowed_degree_fits_returns_zero
+  visible: public
+- file: reject_kv_always_two_bytes.py
+  mistake: KV cache always costed at two bytes per element
+  clause: '`element_bytes`: Python `int`, at least 1. Bytes per element for both weights and cache.'
+  killed_by: test_seeded_random_deployments_match_independent_computation
+  visible: hidden
+- file: reject_usable_truncated_to_mib.py
+  mistake: GPU memory truncated to whole MiB before the reserve
+  clause: '`gpu_memory_bytes`: Python `int`, at least 1. Memory of one GPU in bytes.'
+  killed_by: test_total_exactly_equal_to_usable_memory_fits
+  visible: hidden
+- file: reject_workspace_split_by_degree.py
+  mistake: workspace divided by the degree
+  clause: '`workspace_bytes`: keyword-only Python `int`, at least 0. Activation and runtime workspace
+    per GPU.'
+  killed_by: test_seeded_random_deployments_match_independent_computation
+  visible: hidden
+- file: reject_reserve_capped_at_fifty.py
+  mistake: reserve capped at fifty percent
+  clause: '`reserve_percent`: keyword-only Python `int`, from 0 to 99 inclusive. Percent of GPU memory
+    held back.'
+  killed_by: test_seeded_random_deployments_match_independent_computation
+  visible: hidden
+- file: reject_config_mutated.py
+  mistake: config dict gets a window key written into it when none was given
+  clause: '`config`: as above.'
+  killed_by: test_config_without_window_key_is_not_given_one
+  visible: hidden
+- file: reject_context_off_by_one_window.py
+  mistake: sliding window stores one token fewer than the window
+  clause: '`context_len`: Python `int`, at least 1. Tokens per sequence at the target, prompt plus generated.'
+  killed_by: test_window_stores_every_window_token_not_one_fewer
+  visible: hidden
+uncovered:
+- clause: Returns a Python `int`, `0` or a power of two, never a float.
+  reason: cap of eight wrong solutions per problem
+- clause: Raises `TypeError` when a value is not a Python `int` (`bool`, `float`, `str` and `None` are
+    rejected), or when `config` is not a `dict`. Raises `ValueError` when a value is out of range (including
+    `reserve_percent` of 100 or more), a required key is missing, or the window is below 1.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

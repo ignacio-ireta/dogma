@@ -424,3 +424,20 @@ def test_kv_bytes_stay_exact_beyond_float_precision() -> None:
         pytest.fail(
             "KV bytes beyond float precision must stay exact: use integer arithmetic for the cache"
         )
+
+
+def test_config_without_window_key_is_not_given_one() -> None:
+    cfg = {"num_layers": 80, "num_kv_heads": 8, "head_dim": 128}
+    # A config with no sliding_window key means full attention. Reading it must not add the key.
+    min_gpu_count(70 * 10**9, cfg, 4, 4096, 2, GPU, workspace_bytes=0, reserve_percent=10)
+    if "sliding_window" in cfg:
+        pytest.fail("a config without a window key must stay without one: read it without writing")
+
+
+def test_window_stores_every_window_token_not_one_fewer() -> None:
+    cfg = {"num_layers": 1, "num_kv_heads": 1, "head_dim": 1, "sliding_window": 50}
+    # Weights 1 byte, KV 2 bytes per stored token: a window of 50 stores 50 tokens, so the total
+    # is 1 + 100 = 101 bytes. Usable memory is 100 bytes, so nothing fits and the answer is 0.
+    got = min_gpu_count(1, cfg, 1, 4096, 1, 100, workspace_bytes=0, reserve_percent=0)
+    if got != 0:
+        pytest.fail("a sliding window stores exactly its window of tokens, not one fewer")
