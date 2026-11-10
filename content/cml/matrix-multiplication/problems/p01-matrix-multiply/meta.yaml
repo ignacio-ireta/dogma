@@ -1,5 +1,5 @@
 id: cml/matrix-multiplication/p01-matrix-multiply
-version: 2
+version: 3
 title: Matrix multiplication
 language: python
 runtime: py-numpy

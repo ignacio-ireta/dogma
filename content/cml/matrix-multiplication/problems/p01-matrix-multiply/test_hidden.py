@@ -237,3 +237,26 @@ def test_inputs_are_not_mutated():
     matmul(left, right)
     assert left == left_before, "input A was modified in place"
     assert right == right_before, "input B was modified in place"
+
+
+def test_tuple_rows_give_the_same_product_as_list_rows():
+    # Rows may be tuples (Contract: "Rows are lists or tuples"). Entry (0, 0) is
+    # 1*7 + 2*9 + 3*11 = 58, and the other entries follow the same sum.
+    A = [(1, 2, 3), (4, 5, 6)]
+    B = [(7, 8), (9, 10), (11, 12)]
+    try:
+        result = matmul(A, B)
+    except ValueError as exc:
+        pytest.fail(f"a matrix whose rows are tuples is valid input, but matmul raised: {exc}")
+    assert result == [[58, 64], [139, 154]], (
+        "a matrix whose rows are tuples is valid input, and its product should be returned"
+    )
+
+
+def test_empty_left_operand_with_a_mismatched_inner_dimension_raises():
+    # [] is the (0, 0) matrix. Its inner dimension 0 differs from the 1 row of B,
+    # so the product is undefined and matmul must raise ValueError.
+    _raised_value_error(
+        lambda: matmul([], [[1]]),
+        "the inner dimensions differ when the left matrix is empty and the right one is not",
+    )

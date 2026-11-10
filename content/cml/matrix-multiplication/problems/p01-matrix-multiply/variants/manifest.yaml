@@ -1,7 +1,57 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_reverse_sum_order.py
+  origin: freedom
+  freedom: sums the inner products in reverse order, so float results differ only in the last digits
+reject:
+- file: reject_tuple_rows_refused.py
+  mistake: refuses tuple rows although the Contract allows them
+  clause: '`A`: shape $(m, n)$, a list of $m$ rows of length $n$. `B`: shape $(k, p)$, a list of $k$ rows
+    of length $p$. Rows are lists or tuples of real numbers (ints allowed). Same representation rules
+    as the transpose problem: `[]` is the $(0, 0)$ matrix, and zero-length rows are valid.'
+  killed_by: test_tuple_rows_give_the_same_product_as_list_rows
+  visible: hidden
+- file: reject_empty_left_skips_check.py
+  mistake: empty left operand skips the inner dimension check
+  clause: 'Raises `ValueError` when: - the inner dimensions differ ($n \neq k$). The message must name
+    both shapes as tuples, for example `(2, 3) @ (2, 2)`. - a matrix is ragged (rows of different lengths),
+    or is not a list of rows.'
+  killed_by: test_empty_left_operand_with_a_mismatched_inner_dimension_raises
+  visible: hidden
+- file: reject_empty_matrix_refused.py
+  mistake: refuses the empty matrix that the Contract defines as the 0 by 0 matrix
+  clause: '`A`: shape $(m, n)$, a list of $m$ rows of length $n$. `B`: shape $(k, p)$, a list of $k$ rows
+    of length $p$. Rows are lists or tuples of real numbers (ints allowed). Same representation rules
+    as the transpose problem: `[]` is the $(0, 0)$ matrix, and zero-length rows are valid.'
+  killed_by: test_zero_width_inputs_give_empty_results
+  visible: hidden
+- file: reject_always_float_entries.py
+  mistake: always returns float entries even when both inputs hold ints
+  clause: 'Returns: a list of $m$ rows, each of length $p$, with `C[i][j] = sum over t of A[i][t] * B[t][j]`.
+    The shape is $(m, p)$. Entries are numbers: ints when both inputs hold only ints, floats otherwise.'
+  killed_by: test_integer_inputs_give_integer_entries_and_float_inputs_give_floats
+  visible: hidden
+- file: reject_shape_message_without_tuples.py
+  mistake: the mismatch message gives the shapes as NxM text, not as tuples
+  clause: 'Raises `ValueError` when: - the inner dimensions differ ($n \neq k$). The message must name
+    both shapes as tuples, for example `(2, 3) @ (2, 2)`. - a matrix is ragged (rows of different lengths),
+    or is not a list of rows.'
+  killed_by: test_inner_dimension_mismatch_raises_and_names_both_shapes
+  visible: public
+- file: reject_ragged_last_row_accepted.py
+  mistake: the ragged check skips the last row
+  clause: 'Raises `ValueError` when: - the inner dimensions differ ($n \neq k$). The message must name
+    both shapes as tuples, for example `(2, 3) @ (2, 2)`. - a matrix is ragged (rows of different lengths),
+    or is not a list of rows.'
+  killed_by: test_ragged_input_raises_value_error
+  visible: hidden
+- file: reject_rounds_inputs_in_place.py
+  mistake: rounds float entries of both inputs in place before multiplying
+  clause: Must not mutate its inputs.
+  killed_by: test_flat_list_input_raises_value_error
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
