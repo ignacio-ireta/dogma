@@ -56,3 +56,4 @@ uncovered:
   reason: all inputs are plain ints, so there is no input that can be mutated
 sweeps:
 - reject
+- mutants
