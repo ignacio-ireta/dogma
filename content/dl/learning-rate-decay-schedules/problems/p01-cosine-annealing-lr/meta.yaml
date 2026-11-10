@@ -1,5 +1,5 @@
 id: dl/learning-rate-decay-schedules/p01-cosine-annealing-lr
-version: 1
+version: 2
 title: Cosine annealing learning rate
 language: python
 runtime: py-torch

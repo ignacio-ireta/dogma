@@ -154,3 +154,21 @@ def test_invalid_arguments_raise_value_error():
         lambda: cosine_annealing_lr(0, 0.1, 4, eta_min=-0.01),
         "negative eta_min must raise ValueError",
     )
+
+
+def test_non_integer_t_max_raises_value_error():
+    _rejects(
+        lambda: cosine_annealing_lr(0, 0.1, 4.0),
+        "a float t_max must raise ValueError: t_max must be an int",
+    )
+    _rejects(
+        lambda: cosine_annealing_lr(1, 0.1, 2.5),
+        "a fractional t_max must raise ValueError: t_max must be an int",
+    )
+
+
+def test_infinite_base_lr_raises_value_error():
+    _rejects(
+        lambda: cosine_annealing_lr(0, float("inf"), 4),
+        "infinite base_lr must raise ValueError: base_lr must be finite",
+    )

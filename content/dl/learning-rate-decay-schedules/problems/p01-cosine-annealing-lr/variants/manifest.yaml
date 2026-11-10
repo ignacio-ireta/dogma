@@ -1,7 +1,52 @@
-problem_version: 1
+problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_formula_rewrite.py
+  origin: freedom
+  freedom: writes the same curve as base_lr minus the drop, which differs only in the last digits
+- file: accept_floor_at_or_after_t_max.py
+  origin: freedom
+  freedom: switches to the floor at step greater or equal to t_max, the same value as the formula at t_max
+reject:
+- file: reject_accepts_bool_step.py
+  mistake: accepts a bool as the step count, reading True as 1
+  clause: '`step`: `int`, `step >= 0`. The number of scheduler updates already taken. `bool` is not an
+    `int` here.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_accepts_zero_base_lr.py
+  mistake: accepts a base rate of exactly zero
+  clause: '`base_lr`: `float`, finite, `base_lr > 0`. The rate at step 0.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_eta_min_above_base_lr.py
+  mistake: accepts a floor above the base rate
+  clause: '`eta_min`: `float`, finite, `0 <= eta_min <= base_lr`. The floor. Default `0.0`.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_cosine_period_t_minus_one.py
+  mistake: uses t_max minus one as the cosine period, so the floor comes one step early
+  clause: 'Returns: a Python `float`. - For `0 <= step <= t_max`: `eta_min + (base_lr - eta_min) * (1
+    + cos(pi * step / t_max)) / 2`. - For `step > t_max`: `eta_min`. The schedule holds its floor. Unlike
+    `CosineAnnealingLR`, which keeps oscillating past `T_max`, this contract does not.'
+  killed_by: test_midpoint_is_the_average_of_base_rate_and_floor
+  visible: public
+- file: reject_accepts_float_t_max.py
+  mistake: accepts a non-integer t_max such as 4.0 or 2.5
+  clause: '`t_max`: `int`, `t_max >= 1`. The number of updates from `base_lr` to `eta_min`.'
+  killed_by: test_non_integer_t_max_raises_value_error
+  visible: hidden
+- file: reject_no_finite_check_on_base_lr.py
+  mistake: accepts an infinite base rate without raising
+  clause: 'Raises: `ValueError` when `step` is negative or not an `int`, when `t_max < 1` or is not an
+    `int`, when `base_lr` is not finite and positive, or when `eta_min` is not finite and within `[0,
+    base_lr]`.'
+  killed_by: test_infinite_base_lr_raises_value_error
+  visible: hidden
+uncovered:
+- clause: Must not mutate inputs (there are none to mutate; do not keep module-level state).
+  reason: there are no inputs to change in place, and a cache of past results is not observable through
+    the signature
+sweeps:
+- reject

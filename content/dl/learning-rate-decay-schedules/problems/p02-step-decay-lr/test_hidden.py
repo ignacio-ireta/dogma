@@ -145,3 +145,27 @@ def test_zero_base_rate_raises_value_error():
         lambda: step_decay_lr(0, 0.0, 2, 0.5),
         "a base_lr of zero is not positive and must raise ValueError",
     )
+
+
+def test_block_count_is_exact_floor_division_beyond_float_precision():
+    # 20000000000000999 // 20000000000001 is 999; float division rounds the quotient up to 1000.
+    step_size = 20_000_000_000_001
+    step = 20_000_000_000_000_999
+    # gamma near one keeps the rate large, so one extra drop is far above the tolerance.
+    got = step_decay_lr(step, 1.0, step_size, 0.999)
+    _close(
+        got,
+        0.999**999,
+        "block count must come from exact floor division, not from float division",
+    )
+
+
+def test_non_finite_base_lr_raises_value_error():
+    _rejects(
+        lambda: step_decay_lr(0, float("inf"), 2, 0.5),
+        "infinite base_lr must raise ValueError: base_lr must be finite",
+    )
+    _rejects(
+        lambda: step_decay_lr(0, float("nan"), 2, 0.5),
+        "NaN base_lr must raise ValueError: base_lr must be finite",
+    )

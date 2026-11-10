@@ -1,7 +1,56 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_math_pow_power.py
+  origin: freedom
+  freedom: computes the power with math.pow, which differs only in the last digits
+- file: accept_exp_log_power.py
+  origin: freedom
+  freedom: computes the power as exp of drops times log of gamma, which differs only in the last digits
+reject:
+- file: reject_accepts_bool_step.py
+  mistake: accepts a bool as the step count, reading True as 1
+  clause: '`step`: `int`, `step >= 0`. The number of scheduler updates already taken. `bool` is not an
+    `int` here.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_accepts_zero_base_lr.py
+  mistake: accepts a base rate of exactly zero
+  clause: '`base_lr`: `float`, finite, `base_lr > 0`. The rate before any drop.'
+  killed_by: test_zero_base_rate_raises_value_error
+  visible: hidden
+- file: reject_accepts_float_step_size.py
+  mistake: accepts a non-integer step_size such as 2.5
+  clause: '`step_size`: `int`, `step_size >= 1`. Updates between drops.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_accepts_gamma_above_one.py
+  mistake: accepts a gamma above one, so the rate can grow at each drop
+  clause: '`gamma`: `float`, finite, `0 < gamma <= 1`. The multiplicative factor at each drop.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_loops_over_every_block.py
+  mistake: multiplies by gamma in a loop over every block, not in constant time
+  clause: Must not mutate inputs. Runs in constant time, however large `step` is.
+  killed_by: test_huge_step_count_is_evaluated_directly
+  visible: hidden
+- file: reject_float_division_block_count.py
+  mistake: computes the block count with float division, which rounds up for huge step counts
+  clause: 'Returns: a Python `float`, `base_lr * gamma ** (step // step_size)`. The rate changes exactly
+    when `step` reaches a multiple of `step_size`.'
+  killed_by: test_block_count_is_exact_floor_division_beyond_float_precision
+  visible: hidden
+- file: reject_no_finite_check_on_base_lr.py
+  mistake: accepts an infinite or NaN base rate without raising
+  clause: 'Raises: `ValueError` when `step` is negative or not an `int`, when `step_size < 1` or is not
+    an `int`, when `base_lr` is not finite and positive, or when `gamma` is not finite and within `(0,
+    1]`.'
+  killed_by: test_non_finite_base_lr_raises_value_error
+  visible: hidden
+uncovered:
+- clause: Must not mutate inputs. Runs in constant time, however large `step` is.
+  reason: inputs are plain ints and floats, which cannot be changed in place, so the no-mutation part
+    has nothing to break
+sweeps:
+- reject

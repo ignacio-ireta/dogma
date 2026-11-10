@@ -1,5 +1,5 @@
 id: dl/learning-rate-decay-schedules/p02-step-decay-lr
-version: 3
+version: 4
 title: Step decay learning rate
 language: python
 runtime: py-torch
