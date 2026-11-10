@@ -13,4 +13,4 @@ core: true
 tolerance: {atol: 1.0e-6, rtol: 1.0e-9}
 banned_imports: []              # SQL problems: nothing to ban at the module level
 timeout_s: 30
-status: verified
+status: reviewed

@@ -16,4 +16,4 @@ interview_angle: >-
 sources:
   - "book: Molinaro, SQL Cookbook, chapter on date arithmetic"
   - "book: Kimball and Ross, The Data Warehouse Toolkit (3rd ed.), the date dimension (calendar table)"
-status: verified
+status: reviewed

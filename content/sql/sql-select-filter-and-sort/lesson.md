@@ -103,9 +103,10 @@ the column is a timestamp, because the bound is read as midnight.
 - **Timestamp upper bounds.** `< '2024-12-31'` on a timestamp drops that whole last day. Use
   `< '2025-01-01'`.
 
-The event_log source has lognormal order amounts and dirty statuses. In the reproducible 5,000-row
-draw, the largest amount is 1,850.19 but its status is Completed, so it is excluded by exact
-matching. A normalized filter would put it first; the exact top result starts at 1,203.06.
+The event_log source has lognormal order amounts and dirty statuses. In a seeded 5,000-row draw (200
+users, `dirty_rate` 0.15), the largest 2024 order with a dirty completed label is 311.28, stored as
+`'completed '`. It is the 12th completed-like order by amount. Exact matching drops it, so the exact
+12th row is 307.74, not 311.28; the top five are the same either way.
 
 ## Interview angle
 

@@ -82,7 +82,7 @@ within customer.
 ## Done looks like
 
 All public tests pass, then **Submit** runs the hidden tests. They build their own `orders` frames,
-mostly shuffled, and compare the result with an independent pandas groupby computation. The
+mostly shuffled, and compare the result with an independent DuckDB window-function computation. The
 hidden tests cover these families: rows that arrive out of time order, several customers interleaved,
 two orders on the same date (the order id breaks the tie), a gap of zero days, a first order with no
 gap, a customer whose total is zero (including refunds cancelling spend), string dates and datetime values giving the same result, an empty
