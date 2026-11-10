@@ -5,6 +5,7 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -22,6 +23,10 @@ class Settings(BaseSettings):
 
     # Runner defaults (ARCHITECTURE §4.2); problems may override timeout in meta.yaml.
     run_timeout_s: int = 30
+    # Multiplies every run's time limit, including a problem's own timeout_s. Limits are
+    # calibrated for the learner's machine; a slower one (a shared CI runner) sets this above 1.
+    # It can only lengthen a limit.
+    run_timeout_scale: float = Field(default=1.0, ge=1.0)
     run_memory_mb: int = 2048  # torch problems fit; runaway code is stopped well before swap
 
     # Global switch for attempt recording (DOGMA_RECORD_ATTEMPTS=false for scratch/agent use).

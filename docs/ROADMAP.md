@@ -258,6 +258,30 @@ Card and re-solve due dates never move. No wording about being behind.
 *Newest first. One entry per session or agent: what changed · what was verified (exact commands
 and results) · what's left or blocked.*
 
+### 2026-11-10 · Public-repository hardening (agent): CI, license, run-timeout scale
+
+- **Added:** `.github/workflows/ci.yml`, two macOS jobs on every push: lint, types, tests and the web checks;
+  and `dogma content verify --all`. The privacy audit stays local because its rules are never committed.
+  `LICENSE` (MIT, code) and `LICENSE-CONTENT.md` (curriculum all rights reserved), with a License section in the
+  README. The README's Requirements now state that Run and Submit need macOS. New setting
+  `DOGMA_RUN_TIMEOUT_SCALE` (default 1, cannot go below 1) multiplies every run's time limit, in
+  `runner.run.effective_timeout_s`; documented in `.env.example` and DEVELOPMENT.
+- **Fixed:** two CLI help tests failed only on GitHub Actions, where Typer forces Rich's terminal mode and the
+  help text carries ANSI styling. The shared `cli` fixture now uses a dumb terminal; the duplicate fixture in
+  `test_cli_runs.py` is gone. Reproduce the old failure with `GITHUB_ACTIONS=true uv run --frozen pytest`.
+- **Found on CI:** content verification failed twice on the shared runner, each time on one starter run ending
+  with status `timeout` at 30 s, and on a different problem each time (`cml/shuffling-splitting-and-batching-data`
+  p01, then `cml/ranking-metrics` p01). Both are property-heavy and pass locally in a few seconds. The content
+  job sets the scale to 3. No problem's tests, tolerances, contract or `timeout_s` changed.
+- **Changed:** `tools/docmd/LICENSE` names the dogma contributors, so the audit's attribution exemption table
+  is empty.
+- **Verified:** locally `make lint`, mypy strict (173 files), 4 import contracts, 1700 Python tests (also under
+  `GITHUB_ACTIONS=true`), `gen:api --check`; `dogma content verify --all` on all 175 topics before the scale
+  change, and on the two affected topics with the scale set to 3. `make audit` was not run: this checkout has no
+  `private/denylist.txt`. CI result for this commit is on GitHub.
+- **Left:** content verification takes about 47 minutes on the shared runner. Sharding it by track would cut
+  that, at the cost of running the repository-level checks separately.
+
 ### 2026-11-03 · Time-warp API and web · I-30b done
 
 - **Added:** `GET /calendar`, `POST /calendar/warp` (dry run or apply) and `POST /course/reset` ({confirm:

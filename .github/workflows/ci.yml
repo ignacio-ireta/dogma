@@ -63,7 +63,13 @@ jobs:
   content:
     name: Verify every topic and problem
     runs-on: macos-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
+    env:
+      # Run limits are calibrated for a learner's Mac. The shared runner is several
+      # times slower, and the starter run of a property-heavy problem has crossed its
+      # 30 s limit there, a different problem each time. Lengthen every limit rather
+      # than edit problems one by one.
+      DOGMA_RUN_TIMEOUT_SCALE: "3"
     steps:
       - uses: actions/checkout@v7
 
