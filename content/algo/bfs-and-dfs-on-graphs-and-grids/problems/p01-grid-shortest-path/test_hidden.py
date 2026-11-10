@@ -323,3 +323,12 @@ def test_negative_column_raises_value_error() -> None:
         lambda: shortest_path_length(["..", ".."], (0, 0), (1, -1)),
         "a goal with a negative column is outside the grid and must raise ValueError",
     )
+
+
+def test_wall_cell_that_is_start_and_goal_raises_value_error() -> None:
+    # Both cells must be open. Here they are the same cell, and it is a wall.
+    _expect(
+        ValueError,
+        lambda: shortest_path_length(["#.."], (0, 0), (0, 0)),
+        "a start that equals the goal on a wall must raise ValueError, not return a distance",
+    )

@@ -226,3 +226,16 @@ def test_grid_that_is_not_a_list_raises_type_error() -> None:
         lambda: count_components(("..", "..")),  # type: ignore[arg-type]
         "a grid that is not a list must raise TypeError",
     )
+
+
+def test_grid_is_unchanged_after_counting() -> None:
+    # The rule: the grid is never changed. The check compares the rows before and after the call.
+    grid = ["..#", "..#", "##."]
+    before = list(grid)
+    got, problem = _call(grid, SMALL_CALL_S)
+    if problem is not None:
+        pytest.fail(problem)
+    if got != 2:
+        pytest.fail("the number of components is wrong for this grid")
+    if grid != before:
+        pytest.fail("the grid must never be changed: keep a separate seen record, not the grid")

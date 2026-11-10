@@ -1,5 +1,5 @@
 id: algo/bfs-and-dfs-on-graphs-and-grids/p01-grid-shortest-path
-version: 3                      # bump when tests, tolerances or the contract change
+version: 4                      # bump when tests, tolerances or the contract change
 title: Shortest path in a grid with walls
 language: python
 runtime: py-stdlib

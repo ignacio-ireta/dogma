@@ -1,7 +1,52 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_return_when_goal_is_enqueued.py
+  origin: freedom
+  freedom: returns as soon as the goal cell is first reached, not when it is dequeued
+reject:
+- file: reject_row_length_only_checks_shorter.py
+  mistake: rows longer than the first row are accepted
+  clause: '`grid`: a non-empty `list` of `str`. Every row has the same length, which is at least 1. Each
+    character is `.` or `#`. A grid that is not a list raises `TypeError`, and so does a row that is not
+    a `str`. An empty grid, rows of unequal length or any other character raise `ValueError`.'
+  killed_by: test_ragged_grid_raises_value_error
+  visible: hidden
+- file: reject_grid_accepts_tuple.py
+  mistake: a tuple grid is accepted
+  clause: '`grid`: a non-empty `list` of `str`. Every row has the same length, which is at least 1. Each
+    character is `.` or `#`. A grid that is not a list raises `TypeError`, and so does a row that is not
+    a `str`. An empty grid, rows of unequal length or any other character raise `ValueError`.'
+  killed_by: test_grid_that_is_not_a_list_raises_type_error
+  visible: hidden
+- file: reject_bool_coordinate_accepted.py
+  mistake: bool entries are accepted as ints
+  clause: '`start` and `goal`: `tuple` values `(row, column)` of Python `int` values (not `bool`). Row
+    0 is the top row.'
+  killed_by: test_bool_or_list_coordinates_raise_type_error
+  visible: hidden
+- file: reject_list_coordinate_accepted.py
+  mistake: a list coordinate is accepted where a tuple is required
+  clause: '`start` and `goal`: `tuple` values `(row, column)` of Python `int` values (not `bool`). Row
+    0 is the top row.'
+  killed_by: test_bool_or_list_coordinates_raise_type_error
+  visible: hidden
+- file: reject_lifo_order_not_shortest.py
+  mistake: stack order instead of queue order, so the distance is not the shortest
+  clause: 'Returns: a Python `int`. `0` when `start == goal`. `-1` when `goal` cannot be reached.'
+  killed_by: test_seeded_random_grids_match_the_frontier_oracle
+  visible: hidden
+- file: reject_grid_marked_visited_in_place.py
+  mistake: visited cells are written back into the caller's grid
+  clause: The grid is never changed, since it is a list of strings.
+  killed_by: test_seeded_random_grids_match_the_frontier_oracle
+  visible: hidden
+- file: reject_wall_goal_skipped_when_start_is_goal.py
+  mistake: a wall is accepted when start equals goal
+  clause: Both cells must lie inside the grid, and both must be open. Otherwise raise `ValueError`.
+  killed_by: test_wall_cell_that_is_start_and_goal_raises_value_error
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

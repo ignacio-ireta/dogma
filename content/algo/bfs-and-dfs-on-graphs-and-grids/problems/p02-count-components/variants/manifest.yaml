@@ -1,7 +1,40 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_flood_with_a_queue.py
+  origin: freedom
+  freedom: floods each island in breadth-first order with a queue instead of a stack
+reject:
+- file: reject_row_length_only_checks_shorter.py
+  mistake: rows longer than the first row are accepted
+  clause: '`grid`: a non-empty `list` of `str`. Every row has the same length, at least 1. Each character
+    is `.` or `#`. A grid that is not a list raises `TypeError`, and so does a row that is not a `str`.
+    An empty grid, rows of unequal length or any other character raise `ValueError`.'
+  killed_by: test_ragged_grid_raises_value_error
+  visible: hidden
+- file: reject_grid_accepts_tuple.py
+  mistake: a tuple grid is accepted
+  clause: '`grid`: a non-empty `list` of `str`. Every row has the same length, at least 1. Each character
+    is `.` or `#`. A grid that is not a list raises `TypeError`, and so does a row that is not a `str`.
+    An empty grid, rows of unequal length or any other character raise `ValueError`.'
+  killed_by: test_grid_that_is_not_a_list_raises_type_error
+  visible: hidden
+- file: reject_single_open_cells_not_counted.py
+  mistake: an island of one cell is not counted
+  clause: 'Returns: a Python `int`, at least 0. A grid with no open cells returns `0`.'
+  killed_by: test_two_islands_with_one_bent_corner
+  visible: public
+- file: reject_diagonal_cells_join.py
+  mistake: diagonal neighbours join cells
+  clause: 'Returns: a Python `int`, at least 0. A grid with no open cells returns `0`.'
+  killed_by: test_two_islands_with_one_bent_corner
+  visible: public
+- file: reject_grid_marked_seen_in_place.py
+  mistake: flooded cells are written back into the caller's grid
+  clause: The grid is never changed.
+  killed_by: test_grid_is_unchanged_after_counting
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
