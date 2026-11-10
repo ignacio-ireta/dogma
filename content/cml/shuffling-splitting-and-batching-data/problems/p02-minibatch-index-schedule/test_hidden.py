@@ -207,3 +207,12 @@ def test_batch_indices_are_int64():
             assert batch.dtype == np.int64, (
                 "each batch must be an int64 index array, as the contract states"
             )
+
+
+def test_seed_is_keyword_only_in_the_signature():
+    import inspect  # noqa: PLC0415
+
+    # Contract: `seed`: integer, keyword-only. A positional seed must not be accepted.
+    kind = inspect.signature(minibatch_indices).parameters["seed"].kind
+    if kind is not inspect.Parameter.KEYWORD_ONLY:
+        pytest.fail("seed must be keyword-only: a positional seed was accepted")

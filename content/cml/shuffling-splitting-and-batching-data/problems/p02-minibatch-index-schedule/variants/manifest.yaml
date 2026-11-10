@@ -1,7 +1,55 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_seed_positional.py
+  mistake: seed accepted as a positional argument
+  clause: '`seed`: integer, keyword-only. It is used only to build the random generator.'
+  killed_by: test_seed_is_keyword_only_in_the_signature
+  visible: hidden
+- file: reject_single_row_rejected.py
+  mistake: n of one rejected
+  clause: '`n`: integer, `n >= 1`.'
+  killed_by: test_schedule_matches_loop_reference
+  visible: hidden
+- file: reject_full_batch_rejected.py
+  mistake: batch size equal to n rejected
+  clause: '`batch_size`: integer with `1 <= batch_size <= n`.'
+  killed_by: test_schedule_matches_loop_reference
+  visible: hidden
+- file: reject_zero_epochs_raises.py
+  mistake: zero epochs raises instead of empty list
+  clause: '`epochs`: integer, `epochs >= 0`.'
+  killed_by: test_zero_epochs_gives_an_empty_schedule
+  visible: public
+- file: reject_drop_last_default_true.py
+  mistake: drop_last defaults to True
+  clause: '`drop_last`: bool, keyword-only, default `False`.'
+  killed_by: test_two_epochs_follow_one_generator_and_keep_the_short_batch
+  visible: public
+- file: reject_batches_sorted.py
+  mistake: batch indices sorted within each batch
+  clause: 'Returns: a Python list with one entry per epoch. The entry for each epoch is a list of 1-D
+    int64 arrays, one per batch, in the order they are visited.'
+  killed_by: test_two_epochs_follow_one_generator_and_keep_the_short_batch
+  visible: public
+- file: reject_rng_per_epoch.py
+  mistake: generator recreated each epoch
+  clause: 'Raises `ValueError` when `n < 1`, when `batch_size` is not an integer in `1..n`, or when `epochs`
+    is negative. **Protocol (exact).** 1. Create `rng = np.random.default_rng(seed)` once, before the
+    first epoch. 2. For each epoch, in order, draw `perm = rng.permutation(n)`. That is exactly one draw
+    per epoch. 3. The batches of the epoch are consecutive slices of `perm`: `perm[0:B]`, `perm[B:2B]`,
+    ... where `B = batch_size`. Every batch keeps the order of `perm`; do not sort it. 4. The last slice
+    may be shorter than `B`. If `drop_last` is `True`, drop it. If `drop_last` is `False`, keep it. 5.
+    Epochs with `epochs = 0` give an empty list.'
+  killed_by: test_two_epochs_follow_one_generator_and_keep_the_short_batch
+  visible: public
+- file: reject_drop_last_drops_full_batch.py
+  mistake: drop_last also drops a full final batch
+  clause: '`drop_last`: bool, keyword-only, default `False`.'
+  killed_by: test_drop_last_removes_only_the_short_final_batch
+  visible: public
 uncovered: []
-sweeps: []
+sweeps:
+- reject

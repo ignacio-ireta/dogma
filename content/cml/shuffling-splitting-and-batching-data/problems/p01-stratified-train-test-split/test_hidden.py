@@ -300,3 +300,12 @@ def test_stratify_must_be_one_dimensional_with_one_label_per_row():
         ),
         "two-dimensional stratify was accepted: stratify must be one-dimensional",
     )
+
+
+def test_seed_is_keyword_only_in_the_signature():
+    import inspect  # noqa: PLC0415
+
+    # Contract: `seed`: integer, keyword-only. A positional seed must not be accepted.
+    kind = inspect.signature(train_test_split_indices).parameters["seed"].kind
+    if kind is not inspect.Parameter.KEYWORD_ONLY:
+        pytest.fail("seed must be keyword-only: a positional seed was accepted")

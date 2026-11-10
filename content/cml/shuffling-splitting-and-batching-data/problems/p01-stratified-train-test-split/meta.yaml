@@ -1,5 +1,5 @@
 id: cml/shuffling-splitting-and-batching-data/p01-stratified-train-test-split
-version: 3
+version: 4
 title: Seeded train/test split with stratification
 language: python
 runtime: py-numpy

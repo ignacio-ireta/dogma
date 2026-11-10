@@ -1,5 +1,5 @@
 id: cml/shuffling-splitting-and-batching-data/p02-minibatch-index-schedule
-version: 3
+version: 4
 title: Mini-batch index schedule
 language: python
 runtime: py-numpy

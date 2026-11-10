@@ -1,7 +1,99 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_seed_positional.py
+  mistake: seed accepted as a positional argument
+  clause: '`seed`: integer, keyword-only. It is used only to build the random generator.'
+  killed_by: test_seed_is_keyword_only_in_the_signature
+  visible: hidden
+- file: reject_test_size_zero_allowed.py
+  mistake: test_size of zero accepted
+  clause: '`test_size`: float strictly between 0 and 1.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_two_dim_stratify_accepted.py
+  mistake: two-dimensional stratify accepted
+  clause: '`stratify`: `None`, or a 1-D array-like of length `n` with labels that can be sorted (integers
+    or strings). Default `None`.'
+  killed_by: test_stratify_must_be_one_dimensional_with_one_label_per_row
+  visible: hidden
+- file: reject_stratified_train_unsorted.py
+  mistake: stratified train rows not sorted
+  clause: 'Returns: `(train_idx, test_idx)`, two int64 arrays, each sorted in ascending order. Together
+    they hold every row index `0..n-1` exactly once.'
+  killed_by: test_stratified_split_takes_exact_per_class_counts
+  visible: public
+- file: reject_class_without_train_allowed.py
+  mistake: class with no training row accepted
+  clause: Raises `ValueError` when `n < 2`; when `test_size` is not strictly between 0 and 1; when `stratify`
+    is not 1-D with length `n`; when the training side would be empty; and, for a stratified split, when
+    some class would have no training row.
+  killed_by: test_stratified_split_matches_loop_reference
+  visible: hidden
+- file: reject_stratify_relabelled_in_place.py
+  mistake: stratify labels relabelled in place
+  clause: 'Must not mutate `stratify`. **Protocol (exact).** Every product below is a float64 product
+    evaluated as written, and `ceil` and `floor` act on those floats. Let `n_test = ceil(test_size * n)`.
+    The test side gets exactly `n_test` rows. Float64 matters: `0.07 * 100` is `7.000000000000001`, so
+    `n_test` is 8, which is also the count scikit-learn gives. Exact decimal arithmetic would give 7,
+    and that is wrong for this protocol. *Without `stratify`:* 1. Create `rng = np.random.default_rng(seed)`
+    once. 2. Draw `perm = rng.permutation(n)`. This is the only draw. 3. `test_idx` is the sorted `perm[:n_test]`,
+    and `train_idx` is the sorted `perm[n_test:]`. *With `stratify` (labels `y`):* 1. Create `rng = np.random.default_rng(seed)`
+    once, before any draw. 2. The classes are the distinct labels in ascending order, `c_1 < ... < c_k`.
+    Let `n_j` be the number of rows with label `c_j`. 3. Allocate test rows per class. Let `ideal_j =
+    test_size * n_j` (float64) and `base_j = floor(ideal_j)`. Let `R = n_test - sum(base_j)`. The `R`
+    classes with the largest fractional parts `ideal_j - base_j` each get one extra test row. Ties in
+    the fractional part go to the class that comes first in ascending order. Call the result `t_j`. 4.
+    If some class has `t_j >= n_j`, raise `ValueError`, before any draw. 5. For `j = 1..k` in ascending
+    order, draw `perm_j = rng.permutation(rows_j)`, where `rows_j` is the ascending row indices of class
+    `j`. That is exactly `k` draws. 6. The first `t_j` entries of `perm_j` are test rows; the rest are
+    training rows. 7. `test_idx` and `train_idx` are the unions over all classes, each sorted ascending.'
+  killed_by: test_labels_and_stratify_input_are_not_mutated
+  visible: hidden
+- file: reject_ceiling_with_rounding_tolerance.py
+  mistake: test count rounds the float product before ceil
+  clause: 'Must not mutate `stratify`. **Protocol (exact).** Every product below is a float64 product
+    evaluated as written, and `ceil` and `floor` act on those floats. Let `n_test = ceil(test_size * n)`.
+    The test side gets exactly `n_test` rows. Float64 matters: `0.07 * 100` is `7.000000000000001`, so
+    `n_test` is 8, which is also the count scikit-learn gives. Exact decimal arithmetic would give 7,
+    and that is wrong for this protocol. *Without `stratify`:* 1. Create `rng = np.random.default_rng(seed)`
+    once. 2. Draw `perm = rng.permutation(n)`. This is the only draw. 3. `test_idx` is the sorted `perm[:n_test]`,
+    and `train_idx` is the sorted `perm[n_test:]`. *With `stratify` (labels `y`):* 1. Create `rng = np.random.default_rng(seed)`
+    once, before any draw. 2. The classes are the distinct labels in ascending order, `c_1 < ... < c_k`.
+    Let `n_j` be the number of rows with label `c_j`. 3. Allocate test rows per class. Let `ideal_j =
+    test_size * n_j` (float64) and `base_j = floor(ideal_j)`. Let `R = n_test - sum(base_j)`. The `R`
+    classes with the largest fractional parts `ideal_j - base_j` each get one extra test row. Ties in
+    the fractional part go to the class that comes first in ascending order. Call the result `t_j`. 4.
+    If some class has `t_j >= n_j`, raise `ValueError`, before any draw. 5. For `j = 1..k` in ascending
+    order, draw `perm_j = rng.permutation(rows_j)`, where `rows_j` is the ascending row indices of class
+    `j`. That is exactly `k` draws. 6. The first `t_j` entries of `perm_j` are test rows; the rest are
+    training rows. 7. `test_idx` and `train_idx` are the unions over all classes, each sorted ascending.'
+  killed_by: test_test_count_uses_the_float64_product_as_written
+  visible: hidden
+- file: reject_draw_classes_in_first_seen_order.py
+  mistake: classes drawn in first-seen order
+  clause: 'Must not mutate `stratify`. **Protocol (exact).** Every product below is a float64 product
+    evaluated as written, and `ceil` and `floor` act on those floats. Let `n_test = ceil(test_size * n)`.
+    The test side gets exactly `n_test` rows. Float64 matters: `0.07 * 100` is `7.000000000000001`, so
+    `n_test` is 8, which is also the count scikit-learn gives. Exact decimal arithmetic would give 7,
+    and that is wrong for this protocol. *Without `stratify`:* 1. Create `rng = np.random.default_rng(seed)`
+    once. 2. Draw `perm = rng.permutation(n)`. This is the only draw. 3. `test_idx` is the sorted `perm[:n_test]`,
+    and `train_idx` is the sorted `perm[n_test:]`. *With `stratify` (labels `y`):* 1. Create `rng = np.random.default_rng(seed)`
+    once, before any draw. 2. The classes are the distinct labels in ascending order, `c_1 < ... < c_k`.
+    Let `n_j` be the number of rows with label `c_j`. 3. Allocate test rows per class. Let `ideal_j =
+    test_size * n_j` (float64) and `base_j = floor(ideal_j)`. Let `R = n_test - sum(base_j)`. The `R`
+    classes with the largest fractional parts `ideal_j - base_j` each get one extra test row. Ties in
+    the fractional part go to the class that comes first in ascending order. Call the result `t_j`. 4.
+    If some class has `t_j >= n_j`, raise `ValueError`, before any draw. 5. For `j = 1..k` in ascending
+    order, draw `perm_j = rng.permutation(rows_j)`, where `rows_j` is the ascending row indices of class
+    `j`. That is exactly `k` draws. 6. The first `t_j` entries of `perm_j` are test rows; the rest are
+    training rows. 7. `test_idx` and `train_idx` are the unions over all classes, each sorted ascending.'
+  killed_by: test_stratified_split_matches_loop_reference
+  visible: hidden
+uncovered:
+- clause: '`n`: integer, `n >= 2`.'
+  reason: wrong solution survives, see notes
+sweeps:
+- reject
