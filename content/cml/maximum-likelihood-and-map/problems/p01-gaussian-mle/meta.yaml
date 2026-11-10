@@ -1,5 +1,5 @@
 id: cml/maximum-likelihood-and-map/p01-gaussian-mle
-version: 2
+version: 3
 title: Gaussian maximum likelihood
 language: python
 runtime: py-numpy

@@ -2,6 +2,38 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_direct_rounding_path.py
+  origin: freedom
+  freedom: computes the interior mode from the raw prior and counts instead of through a and b, a different
+    rounding path
+reject:
+- file: reject_accepts_bool_counts.py
+  mistake: accepts a bool as a count because True equals 1
+  clause: '`successes` ($k$) and `trials` ($n$): whole numbers with $0 \le k \le n$ and $n \ge 1$. Integers
+    are expected. A float with an integral value (such as `3.0`) is accepted. A bool, or a non-integral
+    value such as `2.5`, is not.'
+  killed_by: test_boolean_count_raises_value_error
+  visible: hidden
+- file: reject_map_boundary_at_one.py
+  mistake: when a equals one the mode is put at 1 instead of 0
+  clause: 'Returns: a tuple `(mle, map_estimate)` of two Python floats. - `mle` $= k/n$. - `map_estimate`:
+    the mode of the posterior $\mathrm{Beta}(a, b)$ with $a = \alpha + k$ and $b = \beta + n - k$, using
+    this boundary convention. If $a > 1$ and $b > 1$, the mode is inside $(0,1)$ and equals $\dfrac{a-1}{a+b-2}$.
+    If $a \le 1$, the posterior density is largest at $0$, so the mode is $0.0$. Otherwise $b \le 1$,
+    the density is largest at $1$, and the mode is $1.0$. These three cases are exhaustive and exclusive
+    when $n \ge 1$.'
+  killed_by: test_zero_successes_with_weak_prior_puts_map_at_zero
+  visible: hidden
+- file: reject_nonfinite_prior_accepted.py
+  mistake: accepts an infinite prior shape and returns a NaN estimate
+  clause: Raises `ValueError` when `successes` or `trials` is not a whole number, when `trials < 1` (an
+    empty sample has no estimate), when `successes` is outside $[0, n]$, or when `alpha` or `beta` is
+    not a finite number greater than 0.
+  killed_by: test_invalid_prior_parameters_raise_value_error
+  visible: hidden
+uncovered:
+- clause: '`alpha`, `beta`: finite numbers greater than 0, the shape parameters of the prior.'
+  reason: the only way to break alpha or beta greater than 0 alone is to accept zero, and that also breaks
+    the raise bullet C4 so it is not forced
+sweeps:
+- reject

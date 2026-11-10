@@ -1,7 +1,37 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_loop_outer_products.py
+  origin: freedom
+  freedom: sums the outer products of the deviations in a loop over observations, not a single matrix
+    product
+reject:
+- file: reject_rejects_integer_input.py
+  mistake: rejects integer input although integers are allowed
+  clause: '`X`: 2-D array-like of real numbers, shape `(n, d)` with $n \ge 1$ rows and $d \ge 1$ columns.
+    Integers allowed. Every entry is finite.'
+  killed_by: test_mean_and_biased_covariance_of_three_points
+  visible: public
+- file: reject_n_minus_one_guarded.py
+  mistake: divides the covariance by n minus one with a guard for n of one
+  clause: 'Returns: a tuple `(mean, covariance)` of NumPy arrays with dtype `float64`: - `mean`, shape
+    `(d,)`: the column means $\hat\mu = \frac{1}{n}\sum_i x_i$. - `covariance`, shape `(d, d)`: $\hat\Sigma
+    = \frac{1}{n}\sum_i (x_i-\hat\mu)(x_i-\hat\mu)^\top$. With one observation, `covariance` is the $d
+    \times d$ zero matrix.'
+  killed_by: test_mean_and_biased_covariance_of_three_points
+  visible: public
+- file: reject_mutates_float_input.py
+  mistake: centres the caller array in place when it is already float64
+  clause: Must not mutate its input.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
+- file: reject_nan_only_check.py
+  mistake: checks only for NaN and lets infinity through
+  clause: Raises `ValueError` when `X` is not 2-D, when it has no rows or no columns, or when it contains
+    NaN or infinity.
+  killed_by: test_infinite_entry_raises_value_error
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

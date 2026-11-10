@@ -185,3 +185,10 @@ def test_inputs_are_not_mutated():
     np.testing.assert_array_equal(
         X, X_before, err_msg="the input matrix was modified in place: centre a copy, not X"
     )
+
+
+def test_infinite_entry_raises_value_error():
+    _raised_value_error(
+        lambda: gaussian_mle([[1.0, np.inf], [2.0, 3.0]]),
+        "an infinite entry must raise ValueError: the Contract rejects NaN or infinity",
+    )
