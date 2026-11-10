@@ -2,6 +2,57 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_content_ignores_reserved_msg_prefix.py
+  mistake: reserved check misses the msg open marker
+  clause: '`content`: a `str`. Any other type raises `TypeError`. The empty string is valid. Content that
+    contains `<bos>`, `<eom>` or `<msg:` raises `ValueError`, because those strings are reserved.'
+  killed_by: test_reserved_control_string_inside_content_raises_value_error
+  visible: hidden
+- file: reject_keys_missing_only_checked.py
+  mistake: extra key accepted, only missing key checked
+  clause: '`messages`: a `list` of `dict`. Each dict has exactly the keys `"role"` and `"content"`. A
+    missing or extra key raises `ValueError`. A `messages` that is not a `list`, or an item that is not
+    a `dict`, raises `TypeError`.'
+  killed_by: test_message_with_missing_or_extra_key_raises_value_error
+  visible: hidden
+- file: reject_role_case_normalized_silently.py
+  mistake: role case folded and accepted instead of rejected
+  clause: '`role`: a `str` in `{"system", "user", "assistant", "tool"}`. Any other value, including a
+    `str` that differs in case, raises `ValueError`. A non-`str` role raises `ValueError` too.'
+  killed_by: test_unknown_role_raises_value_error
+  visible: hidden
+- file: reject_bool_flag_accepts_int.py
+  mistake: int accepted as the generation flag
+  clause: '`add_generation_prompt`: a `bool`. Any other type, including `int`, raises `TypeError`.'
+  killed_by: test_generation_flag_must_be_a_bool_not_an_int
+  visible: hidden
+- file: reject_user_may_follow_user.py
+  mistake: user message may be followed by another user message
+  clause: 'Turn order (each breach raises `ValueError`): 1. The list is non-empty and holds at least one
+    message that is not `system`. 2. `system` may appear only as the first message, and at most once.
+    3. The first message that is not `system` has role `user`. 4. A `user` message is followed by an `assistant`
+    message, or the list ends. 5. An `assistant` message is followed by a `user` message, a `tool` message,
+    or the list ends. 6. A `tool` message is followed by a `tool` message, an `assistant` message, or
+    the list ends.'
+  killed_by: test_user_followed_by_user_raises_value_error
+  visible: hidden
+- file: reject_generation_prompt_after_tool_refused.py
+  mistake: generation prompt refused after a tool message
+  clause: '`add_generation_prompt=True` requires the last message to be `user` or `tool`. After an `assistant`
+    message the next turn cannot be an assistant turn, so the prompt is invalid there.'
+  killed_by: test_random_valid_conversations_render_like_the_reference
+  visible: hidden
+- file: reject_render_mutates_input.py
+  mistake: input dicts gain a key on the first call
+  clause: Must not mutate `messages`.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
+- file: reject_returns_bytes.py
+  mistake: returns bytes instead of str
+  clause: '`render_chat(messages, add_generation_prompt=False)` returns a `str`.'
+  killed_by: test_single_user_message_with_generation_prompt
+  visible: public
 uncovered: []
-sweeps: []
+sweeps:
+- reject

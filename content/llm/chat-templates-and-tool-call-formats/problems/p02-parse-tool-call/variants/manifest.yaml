@@ -2,6 +2,43 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_required_by_index.py
+  origin: freedom
+  freedom: reads the required list by index, relying on a well formed schema
+reject:
+- file: reject_result_carries_extra_raw_key.py
+  mistake: result carries an extra raw key
+  clause: '`parse_tool_call(text, tool)` returns a `dict` with exactly the keys `"name"` and `"arguments"`.
+    `arguments` holds the parsed values, with the JSON types they were parsed to.'
+  killed_by: test_valid_call_returns_name_and_parsed_arguments
+  visible: public
+- file: reject_duplicate_key_keeps_last_value.py
+  mistake: repeated key keeps the last value instead of failing
+  clause: 'Errors, all subclasses of `ValueError`. The starter defines them, and you must keep them: -
+    `ToolCallParseError`: the text is not one call block; the JSON is malformed; a number is non-finite;
+    a key repeats; the top level is not an object with exactly `name` and `arguments`; `name` is not a
+    string; or `arguments` is not an object. - `ToolSchemaError`: the call''s `name` differs from the
+    schema; a required parameter is missing; an argument is not in `properties`; or an argument value
+    has the wrong type.'
+  killed_by: test_repeated_key_raises_tool_call_parse_error
+  visible: hidden
+- file: reject_boolean_accepted_as_integer.py
+  mistake: boolean accepted in an integer slot
+  clause: 'Errors, all subclasses of `ValueError`. The starter defines them, and you must keep them: -
+    `ToolCallParseError`: the text is not one call block; the JSON is malformed; a number is non-finite;
+    a key repeats; the top level is not an object with exactly `name` and `arguments`; `name` is not a
+    string; or `arguments` is not an object. - `ToolSchemaError`: the call''s `name` differs from the
+    schema; a required parameter is missing; an argument is not in `properties`; or an argument value
+    has the wrong type.'
+  killed_by: test_boolean_in_an_integer_slot_raises_tool_schema_error
+  visible: hidden
+- file: reject_non_string_text_is_stringified.py
+  mistake: non-string text is converted to str instead of TypeError
+  clause: '`text` must be a `str`. Otherwise `TypeError`.'
+  killed_by: test_non_string_text_raises_type_error
+  visible: hidden
+uncovered:
+- clause: Must not mutate `text` or `tool`.
+  reason: wrong solution survives, see notes
+sweeps:
+- reject
