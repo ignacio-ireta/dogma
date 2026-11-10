@@ -2,6 +2,55 @@ problem_version: 1
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_identity_via_difference_of_detached.py
+  origin: freedom
+  freedom: identity built as detached quantized plus x minus detached x instead of x plus detached difference
+reject:
+- file: reject_zero_dim_becomes_one_dim.py
+  mistake: 0-dimensional input comes back one-dimensional
+  clause: '`x`: floating tensor of any shape, including 0-dimensional. It may or may not have `requires_grad=True`.'
+  killed_by: test_output_dtype_and_shape_follow_the_input_for_float32_and_zero_dim
+  visible: hidden
+- file: reject_float_step_refused.py
+  mistake: refuses a float step
+  clause: '`step`: a finite Python `float` or `int` greater than zero. Booleans are invalid.'
+  killed_by: test_forward_rounds_each_entry_to_the_nearest_step_multiple
+  visible: public
+- file: reject_round_half_up_forward.py
+  mistake: ties round half up instead of half to even
+  clause: 'Forward: `y = torch.round(x / step) * step`. `torch.round` rounds half to even, so `0.5 ->
+    0`, `1.5 -> 2`, `2.5 -> 2`. The values match that formula up to floating-point rounding, because the
+    straight-through form computes `x + (quantized - x)`. The result has the shape and dtype of `x`.'
+  killed_by: test_ties_round_to_the_even_multiple_of_step
+  visible: hidden
+- file: reject_clipped_backward.py
+  mistake: backward clips the gradient to zero outside minus one and one
+  clause: 'Backward: with respect to `x`, the gradient is the incoming gradient unchanged, everywhere.
+    There is no clipping, so values far outside any range still pass the gradient through.'
+  killed_by: test_gradient_is_identity_even_though_the_forward_is_a_staircase
+  visible: public
+- file: reject_output_always_requires_grad.py
+  mistake: output always tracks gradients even when input does not
+  clause: '`y` requires grad exactly when `x` does. If `x` does not require grad, `y` must not either.'
+  killed_by: test_input_without_grad_gives_output_without_grad
+  visible: public
+- file: reject_clamps_input_in_place_beyond_a_million.py
+  mistake: clamps the caller input in place to plus or minus one million
+  clause: Must not mutate `x`.
+  killed_by: test_huge_and_tiny_magnitudes_quantize_exactly
+  visible: hidden
+- file: reject_accepts_integer_input.py
+  mistake: accepts an integer input instead of raising
+  clause: 'Raises: `ValueError` when `x` is not floating, or when `step` is not a finite number greater
+    than zero.'
+  killed_by: test_step_must_be_finite_and_positive_and_input_floating
+  visible: hidden
+- file: reject_accepts_zero_step.py
+  mistake: accepts a zero step instead of raising
+  clause: 'Raises: `ValueError` when `x` is not floating, or when `step` is not a finite number greater
+    than zero.'
+  killed_by: test_step_must_be_finite_and_positive_and_input_floating
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

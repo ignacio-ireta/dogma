@@ -2,6 +2,44 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_returns_stale_preexisting_grad.py
+  mistake: returns the stale grad field when x already has one
+  clause: '`x`: 1-D floating tensor of shape `(n,)`, `n >= 1`. It may or may not have `requires_grad=True`,
+    and it may already carry a `.grad` value.'
+  killed_by: test_preexisting_grad_field_is_left_unchanged_not_accumulated
+  visible: hidden
+- file: reject_result_forced_to_default_dtype.py
+  mistake: result cast to default float dtype instead of the dtype of x
+  clause: 'Returns: a tensor of shape `(n,)` and the same dtype as `x`, equal to the derivative of `f`
+    with respect to `x` at the point `x`. The result is detached: `requires_grad` is `False` and it has
+    no `grad_fn`.'
+  killed_by: test_caller_tensor_keeps_requires_grad_flag_and_no_grad_field
+  visible: public
+- file: reject_unused_input_raises.py
+  mistake: raises when f does not depend on x instead of returning zeros
+  clause: If `f`'s output does not depend on `x` (a constant, or no path from `x`), the gradient is all
+    zeros.
+  killed_by: test_graph_that_never_reads_x_gives_zero_gradient_not_an_error
+  visible: hidden
+- file: reject_gradient_disabled_inside_no_grad.py
+  mistake: keeps the surrounding no_grad state so the gradient is missing inside no_grad
+  clause: Must work when called inside `torch.no_grad()`.
+  killed_by: test_works_inside_no_grad_context
+  visible: hidden
+- file: reject_flips_caller_requires_grad.py
+  mistake: turns the caller tensor requires_grad flag on when it was off
+  clause: 'Must leave `x` unchanged: its values, its `requires_grad` flag and its `.grad` field.'
+  killed_by: test_caller_values_and_requires_grad_are_unchanged_when_input_is_plain
+  visible: hidden
+- file: reject_nonscalar_check_is_ndim_gt_1.py
+  mistake: scalar check accepts one-element outputs so autograd raises RuntimeError
+  clause: 'Raises: `ValueError` when `x` is not 1-D or not floating, or when `f(x)` is not 0-dimensional.'
+  killed_by: test_non_scalar_output_is_rejected_as_value_error
+  visible: hidden
+uncovered:
+- clause: '`f`: a callable that takes a 1-D float tensor of shape `(n,)` and returns a 0-dimensional tensor.'
+  reason: C1 constrains the callable f that the caller passes, and a solution cannot break it without
+    also breaking C3 or C7
+sweeps:
+- reject
