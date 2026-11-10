@@ -273,3 +273,36 @@ def test_single_entry_vocabulary_is_a_valid_model_output():
     assert out.tolist() == [[3, 0, 0]], (
         "with a one-entry vocabulary the only argmax is 0: check the choice and the appended token"
     )
+
+
+def test_bool_step_cap_raises_value_error():
+    # A bool is not a step count: True would otherwise be read as a cap of one step.
+    _expect_value_error(
+        _bigram(torch.zeros(2, 2, dtype=torch.float64)),
+        torch.tensor([[0]]),
+        True,
+        eos_id=0,
+        pad_id=0,
+    )
+
+
+def test_finished_rows_may_carry_non_finite_logits():
+    # Logits of a finished row are ignored, so NaN there must neither raise nor change the output.
+    def model(tokens: torch.Tensor) -> torch.Tensor:
+        logits = torch.zeros(tokens.shape[0], 3, dtype=torch.float64)
+        first = tokens[:, 0] == 0  # row 0: prompt [0], emits EOS (id 1) at its first step
+        logits[first, 1] = 1.0
+        logits[~first, 2] = 1.0  # row 1: always emits id 2
+        if tokens.shape[1] >= 2:
+            logits[first] = float("nan")  # row 0 is finished from step 2 on
+        return logits
+
+    try:
+        out = _learner(model, torch.tensor([[0], [2]]), 3, eos_id=1, pad_id=0)
+    except ValueError:
+        pytest.fail("logits of finished rows are ignored: a non-finite value there must not raise")
+    # Row 0 is [prompt, EOS, pad, pad]; row 1 runs to the cap of 3 new tokens.
+    expected = torch.tensor([[0, 1, 0, 0], [2, 2, 2, 2]])
+    assert torch.equal(out, expected), (
+        "finished rows must be padded and their logits ignored, whatever values they hold"
+    )

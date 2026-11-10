@@ -1,7 +1,85 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_masked_fill_pad.py
+  origin: freedom
+  freedom: writes pad_id into finished rows with masked_fill instead of torch.where
+reject:
+- file: reject_max_tokens_bool_accepted.py
+  mistake: accepts a bool as the step cap
+  clause: '`max_new_tokens`: `int`, `>= 0`. A `bool` is rejected.'
+  killed_by: test_bool_step_cap_raises_value_error
+  visible: hidden
+- file: reject_nonfinite_logits_checked.py
+  mistake: rejects non-finite logits of finished rows
+  clause: '`next_logits`: a callable. You call it with an `int64` tensor `tokens` of shape `(B, T)`, where
+    `T >= 1`. It holds the prompt followed by every token appended so far. Finished rows carry `pad_id`
+    at the appended positions. It returns a tensor of shape `(B, V)`, `V >= 1`, with the logits for the
+    token that follows each row''s last position. Logits of finished rows are ignored.'
+  killed_by: test_finished_rows_may_carry_non_finite_logits
+  visible: hidden
+- file: reject_model_sees_eos_in_finished_rows.py
+  mistake: finished rows show EOS instead of pad in the prefix the model sees
+  clause: '`next_logits`: a callable. You call it with an `int64` tensor `tokens` of shape `(B, T)`, where
+    `T >= 1`. It holds the prompt followed by every token appended so far. Finished rows carry `pad_id`
+    at the appended positions. It returns a tensor of shape `(B, V)`, `V >= 1`, with the logits for the
+    token that follows each row''s last position. Logits of finished rows are ignored.'
+  killed_by: test_finished_rows_appear_as_pad_in_the_prefix_the_model_sees
+  visible: hidden
+- file: reject_single_entry_vocab.py
+  mistake: rejects a model that returns a one-entry vocabulary
+  clause: '`next_logits`: a callable. You call it with an `int64` tensor `tokens` of shape `(B, T)`, where
+    `T >= 1`. It holds the prompt followed by every token appended so far. Finished rows carry `pad_id`
+    at the appended positions. It returns a tensor of shape `(B, V)`, `V >= 1`, with the logits for the
+    token that follows each row''s last position. Logits of finished rows are ignored.'
+  killed_by: test_single_entry_vocabulary_is_a_valid_model_output
+  visible: hidden
+- file: reject_prompt_eos_last_is_finished.py
+  mistake: a prompt whose last token is EOS starts out finished
+  clause: '`prompts`: `torch.int64` tensor of shape `(B, P)`, `B >= 1` and `P >= 1`. Each row is a complete
+    prompt with no padding.'
+  killed_by: test_random_bigram_batches_match_one_row_at_a_time_reference
+  visible: hidden
+- file: reject_negative_cap_accepted.py
+  mistake: accepts a negative step cap without raising
+  clause: '`max_new_tokens`: `int`, `>= 0`. A `bool` is rejected.'
+  killed_by: test_negative_step_cap_raises_value_error
+  visible: hidden
+- file: reject_eos_checked_against_vocab.py
+  mistake: raises when the EOS id is not below the vocabulary size
+  clause: '`eos_id`, `pad_id`: `int`. A `bool` is rejected. They are not checked against `V`, and `pad_id`
+    may equal `eos_id`.'
+  killed_by: test_single_entry_vocabulary_is_a_valid_model_output
+  visible: hidden
+- file: reject_ties_to_highest.py
+  mistake: ties in the logits go to the highest token id
+  clause: 'Loop: before step `s` (`s = 1, 2, ...`), if every row is finished, stop. Otherwise call `next_logits(tokens)`,
+    where `tokens` has width `P + s - 1`. For each unfinished row, append the argmax of its logits. Ties
+    go to the lowest token id. For each finished row, append `pad_id`. A row that appends `eos_id` becomes
+    finished. The EOS token is part of the output.'
+  killed_by: test_tie_between_logits_chooses_lowest_token_id
+  visible: hidden
+- file: reject_trailing_pad_column_trimmed.py
+  mistake: drops a last output column that is all pad even when a row generated that token
+  clause: 'Returns: `torch.int64` tensor of shape `(B, P + G)`, where `G` is the number of steps run,
+    `0 <= G <= max_new_tokens`. Row `b` holds its prompt, then its generated tokens up to and including
+    its EOS (or up to the cap), then `pad_id` up to width `P + G`. `G` equals the length of the longest
+    generated sequence.'
+  killed_by: test_random_bigram_batches_match_one_row_at_a_time_reference
+  visible: hidden
+- file: reject_empty_batch_accepted.py
+  mistake: accepts a batch of zero rows instead of raising
+  clause: 'Raises `ValueError` when: `prompts` is not a 2-D `int64` tensor; `B = 0` or `P = 0`; `max_new_tokens`
+    is negative or not an `int`; `eos_id` or `pad_id` is not an `int`; or `next_logits` returns something
+    that is not a 2-D tensor of shape `(B, V)` with `V >= 1`.'
+  killed_by: test_zero_batch_raises_value_error
+  visible: hidden
+- file: reject_zero_cap_alias.py
+  mistake: at zero step cap returns the prompt tensor itself so the output shares storage
+  clause: Must not mutate `prompts`. The returned tensor must not share storage with `prompts`.
+  killed_by: test_zero_new_tokens_returns_a_copy_not_an_alias_of_the_prompt
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
