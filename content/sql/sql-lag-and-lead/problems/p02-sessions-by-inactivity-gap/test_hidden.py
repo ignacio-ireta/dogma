@@ -6,8 +6,11 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import duckdb
+import numpy as np
 import pandas as pd
 import pytest
+
+from dogma_data import rng
 
 COLUMNS = ["visitor_id", "view_id", "viewed_at", "session_number", "starts_session"]
 TYPES = ["BIGINT", "BIGINT", "TIMESTAMP", "BIGINT", "BOOLEAN"]
@@ -156,3 +159,58 @@ def test_fixture_matches_independent_oracle():
 
 def test_empty_input_returns_declared_schema_with_no_rows():
     _same(_run([]), [])
+
+
+def _millisecond_visitor_views(key: str) -> list[tuple[int, int, datetime]]:
+    """Visitors with Zipf-skewed view counts and microsecond clocks, with gaps near 30 minutes.
+
+    Most gaps are short. About one gap in six sits at 30 minutes plus or minus a few microseconds,
+    a second, or a fraction of a second, so the boundary is tested at the resolution that app
+    logs keep. Rows come back shuffled.
+    """
+    gen = rng(key)
+    visitors = 40
+    weights = 1.0 / np.arange(1, visitors + 1, dtype=np.float64) ** 1.2
+    sizes = gen.multinomial(1200, weights / weights.sum())
+    around = np.array([-1, 0, 1, 1_000, 500_000, 999_999, 1_000_000, 1_000_001], dtype=np.int64)
+    rows: list[tuple[int, int, datetime]] = []
+    view_id = 1
+    for visitor, size in enumerate(sizes, start=1):
+        start_us = int(gen.integers(0, 3 * 86_400 * 1_000_000))
+        clock = datetime(2026, 4, 1) + timedelta(microseconds=start_us)
+        for _ in range(int(size)):
+            roll = gen.random()
+            if roll < 1 / 6:
+                step = GAP + timedelta(microseconds=int(gen.choice(around)))
+            elif roll < 0.9:
+                step = timedelta(microseconds=int(gen.exponential(4 * 60 * 1_000_000)))
+            else:
+                step = timedelta(hours=float(gen.uniform(1, 9)))
+            clock += step
+            rows.append((visitor, view_id, clock))
+            view_id += 1
+    order = gen.permutation(len(rows))
+    return [rows[int(i)] for i in order]
+
+
+def test_gap_of_thirty_minutes_and_one_millisecond_starts_a_session():
+    t0 = datetime(2026, 5, 2, 7, 0, 0, 200_000)
+    later = t0 + GAP + timedelta(milliseconds=1)
+    got = _run([(1, 1, t0), (1, 2, later)])
+    if got != [(1, 1, t0, 1, True), (1, 2, later, 2, True)]:
+        pytest.fail(
+            "a gap just over thirty minutes is judged in whole seconds: compare the exact gap, "
+            "fractions of a second included",
+            pytrace=False,
+        )
+
+
+def test_millisecond_clocks_with_skewed_visitors_match_the_oracle():
+    rows = _millisecond_visitor_views("sql/sql-lag-and-lead/p02-sessions-by-inactivity-gap:ms:0")
+    got = _run(rows)
+    if got != _oracle(rows):
+        pytest.fail(
+            "session starts differ on microsecond timestamps: the gap keeps its fractions of a "
+            "second, so judge it as an exact interval",
+            pytrace=False,
+        )

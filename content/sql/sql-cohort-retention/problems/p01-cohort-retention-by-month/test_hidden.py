@@ -15,6 +15,8 @@ from pathlib import Path
 import duckdb
 import pytest
 
+from dogma_data import rng, synth
+
 COLUMNS = ["cohort_month", "period", "active_users", "cohort_size", "retention_rate"]
 TYPES = ["DATE", "BIGINT", "BIGINT", "BIGINT", "DOUBLE"]
 SQL = Path(__file__).with_name("submission.sql").read_text(encoding="utf-8")
@@ -210,3 +212,20 @@ def test_fixture_matches_independent_oracle():
 
 def test_empty_table_returns_no_rows_with_the_declared_schema():
     assert _run([]) == [], "an empty table must return no rows, with the declared columns and types"
+
+
+def test_duplicated_log_rows_count_each_user_once_in_the_cohort_size():
+    gen = rng("sql/sql-cohort-retention/p01-cohort-retention-by-month:dup-log:0")
+    log = synth.event_log(
+        gen,
+        3000,
+        n_users=400,
+        zipf_a=1.1,
+        start="2023-01-01",
+        days=1000,
+        duplicate_rate=0.1,
+    )
+    rows = [
+        (int(user), moment.item()) for user, moment in zip(log["user_id"], log["ts"], strict=True)
+    ]
+    _check(_run(rows), _oracle(rows))

@@ -19,6 +19,8 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
+from dogma_data import rng
+
 COLUMNS = ["customer_id", "customer_name", "order_count", "total_amount"]
 CUSTOMERS_DDL = (
     "CREATE TABLE customers (customer_id BIGINT, customer_name VARCHAR, is_current BOOLEAN)"
@@ -292,3 +294,17 @@ def test_zero_order_customer_total_is_zero_not_null_next_to_non_zero_totals() ->
         "a customer with no orders has a NULL total: wrap the sum in COALESCE(SUM(o.amount), 0.0)"
     )
     _check_same_result(got, _oracle(customers, orders))
+
+
+def test_cent_amounts_with_large_totals_keep_double_precision():
+    gen = rng("sql/sql-joins-and-unions/p01-customer-order-totals:cents:0")
+    ids = [int(x) for x in gen.choice(np.arange(1, 5000), size=60, replace=False)]
+    customers: list[tuple[Any, ...]] = [(cid, f"Shop {cid}", True) for cid in ids]
+    weights = 1.0 / np.arange(1, len(ids) + 1, dtype=np.float64) ** 1.1
+    picks = gen.choice(len(ids), size=1500, p=weights / weights.sum())
+    cents = np.round(gen.lognormal(math.log(400.0), 1.0, size=1500), 2)
+    orders: list[tuple[Any, ...]] = [
+        (i + 1, ids[int(picks[i])], DAY, float(cents[i])) for i in range(1500)
+    ]
+    got = _run_learner_query(_connect(customers, orders))
+    _check_same_result(got, _oracle(customers, orders), check_order=False)

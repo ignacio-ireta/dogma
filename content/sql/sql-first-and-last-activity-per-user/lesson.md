@@ -73,6 +73,11 @@ taking `FIRST_VALUE`.
 - **`event_id` as a clock.** A larger id is not necessarily a later time. Order by time first.
 - **Forgetting users with one event.** The first and last rows are the same row, and that must still appear once.
 
+**Folding labels.** On 1,500 events from 48 users, with 40% of labels carrying case or spacing
+noise, the table holds 20 distinct stored labels. Trimming and lower-casing them leaves 4. The
+folded query returns a different first or last label for 26 of 48 users. The grader compares the
+stored text, so a cleaned label is a wrong answer even when the event is the right one.
+
 ## Interview angle
 
 **60-second answer.** I would ask how ties are broken and whether a missing timestamp is possible, because those

@@ -1,5 +1,5 @@
 id: sql/sql-lag-and-lead/p02-sessions-by-inactivity-gap
-version: 1
+version: 2
 title: Sessions by inactivity gap
 language: sql
 runtime: sql-duckdb
@@ -10,4 +10,4 @@ core: false
 tolerance: {atol: 0.0, rtol: 0.0}
 banned_imports: []
 timeout_s: 30
-status: reviewed
+status: verified

@@ -11,4 +11,4 @@ minutes: {lesson: 12, practice: 25, min_viable: 15}
 interview_angle: "Ask how ties are broken before writing SQL. Then pick one of a join on ranks, arg_min/arg_max with a struct tie-break, or a window with an explicit frame, and say why it returns exactly one row per user."
 sources:
   - "book: Molinaro & de Graaf, SQL Cookbook (2nd ed.), window functions and ranking"
-status: reviewed
+status: verified

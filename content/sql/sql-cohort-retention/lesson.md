@@ -93,6 +93,12 @@ the zeros and flatter the curve.
   fourth decimal ($5 \times 10^{-5}$), because ties can round either way. It also requires a
   multiple of $10^{-4}$, so an unrounded rate fails.
 
+**Retried rows.** A log of 3,300 rows (3,000 events plus 300 retried copies) for 318 users looks
+harmless. A cohort size taken from the rows that carry each user's first timestamp counts a retried
+first event twice. In this log 17 of 32 cohorts get the wrong size. The largest cohort reports 53
+users instead of 48 (+10%), and its period-1 rate falls from 0.312 to 0.283. Count distinct users
+for $N_c$, and check the denominator against the number of users.
+
 ## Interview angle
 
 State the four definitions, then the four CTEs. Name the two traps first: events versus users, and

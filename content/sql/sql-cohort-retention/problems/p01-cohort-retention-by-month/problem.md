@@ -16,6 +16,9 @@ Table `activity` has columns:
 | user_id | BIGINT | Non-null |
 | event_at | TIMESTAMP | Non-null; many rows may share a user and a month |
 
+The log may hold exact duplicate rows, for example a write that the client retried. A duplicate
+row adds nothing: every count below is of distinct users.
+
 Definitions, for every user `u`:
 
 - **Cohort month** `c_u`: the first day of the calendar month of `u`'s earliest `event_at`, as a `DATE`.
@@ -81,6 +84,15 @@ user_id  event_at
 => (2026-01-01, 0, 1, 1, 1.0)
 ```
 
+A retried write is one user, not two. User 5's first event is logged twice:
+
+```text
+user_id  event_at
+5        2026-05-02 08:00:00
+5        2026-05-02 08:00:00
+=> (2026-05-01, 0, 1, 1, 1.0)
+```
+
 ## Constraints
 
 - Allowed: a read-only DuckDB SQL query. CTEs, joins, window functions, `generate_series`, `UNNEST`
@@ -91,9 +103,11 @@ user_id  event_at
 ## Done looks like
 
 The result matches an independent oracle that works in calendar-month indices, on seeded random
-activity with many repeated events per user and month, and on a fixture. Hidden cases cover: a
+activity with many repeated events per user and month, on a three-year log with a heavy user and
+retried duplicate rows (a Zipf-skewed synthetic log), and on a fixture. Hidden cases cover: a
 cohort whose only period is 0; users who return after a gap; a cohort month with no new users; a
 user whose events fall on the last day and first day of two months; many events by one user in one
 month; a grid that extends to the latest month for an early cohort; empty input; exact output types
-and ordering; and a rate that is not 1.0 or 0.0. A query that counts events, uses the previous
+and ordering; a rate that is not 1.0 or 0.0; and a retried duplicate row of a first event, which
+counts once in the cohort size. A query that counts events, uses the previous
 period as denominator, or drops empty periods fails with the mistake named.

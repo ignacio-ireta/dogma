@@ -17,6 +17,8 @@ import duckdb
 import pandas as pd
 import pytest
 
+from dogma_data import rng, synth
+
 COLUMNS = ["user_id", "first_event_time", "first_event_type", "last_event_time", "last_event_type"]
 TYPES = ["BIGINT", "TIMESTAMP", "VARCHAR", "TIMESTAMP", "VARCHAR"]
 SQL = Path(__file__).with_name("submission.sql").read_text(encoding="utf-8")
@@ -204,3 +206,30 @@ def test_empty_table_returns_nothing() -> None:
 def test_single_event_per_user_is_both_first_and_last() -> None:
     rows = [(u, u * 10, BASE + timedelta(hours=u), f"t{u}") for u in range(1, 6)]
     _same(_run(rows), _oracle(rows))
+
+
+def test_event_labels_come_back_exactly_as_stored_on_a_dirty_log():
+    gen = rng("sql/sql-first-and-last-activity-per-user/p01-first-and-last-event:dirty-labels:0")
+    log = synth.event_log(
+        gen,
+        1500,
+        n_users=50,
+        zipf_a=1.3,
+        start="2026-01-01",
+        days=2,
+        categories=("login", "view", "purchase", "logout"),
+        dirty_rate=0.4,
+    )
+    rows = [
+        (int(user), int(event), moment.item(), str(label))
+        for user, event, moment, label in zip(
+            log["user_id"], log["event_id"], log["ts"], log["category"], strict=True
+        )
+    ]
+    got = _run(rows)
+    if got != _oracle(rows):
+        pytest.fail(
+            "a returned event type differs from the stored label: return event_type as stored, "
+            "keeping its case and spaces, and pick the event by time, then event_id",
+            pytrace=False,
+        )

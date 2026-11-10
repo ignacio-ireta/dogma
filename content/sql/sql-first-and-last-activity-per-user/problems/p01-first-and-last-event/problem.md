@@ -23,6 +23,8 @@ Table `events` has these columns:
 - Exactly one row per user. The times and types of a row come from the same event.
 - Final output order is `user_id ASC`.
 - A user with a single event has the same event as first and last.
+- `event_type` is returned exactly as stored: its case and any surrounding spaces are part of the
+  value. Labels are not trimmed or case-folded.
 - An empty table returns an empty result with these column names and types.
 - Do not change the input table.
 
@@ -50,6 +52,15 @@ user_id event_id event_time        event_type
 In the second example, event 11 is first because its time is earliest, even though its id is in the middle. Events
 10 and 12 tie for last at 2026-02-01 00:00, and the largest id, 12, wins.
 
+```text
+user_id event_id event_time        event_type
+4       21       2026-03-05 14:00  " Login"
+4       22       2026-03-05 16:00  "LOGIN "
+=> (4, 2026-03-05 14:00, " Login", 2026-03-05 16:00, "LOGIN ")
+```
+
+The labels keep their case and spaces, because the contract returns the stored value.
+
 ## Constraints
 
 - Use a read-only DuckDB SQL query. CTEs, subqueries, window functions, `arg_min`, `arg_max` and `struct_pack`
@@ -58,7 +69,8 @@ In the second example, event 11 is first because its time is earliest, even thou
 
 ## Done looks like
 
-The result matches an independent pandas oracle on seeded and fixture events. Hidden cases cover ties at the first
-time and at the last time, users with one event, event ids out of time order, a user whose events all share one time,
-large identifiers, empty input, the exact column types and the order of the output rows. Every returned time and type
-belongs to the same event.
+The result matches an independent pandas oracle on seeded and fixture events, and on a skewed log (a few heavy users,
+second-resolution times) whose labels carry case and spacing noise. Hidden cases cover ties at the first time and at
+the last time, users with one event, event ids out of time order, a user whose events all share one time, large
+identifiers, empty input, the exact column types and the order of the output rows. Labels come back exactly as stored.
+Every returned time and type belongs to the same event.
