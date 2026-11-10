@@ -2,6 +2,74 @@ problem_version: 1
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_flops_without_factor_two.py
+  mistake: FLOP count drops the factor 2
+  clause: 'FLOPs: `flops = 2 * m * n * k`. Each of the `m * n` outputs is a dot product of length `k`:
+    `k` multiplies and `k` adds.'
+  killed_by: test_batch_one_decode_gemv_is_memory_bound_with_exact_counts
+  visible: public
+- file: reject_bytes_without_output_write.py
+  mistake: byte count leaves out the output C
+  clause: 'Bytes: `bytes = (m * k + k * n + m * n) * element_bytes`. Each element of `A` and `B` is read
+    once, each element of `C` is written once, and no cache reuse is credited.'
+  killed_by: test_batch_one_decode_gemv_is_memory_bound_with_exact_counts
+  visible: public
+- file: reject_intensity_integer_division.py
+  mistake: intensity uses integer floor division
+  clause: 'Intensity: `intensity = flops / bytes`, in FLOP per byte.'
+  killed_by: test_random_shapes_and_devices_match_exact_rational_roofline
+  visible: hidden
+- file: reject_ridge_truncated_to_integer.py
+  mistake: ridge truncated to an integer before the comparison
+  clause: 'Ridge: `peak_flops / bandwidth`, in FLOP per byte.'
+  killed_by: test_ridge_a_hair_above_the_intensity_stays_memory_bound
+  visible: hidden
+- file: reject_tie_at_ridge_goes_to_memory.py
+  mistake: tie at the ridge reported as memory-bound
+  clause: 'Bound: `"compute"` when `intensity >= ridge`, otherwise `"memory"`. Decide it with exact integer
+    arithmetic: `"compute"` when `flops * bandwidth >= peak_flops * bytes`. At exactly the ridge the bound
+    is `"compute"`.'
+  killed_by: test_intensity_exactly_at_the_ridge_is_reported_as_compute
+  visible: public
+- file: reject_attainable_always_bandwidth_roof.py
+  mistake: compute-bound product attains intensity times bandwidth instead of peak
+  clause: 'Attainable FLOP/s: `peak_flops` when compute-bound, otherwise `intensity * bandwidth`.'
+  killed_by: test_square_product_is_compute_bound_and_floored_by_compute_time
+  visible: public
+- file: reject_time_floor_takes_smaller_time.py
+  mistake: time floor takes the smaller of the two times
+  clause: 'Time floor, in seconds: `max(flops / peak_flops, bytes / bandwidth)`. Arguments:'
+  killed_by: test_square_product_is_compute_bound_and_floored_by_compute_time
+  visible: public
+- file: reject_k_accepts_float_by_coercion.py
+  mistake: k coerced with int so float arguments are accepted
+  clause: '`m`, `n`, `k`: Python `int`, at least 1.'
+  killed_by: test_non_int_argument_raises_type_error
+  visible: hidden
+uncovered:
+- clause: '`element_bytes`: Python `int`, at least 1. Bytes per element (fp16 is 2, fp32 is 4, fp8 is
+    1).'
+  reason: cap of eight wrong solutions per problem
+- clause: '`peak_flops`, `bandwidth`: Python `int`, at least 1. Floats are rejected, so write the device
+    spec as integers. Returns a `dict` with exactly these keys:'
+  reason: cap of eight wrong solutions per problem
+- clause: '`"flops"`: `int`'
+  reason: cap of eight wrong solutions per problem
+- clause: '`"bytes"`: `int`'
+  reason: cap of eight wrong solutions per problem
+- clause: '`"intensity"`: `float`'
+  reason: cap of eight wrong solutions per problem
+- clause: '`"attainable_flops"`: `float`'
+  reason: cap of eight wrong solutions per problem
+- clause: '`"bound"`: `str`, either `"memory"` or `"compute"`'
+  reason: cap of eight wrong solutions per problem
+- clause: '`"time_s"`: `float`, in seconds No rounding: floats are returned at full precision. Raises:'
+  reason: cap of eight wrong solutions per problem
+- clause: '`TypeError` when any argument is not a Python `int`. `bool`, `float` and `str` are rejected.'
+  reason: cap of eight wrong solutions per problem
+- clause: '`ValueError` when any argument is below 1. Must not mutate inputs (there are none to mutate;
+    do not keep module-level state).'
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject
