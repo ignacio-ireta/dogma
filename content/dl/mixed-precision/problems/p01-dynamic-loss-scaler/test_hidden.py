@@ -66,7 +66,7 @@ def test_growth_counter_is_reset_by_an_overflow():
     for _ in range(3):
         scaler.update(found_inf=False)
     scaler.update(found_inf=True)
-    assert scaler.scale == 0.5
+    assert scaler.scale == 0.5, "an overflow must halve the scale"
     for _ in range(3):
         scaler.update(found_inf=False)
     assert scaler.scale == 0.5, (
@@ -79,10 +79,10 @@ def test_growth_counter_is_reset_by_an_overflow():
 def test_growth_interval_one_doubles_every_good_step():
     scaler = DynamicLossScaler(init_scale=8.0, growth_interval=1)
     scaler.update(found_inf=False)
-    assert scaler.scale == 16.0
+    assert scaler.scale == 16.0, "a good step must double the scale once the interval is reached"
     scaler.update(found_inf=True)
-    assert scaler.scale == 8.0
-    assert scaler.update(found_inf=False) is True
+    assert scaler.scale == 8.0, "an overflow must halve the scale back down"
+    assert scaler.update(found_inf=False) is True, "a good step must be reported as applied"
     assert scaler.scale == 16.0, "growth_interval 1 must double after each good step"
 
 
@@ -107,16 +107,18 @@ def test_custom_growth_and_backoff_factors_are_applied():
     assert scaler.scale == 0.75, "backoff must multiply by backoff_factor"
     scaler.update(found_inf=False)
     scaler.update(found_inf=False)
-    assert scaler.scale == 2.25
+    assert scaler.scale == 2.25, "growth after a backoff must multiply the scale by growth_factor"
 
 
 def test_scale_stays_positive_after_a_long_run_of_overflows():
     scaler = DynamicLossScaler(init_scale=2.0**16)
     for _ in range(300):
-        assert scaler.update(found_inf=True) is False
+        assert scaler.update(found_inf=True) is False, (
+            "an overflow must be reported as a skipped step"
+        )
     assert scaler.scale > 0.0, "the scale reached zero: backoff must never remove the scale"
     assert scaler.scale == 2.0**16 * 0.5**300, "backoff must halve on every overflow"
-    assert scaler.good_steps == 0
+    assert scaler.good_steps == 0, "overflows must keep the good-step count at zero"
 
 
 def test_state_is_per_instance_not_shared_between_scalers():
@@ -124,7 +126,7 @@ def test_state_is_per_instance_not_shared_between_scalers():
     b = DynamicLossScaler(init_scale=4.0, growth_interval=2)
     a.update(found_inf=False)
     a.update(found_inf=False)
-    assert a.scale == 8.0
+    assert a.scale == 8.0, "good steps on one scaler must grow only that scaler's scale"
     assert b.scale == 4.0 and b.good_steps == 0, "a second scaler saw the first one's state"
 
 
@@ -191,4 +193,6 @@ def test_property_every_transition_follows_the_update_rule(flags: list[bool], in
                 "good-step transition wrong: count the step and leave the scale unchanged"
             )
         assert 0 <= scaler.good_steps < interval, "good_steps must stay below growth_interval"
-        assert math.isfinite(scaler.scale) and scaler.scale > 0.0
+        assert math.isfinite(scaler.scale) and scaler.scale > 0.0, (
+            "the loss scale must stay finite and positive"
+        )
