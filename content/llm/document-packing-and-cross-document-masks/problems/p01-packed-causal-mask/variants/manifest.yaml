@@ -2,6 +2,55 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_loop_restart.py
+  origin: freedom
+  freedom: restart positions computed by a Python loop instead of a vectorised run start
+reject:
+- file: reject_single_token_row.py
+  mistake: rejects a one token row which the Contract allows
+  clause: '`doc_ids`: 1-D integer array-like of length $T \ge 1$. Each value names the document of its
+    token. Each id must occupy one contiguous run in the row.'
+  killed_by: test_single_document_row_equals_plain_causal_mask
+  visible: hidden
+- file: reject_strict_causal.py
+  mistake: causal rule is strict so the diagonal is lost
+  clause: '`packed_causal_mask` returns: boolean NumPy array of shape `(T, T)`. `mask[i, j]` is `True`
+    exactly when `doc_ids[i] == doc_ids[j]` and `j <= i`.'
+  killed_by: test_two_documents_block_the_cross_document_key
+  visible: public
+- file: reject_positions_int32.py
+  mistake: positions returned as int32 not int64
+  clause: '`restart_positions` returns: `int64` NumPy array of shape `(T,)`. `pos[i]` is the offset of
+    token `i` from the first token of its document, that is `i` minus the index of that first token, so
+    each document starts at 0.'
+  killed_by: test_outputs_have_documented_dtype_and_shape
+  visible: hidden
+- file: reject_contiguity_unchecked.py
+  mistake: contiguity check dropped so a reappearing id is accepted
+  clause: Raises `ValueError` when `doc_ids` is not 1-D, is empty, is not an integer dtype (`bool` and
+    float are rejected), or contains an id that reappears after a different id. Both functions apply the
+    same rules.
+  killed_by: test_non_contiguous_document_ids_raise_value_error
+  visible: hidden
+- file: reject_inplace_shift_ids.py
+  mistake: shifts the ids of the caller array in place
+  clause: Must not mutate inputs.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
+- file: reject_empty_int_array.py
+  mistake: no check for an empty integer array so IndexError is raised
+  clause: Raises `ValueError` when `doc_ids` is not 1-D, is empty, is not an integer dtype (`bool` and
+    float are rejected), or contains an id that reappears after a different id. Both functions apply the
+    same rules.
+  killed_by: test_empty_or_two_dimensional_ids_raise_value_error
+  visible: hidden
+- file: reject_bool_ids_accepted.py
+  mistake: boolean ids accepted as integers
+  clause: Raises `ValueError` when `doc_ids` is not 1-D, is empty, is not an integer dtype (`bool` and
+    float are rejected), or contains an id that reappears after a different id. Both functions apply the
+    same rules.
+  killed_by: test_non_integer_document_ids_raise_value_error
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
