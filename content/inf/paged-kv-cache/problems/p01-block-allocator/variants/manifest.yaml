@@ -2,6 +2,64 @@ problem_version: 1
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_sorted_list_free_pool.py
+  origin: freedom
+  freedom: internal free pool is a sorted list with bisect instead of a heap
+reject:
+- file: reject_bool_accepted_as_int.py
+  mistake: bool accepted as int in the constructor
+  clause: '`BlockAllocator(num_blocks, block_size)`: both are `int`, not `bool`, and at least 1, otherwise
+    `ValueError`.'
+  killed_by: test_invalid_pool_sizes_raise_value_error
+  visible: hidden
+- file: reject_free_count_by_sequences.py
+  mistake: num free blocks counts sequences not blocks
+  clause: '`num_free_blocks` (property): `int`, the number of blocks not held by any sequence.'
+  killed_by: test_random_operations_match_the_independent_model
+  visible: hidden
+- file: reject_floor_block_count.py
+  mistake: block count uses floor so a partial block is not paid for
+  clause: '`allocate(seq_id, n_tokens) -> None`: start sequence `seq_id` with `n_tokens` tokens (`int`,
+    `>= 0`). It takes `ceil(n_tokens / block_size)` blocks. - `seq_id` already active: `ValueError`. -
+    `n_tokens < 0` or not an `int`: `ValueError`. - Not enough free blocks: raise `OutOfBlocksError`,
+    and change nothing.'
+  killed_by: test_allocation_takes_lowest_free_blocks_and_appends_in_place
+  visible: public
+- file: reject_append_not_atomic.py
+  mistake: append stores the token before a failed block grab
+  clause: '`append_token(seq_id) -> tuple[int, int]`: store one more token for an active sequence. Let
+    `p` be its 0-based token position before the append. If `p % block_size == 0`, the sequence needs
+    a new block, so one is taken from the pool. Returns `(physical_block, offset)` where the new token
+    lives, with `offset = p % block_size`. - Unknown `seq_id`: `KeyError`. - A new block is needed and
+    none is free: `OutOfBlocksError`, and change nothing.'
+  killed_by: test_random_operations_match_the_independent_model
+  visible: hidden
+- file: reject_capacity_not_tokens.py
+  mistake: num tokens returns block capacity not the token count
+  clause: '`num_tokens(seq_id) -> int`: tokens stored for the sequence. Unknown `seq_id`: `KeyError`.'
+  killed_by: test_random_operations_match_the_independent_model
+  visible: hidden
+- file: reject_block_table_aliases_state.py
+  mistake: block table returns the live internal list
+  clause: '`block_table(seq_id) -> list[int]`: a **new** list of physical ids in logical order. Mutating
+    it must not change the allocator. Unknown `seq_id`: `KeyError`.'
+  killed_by: test_block_table_returns_a_copy_that_cannot_corrupt_the_allocator
+  visible: hidden
+- file: reject_free_keeps_sequence.py
+  mistake: free returns blocks but keeps the sequence table
+  clause: '`free(seq_id) -> None`: return all of the sequence''s blocks to the pool, and forget the sequence.
+    Unknown `seq_id`: `KeyError`.'
+  killed_by: test_random_operations_match_the_independent_model
+  visible: hidden
+- file: reject_lifo_block_reuse.py
+  mistake: freed blocks reused last in first out not lowest id
+  clause: Reuse is deterministic. Every new block is the **lowest-numbered free** physical id. Freed ids
+    become free again and are reused by that rule.
+  killed_by: test_freed_blocks_return_to_the_pool_and_lowest_id_is_reused
+  visible: public
+uncovered:
+- clause: '`class OutOfBlocksError(RuntimeError)` is defined in the starter. Raise it; do not replace
+    it.'
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject
