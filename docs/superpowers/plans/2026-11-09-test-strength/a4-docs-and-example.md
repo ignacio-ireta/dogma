@@ -89,8 +89,12 @@ Follow these steps in order. The reasons and examples are in the
 | `uncovered` | none | Name a Contract bullet that has no reject, with the reason |
 
 `manifest.yaml` is written only by `scripts/exercise_gate.py` (`add-accept`, `add-reject`,
-`add-uncovered`, `remove-variant`, `adopt-blind`), from what the grader showed. Never edit it by
-hand. Static rules, checked by `dogma content verify`:
+`add-uncovered`, `remove-variant`, `adopt-blind`, `add-test`, `mark-swept`), from what the grader
+showed. Never edit it by hand. A new hidden test enters through `add-test`: it appends the test,
+bumps the version, runs `gate` and records the wrong solution the test catches, or restores every
+file. A variant is evidence, not reference code: when one is installed, style findings are marked
+in the file with `noqa`, while syntax errors and undefined names refuse it. Static rules, checked
+by `dogma content verify`:
 
 | Code | Rule |
 |---|---|
@@ -247,7 +251,8 @@ Check with `make -n verify-variants`: it must print the command and no error.
 ## 7. Variants for the example problem
 
 Problem id: `cml/vector-operations/p01-vector-projection`. OUT: `var/audit-i32/a4`.
-Read its `solution.py` (30 lines). Do not read its `test_hidden.py`.
+Read its `solution.py` (30 lines). Do not read its `test_hidden.py`. The problem already has
+`variants/manifest.yaml` with its blind accept. The commands below add to it.
 
 Make four candidates. For each: copy the solution, then make exactly the edit described, and
 change the docstring to start with `Wrong on purpose:` (rejects) or leave it (accept).
@@ -300,4 +305,4 @@ owned paths.
 - Do not add a `variants/` template to the scaffold. A scaffolded problem must still fail
   verification with `TOPIC_TODO` only.
 - Do not touch `test_hidden.py`, `meta.yaml` or `problem.md` of the example problem.
-- The example gets its blind accept in I-32c, like every other problem.
+- The example's blind accept is already there. Do not remove or replace it.
