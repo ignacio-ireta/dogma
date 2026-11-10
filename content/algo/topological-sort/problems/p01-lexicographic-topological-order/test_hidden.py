@@ -17,6 +17,16 @@ import pytest
 from submission import smallest_topological_order
 
 
+def _raises(expected, call, mistake):
+    try:
+        call()
+    except expected:
+        return
+    except Exception as exc:
+        pytest.fail(f"{mistake}; raised {type(exc).__name__} instead")
+    pytest.fail(mistake)
+
+
 def _brute(nodes, edges):
     """First valid permutation of the sorted names, or None when the graph has a cycle."""
     for perm in itertools.permutations(sorted(nodes)):
@@ -186,18 +196,27 @@ def test_self_loop_is_a_cycle_named_with_its_node():
 
 
 def test_unknown_name_in_an_edge_raises_value_error_not_key_error():
-    with pytest.raises(ValueError):
-        smallest_topological_order(["a", "b"], [("a", "zz")])
+    _raises(
+        ValueError,
+        lambda: smallest_topological_order(["a", "b"], [("a", "zz")]),
+        "an edge that names an unknown node must raise ValueError",
+    )
 
 
 def test_duplicate_node_name_raises_value_error():
-    with pytest.raises(ValueError):
-        smallest_topological_order(["a", "a", "b"], [])
+    _raises(
+        ValueError,
+        lambda: smallest_topological_order(["a", "a", "b"], []),
+        "a duplicate node name must raise ValueError",
+    )
 
 
 def test_non_string_name_raises_type_error():
-    with pytest.raises(TypeError):
-        smallest_topological_order([1, 2], [])
+    _raises(
+        TypeError,
+        lambda: smallest_topological_order([1, 2], []),
+        "a non-string node name must raise TypeError",
+    )
 
 
 def test_long_chain_of_names_comes_out_in_dependency_order():
