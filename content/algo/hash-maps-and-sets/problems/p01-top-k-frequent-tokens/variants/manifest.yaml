@@ -2,6 +2,47 @@ problem_version: 1
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_drops_empty_token.py
+  mistake: skips the empty string token
+  clause: '`tokens`: a list of `str`, possibly empty. Tokens are compared exactly: case-sensitive, with
+    no stripping or normalisation. The empty string `""` is an ordinary token.'
+  killed_by: test_matches_counter_oracle_on_random_token_lists
+  visible: hidden
+- file: reject_negative_k_unguarded.py
+  mistake: guard only catches zero so negative k slices from the end
+  clause: '`k`: an `int`. `k <= 0` returns `[]`. A `k` larger than the number of distinct tokens returns
+    every distinct token.'
+  killed_by: test_matches_counter_oracle_on_random_token_lists
+  visible: hidden
+- file: reject_ties_by_first_appearance.py
+  mistake: ties keep first-appearance order
+  clause: 'Returns: a `list` of `(token, count)` tuples, with `count` an `int` of at least 1. Sort by
+    count, highest first. Break ties by token in ascending Python string order, so `"B"` comes before
+    `"a"` because uppercase letters sort first.'
+  killed_by: test_equal_counts_are_ordered_alphabetically_not_by_first_appearance
+  visible: public
+- file: reject_off_by_one_cap.py
+  mistake: caps k at vocabulary size minus one
+  clause: 'Length of the result: `min(max(k, 0), number of distinct tokens)`.'
+  killed_by: test_k_larger_than_the_vocabulary_returns_every_distinct_token_in_order
+  visible: public
+- file: reject_raises_on_empty.py
+  mistake: raises ValueError on empty input
+  clause: 'Raises: nothing in this problem.'
+  killed_by: test_k_zero_and_empty_input_both_return_an_empty_list
+  visible: public
+- file: reject_sorts_input.py
+  mistake: sorts the caller list in place
+  clause: Must not mutate `tokens`.
+  killed_by: test_input_list_is_not_mutated
+  visible: hidden
+- file: reject_lowercases_tokens.py
+  mistake: folds case so Apple and apple count as one token
+  clause: '`tokens`: a list of `str`, possibly empty. Tokens are compared exactly: case-sensitive, with
+    no stripping or normalisation. The empty string `""` is an ordinary token.'
+  killed_by: test_matches_counter_oracle_on_random_token_lists
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
