@@ -312,3 +312,21 @@ def test_variance_averages_the_squared_deviation_of_every_model():
         "variance is the mean squared deviation of every model from the average (divisor B): "
         "the model that sits at the average still counts"
     )
+
+
+def test_overflowing_spread_is_infinite_not_nan():
+    _, variance, _ = _call([[1e308], [-1e308]], [0.0], 0.0)
+    _require(
+        not np.isnan(variance) and variance == np.inf,
+        "a spread beyond the float64 range must come back as positive infinity, "
+        "not as NaN and not as a finite number",
+    )
+
+
+def test_overflowing_mean_with_a_zero_prediction_stays_finite():
+    # Models predict 1e308, -1e308 and 0. Their mean is 0, so with truth 0 the squared bias is 0.
+    bias2, _, _ = _call([[1e308], [-1e308], [0.0]], [0.0], 0.0)
+    _require(
+        np.isclose(bias2, 0.0, atol=1e-6),
+        "the mean prediction is wrong when huge predictions cancel and one prediction is zero",
+    )

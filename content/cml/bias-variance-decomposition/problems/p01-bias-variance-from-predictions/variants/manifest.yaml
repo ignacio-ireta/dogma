@@ -1,4 +1,4 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
@@ -56,6 +56,22 @@ reject:
   clause: Must not mutate inputs.
   killed_by: test_invalid_input_raises_value_error
   visible: hidden
+- file: reject_any_finite_offsets.py
+  mistake: treats a spread as finite when only some deviations overflow, so it returns NaN
+  clause: Returns Python floats. Use float64 arithmetic, preserving representable errors even when the
+    predictions share a very large common offset. Squared quantities genuinely beyond float64 range may
+    return positive infinity; underflow below the smallest float64 subnormal may return zero.
+  killed_by: test_overflowing_spread_is_infinite_not_nan
+  visible: hidden
+- file: reject_min_magnitude.py
+  mistake: uses the smallest deviation as the scale when averaging overflowing predictions, so a zero
+    breaks the mean
+  clause: 'For each test point `j`, with `pbar_j` the mean of `predictions[:, j]` over the `B` models:
+    - squared bias: `bias2_j = (pbar_j - f_true[j]) ** 2` - variance: `var_j` = the mean over the models
+    of `(predictions[b, j] - pbar_j) ** 2`, divisor `B`, not `B - 1`'
+  killed_by: test_overflowing_mean_with_a_zero_prediction_stays_finite
+  visible: hidden
 uncovered: []
 sweeps:
 - reject
+- mutants

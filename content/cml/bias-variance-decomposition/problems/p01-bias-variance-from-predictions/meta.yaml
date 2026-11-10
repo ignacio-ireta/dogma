@@ -1,5 +1,5 @@
 id: cml/bias-variance-decomposition/p01-bias-variance-from-predictions
-version: 3                      # bump when tests, tolerances or the contract change
+version: 4                      # bump when tests, tolerances or the contract change
 title: Bias-variance from predictions
 language: python                # python | sql
 runtime: py-numpy               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
