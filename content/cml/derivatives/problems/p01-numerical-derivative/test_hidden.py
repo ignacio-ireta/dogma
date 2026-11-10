@@ -116,7 +116,7 @@ def test_linear_function_has_its_slope_for_both_methods():
             )
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(st.lists(FINITE, min_size=1, max_size=4), st.floats(-4.0, 4.0, allow_nan=False))
 def test_random_polynomial_derivative_is_accurate(coeffs, x):
     def f(t):
@@ -167,7 +167,7 @@ def test_non_positive_or_non_finite_step_raises_value_error(bad_h):
     )
 
 
-@pytest.mark.parametrize("method", ["central", "forward"])
+@pytest.mark.parametrize("method", ["central", "forward"], ids=["central", "forward"])
 @pytest.mark.parametrize("x", [1e8, -1e8], ids=["large-positive", "large-negative"])
 def test_default_step_scales_with_large_x_for_both_schemes_and_signs(method, x):
     # A forward step that ignores |x| rounds x + h back to x, so the quotient is 0. A step
