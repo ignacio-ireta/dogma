@@ -1,5 +1,5 @@
 id: dl/causal-masking/p01-causal-padding-mask
-version: 1
+version: 2
 title: Bottom-right causal mask with key padding
 language: python
 runtime: py-torch

@@ -1,7 +1,54 @@
-problem_version: 1
+problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_key_valid_too_few_columns_passes.py
+  mistake: key_valid check accepts one column too few
+  clause: 'Raises: `ValueError` for invalid `query_len` or `key_len`, a non-boolean `key_valid`, or a
+    `key_valid` that is not 2-D with `S` columns.'
+  killed_by: test_key_valid_with_fewer_than_key_len_columns_is_rejected
+  visible: hidden
+- file: reject_zero_size_rejected.py
+  mistake: rejects zero as a size
+  clause: '`query_len` (`L`) and `key_len` (`S`): Python `int`, `>= 0`. A `bool`, a `float` or a negative
+    value is invalid. Either may be zero.'
+  killed_by: test_causal_part_matches_tril_oracle_for_every_small_shape
+  visible: hidden
+- file: reject_negative_offset_clamped.py
+  mistake: clamps the causal offset to zero when query_len exceeds key_len
+  clause: 'Causal rule: query `i` (`0 <= i < L`) may attend key `j` (`0 <= j < S`) exactly when `j <=
+    S - L + i`. The offset `S - L` may be negative (when `L > S`).'
+  killed_by: test_fully_masked_row_is_all_false_and_no_error
+  visible: public
+- file: reject_empty_batch_rejected.py
+  mistake: rejects a key valid with zero rows
+  clause: '`key_valid`: `None`, or a boolean tensor of shape `(N, S)` where `True` marks a real key and
+    `False` marks padding. `N >= 0`.'
+  killed_by: test_output_is_boolean_with_contract_shapes
+  visible: hidden
+- file: reject_none_branch_uint8.py
+  mistake: returns uint8 instead of bool when key valid is None
+  clause: 'Returns, when `key_valid` is `None`: boolean tensor of shape `(L, S)`.'
+  killed_by: test_square_mask_is_lower_triangle
+  visible: public
+- file: reject_padding_on_query_axis.py
+  mistake: indexes key valid by query position instead of key position
+  clause: 'Returns, when `key_valid` is given: boolean tensor of shape `(N, L, S)`, where the entry for
+    batch `n`, query `i`, key `j` is the causal rule AND `key_valid[n, j]`.'
+  killed_by: test_padding_is_anded_along_keys_with_causal_rule
+  visible: hidden
+- file: reject_empty_row_first_key_true.py
+  mistake: sets key 0 True in rows with no allowed key
+  clause: 'Fully masked rows: a query row with no `True` entry is returned as all `False`. The function
+    never raises for such a row and never sets any entry to `True` to avoid it.'
+  killed_by: test_fully_masked_row_is_all_false_and_no_error
+  visible: public
+- file: reject_mask_mutated_after_use.py
+  mistake: writes the causal first row into key valid after computing the mask
+  clause: Must not mutate `key_valid`. The returned tensor must not share storage with `key_valid`.
+  killed_by: test_padding_is_anded_along_keys_with_causal_rule
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

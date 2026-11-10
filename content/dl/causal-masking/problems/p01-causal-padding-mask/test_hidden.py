@@ -156,3 +156,9 @@ def test_large_sizes_count_allowed_pairs_exactly():
     expected_count = sum(max(0, S - L + i + 1) for i in range(L))
     if int(got.sum()) != expected_count:
         pytest.fail("allowed-pair count is wrong for a large decode-sized mask", pytrace=False)
+
+
+def test_key_valid_with_fewer_than_key_len_columns_is_rejected():
+    # Contract: key_valid must have exactly S columns. Two columns for S = 3 is invalid.
+    rejects(lambda: causal_padding_mask(2, 3, torch.ones(1, 2, dtype=torch.bool)))
+    rejects(lambda: causal_padding_mask(1, 3, torch.ones(2, 2, dtype=torch.bool)))
