@@ -66,9 +66,9 @@ Work stops and resumes across sessions through the status table and the handoff 
 | I-31a | Data realism platform: `dogma_data` (real offline datasets, frozen realistic generators, seeds), `hf` dependency group + HF snapshot sync, submission ban, test-import allowlist, `exercise_audit realism` (plan `2026-11-09-data-realism.md`) | — | I-03, I-28 | done |
 | I-31b | Data realism content sweep: real and realistic data in the tests, statements and lessons of the affected problems (slices S1–S7) | — | I-31a | done |
 | I-31c | Data realism review: second-agent review per slice, fresh exercise audit, statuses back to `reviewed` | — | I-31b | todo |
-| I-32a | Test-strength platform: hidden-test lint, `variants/` manifest, `scripts/exercise_gate.py`, docs and variants for the example problem (plan `2026-11-09-test-strength.md`; a1–a4) | — | I-31a | todo |
+| I-32a | Test-strength platform: hidden-test lint, `variants/` manifest, `scripts/exercise_gate.py`, docs and variants for the example problem (plan `2026-11-09-test-strength.md`; a1–a4) | — | I-31a | done |
 | I-32b | Hygiene sweep: messages, ids, Hypothesis flags and `pytest.raises` in hidden tests, outcomes unchanged | — | I-32a, I-31c | todo |
-| I-32c | One blind solution per problem, committed as `variants/accept_blind` | — | I-32a, I-31c | todo |
+| I-32c | One blind solution per problem, committed as `variants/accept_blind` | — | I-32a, I-31c | in-progress |
 | I-32d | Reject sweep and mutant triage: one wrong solution per Contract bullet, gaps closed by gated tests | — | I-32b, I-32c | todo |
 | I-32e | Test-strength close-out: enforce the rules in the gate, re-audit, report | — | I-32d | todo |
 
@@ -304,6 +304,46 @@ proves equal.
 
 *Newest first. One entry per session or agent: what changed · what was verified (exact commands
 and results) · what's left or blocked.*
+
+### 2026-11-10 · Test-strength platform and first blind accepts · I-32a done, I-32c in progress
+
+- **Where:** branch `i32-test-strength` (worktree `.claude/worktrees/i32`), 18 commits on top of
+  `5b6e734`. Not merged to `main`. One coordinating session, Haiku agents as executors.
+- **I-32a (platform):** `dogma.content.testlint` (four rules for hidden tests and an id-leak
+  check); the `variants/manifest.yaml` schema, loader fields and `VARIANT_*` validation;
+  `scripts/exercise_gate.py` (`lint`, `clauses`, `probe`, `note`, `ledger`, `add-accept`,
+  `add-reject`, `add-uncovered`, `remove-variant`, `adopt-blind`, `variants`, `gate`,
+  `bump-version`, `add-test`, `mark-swept`, `worklist`, `scorecard`); CONTENT_SPEC §6.4, §6.7 and
+  §6.8; ADR-0022; `make verify-variants` inside `test-all`; variants for the example problem
+  (three rejects, one alternative accept).
+- **I-32c (blind accepts):** 170 of 251 problems have `variants/accept_blind`, written by agents
+  that saw only the statement, the starter and the public tests. 168 passed on the first
+  submission, 2 on the second, none failed. The other 81 problems are in the 48 topics I-31
+  touched and wait for I-31c.
+- **Departure from the plan:** blind solving and adoption for problems outside the I-31 topics
+  started before I-31c was done. I-31c owns only its own topic directories, so it cannot change
+  these problems.
+- **Runbook and tool defects found by running them, all fixed on the branch:** the protocol asked
+  early runbooks for a ledger command that did not exist yet; two test files with one basename
+  collided at collection; `ruff format` also checks Python blocks in Markdown; a test literal
+  read as an e-mail address to the privacy audit; installing a variant refused 37 working blind
+  solutions on style rules (style findings are now marked with `noqa`, real errors still
+  refuse); the blind-similarity check counted lines the starter already has.
+- **Trial of `add-test`:** on `cml/vector-operations/p01-vector-projection`, with a solution
+  that rescales `b` in place (it passes all 17 current tests). The gate passed, the version went
+  2 to 3 and the reject was recorded against "Must not mutate its inputs." The trial was then
+  undone: the gap is left for I-32d so that the problem's version is bumped once.
+- **Verified:** `make check` exit 0 on `dc33fc6`: Ruff and format (2,435 files), strict mypy (180
+  files), 6 import contracts, content typing (251 packages), 2,184 Python tests, all 175 topics
+  verified, 187 browser unit tests, production build, audit clean (4,022 files).
+  `exercise_gate.py variants`: 174 ok, 0 mismatches in 170 problems. `exercise_gate.py gate
+  --mode none`: 170 of 170 adopted problems pass (run before the example's four extra variants;
+  the example was gated again after them). `make test-all` was not run.
+- **Tag:** `i32-start` is on `dc33fc6`. Version checks count from it. When the I-31 topics join
+  the sweeps (after I-31c is merged into this branch), move the tag to that merge, and only
+  after the sweeps for the first 170 problems are complete.
+- **Left:** I-32b (216 lint sites in 75 problems), I-32c for the 81 held problems, I-32d, I-32e,
+  and the merge to `main`. Notes so far are in `docs/audits/test-strength-decisions.md`.
 
 ### 2026-11-09 · Data realism content sweep · I-31b done
 
