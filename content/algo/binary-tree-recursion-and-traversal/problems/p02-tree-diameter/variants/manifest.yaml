@@ -45,3 +45,4 @@ uncovered:
   reason: 'states a permission: recursion is allowed, so no wrong solution can break it'
 sweeps:
 - reject
+- mutants
