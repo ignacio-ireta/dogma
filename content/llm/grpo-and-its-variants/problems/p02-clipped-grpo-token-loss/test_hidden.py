@@ -389,7 +389,9 @@ def test_non_finite_log_prob_raises_value_error():
     )
 
 
-@pytest.mark.parametrize("clip_eps", [0.0, 1.0, -0.2])
+@pytest.mark.parametrize(
+    "clip_eps", [0.0, 1.0, -0.2], ids=["zero-clip", "one-clip", "negative-clip"]
+)
 def test_clip_width_outside_zero_and_one_raises_value_error(clip_eps):
     new, old, ref, adv, mask = _batch(160)
     _expect_value_error(

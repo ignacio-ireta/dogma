@@ -276,7 +276,7 @@ def test_integer_rewards_raise_value_error():
     )
 
 
-@pytest.mark.parametrize("eps", [0.0, -1e-6, math.nan])
+@pytest.mark.parametrize("eps", [0.0, -1e-6, math.nan], ids=["zero-eps", "negative-eps", "nan-eps"])
 def test_non_positive_eps_raises_value_error(eps):
     rewards = torch.tensor([[1.0, 0.0, 0.0, 1.0]], dtype=torch.float64)
     _expect_value_error(
