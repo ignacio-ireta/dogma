@@ -83,6 +83,10 @@ on any engine. A zero denominator is not an error in DuckDB: `1.0 / 0.0` is `inf
 - **Filtered denominators.** `COUNT(*) FILTER (WHERE device = 'mobile')` is 0 for a channel with no
   mobile session, and dividing by it gives `inf` unless it is guarded with `NULLIF`.
 
+Dirty event_log channel names create 30 exact groups from six source labels. For the ads label,
+there are 741 exact sessions; trimming and lowercasing merges in 121 more. Revenue also has a long
+tail: the 99th percentile in this draw is 281.29.
+
 ## Interview angle
 
 "Conversion rate and mobile revenue by channel, in one query." Answer shape: `GROUP BY channel`, one

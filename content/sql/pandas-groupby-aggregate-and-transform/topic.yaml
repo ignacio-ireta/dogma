@@ -15,4 +15,4 @@ interview_angle: >-
   rather than zero.
 sources:
   - "book: McKinney, Python for Data Analysis (3rd ed.), chapter on data aggregation and group operations"
-status: reviewed
+status: verified

@@ -96,6 +96,10 @@ when 0 is the right business answer (Beaulieu, *Learning SQL*, chapter on groupi
 - **`HAVING` for row filters.** `HAVING status = 'completed'` either errors or filters the wrong
   thing. Row conditions belong in `WHERE`.
 
+An event_log draw of 3,000 orders has 1,286 exact completed rows and 57 customers meeting the
+three-order threshold. Lowercasing and trimming status labels changes that to 1,526 rows and 61
+customers. Treat status as the exact stored key.
+
 ## Interview angle
 
 "How many customers placed at least three orders in the last 90 days?" Answer shape: `WHERE` for

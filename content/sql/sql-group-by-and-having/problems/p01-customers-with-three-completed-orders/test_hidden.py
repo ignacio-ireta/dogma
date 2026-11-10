@@ -19,6 +19,8 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
+from dogma_data import rng, synth
+
 COLUMNS = ["customer_id", "completed_orders", "total_amount"]
 ALL_COLUMNS = ["order_id", "customer_id", "order_date", "status", "amount"]
 TABLE_DDL = (
@@ -137,6 +139,38 @@ def _check_same_result(got: pd.DataFrame, want: pd.DataFrame) -> None:
     )
 
 
+@pytest.fixture(scope="module")
+def event_log_orders() -> list[tuple[object, ...]]:
+    generated = synth.event_log(
+        rng("sql/sql-group-by-and-having/p01-customers-with-three-completed-orders:event-log:0"),
+        3_000,
+        n_users=100,
+        categories=tuple(STATUSES),
+        start="2024-01-01",
+        days=90,
+        amount_median=30.0,
+        amount_sigma=1.0,
+        dirty_rate=0.15,
+    )
+    return [
+        (
+            int(order_id),
+            int(customer_id),
+            pd.Timestamp(stamp).date(),
+            str(status),
+            float(amount),
+        )
+        for order_id, customer_id, stamp, status, amount in zip(
+            generated["event_id"],
+            generated["user_id"],
+            generated["ts"],
+            generated["category"],
+            generated["amount"],
+            strict=True,
+        )
+    ]
+
+
 def _random_rows(rng: np.random.Generator, n: int) -> list[tuple[object, ...]]:
     rows: list[tuple[object, ...]] = []
     for order_id in range(1, n + 1):
@@ -155,6 +189,12 @@ def _random_rows(rng: np.random.Generator, n: int) -> list[tuple[object, ...]]:
 def test_random_tables_match_the_pandas_oracle(seed: int) -> None:
     rows = _random_rows(np.random.default_rng(seed), 90)
     _check_same_result(_run_learner_query(_connect(rows)), _oracle(rows))
+
+
+def test_event_log_orders_match_the_pandas_aggregation_oracle(
+    event_log_orders: list[tuple[object, ...]],
+) -> None:
+    _check_same_result(_run_learner_query(_connect(event_log_orders)), _oracle(event_log_orders))
 
 
 def test_exactly_three_completed_orders_is_kept_and_two_is_not() -> None:

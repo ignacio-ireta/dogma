@@ -1,5 +1,5 @@
 id: sql/sql-date-handling/p01-monthly-active-users
-version: 3                      # bump when tests, tolerances or the contract change
+version: 4                      # bump when tests, tolerances or the contract change
 title: Monthly active users, including months with no activity
 language: sql
 runtime: sql-duckdb
@@ -11,4 +11,4 @@ core: true
 tolerance: {atol: 1.0e-6, rtol: 1.0e-9}
 banned_imports: []              # SQL problems: nothing to ban at the module level
 timeout_s: 30
-status: reviewed
+status: verified

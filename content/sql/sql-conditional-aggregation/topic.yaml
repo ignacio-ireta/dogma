@@ -16,4 +16,4 @@ interview_angle: >-
 sources:
   - "book: Beaulieu, Learning SQL (3rd ed.), the material on grouping and aggregates"
   - "book: Molinaro, SQL Cookbook, the reporting and pivot recipes"
-status: reviewed
+status: verified

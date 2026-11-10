@@ -89,6 +89,10 @@ column raises a warning in recent pandas. Cast to `float64` before reshaping.
 - **`pivot` duplicates.** `pivot` raises `ValueError` on duplicate (index, column) pairs. Aggregate
   first, or use `pivot_table`.
 
+The interview-prep customers CSV has 50 repeated customer ids. Customer C02413 appears twice, and
+its 11 known-amount orders total 598.36; an unchecked merge on that key doubles it to 1,196.72.
+Keep the many-to-one check so the lookup-key defect fails loudly.
+
 ## Interview angle
 
 "Revenue by region and month, with orders that have no matching customer." Answer shape: left merge with

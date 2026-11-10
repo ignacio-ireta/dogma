@@ -6,6 +6,7 @@ has and the total of their completed amounts. Order the customers by total, larg
 
 ## Contract
 
+- Status values use exact string equality; casing and surrounding whitespace are not normalized.
 - Input: a table `orders` with columns `order_id` (BIGINT), `customer_id` (BIGINT),
   `order_date` (DATE), `status` (VARCHAR) and `amount` (DOUBLE, may be NULL).
 - Returns: one row per qualifying customer, with exactly these columns in this order:
@@ -48,6 +49,9 @@ customer_id  completed_orders  total_amount
 2            3                 NULL
 ```
 
+The event_log dataset can be mapped to orders, with its dirty category values used as statuses
+and its lognormal amounts retained. Only the exact completed label qualifies.
+
 ## Constraints
 
 - Allowed: standard `SELECT`, `FROM`, `WHERE`, `GROUP BY`, `HAVING`, `ORDER BY`, and DuckDB's
@@ -60,4 +64,5 @@ All public tests pass, then **Submit** runs the hidden tests. They build their o
 tables. The hidden tests cover these families: a group of exactly three and of two, non-completed
 orders (and other capitalisations of `completed`) that must not count toward the threshold, NULL amounts that count as orders but are
 skipped by the sum, a group whose total is NULL, totals that tie, one customer with many orders,
-no qualifying customers, and random tables checked against an independent pandas computation.
+no qualifying customers, Zipf-skewed customers, lognormal amounts, and `event_log` rows checked
+against an independent pandas computation.

@@ -80,6 +80,13 @@ date arithmetic chapter covers the interval forms [Molinaro, *SQL Cookbook*, dat
 - **Month arithmetic clamps.** `2023-01-31 + INTERVAL 1 MONTH` is `2023-02-28`, and `2024-01-31` gives
   `2024-02-29`.
 
+In a 5,000-event draw from event_log, November has 1,254 rows but only 179 active users. A row
+count overstates activity because a few users generate many events. Count distinct users.
+
+For days-to-second, 90 users' calendar gaps differ from floored elapsed days. User 12's first
+events are 2024-01-01 08:37:20 and 2024-01-02 01:46:21: 0.71 elapsed days, but one calendar day.
+Subtract the first two calendar dates, not floored elapsed time.
+
 ## Interview angle
 
 *Answer shape:* "I start from the calendar of periods, one row per month, typed as dates. I LEFT JOIN the events

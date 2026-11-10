@@ -14,4 +14,4 @@ interview_angle: >-
   are treated, and whether the output shape is what the question asked for.
 sources:
   - "book: McKinney, Python for Data Analysis (3rd ed.), chapter on data wrangling: join, combine and reshape"
-status: reviewed
+status: verified

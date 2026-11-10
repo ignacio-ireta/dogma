@@ -1,4 +1,4 @@
-"""Hidden tests: random order tables checked against an independent DuckDB window-function
+"""Hidden tests: interview-prep orders and hand-built tables checked against an independent pandas
 computation, plus edge cases. Each test name says what it checks, and each failure message names
 the likely mistake first."""
 
@@ -9,12 +9,14 @@ from collections.abc import Sequence
 from datetime import date, timedelta
 from typing import Any
 
-import duckdb
 import numpy as np
 import pandas as pd
+import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import customer_order_features
+
+from dogma_data import load_frame
 
 COLUMNS = [
     "order_id",
@@ -68,29 +70,33 @@ def _frame(rows: Sequence[Row], as_strings: bool = False) -> pd.DataFrame:
 
 
 def _oracle(rows: Sequence[Row]) -> list[tuple[Any, ...]]:
-    """Independent answer from DuckDB window functions, in the contract's row order."""
-    con = duckdb.connect()
-    con.execute(
-        "CREATE TABLE o (order_id BIGINT, customer_id BIGINT, order_date DATE, amount DOUBLE)"
+    """Independent pandas computation, in the contract's row order."""
+    frame = _frame(rows).copy()
+    frame["order_date"] = pd.to_datetime(frame["order_date"])
+    frame = frame.sort_values(["customer_id", "order_date", "order_id"], kind="stable").reset_index(
+        drop=True
     )
-    if rows:
-        con.executemany("INSERT INTO o VALUES (?, ?, ?, ?)", list(rows))
-    return con.execute(
-        """
-        SELECT order_id, customer_id, order_date, amount,
-               ROW_NUMBER() OVER w AS order_seq,
-               CASE WHEN SUM(amount) OVER (PARTITION BY customer_id) = 0 THEN NULL
-                    ELSE amount / SUM(amount) OVER (PARTITION BY customer_id) END AS share,
-               order_date - LAG(order_date) OVER w AS days,
-               SUM(amount) OVER (
-                   PARTITION BY customer_id ORDER BY order_date, order_id
-                   ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-               ) AS running
-        FROM o
-        WINDOW w AS (PARTITION BY customer_id ORDER BY order_date, order_id)
-        ORDER BY customer_id, order_date, order_id
-        """
-    ).fetchall()
+    grouped = frame.groupby("customer_id", sort=False)
+    totals = grouped["amount"].transform("sum")
+    frame["order_seq"] = grouped.cumcount() + 1
+    frame["share_of_customer_total"] = (frame["amount"] / totals).where(totals != 0.0)
+    frame["days_since_previous_order"] = grouped["order_date"].diff().dt.days.astype("float64")
+    frame["customer_running_total"] = grouped["amount"].cumsum().astype("float64")
+    frame["order_date"] = frame["order_date"].dt.date
+    return list(
+        frame[
+            [
+                "order_id",
+                "customer_id",
+                "order_date",
+                "amount",
+                "order_seq",
+                "share_of_customer_total",
+                "days_since_previous_order",
+                "customer_running_total",
+            ]
+        ].itertuples(index=False, name=None)
+    )
 
 
 def _is_missing(value: object) -> bool:
@@ -161,7 +167,8 @@ def _first_problem(got: object, rows: Sequence[Row]) -> str | None:  # noqa: PLR
     if not _all_same(got["customer_running_total"], [row[7] for row in want]):
         return (
             "customer_running_total differs: the running total restarts for each customer and "
-            "includes the current order (grouped cumsum)"
+            "includes the current order (grouped cumsum), accumulated in float64; a float32 "
+            "running sum loses cents on large totals"
         )
     return None
 
@@ -181,6 +188,25 @@ def _check(rows: Sequence[Row], as_strings: bool = False) -> None:
     if problem is None:
         problem = _first_problem(got, rows)
     assert problem is None, problem
+
+
+@pytest.fixture(scope="module")
+def interview_orders() -> list[Row]:
+    source = load_frame("orders")
+    known_amounts = source.loc[
+        source["amount"].notna(), ["order_id", "customer_id", "order_date", "amount"]
+    ]
+    return [
+        (
+            int(order_id[1:]),
+            int(customer_id[1:]),
+            pd.Timestamp(order_date).date(),
+            float(amount),
+        )
+        for order_id, customer_id, order_date, amount in known_amounts.itertuples(
+            index=False, name=None
+        )
+    ]
 
 
 def _random_rows(rng: np.random.Generator) -> list[Row]:
@@ -205,6 +231,12 @@ def _random_rows(rng: np.random.Generator) -> list[Row]:
 @given(seed=st.integers(min_value=0, max_value=10_000), as_strings=st.booleans())
 def test_random_orders_match_the_duckdb_window_oracle(seed: int, as_strings: bool) -> None:
     _check(_random_rows(np.random.default_rng(seed)), as_strings=as_strings)
+
+
+def test_interview_prep_orders_match_the_pandas_window_oracle(
+    interview_orders: list[Row],
+) -> None:
+    _check(interview_orders, as_strings=True)
 
 
 def test_rows_are_sorted_by_customer_then_date_then_order_id() -> None:

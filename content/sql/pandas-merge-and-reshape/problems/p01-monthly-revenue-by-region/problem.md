@@ -21,8 +21,9 @@ not filled with zero.
   1. Left-merge `orders` onto `customers` by `customer_id` with `validate="many_to_one"`. A duplicate
      `customer_id` in `customers` raises `ValueError`. pandas raises `MergeError`, which is a
      `ValueError` subclass; let it propagate, do not catch it.
-  2. An order whose customer is not in `customers` gets the region `"unknown"`. `"unknown"` is an
-     ordinary label, so it sorts like any other region name.
+  2. An order whose customer is not in `customers` gets the region `"unknown"`. A customer who is in
+     `customers` but whose `region` is missing (NaN) also gets `"unknown"`, and its orders are kept.
+     `"unknown"` is an ordinary label, so it sorts like any other region name.
   3. An order with NaN `amount` is dropped before grouping. Its amount is unknown, not zero, so it
      creates no region row and no month column of its own.
   4. The month of an order is its calendar month, written `"YYYY-MM"`.
@@ -67,6 +68,10 @@ North   100.0
 An unknown amount does not create a region with a zero total, and it does not create the 2024-03
 column.
 
+The interview-prep orders and customers datasets provide order amounts, dates, and city labels, and
+about one customer in twenty has no city. Use each customer's city as this problem's region label.
+A customer with no city is in `customers`, so its orders go to `"unknown"`, as the second rule says.
+
 ## Constraints
 
 - Allowed: `pandas` and `numpy`, and the standard library.
@@ -79,5 +84,5 @@ All public tests pass, then **Submit** runs the hidden tests. They build their o
 customer ids (must raise, not double the revenue), NaN amounts (dropped, not filled), regions with
 only unknown amounts, missing cells that must be `0.0`, integer amounts giving float cells, `datetime64`
 and string dates giving the same months, months sorted across a year boundary, an empty result with
-its names, inputs left unchanged, and random tables checked against an independent SQL computation
-in DuckDB.
+its names, inputs left unchanged, customers with a missing region (interview-prep, NaN city), lognormal
+amounts with missing values, and interview-prep rows checked against a pandas merge and groupby oracle.

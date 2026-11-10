@@ -7,6 +7,7 @@ columns. Every number comes from one pass over the table, with no join and no se
 
 ## Contract
 
+- Channel values are grouped exactly as stored; casing and surrounding whitespace are not normalized.
 - Input: one table, `sessions`.
   - `session_id`: BIGINT, unique.
   - `channel`: VARCHAR, never NULL. Lowercase names such as `ads`.
@@ -64,6 +65,9 @@ podcast   2         1                   0.5              0.0             12.5
 referral  3         1                   0.3333           80.0            0.0
 ```
 
+The event_log dataset supplies dirty channel labels and lognormal amounts. Exact stored labels
+form separate groups, and each group's revenue can have a long right tail.
+
 ## Constraints
 
 - Allowed: `SELECT`, `FROM`, `WHERE`, `GROUP BY`, `ORDER BY`, `CASE`, `FILTER (WHERE ...)`,
@@ -77,4 +81,5 @@ tables, so a query tuned to the fixture fails. The hidden tests cover these fami
 with no conversions, a channel that has sessions on one device only, revenue that is NULL on every
 session of a device, a converted session with no revenue, a rate that must be a fraction (not a
 whole number or a percentage) rounded to 4 places, revenue counted on non-converted sessions, an
-empty table, the row order, and random tables checked against an independent pandas computation.
+empty table, the row order, dirty channel keys kept as stored, lognormal revenue, and `event_log`
+rows checked against an independent pandas computation.

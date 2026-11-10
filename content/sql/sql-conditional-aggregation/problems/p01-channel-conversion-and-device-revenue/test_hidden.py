@@ -18,6 +18,8 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
+from dogma_data import rng, synth
+
 COLUMNS = [
     "channel",
     "sessions",
@@ -137,6 +139,11 @@ def _first_problem(got: pd.DataFrame, rows: Sequence[tuple[Any, ...]]) -> str | 
     got_channels = [str(c) for c in got["channel"]]
     want_channels = [row[0] for row in want]
     if set(got_channels) != set(want_channels) or len(got_channels) != len(want_channels):
+        if {c.strip().lower() for c in got_channels} == {c.strip().lower() for c in want_channels}:
+            return (
+                "channel keys differ in casing or spacing: group by channel exactly as stored, "
+                "with no LOWER or TRIM"
+            )
         return (
             "channels differ: return one row per channel that has at least one session. A WHERE "
             "on converted or device removes whole channels"
@@ -184,6 +191,36 @@ def _check_same_result(got: pd.DataFrame, rows: Sequence[tuple[Any, ...]]) -> No
     assert problem is None, problem
 
 
+@pytest.fixture(scope="module")
+def event_log_sessions() -> list[tuple[Any, ...]]:
+    generated = synth.event_log(
+        rng(
+            "sql/sql-conditional-aggregation/p01-channel-conversion-and-device-revenue:event-log:0"
+        ),
+        5_000,
+        n_users=300,
+        categories=tuple(CHANNELS),
+        start="2024-01-01",
+        days=90,
+        amount_median=30.0,
+        amount_sigma=1.0,
+        dirty_rate=0.15,
+    )
+    conversion_cutoff = float(pd.Series(generated["amount"]).quantile(0.85))
+    return [
+        (
+            int(event_id),
+            str(channel),
+            "mobile" if int(event_id) % 2 == 0 else "desktop",
+            bool(float(amount) >= conversion_cutoff),
+            float(amount),
+        )
+        for event_id, channel, amount in zip(
+            generated["event_id"], generated["category"], generated["amount"], strict=True
+        )
+    ]
+
+
 def _random_rows(rng: np.random.Generator) -> list[tuple[Any, ...]]:
     n = int(rng.integers(0, 41))
     pool = [
@@ -211,6 +248,16 @@ def test_random_sessions_match_the_pandas_computation(seed: int) -> None:
     if problem is None:
         assert got is not None
         problem = _first_problem(got, rows)
+    assert problem is None, problem
+
+
+def test_event_log_sessions_match_the_pandas_aggregation_oracle(
+    event_log_sessions: list[tuple[Any, ...]],
+) -> None:
+    got, problem = _query(_connect(event_log_sessions))
+    if problem is None:
+        assert got is not None
+        problem = _first_problem(got, event_log_sessions)
     assert problem is None, problem
 
 

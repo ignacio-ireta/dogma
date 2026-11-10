@@ -52,6 +52,9 @@ month       active_users
 2024-02-01  1
 ```
 
+The event_log dataset has many events from a small set of heavy users. It is still one active
+user per month, no matter how many events that user produced.
+
 ## Constraints
 
 - Allowed: `SELECT`, `FROM`, `JOIN`, `WHERE`, `GROUP BY`, `ORDER BY`, `WITH`, `generate_series`, and
@@ -62,7 +65,7 @@ month       active_users
 
 All public tests pass, then **Submit** runs the hidden tests. They build their own `events` tables, so a
 query tuned to the fixture fails. The hidden tests cover these families: an empty month in the middle, an
-empty last month, an events table with no rows, events at midnight on the first of a month and at the last
-second of a month, a leap-day event, several events by one user in one month (counted once), a user
+empty last month, an events table with no rows, month-boundary timestamps, a leap-day event, several
+events by one user in one month (counted once), Zipf-skewed user activity, naive timestamps, a user
 active in every month, events before and after the range, the month column type, the row order, and
-random tables checked against an independent pandas computation.
+`event_log` tables checked against an independent pandas computation.

@@ -71,6 +71,10 @@ also follow row order. So the sort is what makes the sequence and the gaps mean 
   reductions avoid that callback overhead. Check the result's index and empty-input shape before
   assigning or joining it. Use `apply` when no built-in method fits.
 
+The interview-prep orders CSV has 15,000 rows, 300 unknown amounts, and an amount p99 of 337.47.
+For customer C02346, order O000066 arrives before earlier-dated rows: its running total is 14.12
+in arrival order but 237.94 after sorting by date and id. Sort before the grouped cumulative sum.
+
 ## Interview angle
 
 "For each order, add the customer's order number, their share of spend, and the days since their

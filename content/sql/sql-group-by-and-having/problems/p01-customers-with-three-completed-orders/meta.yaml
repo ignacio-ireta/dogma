@@ -1,5 +1,5 @@
 id: sql/sql-group-by-and-having/p01-customers-with-three-completed-orders
-version: 2                     # bump when tests, tolerances or the contract change
+version: 3                     # bump when tests, tolerances or the contract change
 title: Customers with three or more completed orders
 language: sql
 runtime: sql-duckdb
@@ -12,4 +12,4 @@ core: true
 tolerance: {atol: 1.0e-6, rtol: 1.0e-9}
 banned_imports: []             # SQL problems: nothing to ban at the module level
 timeout_s: 30
-status: reviewed
+status: verified

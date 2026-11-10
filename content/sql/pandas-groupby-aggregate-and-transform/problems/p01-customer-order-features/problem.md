@@ -24,7 +24,7 @@ are sorted in time.
   - `days_since_previous_order`: float64. The calendar days from the customer's previous order date to
     this order's date. `0.0` when two orders share a date. `NaN` for the customer's first order.
   - `customer_running_total`: float64. The sum of that customer's amounts up to and including this
-    order, in sort order.
+    order, in sort order, accumulated in float64 (a float32 accumulator loses cents on large totals).
 - The dtypes above hold for every input, including an empty one.
 - Must not mutate `orders`: no added or removed columns, no reordered rows, no changed dtypes.
 - Raises: nothing. Bad input is the caller's problem; the function does not catch errors.
@@ -70,6 +70,10 @@ order_id  customer_id  order_date  amount  order_seq  share_of_customer_total  d
 12        40           2024-05-02  0.0     1          NaN                      NaN                        0.0
 ```
 
+The interview-prep orders dataset has many customers with orders spread across dates and amounts
+with a long right tail. Keep the original order amounts and compute each feature after sorting
+within customer.
+
 ## Constraints
 
 - Allowed: `pandas` and `numpy`, and the standard library.
@@ -78,9 +82,10 @@ order_id  customer_id  order_date  amount  order_seq  share_of_customer_total  d
 ## Done looks like
 
 All public tests pass, then **Submit** runs the hidden tests. They build their own `orders` frames,
-mostly shuffled, and compare the result with an independent DuckDB window-function computation. The
+mostly shuffled, and compare the result with an independent pandas groupby computation. The
 hidden tests cover these families: rows that arrive out of time order, several customers interleaved,
 two orders on the same date (the order id breaks the tie), a gap of zero days, a first order with no
 gap, a customer whose total is zero (including refunds cancelling spend), string dates and datetime values giving the same result, an empty
 input keeping the same columns and dtypes, the dtype of every column, a fresh index, inputs left
-unchanged, and random tables.
+unchanged, skewed customer histories, heavy-tailed amounts, float64 running totals on large totals,
+and interview-prep `orders` rows.

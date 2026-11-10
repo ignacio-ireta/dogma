@@ -1,8 +1,8 @@
-"""Hidden tests: random tables checked against an independent SQL computation, plus edge cases.
+"""Hidden tests: hand-built edge cases, plus interview-prep frames checked against a pandas oracle.
 
-The oracle runs its join and sums in DuckDB SQL, a different implementation from the pandas
-pipeline. The table is then pivoted with plain Python loops. Each failure message names the likely
-mistake first.
+The hand-built cases use an independent oracle: DuckDB SQL for the joins and sums, then a plain
+Python pivot. The interview-prep test uses a pandas merge and groupby on the same frames. Each
+failure message names the likely mistake first.
 """
 
 from __future__ import annotations
@@ -17,6 +17,8 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import monthly_revenue_by_region
+
+from dogma_data import load_frame
 
 REGIONS = ["North", "South", "East", "West"]
 ORDER_COLUMNS = ["order_id", "customer_id", "order_date", "amount"]
@@ -93,8 +95,9 @@ def _first_problem(got: Any, want: pd.DataFrame) -> str | None:  # noqa: PLR0911
     if got.shape != want.shape:
         return (
             "the number of regions or months differs: a region or month with no known revenue "
-            "must add no row or column (drop NaN amounts, do not fill them), and orders from "
-            "unknown customers belong to the 'unknown' region"
+            "must add no row or column (drop NaN amounts, do not fill them). Orders from unknown "
+            "customers, and from customers with no region, belong to the 'unknown' region; do not "
+            "drop them"
         )
     if list(got.index) != list(want.index):
         return "region labels or their order differ: sort regions ascending as strings"
@@ -110,6 +113,40 @@ def _first_problem(got: Any, want: pd.DataFrame) -> str | None:  # noqa: PLR0911
             "month, counting each order once (a repeated merge key doubles it)"
         )
     return None
+
+
+def _pandas_oracle(orders: pd.DataFrame, customers: pd.DataFrame) -> pd.DataFrame:
+    """Expected monthly revenue from a pandas many-to-one merge and groupby."""
+    merged = orders.merge(customers, how="left", on="customer_id", validate="many_to_one")
+    merged["region"] = merged["region"].fillna("unknown")
+    known = merged.dropna(subset=["amount"]).copy()
+    if known.empty:
+        return pd.DataFrame(
+            index=pd.Index([], name="region"),
+            columns=pd.Index([], name="month"),
+            dtype="float64",
+        )
+    known["month"] = pd.to_datetime(known["order_date"]).dt.strftime("%Y-%m")
+    result = known.groupby(["region", "month"])["amount"].sum().unstack("month", fill_value=0.0)
+    result = result.sort_index().sort_index(axis=1).astype("float64")
+    result.index.name = "region"
+    result.columns.name = "month"
+    return result
+
+
+@pytest.fixture(scope="module")
+def interview_frames() -> tuple[pd.DataFrame, pd.DataFrame]:
+    source_orders = load_frame("orders")
+    orders = source_orders[["order_id", "customer_id", "order_date", "amount"]].copy()
+    orders["order_id"] = orders["order_id"].str[1:].astype("int64")
+    orders["customer_id"] = orders["customer_id"].str[1:].astype("int64")
+    orders["amount"] = orders["amount"].astype("float64")
+
+    source_customers = load_frame("customers")
+    customers = source_customers[["customer_id", "city"]].rename(columns={"city": "region"}).copy()
+    customers["customer_id"] = customers["customer_id"].str[1:].astype("int64")
+    customers = customers.drop_duplicates("customer_id", keep="first").reset_index(drop=True)
+    return orders, customers
 
 
 def _random_rows(
@@ -140,6 +177,16 @@ def test_random_tables_match_an_independent_sql_computation(seed: int) -> None:
     got, problem = _try(orders, customers)
     if problem is None:
         problem = _first_problem(got, _oracle(order_rows, customer_rows))
+    assert problem is None, problem
+
+
+def test_interview_prep_frames_match_the_pandas_merge_oracle(
+    interview_frames: tuple[pd.DataFrame, pd.DataFrame],
+) -> None:
+    orders, customers = interview_frames
+    got, problem = _try(orders.copy(deep=True), customers.copy(deep=True))
+    if problem is None:
+        problem = _first_problem(got, _pandas_oracle(orders, customers))
     assert problem is None, problem
 
 

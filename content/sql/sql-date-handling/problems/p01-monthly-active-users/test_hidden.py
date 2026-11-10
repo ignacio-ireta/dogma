@@ -17,6 +17,8 @@ import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 import pytest
 
+from dogma_data import rng, synth
+
 COLUMNS = ["month", "active_users"]
 EVENTS_DDL = "CREATE TABLE events (user_id BIGINT, event_ts TIMESTAMP)"
 MONTH_STARTS = [
@@ -80,6 +82,22 @@ def _must_equal(got: list[tuple[Any, ...]], want: list[tuple[date, int]], mistak
         pytest.fail(mistake)
 
 
+@pytest.fixture(scope="module")
+def event_log_events() -> list[tuple[int, datetime]]:
+    generated = synth.event_log(
+        rng("sql/sql-date-handling/p01-monthly-active-users:event-log:0"),
+        5_000,
+        n_users=500,
+        start="2022-10-01",
+        days=1200,
+        dirty_rate=0.1,
+    )
+    return [
+        (int(user_id), pd.Timestamp(stamp).to_pydatetime())
+        for user_id, stamp in zip(generated["user_id"], generated["ts"], strict=True)
+    ]
+
+
 def _random_events(rng: np.random.Generator) -> list[tuple[int, datetime]]:
     events: list[tuple[int, datetime]] = []
     for _ in range(int(rng.integers(0, 41))):
@@ -132,6 +150,19 @@ def test_random_tables_match_the_pandas_oracle() -> None:
                     "a month can be lost; compare with the first day of the next month, not the "
                     "last day"
                 )
+
+
+def test_event_log_matches_the_pandas_month_oracle(
+    event_log_events: list[tuple[int, datetime]],
+) -> None:
+    want = _oracle(event_log_events)
+    columns, rows = _run_learner_query(_connect(event_log_events))
+    rows = _rows_of(columns, rows)
+    assert rows == want, (
+        "event_log months are wrong: the log spans several years, so match each event on its full "
+        "date (month and year) inside the four months only, counting distinct users over the "
+        "half-open calendar range"
+    )
 
 
 def test_empty_middle_month_keeps_its_row() -> None:
