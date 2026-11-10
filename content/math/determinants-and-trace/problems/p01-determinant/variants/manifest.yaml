@@ -1,7 +1,61 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_loop_elimination.py
+  origin: freedom
+  freedom: explicit Python loops in place of vectorised row operations, same pivots and rounding path
+- file: accept_numpy_scalar_result.py
+  origin: freedom
+  freedom: returns a NumPy float64 scalar instead of a converted Python float
+reject:
+- file: reject_first_nonzero_pivot.py
+  mistake: takes the first nonzero entry as pivot, so a tiny leading entry loses the later rows
+  clause: 'Algorithm: partial pivoting. Each row swap multiplies the sign by `-1`. If some column has
+    no nonzero entry on or below the diagonal, return `0.0`.'
+  killed_by: test_tiny_leading_entry_still_uses_the_largest_pivot
+  visible: hidden
+- file: reject_nan_only_checked.py
+  mistake: checks for NaN but lets infinity through
+  clause: Raises `ValueError` when `A` is not 2-D, when it is not square, or when it contains NaN or infinity.
+  killed_by: test_infinite_entry_raises_value_error
+  visible: hidden
+- file: reject_empty_matrix_refused.py
+  mistake: raises on the empty matrix instead of returning 1.0
+  clause: '`A`: 2-D array-like of real numbers, shape `(n, n)` with `n >= 0`. Integers allowed. The empty
+    `0 x 0` matrix is valid.'
+  killed_by: test_zero_by_zero_matrix_has_determinant_one
+  visible: hidden
+- file: reject_zero_by_zero_returns_zero.py
+  mistake: returns 0.0 for the empty matrix instead of 1.0
+  clause: 'Returns: the determinant as a float. For the `0 x 0` matrix, return `1.0`.'
+  killed_by: test_zero_by_zero_matrix_has_determinant_one
+  visible: hidden
+- file: reject_no_sign_flip_on_swap.py
+  mistake: forgets to negate the sign when two rows swap
+  clause: 'Algorithm: partial pivoting. Each row swap multiplies the sign by `-1`. If some column has
+    no nonzero entry on or below the diagonal, return `0.0`.'
+  killed_by: test_two_by_two_needs_a_row_swap_and_gives_negative_two
+  visible: public
+- file: reject_tiny_pivot_counts_as_zero.py
+  mistake: treats a pivot below threshold as zero so tiny nonzero columns give 0.0
+  clause: 'Algorithm: partial pivoting. Each row swap multiplies the sign by `-1`. If some column has
+    no nonzero entry on or below the diagonal, return `0.0`.'
+  killed_by: test_tiny_nonzero_pivots_are_not_treated_as_zero
+  visible: hidden
+- file: reject_non_2d_raises_type_error.py
+  mistake: raises TypeError instead of ValueError for a non 2-D input
+  clause: Raises `ValueError` when `A` is not 2-D, when it is not square, or when it contains NaN or infinity.
+  killed_by: test_one_dimensional_input_raises_value_error
+  visible: hidden
+- file: reject_mutates_float_input.py
+  mistake: uses asarray so a float64 input is eliminated in place
+  clause: Must not mutate its input.
+  killed_by: test_input_matrix_is_not_mutated
+  visible: hidden
+uncovered:
+- clause: A large matrix can overflow or underflow the product of pivots. This function does not have
+    to guard against that.
+  reason: states that overflow and underflow need not be guarded, so there is no requirement to break
+sweeps:
+- reject

@@ -270,3 +270,21 @@ def test_input_matrix_is_not_mutated():
     A_copy = A.copy()
     determinant(A)
     np.testing.assert_array_equal(A, A_copy, err_msg="input matrix was modified in place")
+
+
+def test_tiny_leading_entry_still_uses_the_largest_pivot():
+    # Expand along the first row: det = 1e-16*(1*2 - 1*1) - 1*(1*2 - 1*1) + 1*(1*1 - 1*1)
+    #                                   = -1 + 1e-16.
+    # Taking the tiny 1e-16 as pivot loses the digits of the later rows, so partial pivoting
+    # (swap in the row with the largest entry in column 0) is what keeps the answer near -1.
+    A = [[1e-16, 1.0, 1.0], [1.0, 1.0, 1.0], [1.0, 1.0, 2.0]]
+    assert abs(determinant(A) + 1.0) <= 1e-9, (
+        "a tiny leading entry must not be the pivot: take the largest entry in the column"
+    )
+
+
+def test_infinite_entry_raises_value_error():
+    _must_raise_value_error(
+        lambda: determinant([[1.0, np.inf], [0.0, 1.0]]),
+        "an infinite entry must raise ValueError: validate with np.isfinite, which rejects inf",
+    )
