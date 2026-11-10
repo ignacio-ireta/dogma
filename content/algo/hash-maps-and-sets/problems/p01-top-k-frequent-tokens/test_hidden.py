@@ -22,7 +22,7 @@ def _oracle(tokens: list[str], k: int) -> list[tuple[str, int]]:
     return ranked[: max(k, 0)]
 
 
-@settings(max_examples=150, deadline=None)
+@settings(max_examples=150, deadline=None, report_multiple_bugs=False)
 @given(
     tokens=st.lists(st.sampled_from(VOCAB), max_size=60),
     k=st.integers(min_value=-3, max_value=12),
