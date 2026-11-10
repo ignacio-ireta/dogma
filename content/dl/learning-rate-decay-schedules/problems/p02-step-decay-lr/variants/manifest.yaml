@@ -54,3 +54,4 @@ uncovered:
     has nothing to break
 sweeps:
 - reject
+- mutants

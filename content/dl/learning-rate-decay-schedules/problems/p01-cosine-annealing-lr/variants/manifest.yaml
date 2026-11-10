@@ -50,3 +50,4 @@ uncovered:
     the signature
 sweeps:
 - reject
+- mutants
