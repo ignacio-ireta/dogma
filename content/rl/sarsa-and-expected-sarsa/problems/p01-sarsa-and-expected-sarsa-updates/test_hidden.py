@@ -14,7 +14,7 @@ from submission import expected_sarsa_update, sarsa_update
 def _close(actual, desired, *, err_msg, **tolerance):
     """assert_allclose whose failure shows err_msg as the first line, without the values."""
     try:
-        np.testing.assert_allclose(actual, desired, **tolerance)
+        np.testing.assert_allclose(actual, desired, err_msg=err_msg, **tolerance)
     except AssertionError:
         pytest.fail(err_msg, pytrace=False)
 
@@ -22,7 +22,7 @@ def _close(actual, desired, *, err_msg, **tolerance):
 def _equal(actual, desired, *, err_msg):
     """assert_array_equal whose failure shows err_msg as the first line, without the values."""
     try:
-        np.testing.assert_array_equal(actual, desired)
+        np.testing.assert_array_equal(actual, desired, err_msg=err_msg)
     except AssertionError:
         pytest.fail(err_msg, pytrace=False)
 
