@@ -306,3 +306,11 @@ def test_kernel_too_tall_with_wide_input_raises_value_error():
     x = torch.ones(1, 1, 4, 8, dtype=torch.float64)
     w = torch.ones(1, 1, 5, 2, dtype=torch.float64)
     _must_reject_conv(x, w, case="a kernel taller than the input when only height is too small")
+
+
+def test_weight_wider_than_x_raises_value_error():
+    # The Contract says the weight must have x's dtype. A float64 weight with a float32 input is
+    # wider, not narrower, so it is a dtype mismatch and must raise ValueError too.
+    x = torch.ones(1, 1, 4, 4, dtype=torch.float32)
+    w = torch.ones(1, 1, 2, 2, dtype=torch.float64)
+    _must_reject_conv(x, w, case="a weight wider than x (the weight must have x's dtype)")

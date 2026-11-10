@@ -1,7 +1,58 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_matmul_channel_mix.py
+  origin: freedom
+  freedom: channel mixing written as a matrix product instead of einsum
+reject:
+- file: reject_weight_dtype_cast_silently.py
+  mistake: casts a wider weight to x dtype instead of raising
+  clause: '`weight`: tensor of shape `(C_out, C_in, kH, kW)` with `C_out, kH, kW >= 1`. Its dtype is `x`''s
+    dtype. Its second axis must equal `C_in`.'
+  killed_by: test_weight_wider_than_x_raises_value_error
+  visible: hidden
+- file: reject_single_example_batch_rejected.py
+  mistake: rejects a batch of one example
+  clause: '`x`: floating-point tensor of shape `(N, C_in, H, W)`, every axis at least 1. `N` is the batch.'
+  killed_by: test_ones_kernel_sums_each_two_by_two_window
+  visible: public
+- file: reject_bias_dtype_unchecked.py
+  mistake: bias dtype is never checked
+  clause: '`bias`: `None`, or a tensor of shape `(C_out,)` with `x`''s dtype. `None` means no bias.'
+  killed_by: test_invalid_inputs_raise_value_error
+  visible: hidden
+- file: reject_bool_stride_accepted.py
+  mistake: booleans accepted as stride and padding
+  clause: '`stride`: integer `s >= 1`, the same on both spatial axes. Booleans are invalid.'
+  killed_by: test_invalid_inputs_raise_value_error
+  visible: hidden
+- file: reject_padding_only_bottom_right.py
+  mistake: pads only the bottom and right
+  clause: '`padding`: integer `p >= 0`, the same on both sides of both spatial axes. Booleans are invalid.'
+  killed_by: test_padding_gives_the_expected_output_size_and_values
+  visible: public
+- file: reject_output_size_plus_one_before_floor.py
+  mistake: output height counts one extra kernel row before the floor
+  clause: 'Output size: $H_{\text{out}}=\left\lfloor\frac{H+2p-k_H}{s}\right\rfloor+1$, and the same formula
+    for $W_{\text{out}}$ with $k_W$. The floor rounds down.'
+  killed_by: test_ones_kernel_sums_each_two_by_two_window
+  visible: public
+- file: reject_output_float64_always.py
+  mistake: output is always float64
+  clause: 'Returns: tensor of shape `(N, C_out, H_out, W_out)` with `x`''s dtype.'
+  killed_by: test_float32_inputs_return_float32_close_to_the_reference
+  visible: hidden
+- file: reject_kernel_exactly_fitting_rejected.py
+  mistake: kernel exactly fitting the padded input is rejected
+  clause: 'Raises `ValueError` when: `x` is not a floating 4-D tensor, or has a zero-size axis; `weight`
+    is not a 4-D tensor of `x`''s dtype, or its second axis is not `C_in`; `bias` has the wrong shape
+    or dtype; `stride` is not an integer `>= 1`; `padding` is not an integer `>= 0`; or the kernel does
+    not fit in the padded input, so that $H_{\text{out}}$ or $W_{\text{out}}$ would be below 1.'
+  killed_by: test_kernel_is_not_flipped
+  visible: public
+uncovered:
+- clause: Must not mutate `x`, `weight` or `bias`.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject
