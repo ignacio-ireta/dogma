@@ -199,3 +199,15 @@ def test_one_non_integer_among_integers_raises_value_error():
         2.0,
         "a single non-integer entry must raise ValueError, even next to integral values",
     )
+
+
+def test_negative_counts_in_k_are_not_overwritten():
+    # Negative counts have probability 0 but must stay as the caller gave them.
+    k = np.array([-4, -1, 0, 2])
+    before = k.copy()
+    _call(k, 2.0)
+    np.testing.assert_array_equal(
+        k,
+        before,
+        err_msg="input k was modified in place: negative counts were overwritten",
+    )

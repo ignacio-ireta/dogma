@@ -267,3 +267,15 @@ def test_negative_n_with_p_at_zero_or_one_raises_value_error():
         1.0,
         "n = -1 must raise ValueError for every p: n must be a non-negative integer (p = 1 case)",
     )
+
+
+def test_out_of_range_entries_of_k_are_not_overwritten():
+    # Entries of k outside [0, 5] have probability 0 but must stay as the caller gave them.
+    k = np.array([-3, 0, 2, 7, 11])
+    before = k.copy()
+    _pmf(k, 5, 0.3, "k with entries outside [0, n] must give probabilities, not an error")
+    np.testing.assert_array_equal(
+        k,
+        before,
+        err_msg="input k was modified in place: entries outside [0, n] were overwritten",
+    )

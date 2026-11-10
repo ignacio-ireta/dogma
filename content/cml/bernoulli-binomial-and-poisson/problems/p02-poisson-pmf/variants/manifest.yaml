@@ -1,7 +1,38 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_reordered_log_terms.py
+  origin: freedom
+  freedom: sums the log terms in a different order
+reject:
+- file: reject_integral_floats_refused.py
+  mistake: integral float arrays refused, only scalar integral floats accepted
+  clause: '`k`: integer array-like of any shape. Integral floats such as `2.0` are accepted. Values below
+    0 have probability `0.0`.'
+  killed_by: test_integral_float_k_gives_the_same_pmf_as_integer_k
+  visible: hidden
+- file: reject_lam_zero_refused.py
+  mistake: lam equal to zero refused as invalid
+  clause: '`lam`: finite real number $\lambda \ge 0$. Mean and variance are both $\lambda$.'
+  killed_by: test_zero_rate_puts_all_mass_on_zero
+  visible: public
+- file: reject_scalar_k_one_dimensional.py
+  mistake: scalar k gives a one-dimensional result instead of 0-d
+  clause: 'Returns: NumPy `float64` array with the same shape as `k`, holding $P(X=k)$. A scalar `k` gives
+    a 0-d array.'
+  killed_by: test_scalar_k_returns_a_zero_dimensional_result
+  visible: hidden
+- file: reject_infinite_lam_accepted.py
+  mistake: infinite lam accepted and gives NaN instead of raising
+  clause: Raises `ValueError` when `lam` is negative, NaN or infinite, or when `k` contains a non-integer.
+  killed_by: test_invalid_rate_raises_value_error
+  visible: hidden
+- file: reject_out_of_range_k_overwritten.py
+  mistake: k overwritten in place at negative counts
+  clause: Must not mutate its inputs.
+  killed_by: test_negative_counts_in_k_are_not_overwritten
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

@@ -1,7 +1,44 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_reordered_log_terms.py
+  origin: freedom
+  freedom: sums the three log terms in a different order
+reject:
+- file: reject_integral_floats_refused.py
+  mistake: integral float arrays refused, only scalar integral floats accepted
+  clause: '`k`: integer array-like of any shape. Integral floats such as `2.0` are accepted. Entries outside
+    $[0, n]$ have probability `0.0`.'
+  killed_by: test_integral_float_k_gives_the_same_pmf_as_integer_k
+  visible: hidden
+- file: reject_n_zero_refused.py
+  mistake: n equal to zero refused as invalid
+  clause: '`n`: integer $n \ge 0$.'
+  killed_by: test_zero_trials_is_a_certain_zero
+  visible: public
+- file: reject_p_zero_refused.py
+  mistake: p equal to zero refused as invalid
+  clause: '`p`: real number in $[0, 1]$.'
+  killed_by: test_p_zero_puts_all_mass_on_zero_exactly
+  visible: hidden
+- file: reject_result_cast_to_float32.py
+  mistake: result array cast to float32 instead of float64
+  clause: 'Returns: NumPy `float64` array with the same shape as `k`, holding $P(X=k)$. A scalar `k` gives
+    a 0-d array.'
+  killed_by: test_mean_and_variance_match_np_and_np_one_minus_p
+  visible: hidden
+- file: reject_nan_p_accepted.py
+  mistake: NaN p passes the range check and returns NaN instead of raising
+  clause: Raises `ValueError` when `n` is not a non-negative integer, when `p` is not in $[0, 1]$ (NaN
+    included), or when `k` contains a non-integer value.
+  killed_by: test_nan_p_raises_value_error
+  visible: hidden
+- file: reject_out_of_range_k_overwritten.py
+  mistake: k overwritten in place at entries outside zero to n
+  clause: Must not mutate its inputs.
+  killed_by: test_out_of_range_entries_of_k_are_not_overwritten
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
