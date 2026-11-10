@@ -183,3 +183,22 @@ def test_inputs_are_not_mutated():
     vector_projection(a, b)
     np.testing.assert_array_equal(a, a_copy, err_msg="input a was modified in place")
     np.testing.assert_array_equal(b, b_copy, err_msg="input b was modified in place")
+
+
+def test_float_b_whose_largest_entry_is_not_one_is_not_mutated():
+    a = np.array([1.0, 2.0, 3.0])
+    # Largest entry is 2, so any scaling of b by it would change the caller's array.
+    b = np.array([0.0, 2.0, 0.0])
+    b_copy = b.copy()
+    # a·b / b·b = 4 / 4 = 1, so the projection is b itself: [0, 2, 0].
+    np.testing.assert_allclose(
+        vector_projection(a, b),
+        [0.0, 2.0, 0.0],
+        atol=1e-12,
+        err_msg="wrong projection onto a float64 b that is not a unit direction",
+    )
+    np.testing.assert_array_equal(
+        b,
+        b_copy,
+        err_msg="input b was modified in place when its largest entry is not 1",
+    )

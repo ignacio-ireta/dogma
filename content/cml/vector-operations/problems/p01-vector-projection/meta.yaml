@@ -1,5 +1,5 @@
 id: cml/vector-operations/p01-vector-projection
-version: 2
+version: 3
 title: Vector projection
 language: python
 runtime: py-numpy
