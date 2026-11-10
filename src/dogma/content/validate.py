@@ -26,7 +26,7 @@ from dogma.content.loader import (
     load_topic,
 )
 from dogma.content.pyfacts import PythonFacts
-from dogma.content.schemas import PROBLEM_DIR_PATTERN, CorePath, Syllabus
+from dogma.content.schemas import PROBLEM_DIR_PATTERN, CorePath, Syllabus, VariantsManifest
 from dogma.core.config import Settings
 from dogma.core.errors import ContentError, ErrorCode
 
@@ -80,6 +80,9 @@ CASE_ONLY_NAMES = (*CASE_FILES, "exhibits")
 DEBRIEF_SECTIONS = ("Reframe", "Ask", "Structure", "Synthesize")
 REVEAL_MIN, REVEAL_MAX = 2, 8
 EXHIBIT_SUFFIXES = (".png", ".csv")
+# Off until the variant sweeps (I-32e) exist. Then verified and reviewed problems need variants.
+VARIANTS_REQUIRED = False
+VARIANT_STATUSES_REQUIRING = ("verified", "reviewed")
 
 _CARD_NUMBER = re.compile(r"[1-9][0-9]*")
 _QUESTION = re.compile(r"Q(\d+)\. \S")
@@ -451,7 +454,131 @@ def _check_problem(topic: TopicPackage, problem: ProblemPackage) -> list[Issue]:
     issues.extend(_check_problem_md(problem))
     issues.extend(_check_hints(problem))
     issues.extend(_check_python(problem))
+    issues.extend(validate_variants(problem))
     return issues
+
+
+def validate_variants(problem: ProblemPackage) -> list[Issue]:
+    """Check the ``variants/`` manifest against the files and statement. Nothing is run."""
+    variants_dir = problem.dir / "variants"
+    manifest_path = variants_dir / "manifest.yaml"
+    issues: list[Issue] = []
+    if problem.variant_files and "manifest.yaml" not in problem.variant_files:
+        issues.append(
+            Issue(
+                "VARIANT_MANIFEST_MISSING",
+                str(variants_dir),
+                "variants/ has files but no manifest.yaml",
+            )
+        )
+    manifest = problem.variants
+    if manifest is None:
+        return issues + _variants_required_issues(problem, complete=False)
+    listed = [variant.file for variant in manifest.accept] + [
+        variant.file for variant in manifest.reject
+    ]
+    for name in sorted(problem.variant_files - {"manifest.yaml"} - set(listed)):
+        issues.append(
+            Issue(
+                "VARIANT_FILE_UNLISTED",
+                str(variants_dir / name),
+                f"variant file {name} is not named in manifest.yaml",
+            )
+        )
+    for name in listed:
+        if name not in problem.variant_files:
+            issues.append(
+                Issue(
+                    "VARIANT_FILE_MISSING",
+                    str(manifest_path),
+                    f"manifest.yaml names {name}, which is not in variants/",
+                )
+            )
+    if problem.meta is not None:
+        issues.extend(_variant_suffix_issues(problem.meta.language, listed, str(manifest_path)))
+        if manifest.problem_version != problem.meta.version:
+            issues.append(
+                Issue(
+                    "VARIANT_VERSION_STALE",
+                    str(manifest_path),
+                    f"problem_version {manifest.problem_version} must be {problem.meta.version}",
+                )
+            )
+    issues.extend(_variant_clause_issues(problem, manifest, str(manifest_path)))
+    issues.extend(_variant_killed_by_issues(problem, manifest, str(manifest_path)))
+    complete = any(variant.origin == "blind" for variant in manifest.accept) and (
+        bool(manifest.reject) or bool(manifest.uncovered)
+    )
+    return issues + _variants_required_issues(problem, complete=complete)
+
+
+def _variant_suffix_issues(language: str, listed: list[str], path: str) -> list[Issue]:
+    wrong = ".sql" if language == "python" else ".py"
+    return [
+        Issue(
+            "VARIANT_SUFFIX",
+            path,
+            f"{name} must not end in {wrong} for a {language} problem",
+        )
+        for name in listed
+        if name.endswith(wrong)
+    ]
+
+
+def _variant_clause_issues(
+    problem: ProblemPackage, manifest: VariantsManifest, path: str
+) -> list[Issue]:
+    statement_file = problem.dir / "problem.md"
+    if not statement_file.is_file():
+        return []
+    statement = " ".join(statement_file.read_text(encoding="utf-8").split())
+    clauses = [variant.clause for variant in manifest.reject]
+    clauses += [variant.clause for variant in manifest.uncovered]
+    clauses += [variant.clause for variant in manifest.accept if variant.clause is not None]
+    return [
+        Issue(
+            "VARIANT_CLAUSE_NOT_IN_STATEMENT",
+            path,
+            f"clause {clause!r} is not in problem.md",
+        )
+        for clause in clauses
+        if " ".join(clause.split()) not in statement
+    ]
+
+
+def _variant_killed_by_issues(
+    problem: ProblemPackage, manifest: VariantsManifest, path: str
+) -> list[Issue]:
+    issues: list[Issue] = []
+    for variant in manifest.reject:
+        name = "test_public.py" if variant.visible == "public" else "test_hidden.py"
+        facts = problem.python.get(name)
+        known = set(facts.test_functions) if facts is not None else set()
+        if variant.killed_by not in known:
+            issues.append(
+                Issue(
+                    "VARIANT_KILLED_BY_UNKNOWN",
+                    path,
+                    f"{variant.file} is killed_by {variant.killed_by}, "
+                    f"which {name} does not define",
+                )
+            )
+    return issues
+
+
+def _variants_required_issues(problem: ProblemPackage, *, complete: bool) -> list[Issue]:
+    if not VARIANTS_REQUIRED or complete or problem.meta is None:
+        return []
+    if problem.meta.status not in VARIANT_STATUSES_REQUIRING:
+        return []
+    return [
+        Issue(
+            "VARIANTS_REQUIRED",
+            str(problem.dir),
+            f"a {problem.meta.status} problem needs variants/: a blind accept and a reject "
+            "or uncovered entry",
+        )
+    ]
 
 
 def _check_problem_files(problem: ProblemPackage) -> list[Issue]:

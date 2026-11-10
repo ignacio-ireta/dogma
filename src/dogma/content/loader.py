@@ -27,6 +27,7 @@ from dogma.content.schemas import (
     RevealsFile,
     Syllabus,
     TopicMeta,
+    VariantsManifest,
 )
 from dogma.core.errors import ContentError, ErrorCode
 
@@ -56,6 +57,8 @@ class ProblemPackage:
     problem: Outline | None
     hints: Outline | None
     python: dict[str, PythonFacts]
+    variants: VariantsManifest | None = None
+    variant_files: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True)
@@ -147,6 +150,14 @@ def load_problem(problem_dir: Path) -> ProblemPackage:
         for name in _PROBLEM_PYTHON_FILES
         if name in files
     }
+    variants_dir = problem_dir / "variants"
+    variant_files: frozenset[str] = frozenset()
+    variants: VariantsManifest | None = None
+    if variants_dir.is_dir():
+        variant_files = frozenset(path.name for path in variants_dir.iterdir() if path.is_file())
+        manifest_path = variants_dir / "manifest.yaml"
+        if manifest_path.is_file():
+            variants = _validate_yaml(manifest_path, _read_text(manifest_path), VariantsManifest)
     return ProblemPackage(
         dir=problem_dir,
         meta=meta,
@@ -154,6 +165,8 @@ def load_problem(problem_dir: Path) -> ProblemPackage:
         problem=_load_outline(problem_dir / "problem.md"),
         hints=_load_outline(problem_dir / "hints.md"),
         python=python,
+        variants=variants,
+        variant_files=variant_files,
     )
 
 

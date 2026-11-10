@@ -1,0 +1,10 @@
+problem_version: 1
+accept:
+  - file: accept_blind.py
+    origin: blind
+reject:
+  - file: reject_mutates_input.py
+    mistake: doubles the caller's list in place
+    clause: Must not mutate its input.
+    killed_by: test_input_list_is_not_mutated
+    visible: hidden

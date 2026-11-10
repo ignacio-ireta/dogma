@@ -250,3 +250,66 @@ class ProblemMeta(ContentModel):
         elif self.entry != "query":
             raise ValueError(f"sql entry must be 'query', got {self.entry!r}")
         return self
+
+
+# --- problems/<pNN-slug>/variants/manifest.yaml -------------------------------------------
+
+VARIANT_ACCEPT_PATTERN = r"^accept_[a-z0-9_]+\.(py|sql)$"
+VARIANT_REJECT_PATTERN = r"^reject_[a-z0-9_]+\.(py|sql)$"
+TEST_FUNCTION_PATTERN = r"^test_[A-Za-z0-9_]+$"
+
+
+class AcceptVariant(ContentModel):
+    file: str = Field(pattern=VARIANT_ACCEPT_PATTERN)
+    origin: Literal["blind", "freedom"]
+    freedom: str | None = None
+    clause: str | None = None
+
+    @model_validator(mode="after")
+    def check_origin(self) -> Self:
+        if self.origin == "blind":
+            if self.file.rsplit(".", 1)[0] != "accept_blind":
+                raise ValueError(f"a blind accept must be named accept_blind: {self.file!r}")
+            if self.freedom is not None:
+                raise ValueError("a blind accept must not set freedom")
+        elif not self.freedom:
+            raise ValueError("a freedom accept must say what it does differently (freedom)")
+        return self
+
+
+class RejectVariant(ContentModel):
+    file: str = Field(pattern=VARIANT_REJECT_PATTERN)
+    mistake: str = Field(min_length=1)
+    clause: str = Field(min_length=1)
+    killed_by: str = Field(pattern=TEST_FUNCTION_PATTERN)
+    visible: Literal["public", "hidden"]
+    message_has: str | None = None
+
+
+class UncoveredClause(ContentModel):
+    clause: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
+
+
+class VariantsManifest(ContentModel):
+    problem_version: int = Field(ge=1)
+    accept: tuple[AcceptVariant, ...] = ()
+    reject: tuple[RejectVariant, ...] = ()
+    uncovered: tuple[UncoveredClause, ...] = ()
+    sweeps: tuple[Literal["reject", "mutants"], ...] = ()
+
+    @model_validator(mode="after")
+    def check_manifest(self) -> Self:
+        files = [variant.file for variant in self.accept] + [
+            variant.file for variant in self.reject
+        ]
+        duplicates = _duplicate_values(files)
+        if duplicates:
+            raise ValueError(f"a variant file is listed more than once: {duplicates}")
+        blind = sum(1 for variant in self.accept if variant.origin == "blind")
+        if blind > 1:
+            raise ValueError(f"at most one blind accept is allowed; found {blind}")
+        repeated = _duplicate_values(self.sweeps)
+        if repeated:
+            raise ValueError(f"a sweep is listed more than once: {repeated}")
+        return self
