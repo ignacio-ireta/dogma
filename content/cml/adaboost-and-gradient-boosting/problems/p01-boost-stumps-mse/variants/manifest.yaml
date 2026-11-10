@@ -59,3 +59,4 @@ uncovered:
     C5 or C6
 sweeps:
 - reject
+- mutants
