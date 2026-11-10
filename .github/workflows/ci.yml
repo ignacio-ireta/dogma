@@ -1,0 +1,77 @@
+# The public half of `make check` (docs/ENGINEERING_STANDARDS.md §13), on every push.
+#
+# Runs on macOS because the grader launches learner code only under the system
+# sandbox (`sandbox-exec`, src/dogma/runner/policy.py); tests and content
+# verification execute real attempts.
+#
+# The privacy audit (`make audit`) is not run here: its rules live in
+# `private/denylist.txt`, which is never committed, and the audit refuses to
+# certify without them. It stays a local gate and a pre-commit hook.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, types, tests, web
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: web/package.json
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Lint (ruff check, ruff format --check)
+        run: make lint
+
+      - name: Types (mypy strict, import contracts, content typing)
+        run: make types
+
+      - name: Tests (unit and integration)
+        run: make test
+
+      - name: Install web dependencies
+        run: pnpm --dir web install --frozen-lockfile
+
+      - name: Web (biome, tsc, vitest, API contract, production build)
+        run: make web-check
+
+  content:
+    name: Verify every topic and problem
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      # Reference solution passes, starter fails, tests repeat, for all topics.
+      - name: dogma content verify --all
+        run: make verify-content

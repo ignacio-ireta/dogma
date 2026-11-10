@@ -10,6 +10,11 @@ planned Library refresh.
 
 ## Requirements
 
+- macOS. Run and Submit execute your code under the system sandbox (`sandbox-exec`), with no
+  network and writes confined to the attempt directory; on other systems the grader refuses to
+  run rather than run unsandboxed. To try dogma without installing anything, use the
+  [interactive demo](https://ignacio-ireta.github.io/projects/dogma/), which grades in the
+  browser.
 - Python 3.12, managed by `uv` (see `.python-version`).
 - For the browser: Node.js 22 or newer and pnpm 12.8.1, as specified in
   [web/package.json](web/package.json).
