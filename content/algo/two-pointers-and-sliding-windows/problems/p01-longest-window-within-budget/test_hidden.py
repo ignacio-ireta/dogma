@@ -275,3 +275,10 @@ def test_large_list_of_200000_entries_finishes_within_the_time_limit() -> None:
         pytest.fail("the result could not be read back: return a (length, start) tuple of ints")
     problem = _first_problem(value, (LARGE_N // 2, 0))
     assert problem is None, problem
+
+
+def test_single_entry_is_a_window_only_when_it_fits_the_budget() -> None:
+    # The only window [5] sums to 5, which is above the budget 4, so no window is valid: (0, 0).
+    _verify([5], 4, (0, 0))
+    # The only window [3] sums to 3, which is within the budget 4: length 1, start 0.
+    _verify([3], 4, (1, 0))

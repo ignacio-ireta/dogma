@@ -1,5 +1,5 @@
 id: algo/two-pointers-and-sliding-windows/p01-longest-window-within-budget
-version: 2                     # bump when tests, tolerances or the contract change
+version: 3                     # bump when tests, tolerances or the contract change
 title: Longest window within a budget
 language: python
 runtime: py-stdlib

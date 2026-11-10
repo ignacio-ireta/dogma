@@ -1,7 +1,63 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_single_entry_ignores_budget.py
+  mistake: a single entry above the budget is returned as a window
+  clause: '`costs`: a `list` of `int`, possibly empty. Every entry is `>= 0`.'
+  killed_by: test_single_entry_is_a_window_only_when_it_fits_the_budget
+  visible: hidden
+- file: reject_zero_budget_returns_empty.py
+  mistake: budget of zero returns no window even when zero-cost entries form one
+  clause: '`budget`: an `int` that is `>= 0`.'
+  killed_by: test_examples_from_problem_md
+  visible: public
+- file: reject_ties_keep_last_start.py
+  mistake: ties keep the last window of maximum length instead of the first
+  clause: 'Returns: a `tuple` `(length, start)` of two Python `int`s. - `length`: the number of entries
+    in the longest window `costs[start:start + length]` whose sum is `<= budget`. - `start`: the index
+    of the first entry of that window. Among windows of the same maximum length, return the smallest `start`.
+    - If no window is valid, return `(0, 0)`. That happens when `costs` is empty or every entry is greater
+    than `budget`.'
+  killed_by: test_examples_from_problem_md
+  visible: public
+- file: reject_no_window_returns_len_start.py
+  mistake: no valid window returns the length of the list as the start
+  clause: 'Returns: a `tuple` `(length, start)` of two Python `int`s. - `length`: the number of entries
+    in the longest window `costs[start:start + length]` whose sum is `<= budget`. - `start`: the index
+    of the first entry of that window. Among windows of the same maximum length, return the smallest `start`.
+    - If no window is valid, return `(0, 0)`. That happens when `costs` is empty or every entry is greater
+    than `budget`.'
+  killed_by: test_no_valid_window_returns_zero_and_zero
+  visible: public
+- file: reject_negative_check_first_entry_only.py
+  mistake: negative cost check looks only at the first entry
+  clause: 'Raises: `ValueError` when any entry of `costs` is negative, or when `budget` is negative.'
+  killed_by: test_negative_cost_after_a_valid_prefix_raises_value_error
+  visible: hidden
+- file: reject_sorts_input_after_scan.py
+  mistake: sorts the costs list in place after the scan
+  clause: Must not mutate `costs`.
+  killed_by: test_costs_list_is_not_mutated
+  visible: hidden
+- file: reject_last_entry_skipped.py
+  mistake: the last entry is never part of a window
+  clause: 'Returns: a `tuple` `(length, start)` of two Python `int`s. - `length`: the number of entries
+    in the longest window `costs[start:start + length]` whose sum is `<= budget`. - `start`: the index
+    of the first entry of that window. Among windows of the same maximum length, return the smallest `start`.
+    - If no window is valid, return `(0, 0)`. That happens when `costs` is empty or every entry is greater
+    than `budget`.'
+  killed_by: test_examples_from_problem_md
+  visible: public
+- file: reject_quadratic_scan.py
+  mistake: checks every start and extends each window, quadratic time
+  clause: 'Complexity: **O(n) time** and O(1) extra space, for `n = len(costs)`. The hidden tests include
+    an input with `n = 200,000`. A solution that checks every start and extends each window to the right
+    does about `n**2 / 2` steps there, and it will not finish in time. One left pointer and one right
+    pointer, each moving only forward, do about `2n` steps.'
+  killed_by: test_large_list_of_200000_entries_finishes_within_the_time_limit
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
