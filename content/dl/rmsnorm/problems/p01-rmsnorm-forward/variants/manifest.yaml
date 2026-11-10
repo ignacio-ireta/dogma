@@ -2,6 +2,47 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_rsqrt_multiply.py
+  origin: freedom
+  freedom: multiplies by the reciprocal square root instead of dividing by the square root
+reject:
+- file: reject_empty_leading_dims_refused.py
+  mistake: refuses inputs with empty leading dimensions
+  clause: '`x`: floating-point tensor with `ndim >= 1`, shape `(..., D)`, `D >= 1`. Leading dimensions
+    may be any size, including zero. Must not be modified.'
+  killed_by: test_empty_leading_dimension_returns_empty_output
+  visible: hidden
+- file: reject_gain_abs_in_place.py
+  mistake: modifies gain in place with abs
+  clause: '`gain`: tensor of shape `(D,)`. Must not be modified.'
+  killed_by: test_matches_reference_over_random_leading_shapes
+  visible: hidden
+- file: reject_eps_outside_sqrt.py
+  mistake: eps added outside the square root
+  clause: '`eps`: float `> 0`. Added to the mean square **inside** the square root.'
+  killed_by: test_matches_reference_over_random_leading_shapes
+  visible: hidden
+- file: reject_divisor_width_plus_one.py
+  mistake: divides the sum of squares by D plus one
+  clause: 'Statistic: `mean(x**2)` over the last dimension, with `keepdim`.'
+  killed_by: test_unit_gain_example_divides_by_root_mean_square
+  visible: public
+- file: reject_float32_statistic_precision.py
+  mistake: computes the mean square in float32 for every input
+  clause: 'Returns: a tensor with the shape and dtype of `x`, equal to `gain * x / sqrt(mean(x**2) + eps)`.'
+  killed_by: test_matches_reference_over_random_leading_shapes
+  visible: hidden
+- file: reject_eps_negative_only_checked.py
+  mistake: accepts eps of zero and rejects only negative eps
+  clause: 'Raises `ValueError` when: `x` is 0-dimensional or non-floating; `D == 0`; `gain` does not have
+    shape `(D,)`; `eps <= 0`.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_mutates_1d_input.py
+  mistake: divides a one-dimensional input in place
+  clause: Must not mutate inputs.
+  killed_by: test_matches_reference_over_random_leading_shapes
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
