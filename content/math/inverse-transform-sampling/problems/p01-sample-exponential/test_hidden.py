@@ -188,3 +188,20 @@ def test_negative_count_raises_value_error():
         lambda: sample_exponential(1.0, -1, _Uniforms([0.1, 0.2])),
         "a negative number of draws is invalid: raise ValueError",
     )
+
+
+def test_integer_rate_is_accepted_as_a_real_number():
+    # An integer is a real number, so rate 2 is valid. For u = 0.25 and 0.5 the draws are
+    # -log(1 - u) / 2, that is -ln(0.75) / 2 and -ln(0.5) / 2.
+    u = np.array([0.25, 0.5])
+    got = _run(
+        lambda: sample_exponential(2, len(u), _Uniforms(u)),
+        "an integer rate is a real number and must be accepted: sample_exponential raised",
+    )
+    expected = np.array([-math.log(0.75) / 2.0, -math.log(0.5) / 2.0])
+    np.testing.assert_allclose(
+        got,
+        expected,
+        rtol=1e-12,
+        err_msg="draws for an integer rate differ from -log(1 - u) / rate",
+    )

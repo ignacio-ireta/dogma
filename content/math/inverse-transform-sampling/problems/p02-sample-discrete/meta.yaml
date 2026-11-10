@@ -1,5 +1,5 @@
 id: math/inverse-transform-sampling/p02-sample-discrete
-version: 3                     # bump when tests, tolerances or the contract change
+version: 4                     # bump when tests, tolerances or the contract change
 title: Discrete samples by inverse transform
 language: python
 runtime: py-numpy

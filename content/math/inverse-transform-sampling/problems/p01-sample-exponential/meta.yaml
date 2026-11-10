@@ -1,5 +1,5 @@
 id: math/inverse-transform-sampling/p01-sample-exponential
-version: 2                     # bump when tests, tolerances or the contract change
+version: 3                     # bump when tests, tolerances or the contract change
 title: Exponential samples by inverse transform
 language: python
 runtime: py-numpy

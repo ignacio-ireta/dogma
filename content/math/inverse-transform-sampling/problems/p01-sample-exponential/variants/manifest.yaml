@@ -1,7 +1,50 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_reciprocal_rate.py
+  origin: freedom
+  freedom: multiplies by the reciprocal of rate instead of dividing by rate
+reject:
+- file: reject_rate_int_rejected.py
+  mistake: rejects integer rates as not floats
+  clause: '`rate`: a real number that is finite and greater than 0.'
+  killed_by: test_integer_rate_is_accepted_as_a_real_number
+  visible: hidden
+- file: reject_no_finite_check.py
+  mistake: no finiteness check on rate, so an infinite rate is accepted
+  clause: Raises `ValueError` when `rate` is not finite and positive, or when `n` is negative.
+  killed_by: test_rate_that_is_not_finite_and_positive_raises_value_error
+  visible: hidden
+- file: reject_naive_log.py
+  mistake: forms 1 minus u before the log, losing tiny uniforms
+  clause: 'Returns: a float64 array of shape `(n,)` whose entries are `-log1p(-u) / rate`, elementwise.'
+  killed_by: test_tiny_uniforms_keep_their_magnitude_in_the_draw
+  visible: hidden
+- file: reject_float32_result.py
+  mistake: returns float32 draws instead of float64
+  clause: 'Returns: a float64 array of shape `(n,)` whose entries are `-log1p(-u) / rate`, elementwise.'
+  killed_by: test_zero_draws_give_an_empty_float_array
+  visible: public
+- file: reject_scalar_draw_loop.py
+  mistake: draws one uniform per call in a loop instead of one call with n
+  clause: '`rng`: a NumPy `Generator`. The function makes exactly one call, `u = rng.random(n)`, and no
+    other draw. (In tests `rng` may be any object with a `random(n)` method that returns `n` values in
+    `[0, 1)`.)'
+  killed_by: test_draws_come_from_one_call_to_random_with_n
+  visible: hidden
+- file: reject_zero_count_rejected.py
+  mistake: rejects a count of zero
+  clause: '`n`: an int, `n >= 0`.'
+  killed_by: test_zero_draws_give_an_empty_float_array
+  visible: public
+- file: reject_negative_count_type_error.py
+  mistake: raises TypeError instead of ValueError for a negative count
+  clause: Raises `ValueError` when `rate` is not finite and positive, or when `n` is negative.
+  killed_by: test_negative_count_raises_value_error
+  visible: hidden
+uncovered:
+- clause: Must not mutate its inputs.
+  reason: rate and n are immutable scalars, and rng is covered by C3
+sweeps:
+- reject

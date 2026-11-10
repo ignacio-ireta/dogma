@@ -250,3 +250,15 @@ def test_sum_just_outside_the_tolerance_is_rejected():
         lambda: sample_discrete([0.5, 0.5 + 1.5e-9], 3, np.random.default_rng(0)),
         "probabilities whose sum is more than the 1e-9 tolerance away from 1 must raise ValueError",
     )
+
+
+def test_float_array_whose_sum_is_not_exactly_one_is_left_unchanged():
+    # 0.6 + 0.3 + 0.1 is 0.9999999999999999 in floating point. It is valid, but it is not exactly 1,
+    # so rescaling the caller's own array would change its values.
+    probs = np.array([0.6, 0.3, 0.1])
+    before = probs.copy()
+    _run(
+        lambda: sample_discrete(probs, 10, np.random.default_rng(0)),
+        "valid inputs must not raise: sample_discrete raised",
+    )
+    np.testing.assert_array_equal(probs, before, err_msg="probs was modified: work on a copy")

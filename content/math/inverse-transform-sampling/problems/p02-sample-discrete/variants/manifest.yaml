@@ -1,7 +1,59 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_linear_count.py
+  origin: freedom
+  freedom: counts the cumulative sums at or below each draw in a loop instead of searchsorted
+reject:
+- file: reject_inplace_normalise.py
+  mistake: normalises the caller's float array in place when its sum is not exactly one
+  clause: Must not mutate `probs`.
+  killed_by: test_float_array_whose_sum_is_not_exactly_one_is_left_unchanged
+  visible: hidden
+- file: reject_zero_prob_rejected.py
+  mistake: rejects zero-probability categories, though non-negative entries are valid
+  clause: '`probs`: a 1-D sequence of `k >= 1` finite, non-negative numbers. Their sum must be 1 up to
+    floating-point rounding: `abs(sum - 1) <= 1e-9`.'
+  killed_by: test_matches_a_linear_scan_for_the_same_uniforms
+  visible: hidden
+- file: reject_zero_count_rejected.py
+  mistake: rejects a count of zero
+  clause: '`n`: an int, `n >= 0`.'
+  killed_by: test_matches_a_linear_scan_for_the_same_uniforms
+  visible: hidden
+- file: reject_scalar_draw_loop.py
+  mistake: draws one uniform per call in a loop instead of one call with n
+  clause: '`rng`: a NumPy `Generator`. The function makes exactly one call, `u = rng.random(n)`, and no
+    other draw. (In tests `rng` may be any object with a `random(n)` method that returns `n` values in
+    `[0, 1)`.)'
+  killed_by: test_draws_come_from_one_call_to_random_with_n
+  visible: hidden
+- file: reject_closed_upper_boundary.py
+  mistake: uses a closed upper boundary, so a draw on a cumulative sum goes to the wrong category
+  clause: Let `c = cumsum(probs)` and `c_-1 = 0`. Category `i` is returned when `c[i-1] <= u < c[i]`.
+    A draw `u` that is at least `c[k-1]` is returned as category `k-1`. That case happens when rounding
+    leaves `c[k-1]` just below 1.
+  killed_by: test_a_draw_on_a_cumulative_boundary_goes_to_the_category_that_starts_there
+  visible: public
+- file: reject_no_top_clamp.py
+  mistake: drops the clamp, so a draw above the last cumulative sum indexes past the end
+  clause: Let `c = cumsum(probs)` and `c_-1 = 0`. Category `i` is returned when `c[i-1] <= u < c[i]`.
+    A draw `u` that is at least `c[k-1]` is returned as category `k-1`. That case happens when rounding
+    leaves `c[k-1]` just below 1.
+  killed_by: test_draw_above_the_last_cumulative_sum_maps_to_the_last_category
+  visible: hidden
+- file: reject_float_indices.py
+  mistake: returns float category indices instead of integers
+  clause: 'Returns: an integer array of shape `(n,)`.'
+  killed_by: test_chi_square_goodness_of_fit_at_a_fixed_seed
+  visible: hidden
+- file: reject_loose_sum_tolerance.py
+  mistake: accepts sums up to 1e-6 from one, not 1e-9
+  clause: Raises `ValueError` when `probs` is not a non-empty 1-D sequence, when an entry is negative
+    or not finite, when the sum is not 1 within `1e-9`, or when `n` is negative.
+  killed_by: test_probabilities_off_by_a_small_real_amount_are_rejected
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
