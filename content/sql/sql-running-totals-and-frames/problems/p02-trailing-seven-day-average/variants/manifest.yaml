@@ -2,6 +2,38 @@ problem_version: 1
 accept:
 - file: accept_blind.sql
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_self_join.sql
+  origin: freedom
+  freedom: window computed by a self-join on a seven-day date range instead of a window frame
+reject:
+- file: reject_rows_frame_counts_rows_not_days.sql
+  mistake: window is six preceding rows, not seven calendar days, so closed days are skipped
+  clause: Do not zero-fill closed days, and do not count them.
+  killed_by: test_window_skips_closed_days_and_covers_seven_calendar_days
+  visible: public
+- file: reject_eight_day_window.sql
+  mistake: window reaches seven days back, covering eight calendar days
+  clause: Do not zero-fill closed days, and do not count them.
+  killed_by: test_window_skips_closed_days_and_covers_seven_calendar_days
+  visible: public
+- file: reject_days_count_includes_closed_days.sql
+  mistake: days in window counts calendar days from the first row, so closed days are counted
+  clause: Do not zero-fill closed days, and do not count them.
+  killed_by: test_window_skips_closed_days_and_covers_seven_calendar_days
+  visible: public
+- file: reject_final_order_date_first.sql
+  mistake: final order sorts by date first, so stores interleave
+  clause: Final output order is `store_id ASC, sales_date ASC`.
+  killed_by: test_matches_calendar_oracle_on_seeded_shops_with_gaps
+  visible: hidden
+- file: reject_placeholder_row_on_empty_input.sql
+  mistake: a placeholder row is returned when the table is empty
+  clause: An empty table returns no rows, with the stated column names and types.
+  killed_by: test_empty_table_returns_no_rows_with_the_declared_schema
+  visible: public
+uncovered:
+- clause: Do not change the input table. Averages are compared with an absolute tolerance of 1e-9 and
+    a relative tolerance of 1e-12.
+  reason: a read-only query cannot change the input table, so no wrong solution can break this
+sweeps:
+- reject

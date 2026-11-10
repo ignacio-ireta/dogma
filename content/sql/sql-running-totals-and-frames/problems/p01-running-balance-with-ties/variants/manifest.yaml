@@ -2,6 +2,43 @@ problem_version: 2
 accept:
 - file: accept_blind.sql
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_correlated_subqueries.sql
+  origin: freedom
+  freedom: position and balance computed by correlated subqueries instead of window functions
+reject:
+- file: reject_order_ignores_posting_id.sql
+  mistake: order inside an account uses posted_at only, so tied postings have no defined order
+  clause: Postings of one account are ordered by `posted_at ASC`, then `posting_id ASC`. The second key
+    breaks ties, and the query must use it.
+  killed_by: test_running_balance_with_a_tie_matches_the_worked_example
+  visible: public
+- file: reject_position_starts_at_zero.sql
+  mistake: positions are counted from zero
+  clause: '`position_in_account` is 1 for the first posting in that order, 2 for the next, and so on.'
+  killed_by: test_running_balance_with_a_tie_matches_the_worked_example
+  visible: public
+- file: reject_balance_not_restarted.sql
+  mistake: running sum has no partition by account, so balances carry over between accounts
+  clause: '`balance_cents` is the sum of `amount_cents` over the postings of that account at positions
+    up to and including this one. It restarts for every account.'
+  killed_by: test_matches_group_sort_oracle_on_seeded_postings_with_ties
+  visible: hidden
+- file: reject_final_order_by_position_only.sql
+  mistake: final order sorts by position only, so accounts interleave
+  clause: Final output order is `account_id ASC, position_in_account ASC`.
+  killed_by: test_matches_group_sort_oracle_on_seeded_postings_with_ties
+  visible: hidden
+- file: reject_seed_row_on_empty_input.sql
+  mistake: a placeholder row is added when the table is empty
+  clause: An empty table returns no rows, with the stated column names and types.
+  killed_by: test_empty_table_returns_no_rows_with_the_declared_schema
+  visible: public
+uncovered:
+- clause: 'Output columns, in order, with these types: `account_id BIGINT`, `posting_id BIGINT`, `posted_at
+    TIMESTAMP`, `amount_cents BIGINT`, `position_in_account BIGINT`, `balance_cents BIGINT`. DuckDB widens
+    `SUM` over `BIGINT`, so cast the balance back to `BIGINT`.'
+  reason: every test checks this first, so a wrong solution fails all of them
+- clause: Do not change the input table.
+  reason: a read-only query cannot change the input table, so no wrong solution can break this
+sweeps:
+- reject
