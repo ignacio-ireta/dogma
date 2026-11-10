@@ -1,7 +1,47 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_pow_square.py
+  origin: freedom
+  freedom: squares the difference with pow instead of a product
+reject:
+- file: reject_batch_one_broadcasts.py
+  mistake: a batch of one broadcasts silently against many batches
+  clause: 'Raises: `ValueError` when an argument is not a floating tensor, is not 3-dimensional, or has
+    a batch size or feature size that differs from the other argument.'
+  killed_by: test_batch_of_one_against_many_batches_is_rejected_as_value_error
+  visible: hidden
+- file: reject_squeezes_n1_row.py
+  mistake: drops the batch axis when there is one query point
+  clause: '`X`: floating tensor of shape `(B, N, D)`. `Y`: floating tensor of shape `(B, M, D)`. Float32
+    and float64 are both valid, and the two arguments may differ. `B`, `N`, `M` and `D` are each zero
+    or more. Complex, integer and boolean tensors are invalid.'
+  killed_by: test_random_float64_inputs_match_independent_reference
+  visible: hidden
+- file: reject_result_dtype_from_x.py
+  mistake: result dtype follows the first argument instead of promote_types
+  clause: 'Returns: a tensor of shape `(B, N, M)` where `out[b, i, j] = sum over d of (X[b, i, d] - Y[b,
+    j, d])**2`. Its dtype is `torch.promote_types(X.dtype, Y.dtype)`, so float32 with float32 stays float32
+    and float32 with float64 becomes float64.'
+  killed_by: test_float32_with_float64_promotes_to_float64
+  visible: hidden
+- file: reject_negative_for_identical.py
+  mistake: subtracts a tiny constant so identical points go slightly negative
+  clause: Every returned entry is `>= 0`, including entries for identical points.
+  killed_by: test_zero_sized_batch_query_reference_and_feature_dimensions
+  visible: hidden
+- file: reject_expansion_cancellation.py
+  mistake: expansion formula without guarding cancellation under a large offset
+  clause: 'Accuracy: each entry matches the exact value computed in float64 from the input values, with
+    `atol=1e-6` and `rtol=1e-5`. This holds when the points share a large common offset.'
+  killed_by: test_large_common_offset_keeps_small_distances_accurate_in_float32
+  visible: hidden
+- file: reject_normalises_y_in_place.py
+  mistake: rescales Y in place by its largest magnitude, mutating the caller tensor
+  clause: Must not mutate inputs.
+  killed_by: test_random_float64_inputs_match_independent_reference
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

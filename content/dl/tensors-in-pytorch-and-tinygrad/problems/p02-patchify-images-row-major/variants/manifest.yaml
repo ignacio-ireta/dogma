@@ -2,6 +2,52 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_contiguous_view.py
+  origin: freedom
+  freedom: makes the tensor contiguous and then uses view instead of reshape
+reject:
+- file: reject_assumes_square_images.py
+  mistake: uses the height for both grid axes, which fails non-square images
+  clause: '`images`: tensor of shape `(B, C, H, W)`, any dtype. `B`, `C`, `H` and `W` are each zero or
+    more.'
+  killed_by: test_matches_slicing_reference_on_random_images_with_several_patch_sizes
+  visible: hidden
+- file: reject_rejects_patch_one.py
+  mistake: rejects patch size one, which is a valid positive integer
+  clause: '`patch`: a positive `int` (not a `bool`). `H` and `W` must both be divisible by `patch`.'
+  killed_by: test_channels_are_flattened_before_pixels_within_each_patch
+  visible: public
+- file: reject_channel_last_features.py
+  mistake: orders features row, column, then channel instead of channel-major
+  clause: 'Returns: a tensor of the same dtype as `images`, shape `(B, N, C * patch * patch)`, with `N
+    = (H // patch) * (W // patch)`. - Patch index `n = gi * (W // patch) + gj`, where `(gi, gj)` is the
+    patch''s grid row and column. Patches are numbered in row-major order over the grid. - Within a patch,
+    features are channel-major, then row, then column: `out[b, n, c*p*p + r*p + s] = images[b, c, gi*p
+    + r, gj*p + s]`, with `p = patch`.'
+  killed_by: test_matches_slicing_reference_on_random_images_with_several_patch_sizes
+  visible: hidden
+- file: reject_shares_memory_single_patch.py
+  mistake: drops the clone, so a whole-image patch shares memory with the input
+  clause: The result owns its memory. Writing into it must not change `images`, even when one patch covers
+    the whole image.
+  killed_by: test_single_patch_result_does_not_alias_the_input
+  visible: hidden
+- file: reject_float_roundtrip.py
+  mistake: passes values through float32, losing exact bits
+  clause: Values are copied exactly. Signed zeros, subnormal numbers and huge values are unchanged.
+  killed_by: test_matches_slicing_reference_on_random_images_with_several_patch_sizes
+  visible: hidden
+- file: reject_skips_width_check.py
+  mistake: checks only the height for divisibility
+  clause: 'Raises: `ValueError` when `images` is not 4-dimensional, when `patch` is not a positive integer,
+    or when `H` or `W` is not divisible by `patch`.'
+  killed_by: test_non_divisible_height_or_width_is_rejected_as_value_error
+  visible: hidden
+- file: reject_zeroes_input.py
+  mistake: zeroes the caller input after copying
+  clause: Must not mutate inputs.
+  killed_by: test_matches_slicing_reference_on_random_images_with_several_patch_sizes
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

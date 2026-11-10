@@ -1,5 +1,5 @@
 id: dl/tensors-in-pytorch-and-tinygrad/p01-batched-pairwise-distances
-version: 3                      # bump when tests, tolerances or the contract change
+version: 4                      # bump when tests, tolerances or the contract change
 title: Batched pairwise squared distances
 language: python                # python | sql
 runtime: py-torch               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch

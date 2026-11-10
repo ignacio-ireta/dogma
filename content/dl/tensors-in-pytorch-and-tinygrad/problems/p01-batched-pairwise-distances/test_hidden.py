@@ -171,3 +171,8 @@ def test_inputs_are_not_mutated():
 def test_argument_with_wrong_rank_is_rejected_as_value_error():
     rejects(lambda: batched_sq_distances(torch.ones(1, 2), torch.ones(1, 2, 2)))
     rejects(lambda: batched_sq_distances(torch.ones(1, 2, 2), torch.ones(1, 2)))
+
+
+def test_batch_of_one_against_many_batches_is_rejected_as_value_error():
+    rejects(lambda: batched_sq_distances(torch.ones(1, 2, 2), torch.ones(3, 2, 2)))
+    rejects(lambda: batched_sq_distances(torch.ones(3, 2, 2), torch.ones(1, 2, 2)))
