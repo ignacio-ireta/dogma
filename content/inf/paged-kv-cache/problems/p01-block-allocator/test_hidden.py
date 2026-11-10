@@ -9,6 +9,16 @@ from hypothesis import strategies as st
 from submission import BlockAllocator, OutOfBlocksError
 
 
+def _raises(expected, call, mistake):
+    try:
+        call()
+    except expected:
+        return
+    except Exception as exc:
+        pytest.fail(f"{mistake}; raised {type(exc).__name__} instead")
+    pytest.fail(mistake)
+
+
 def outcome(call, *args):
     """Run a learner call; return ('ok', value) or ('err', exception class name)."""
     try:
@@ -75,7 +85,9 @@ def same_outcome(learner, expected, where: str) -> None:
         raise AssertionError(f"{where}: wrong return value (check the offset or the block id)")
 
 
-@pytest.mark.parametrize("seed", list(range(30)))
+@pytest.mark.parametrize(
+    "seed", list(range(30)), ids=[chr(97 + i // 26) + chr(97 + i % 26) for i in range(30)]
+)
 def test_random_operations_match_the_independent_model(seed):
     rng = random.Random(seed)  # noqa: S311 - seeded, reproducible model inputs
     num_blocks, block_size = rng.randint(1, 9), rng.randint(1, 4)
@@ -117,19 +129,28 @@ def test_block_table_returns_a_copy_that_cannot_corrupt_the_allocator():
 def test_exhaustion_on_allocate_is_named_and_changes_nothing():
     a = BlockAllocator(3, 4)
     a.allocate(0, 8)
-    with pytest.raises(OutOfBlocksError):
-        a.allocate(1, 9)
+    _raises(
+        OutOfBlocksError,
+        lambda: a.allocate(1, 9),
+        "allocate with too few free blocks must raise OutOfBlocksError",
+    )
     assert a.num_free_blocks == 1, "failed allocation must not take any blocks"
-    with pytest.raises(KeyError):
-        a.block_table(1)
+    _raises(
+        KeyError,
+        lambda: a.block_table(1),
+        "block_table of an unknown sequence must raise KeyError",
+    )
 
 
 def test_exhaustion_on_append_is_named_and_changes_nothing():
     a = BlockAllocator(2, 2)
     a.allocate(0, 2)
     a.allocate(1, 2)
-    with pytest.raises(OutOfBlocksError):
-        a.append_token(0)
+    _raises(
+        OutOfBlocksError,
+        lambda: a.append_token(0),
+        "append with no free block must raise OutOfBlocksError",
+    )
     assert a.num_tokens(0) == 2, "failed append must not store the token"
     assert a.block_table(0) == [0], "failed append must not change the block table"
 
@@ -173,8 +194,11 @@ def test_misuse_raises_the_named_error_for_each_operation():
     ids=["zero-blocks", "zero-block-size", "negative-blocks", "bool-blocks", "bool-block-size"],
 )
 def test_invalid_pool_sizes_raise_value_error(args):
-    with pytest.raises(ValueError):
-        BlockAllocator(*args)
+    _raises(
+        ValueError,
+        lambda: BlockAllocator(*args),
+        "invalid pool size must raise ValueError",
+    )
 
 
 @settings(max_examples=60, deadline=None, derandomize=True, report_multiple_bugs=False)
