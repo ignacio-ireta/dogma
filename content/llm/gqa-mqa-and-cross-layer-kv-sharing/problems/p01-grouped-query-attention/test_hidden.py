@@ -304,3 +304,18 @@ def test_n_kv_heads_not_dividing_n_heads_raises_value_error():
     assert problem is None, (
         f"n_kv_heads must divide n_heads, but this call was not rejected with ValueError: {problem}"
     )
+
+
+def test_bool_head_count_raises_even_when_shapes_fit():
+    # d_model = 2. With n_heads = True (1) and n_kv_heads = 1, every weight has shape (2, 2),
+    # so the weight-shape rule cannot be what rejects these calls: only the bool rule can.
+    X = torch.ones(1, 2, 2, dtype=torch.float64)
+    eye = torch.eye(2, dtype=torch.float64)
+    for call in (
+        lambda: grouped_query_attention(X, eye, eye, eye, eye, True, 1),
+        lambda: grouped_query_attention(X, eye, eye, eye, eye, 1, True),
+    ):
+        problem = _problem_or_none(call)
+        assert problem is None, (
+            "a bool head count must be rejected with ValueError, as the contract says"
+        )

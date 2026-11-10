@@ -1,7 +1,61 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_contiguous_view_merge.py
+  origin: freedom
+  freedom: merges heads with contiguous then view instead of reshape
+reject:
+- file: reject_accepts_bool_head_count.py
+  mistake: accepts True as a head count
+  clause: '`n_heads`, `n_kv_heads`: Python `int`s. `n_kv_heads >= 1`, `n_heads >= n_kv_heads`, and `n_kv_heads`
+    divides `n_heads`. `n_heads` divides `d_model`.'
+  killed_by: test_bool_head_count_raises_even_when_shapes_fit
+  visible: hidden
+- file: reject_skips_output_projection_for_single_token.py
+  mistake: skips the output projection when there is one token
+  clause: '`X`: `torch.float64`, shape `(B, L, d_model)`. `B >= 1`, `L >= 1`.'
+  killed_by: test_property_random_shapes_match_reference
+  visible: hidden
+- file: reject_query_projection_not_transposed.py
+  mistake: query projection uses X times W_q without the transpose
+  clause: '`W_q`: `torch.float64`, shape `(d_model, d_model)`, in PyTorch `nn.Linear` layout: a projection
+    is `y = x @ W.T`. Its output features are the `n_heads` query heads in order.'
+  killed_by: test_random_inputs_match_reference
+  visible: hidden
+- file: reject_interleaved_kv_feature_blocks.py
+  mistake: key features interleaved across heads, not contiguous blocks
+  clause: '`W_k`, `W_v`: `torch.float64`, shape `(n_kv_heads * d_head, d_model)`, also `nn.Linear` layout.
+    Output feature block `g` (rows `g*d_head .. (g+1)*d_head - 1`) is key or value head `g`.'
+  killed_by: test_random_inputs_match_reference
+  visible: hidden
+- file: reject_output_projection_without_transpose.py
+  mistake: output projection uses W_o without the transpose
+  clause: '`W_o`: `torch.float64`, shape `(d_model, d_model)`, `nn.Linear` layout. It maps the concatenated
+    heads to `d_model`.'
+  killed_by: test_random_inputs_match_reference
+  visible: hidden
+- file: reject_mask_skips_first_group.py
+  mistake: mask applied only to the heads of the first group
+  clause: '`mask`: `None`, or a `torch.bool` tensor of shape `(L, L)`. `mask[i, j]` is `True` when query
+    token `i` may attend to key token `j`. The mask is shared by all sequences and all heads.'
+  killed_by: test_mask_true_means_allowed_so_a_masked_row_copies_its_own_value
+  visible: public
+- file: reject_merge_heads_without_transpose.py
+  mistake: merges heads by reshape without transposing back
+  clause: 'Returns: `torch.float64`, shape `(B, L, d_model)`.'
+  killed_by: test_mask_true_means_allowed_so_a_masked_row_copies_its_own_value
+  visible: public
+- file: reject_fully_masked_check_only_whole_mask.py
+  mistake: checks only whether the whole mask is empty, not each row
+  clause: 'Raises `ValueError` when: `X` is not 3-D; any weight has the wrong shape (for example, a full-width
+    key projection when `n_kv_heads < n_heads`); `n_heads` or `n_kv_heads` is not a positive integer or
+    is a `bool`; `n_kv_heads` does not divide `n_heads`; `n_heads` does not divide `d_model`; `mask` is
+    not a `torch.bool` tensor of shape `(L, L)`; or some query row of `mask` has no `True` entry.'
+  killed_by: test_fully_masked_query_row_raises_value_error
+  visible: hidden
+uncovered:
+- clause: Must not mutate inputs.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

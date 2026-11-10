@@ -1,5 +1,5 @@
 id: llm/gqa-mqa-and-cross-layer-kv-sharing/p01-grouped-query-attention
-version: 3                      # bump when tests, tolerances or the contract change
+version: 4                      # bump when tests, tolerances or the contract change
 title: "Grouped-query attention forward pass"
 language: python                # python | sql
 runtime: py-torch               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
