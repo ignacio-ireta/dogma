@@ -1,7 +1,60 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_reciprocal_scaling.py
+  origin: freedom
+  freedom: scales the central difference by 0.5 over h instead of dividing by 2h, a different rounding
+    path
+reject:
+- file: reject_x_nan_only.py
+  mistake: checks only for NaN so an infinite x is not rejected
+  clause: '`x`: a finite real number (an int is fine). A non-finite `x` raises `ValueError`.'
+  killed_by: test_non_finite_x_raises_value_error
+  visible: hidden
+- file: reject_method_case_insensitive.py
+  mistake: accepts the method name in another letter case
+  clause: '`method`: exactly `"forward"` or `"central"`. Any other value raises `ValueError`. Do not fall
+    back to a default scheme.'
+  killed_by: test_method_name_must_match_exactly
+  visible: hidden
+- file: reject_forward_step_third_root.py
+  mistake: forward default step uses the central exponent
+  clause: '`h`: `None` for the default step, or a positive finite number. The default is $h = \varepsilon^{1/2}\max(1,|x|)$
+    for forward and $h = \varepsilon^{1/3}\max(1,|x|)$ for central, where $\varepsilon$ is the float64
+    machine epsilon (`np.finfo(np.float64).eps`). A zero, negative, NaN or infinite `h` raises `ValueError`.'
+  killed_by: test_forward_method_meets_its_first_order_accuracy_class
+  visible: hidden
+- file: reject_h_infinite_accepted.py
+  mistake: accepts an infinite h
+  clause: '`h`: `None` for the default step, or a positive finite number. The default is $h = \varepsilon^{1/2}\max(1,|x|)$
+    for forward and $h = \varepsilon^{1/3}\max(1,|x|)$ for central, where $\varepsilon$ is the float64
+    machine epsilon (`np.finfo(np.float64).eps`). A zero, negative, NaN or infinite `h` raises `ValueError`.'
+  killed_by: test_non_positive_or_non_finite_step_raises_value_error
+  visible: hidden
+- file: reject_default_step_ignores_sign.py
+  mistake: default step uses x instead of abs x so negative x gets a tiny step
+  clause: '`h`: `None` for the default step, or a positive finite number. The default is $h = \varepsilon^{1/2}\max(1,|x|)$
+    for forward and $h = \varepsilon^{1/3}\max(1,|x|)$ for central, where $\varepsilon$ is the float64
+    machine epsilon (`np.finfo(np.float64).eps`). A zero, negative, NaN or infinite `h` raises `ValueError`.'
+  killed_by: test_default_step_scales_with_large_x_for_both_schemes_and_signs
+  visible: hidden
+- file: reject_float32_central_result.py
+  mistake: returns the result rounded through float32
+  clause: 'Returns: a Python `float`.'
+  killed_by: test_central_error_on_cubic_is_exactly_h_squared
+  visible: public
+- file: reject_h_type_error.py
+  mistake: raises TypeError instead of ValueError for a bad h
+  clause: 'Raises: `ValueError` for an unknown `method`, a non-finite `x`, or an invalid `h`.'
+  killed_by: test_non_positive_or_non_finite_step_raises_value_error
+  visible: hidden
+- file: reject_writes_attribute_on_f.py
+  mistake: writes an attribute onto the callable it was given
+  clause: '`f`: a callable that takes one float and returns a real number. Only evaluate it; never change
+    anything it is given.'
+  killed_by: test_callable_argument_keeps_its_attributes_after_the_call
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

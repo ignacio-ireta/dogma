@@ -201,3 +201,17 @@ def test_default_central_step_near_the_origin_is_the_cube_root_of_epsilon():
         "at 0 is h squared, so the default step must be the cube root of machine epsilon times "
         "max(1, |x|)"
     )
+
+
+def test_callable_argument_keeps_its_attributes_after_the_call():
+    class Cube:
+        def __call__(self, t):
+            return t**3
+
+    f = Cube()
+    before = dict(vars(f))
+    for method in ("forward", "central"):
+        numerical_derivative(f, 1.5, method=method, h=0.1)
+    assert vars(f) == before, (
+        "f must only be evaluated: the call must not add, remove or change attributes of f"
+    )

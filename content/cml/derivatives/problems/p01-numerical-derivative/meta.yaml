@@ -1,5 +1,5 @@
 id: cml/derivatives/p01-numerical-derivative
-version: 3
+version: 4
 title: Numerical derivative
 language: python
 runtime: py-numpy
