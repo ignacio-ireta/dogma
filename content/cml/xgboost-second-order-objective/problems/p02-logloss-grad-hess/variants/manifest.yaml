@@ -2,6 +2,48 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_sigma_hessian.py
+  origin: freedom
+  freedom: Hessian as sigma times one minus sigma from the stable sigma, not the z form, only the last
+    digits differ
+reject:
+- file: reject_rejects_boolean_labels.py
+  mistake: rejects boolean labels which the Contract accepts
+  clause: '`y`: 1-D array-like, the same length as `margin`. Every entry is exactly `0` or `1`. Booleans
+    are accepted.'
+  killed_by: test_boolean_labels_are_accepted_and_return_float64
+  visible: hidden
+- file: reject_naive_sigmoid.py
+  mistake: naive sigmoid overflows for large negative margins
+  clause: '`margin`: 1-D array-like of finite floats. Magnitudes up to $10^4$ are valid input.'
+  killed_by: test_saturated_margins_are_finite_warning_free_and_exact
+  visible: hidden
+- file: reject_hess_float32.py
+  mistake: Hessian returned as float32 not float64
+  clause: 'Returns: `(grad, hess)`, two `float64` arrays of shape `(n,)`.'
+  killed_by: test_matches_closed_form_on_random_moderate_margins
+  visible: hidden
+- file: reject_grad_column.py
+  mistake: gradient returned as an n by 1 column not shape n
+  clause: 'Returns: `(grad, hess)`, two `float64` arrays of shape `(n,)`.'
+  killed_by: test_zero_margin_gives_half_probability_gradient_and_quarter_hessian
+  visible: public
+- file: reject_checks_only_negative_infinity.py
+  mistake: checks only for negative infinity so NaN and positive infinity pass
+  clause: 'Raises: `ValueError` when `y` and `margin` are not 1-D of the same length, when `y` has any
+    entry other than 0 or 1, or when `margin` has a non-finite entry.'
+  killed_by: test_invalid_inputs_raise_value_error
+  visible: hidden
+- file: reject_empty_margin_raises.py
+  mistake: raises on empty input which the Contract says returns empty arrays
+  clause: Empty input (length 0) returns two empty arrays.
+  killed_by: test_empty_input_returns_empty_float_arrays
+  visible: hidden
+- file: reject_rounds_margin_in_place.py
+  mistake: rounds the caller margin array in place
+  clause: Must not mutate inputs.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

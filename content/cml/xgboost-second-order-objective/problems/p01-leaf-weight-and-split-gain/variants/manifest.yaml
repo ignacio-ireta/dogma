@@ -2,6 +2,49 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_fsum_sums.py
+  origin: freedom
+  freedom: sums each side with math fsum instead of np sum, only the last digits differ
+reject:
+- file: reject_empty_side_nan.py
+  mistake: empty side gives a NaN gradient sum instead of zero
+  clause: '`g_left`, `g_right`: 1-D array-like of finite numbers. Either may be empty.'
+  killed_by: test_empty_right_side_with_positive_lambda_gives_zero_weight_and_gain_minus_gamma
+  visible: public
+- file: reject_rejects_zero_hessian_entries.py
+  mistake: rejects zero hessian entries which the Contract allows
+  clause: '`h_left`, `h_right`: 1-D array-like, the same length as the matching gradient array. Every
+    entry is finite and zero or positive.'
+  killed_by: test_zero_hessian_side_with_positive_lambda_is_accepted
+  visible: hidden
+- file: reject_rejects_zero_lambda.py
+  mistake: rejects a zero regulariser which the Contract allows
+  clause: '`reg_lambda`: finite real number, zero or positive.'
+  killed_by: test_opposite_gradients_give_opposite_leaf_weights
+  visible: public
+- file: reject_checks_only_left_denominator.py
+  mistake: checks the denominator of the left leaf only
+  clause: Each side must have $H + \lambda > 0$. An empty side therefore needs `reg_lambda > 0`, and so
+    does a side whose hessians sum to zero.
+  killed_by: test_empty_side_with_zero_lambda_raises_value_error
+  visible: hidden
+- file: reject_uses_parent_hessian_for_right_leaf.py
+  mistake: right leaf weight divides by the parent hessian sum
+  clause: 'Returns: `(w_left, w_right, gain)`, three Python `float` values.'
+  killed_by: test_worked_example_gives_leaf_weights_and_gain
+  visible: public
+- file: reject_type_error_on_negative_lambda.py
+  mistake: raises TypeError instead of ValueError for a bad regulariser
+  clause: 'Raises: `ValueError` for any violation of the rules above.'
+  killed_by: test_negative_reg_lambda_raises_value_error
+  visible: public
+- file: reject_sorts_gradients_in_place.py
+  mistake: sorts the caller gradient array in place
+  clause: Must not mutate inputs.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
+uncovered:
+- clause: '`gamma`: finite real number, zero or positive.'
+  reason: wrong solution survives, see notes
+sweeps:
+- reject
