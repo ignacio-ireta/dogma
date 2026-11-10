@@ -43,7 +43,7 @@ def test_float_values_are_copied_exactly():
     )
 
 
-@settings(max_examples=100, deadline=None)
+@settings(max_examples=100, deadline=None, report_multiple_bugs=False)
 @given(rectangular_matrices())
 def test_shape_swaps_rows_and_columns(matrix):
     n_rows, n_cols = len(matrix), len(matrix[0])
@@ -56,7 +56,7 @@ def test_shape_swaps_rows_and_columns(matrix):
     )
 
 
-@settings(max_examples=100, deadline=None)
+@settings(max_examples=100, deadline=None, report_multiple_bugs=False)
 @given(rectangular_matrices(min_cols=1))
 def test_transposing_twice_returns_the_original(matrix):
     assert transpose(transpose(matrix)) == matrix, (
@@ -64,7 +64,7 @@ def test_transposing_twice_returns_the_original(matrix):
     )
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(st.integers(min_value=0, max_value=5), st.integers(min_value=0, max_value=5))
 def test_ragged_rows_always_raise_value_error(len_a, len_b):
     assume(len_a != len_b)
