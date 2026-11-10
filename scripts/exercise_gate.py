@@ -321,11 +321,14 @@ def cmd_ledger(args: argparse.Namespace) -> int:
 # --- manifest: reading, writing and rollback ----------------------------------------------------
 
 _ACCEPT_BLIND = "accept_blind"
-# Style and complexity rules. A variant is evidence, not reference code: a blind solution with
-# too many branches, or a zip without strict=, is what a learner writes. Findings in these
-# families are marked in the file with noqa. Anything else (syntax, undefined names, unused
-# variables) still refuses the variant.
-_STYLE_RULES = "B,C4,SIM,RUF,PTH,N,S,T20,PL,UP,E501"
+# A variant is evidence, not reference code: a blind solution with too many branches, a zip
+# without strict= or a leftover variable is what a learner writes. Findings of every enabled
+# rule outside _REAL_ERRORS are marked in the file with noqa, as is an unused variable. What
+# stays refused: syntax errors, undefined names and the other pyflakes and import findings.
+# The rules are named by exclusion on purpose: selecting families on the command line would
+# switch rules back on that the repository's configuration ignores.
+_REAL_ERRORS = "F,W,I,E4,E7,E9"
+_UNUSED_VARIABLE = "F841"
 _NOQA_ROUNDS = 2
 
 
@@ -503,7 +506,8 @@ def install_variant(problem: audit.Problem, source: Path, name: str) -> Path:
 def _tidy(target: Path) -> tuple[str, str] | None:
     """Format and lint one installed variant. Returns (step, output) for a failure, else None.
 
-    Safe fixes are applied. Style findings that remain are marked with noqa (``_STYLE_RULES``).
+    Safe fixes are applied. Style findings that remain are marked with noqa (``_REAL_ERRORS``
+    names what is never marked).
     """
     ok, output = _ruff(("format",), target)
     if not ok:
@@ -513,7 +517,8 @@ def _tidy(target: Path) -> tuple[str, str] | None:
         ok, output = _ruff(("check",), target)
         if ok:
             return None
-        _ruff(("check", "--select", _STYLE_RULES, "--add-noqa"), target)
+        _ruff(("check", "--ignore", _REAL_ERRORS, "--add-noqa"), target)
+        _ruff(("check", "--select", _UNUSED_VARIABLE, "--add-noqa"), target)
         _ruff(("format",), target)
     ok, output = _ruff(("check",), target)
     return None if ok else ("check", output)
