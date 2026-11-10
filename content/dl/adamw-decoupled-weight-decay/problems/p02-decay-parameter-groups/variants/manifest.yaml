@@ -1,7 +1,53 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_exact_type_check_rejects_parameter.py
+  mistake: rejects nn.Parameter values because the type check is exact
+  clause: '`named_params`: a non-empty list of `(name, tensor)` pairs. Names are unique strings. Values
+    are `torch.Tensor` objects.'
+  killed_by: test_parameter_objects_are_accepted_and_kept_by_identity
+  visible: hidden
+- file: reject_duplicate_names_checked_for_matrices_only.py
+  mistake: checks duplicate names only among matrices and not among one-dimensional tensors
+  clause: Raises `ValueError` for an empty list, duplicate names, a value that is not a tensor, or a `weight_decay`
+    that is negative or not finite.
+  killed_by: test_duplicate_names_on_one_dimensional_tensors_are_rejected
+  visible: hidden
+- file: reject_bias_substring_match.py
+  mistake: bias matched as a name suffix so a name ending in lm_bias is left undecayed
+  clause: 'A tensor is **decayed** when it has at least two dimensions and its final dotted name component
+    is not `"bias"`. Every other tensor is **undecayed**. A two-dimensional tensor named `...bias` is
+    undecayed. Classification uses only the tensor''s rank and name, never the module type: - an embedding
+    table such as `embed.weight` is two-dimensional, so it **is** decayed; - a one-dimensional norm gain
+    such as `norm.weight` is **not** decayed, whatever its name; - only the final component counts: `attn.bias_scale.weight`
+    and `head.lm_bias` are two-dimensional and not named `bias`, so they **are** decayed.'
+  killed_by: test_bias_inside_a_longer_name_does_not_count_as_a_bias
+  visible: hidden
+- file: reject_negative_decay_accepted.py
+  mistake: accepts a negative weight decay
+  clause: '`weight_decay`: finite and `>= 0`.'
+  killed_by: test_invalid_weight_decay_raises_value_error
+  visible: hidden
+- file: reject_empty_undecayed_group_kept.py
+  mistake: keeps an empty undecayed group
+  clause: 'Return a list of dicts: - the decayed group first, `{"params": [...], "weight_decay": weight_decay}`
+    - then the undecayed group, `{"params": [...], "weight_decay": 0.0}` - omit a group that would be
+    empty'
+  killed_by: test_only_decayed_parameters_give_a_single_group
+  visible: public
+- file: reject_group_sorted_by_name.py
+  mistake: sorts the tensors of each group by name
+  clause: Within each group, keep the original order. Place the caller's tensor objects in the groups;
+    do not copy them.
+  killed_by: test_membership_follows_rank_and_bias_name
+  visible: hidden
+- file: reject_input_list_popped.py
+  mistake: removes the last pair from the caller list
+  clause: Must not mutate the input list or its tensors.
+  killed_by: test_membership_follows_rank_and_bias_name
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

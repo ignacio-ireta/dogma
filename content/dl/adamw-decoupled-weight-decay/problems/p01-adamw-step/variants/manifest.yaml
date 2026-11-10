@@ -1,7 +1,67 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_addcdiv_fused_update.py
+  origin: freedom
+  freedom: one fused addcdiv call in place of a divide and a subtract
+reject:
+- file: reject_state_moment_mutated.py
+  mistake: updates the carried first moment in place
+  clause: Must not mutate inputs.
+  killed_by: test_carried_over_first_moment_is_not_changed_by_the_update
+  visible: hidden
+- file: reject_zeros_default_float32_state.py
+  mistake: creates moments in the float32 default dtype
+  clause: Returns `(new_params, (new_m, new_v, t_new))`, with the input shapes and dtypes.
+  killed_by: test_moments_keep_the_bfloat16_dtype_of_their_parameter
+  visible: hidden
+- file: reject_state_t_incremented_after_bias.py
+  mistake: bias correction uses the step count from before this update
+  clause: '`state`: `None`, or the tuple `(m, v, t)` with one moment tensor per parameter and `t` a non-negative
+    `int` (not `bool`) counting updates taken. `t` starts at 0 and is incremented before bias correction.'
+  killed_by: test_matches_torch_adamw_over_several_steps
+  visible: hidden
+- file: reject_eps_inside_sqrt.py
+  mistake: epsilon added inside the square root
+  clause: 'Per tensor, with the value `p` before this update and the raw gradient `g`: - shrink: `p_decayed
+    = p * (1 - lr * weight_decay)` - `m = beta1 * m + (1 - beta1) * g`, `v = beta2 * v + (1 - beta2) *
+    g * g` - `m_hat = m / (1 - beta1**t_new)`, `v_hat = v / (1 - beta2**t_new)` - `p_new = p_decayed -
+    lr * m_hat / (sqrt(v_hat) + eps)`'
+  killed_by: test_matches_torch_adamw_over_several_steps
+  visible: hidden
+- file: reject_state_bool_t_accepted.py
+  mistake: accepts a bool as the step count in the state
+  clause: Raises `ValueError` for mismatched lengths or shapes, out-of-range or non-finite scalars, and
+    malformed state.
+  killed_by: test_boolean_step_count_in_state_is_rejected
+  visible: hidden
+- file: reject_weight_decay_added_to_gradient.py
+  mistake: weight decay added to the gradient as in L2 regularisation
+  clause: 'Per tensor, with the value `p` before this update and the raw gradient `g`: - shrink: `p_decayed
+    = p * (1 - lr * weight_decay)` - `m = beta1 * m + (1 - beta1) * g`, `v = beta2 * v + (1 - beta2) *
+    g * g` - `m_hat = m / (1 - beta1**t_new)`, `v_hat = v / (1 - beta2**t_new)` - `p_new = p_decayed -
+    lr * m_hat / (sqrt(v_hat) + eps)`'
+  killed_by: test_zero_gradient_only_shrinks_the_weight_by_the_decay_factor
+  visible: public
+- file: reject_lr_zero_rejected.py
+  mistake: rejects a zero learning rate that the contract allows
+  clause: '`lr` is finite and `>= 0`. `beta1`, `beta2` are in `[0, 1)`. `eps` is finite and `> 0`. `weight_decay`
+    is finite and `>= 0`.'
+  killed_by: test_zero_learning_rate_is_accepted_and_leaves_weights_unchanged
+  visible: hidden
+- file: reject_zero_dim_parameter_rejected.py
+  mistake: rejects a zero-dimensional parameter that the contract allows
+  clause: '`params`, `grads`: lists of floating-point tensors of equal length. `grads[i]` has the same
+    shape and dtype as `params[i]`.'
+  killed_by: test_zero_dimensional_parameter_is_updated_like_torch_adamw
+  visible: hidden
+uncovered:
+- clause: '`params`, `grads`: lists of floating-point tensors of equal length. `grads[i]` has the same
+    shape and dtype as `params[i]`.'
+  reason: wrong solution survives, see notes
+- clause: '`lr` is finite and `>= 0`. `beta1`, `beta2` are in `[0, 1)`. `eps` is finite and `> 0`. `weight_decay`
+    is finite and `>= 0`.'
+  reason: wrong solution survives, see notes
+sweeps:
+- reject

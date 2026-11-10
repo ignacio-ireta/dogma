@@ -224,3 +224,26 @@ def test_names_without_a_dot_follow_the_same_decay_rule():
             "a one-dimensional tensor named bias without a dot must be undecayed",
             pytrace=False,
         )
+
+
+def test_parameter_objects_are_accepted_and_kept_by_identity():
+    # nn.Parameter is a torch.Tensor, so the values from model.named_parameters() are valid
+    weight = torch.nn.Parameter(torch.zeros(2, 3))
+    try:
+        groups = build_adamw_groups([("linear.weight", weight)], weight_decay=0.1)
+    except ValueError:
+        raise AssertionError("an nn.Parameter is a torch.Tensor and must be accepted") from None
+    assert groups[0]["params"][0] is weight, (
+        "the decayed group must hold the parameter object itself, not a copy"
+    )
+
+
+def test_duplicate_names_on_one_dimensional_tensors_are_rejected():
+    # names must be unique whatever the rank of the tensor they belong to
+    gain = torch.ones(3)
+    bias = torch.zeros(3)
+    try:
+        build_adamw_groups([("norm.weight", gain), ("norm.weight", bias)], weight_decay=0.1)
+    except ValueError:
+        return
+    raise AssertionError("duplicate names on one-dimensional tensors must raise ValueError")

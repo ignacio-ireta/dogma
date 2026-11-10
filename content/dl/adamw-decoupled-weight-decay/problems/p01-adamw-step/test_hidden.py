@@ -256,3 +256,69 @@ def test_eps_must_be_finite_and_positive(eps):
         lambda: adamw_step([zeros], [zeros], None, lr=LR, eps=eps, weight_decay=0.1),
         "eps outside its allowed range (must be finite and positive)",
     )
+
+
+def test_carried_over_first_moment_is_not_changed_by_the_update():
+    # the moments in a carried-over state are inputs and must keep their values
+    params = [torch.tensor([1.0, -2.0], dtype=torch.float64)]
+    _, state = adamw_step(params, [torch.tensor([0.5, 3.0], dtype=torch.float64)], None, lr=0.1)
+    m_before = [t.clone() for t in state[0]]
+    adamw_step(params, [torch.tensor([-1.0, 2.0], dtype=torch.float64)], state, lr=0.1)
+    torch.testing.assert_close(
+        state[0][0],
+        m_before[0],
+        atol=0,
+        rtol=0,
+        msg="the carried-over first moment must not be changed in place",
+    )
+
+
+def test_moments_keep_the_bfloat16_dtype_of_their_parameter():
+    # the returned moments follow the input dtype, not the float32 default
+    p = torch.tensor([1.0, -2.0], dtype=torch.bfloat16)
+    g = torch.tensor([0.5, 3.0], dtype=torch.bfloat16)
+    _, (new_m, new_v, _) = adamw_step([p], [g], None, lr=0.1)
+    assert new_m[0].dtype == torch.bfloat16, "the first moment must have the dtype of its parameter"
+    assert new_v[0].dtype == torch.bfloat16, (
+        "the second moment must have the dtype of its parameter"
+    )
+
+
+def test_zero_learning_rate_is_accepted_and_leaves_weights_unchanged():
+    # lr = 0 is a valid non-negative rate: shrink = 1 and the Adam step is multiplied by 0
+    params = [torch.tensor([1.0, -2.0], dtype=torch.float64)]
+    grads = [torch.tensor([0.5, 3.0], dtype=torch.float64)]
+    try:
+        new_params, _ = adamw_step(params, grads, None, lr=0.0, weight_decay=0.5)
+    except ValueError:
+        raise AssertionError("a zero learning rate is a valid input and must be accepted") from None
+    torch.testing.assert_close(
+        new_params[0],
+        params[0],
+        atol=0,
+        rtol=0,
+        msg="a zero learning rate must be accepted and must leave the weights unchanged",
+    )
+
+
+def test_zero_dimensional_parameter_is_updated_like_torch_adamw():
+    # a scalar weight is a floating-point tensor of shape () and must be accepted
+    p = torch.tensor(1.0, dtype=torch.float64)
+    g = torch.tensor(0.5, dtype=torch.float64)
+    ref = torch.nn.Parameter(p.clone())
+    optimizer = torch.optim.AdamW([ref], lr=0.1, weight_decay=0.5)
+    ref.grad = g.clone()
+    optimizer.step()
+    try:
+        new_params, _ = adamw_step([p], [g], None, lr=0.1, weight_decay=0.5)
+    except ValueError:
+        raise AssertionError(
+            "a zero-dimensional parameter is a valid tensor and must be accepted"
+        ) from None
+    torch.testing.assert_close(
+        new_params[0],
+        ref.detach(),
+        atol=1e-10,
+        rtol=1e-10,
+        msg="a zero-dimensional parameter must be updated as torch.optim.AdamW updates it",
+    )

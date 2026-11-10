@@ -1,5 +1,5 @@
 id: dl/adamw-decoupled-weight-decay/p01-adamw-step
-version: 2
+version: 3
 title: "One AdamW step with decoupled weight decay"
 language: python
 runtime: py-torch
