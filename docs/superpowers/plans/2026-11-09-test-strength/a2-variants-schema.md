@@ -25,26 +25,30 @@ VARIANT_ACCEPT_PATTERN = r"^accept_[a-z0-9_]+\.(py|sql)$"
 VARIANT_REJECT_PATTERN = r"^reject_[a-z0-9_]+\.(py|sql)$"
 TEST_FUNCTION_PATTERN = r"^test_[A-Za-z0-9_]+$"
 
+
 class AcceptVariant(ContentModel):
-    file: str            # matches VARIANT_ACCEPT_PATTERN
+    file: str  # matches VARIANT_ACCEPT_PATTERN
     origin: Literal["blind", "freedom"]
-    freedom: str | None = None   # what this solution does differently from the reference
+    freedom: str | None = None  # what this solution does differently from the reference
     clause: str | None = None
 
+
 class RejectVariant(ContentModel):
-    file: str            # matches VARIANT_REJECT_PATTERN
-    mistake: str         # min_length 1
-    clause: str          # min_length 1
-    killed_by: str       # matches TEST_FUNCTION_PATTERN
+    file: str  # matches VARIANT_REJECT_PATTERN
+    mistake: str  # min_length 1
+    clause: str  # min_length 1
+    killed_by: str  # matches TEST_FUNCTION_PATTERN
     visible: Literal["public", "hidden"]
     message_has: str | None = None
 
+
 class UncoveredClause(ContentModel):
-    clause: str          # min_length 1
-    reason: str          # min_length 1
+    clause: str  # min_length 1
+    reason: str  # min_length 1
+
 
 class VariantsManifest(ContentModel):
-    problem_version: int           # ge 1
+    problem_version: int  # ge 1
     accept: tuple[AcceptVariant, ...] = ()
     reject: tuple[RejectVariant, ...] = ()
     uncovered: tuple[UncoveredClause, ...] = ()

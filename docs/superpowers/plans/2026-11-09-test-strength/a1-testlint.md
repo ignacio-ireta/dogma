@@ -22,11 +22,13 @@ RULES: tuple[str, ...] = (
     "HIDDEN_ASSERT_MESSAGE",
 )
 
+
 @dataclass(frozen=True)
 class LintFinding:
-    rule: str      # one of RULES
-    line: int      # 1-based line in the source
-    message: str   # the fixed sentence for the rule, below
+    rule: str  # one of RULES
+    line: int  # 1-based line in the source
+    message: str  # the fixed sentence for the rule, below
+
 
 def lint_hidden_tests(source: str) -> list[LintFinding]: ...
 def id_leaks(names: Iterable[str]) -> list[str]: ...

@@ -34,7 +34,7 @@ uv run --frozen --group torch python scripts/exercise_gate.py clauses --out <OUT
 **`HIDDEN_ASSERT_MESSAGE` on an `assert`.** Add a message. Change nothing in the condition.
 
 ```python
-assert out.shape == (n, k)                       # before
+assert out.shape == (n, k)  # before
 assert out.shape == (n, k), "wrong output shape: one row per sample, one column per class"
 ```
 
@@ -45,7 +45,7 @@ For an assert that spans lines in parentheses, the message goes after the closin
 `torch.testing.assert_close`. Change no other argument.
 
 ```python
-np.testing.assert_allclose(got, want, rtol=1e-9)                                   # before
+np.testing.assert_allclose(got, want, rtol=1e-9)  # before
 np.testing.assert_allclose(got, want, rtol=1e-9, err_msg="values differ from the reference")
 ```
 
@@ -83,7 +83,7 @@ If it has no `@settings`, add this line directly above `@given(...)`, and make s
 **`HIDDEN_BARE_RAISES`.** This is the one fix that changes code. Use it only for the plain form:
 
 ```python
-with pytest.raises(ValueError):                                                     # before
+with pytest.raises(ValueError):  # before
     solve(bad_input)
 ```
 
