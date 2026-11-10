@@ -228,3 +228,25 @@ def test_invalid_arguments_raise_value_error():
                 "invalid input must raise ValueError, not another exception type", pytrace=False
             )
         pytest.fail(message, pytrace=False)
+
+
+def test_one_dimensional_single_feature_keeps_shape():
+    # A length-one vector is constant, so its centred value is zero and the output is the bias.
+    # The output must keep the input's shape (1,), not collapse to a scalar.
+    x = _randn((1,), 111)
+    weight, bias = _randn((1,), 112), _randn((1,), 113)
+    y = _call(x, weight, bias)
+    _close(y, bias, "a one-dimensional input must return a tensor of the same shape")
+
+
+def test_non_contiguous_three_dimensional_input_is_normalized():
+    # A transposed tensor is a valid float input of shape (2, 3, 5) with non-contiguous memory.
+    base = _randn((5, 3, 2), 121)
+    x = base.transpose(0, 2)
+    weight, bias = _randn((5,), 122), _randn((5,), 123)
+    y = _call(x, weight, bias)
+    _close(
+        y,
+        _oracle(x, weight, bias),
+        "a valid non-contiguous input must be normalized over its last dimension like any other",
+    )

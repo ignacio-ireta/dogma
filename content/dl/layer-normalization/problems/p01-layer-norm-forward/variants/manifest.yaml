@@ -1,7 +1,65 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_rsqrt_multiply.py
+  origin: freedom
+  freedom: multiplies by the reciprocal square root instead of dividing by the square root
+reject:
+- file: reject_eps_zero_allowed.py
+  mistake: accepts eps equal to zero
+  clause: 'Raises `ValueError` when: `x` is a 0-dimensional or non-floating tensor; `D == 0`; `weight`
+    or `bias` does not have shape `(D,)`; `eps <= 0`.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_eps_outside_std.py
+  mistake: adds eps to the standard deviation instead of inside the square root
+  clause: '`eps`: float `> 0`, added to the variance inside the square root.'
+  killed_by: test_matches_reference_over_random_leading_shapes
+  visible: hidden
+- file: reject_second_moment_variance.py
+  mistake: variance as E of x squared minus squared mean without centring first
+  clause: 'Statistics: the mean and the **biased** variance (divide by `D`) over the last dimension, with
+    the mean subtracted before squaring.'
+  killed_by: test_large_common_offset_keeps_statistics_accurate
+  visible: hidden
+- file: reject_float64_output.py
+  mistake: always returns float64 so float32 input gets a float64 result
+  clause: 'Returns: a tensor with the shape and dtype of `x`, equal to `weight * (x - mean) / sqrt(var
+    + eps) + bias`.'
+  killed_by: test_float32_inputs_return_float32
+  visible: hidden
+- file: reject_weight_clamped_in_place.py
+  mistake: clamps weight in place after use so the caller weight changes
+  clause: '`weight`, `bias`: tensors of shape `(D,)`. Must not be modified.'
+  killed_by: test_matches_reference_over_random_leading_shapes
+  visible: hidden
+- file: reject_centres_input_in_place.py
+  mistake: centres x in place so the caller tensor changes
+  clause: Must not mutate inputs.
+  killed_by: test_matches_reference_over_random_leading_shapes
+  visible: hidden
+- file: reject_one_dimensional_squeeze.py
+  mistake: squeeze drops a length-one feature dimension on a one-dimensional input
+  clause: '`x`: floating-point tensor with `ndim >= 1`, shape `(..., D)`, `D >= 1`. Leading dimensions
+    may be any size, including zero. Must not be modified.'
+  killed_by: test_one_dimensional_single_feature_keeps_shape
+  visible: hidden
+- file: reject_view_on_noncontiguous.py
+  mistake: view flattens a non-contiguous three-dimensional input and fails
+  clause: '`x`: floating-point tensor with `ndim >= 1`, shape `(..., D)`, `D >= 1`. Leading dimensions
+    may be any size, including zero. Must not be modified.'
+  killed_by: test_non_contiguous_three_dimensional_input_is_normalized
+  visible: hidden
+uncovered:
+- clause: 'Allowed: Python standard library and PyTorch tensor operations, such as `mean`, `sqrt`, `clone`,
+    and broadcasting.'
+  reason: allowed-library list, not a complexity promise, runbook gives no wrong solution for a list of
+    allowed tools
+- clause: 'Not allowed: `torch.nn` (this covers `torch.nn.functional`, `nn` modules and `from torch import
+    nn`), `torch.ops`, and any library routine that normalizes the last dimension as a whole: `torch.layer_norm`,
+    `torch.native_layer_norm`, `torch.group_norm` (a single group normalizes over all features), and `torch.instance_norm`.
+    Write the statistics yourself.'
+  reason: ban on library routines, not a complexity promise, runbook gives no wrong solution for a ban
+sweeps:
+- reject
