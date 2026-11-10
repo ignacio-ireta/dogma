@@ -2,6 +2,64 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_nan_keeps_sign.py
+  origin: freedom
+  freedom: NaN keeps the sign bit of x, the Contract does not say what sign a NaN has
+reject:
+- file: reject_infinity_sign_dropped.py
+  mistake: negative infinity returned as positive infinity
+  clause: 'Returns: `float`. - NaN returns NaN. `+inf` and `-inf` return themselves. - A zero or a value
+    that rounds to zero keeps the sign of `x`, so `-0.0` stays `-0.0`. - Overflow: if the rounded magnitude
+    would be larger than the largest finite value of the format, the result is the infinity with the sign
+    of `x`. This includes values at or above the midpoint between the largest finite value and the next
+    power of two.'
+  killed_by: test_nan_and_infinities_pass_through_and_zero_keeps_its_sign
+  visible: hidden
+- file: reject_underflow_loses_sign.py
+  mistake: negative value that underflows returns positive zero
+  clause: 'Returns: `float`. - NaN returns NaN. `+inf` and `-inf` return themselves. - A zero or a value
+    that rounds to zero keeps the sign of `x`, so `-0.0` stays `-0.0`. - Overflow: if the rounded magnitude
+    would be larger than the largest finite value of the format, the result is the infinity with the sign
+    of `x`. This includes values at or above the midpoint between the largest finite value and the next
+    power of two.'
+  killed_by: test_tiny_negative_value_underflows_to_negative_zero
+  visible: public
+- file: reject_largest_finite_overflows.py
+  mistake: largest finite value overflows to infinity
+  clause: 'Returns: `float`. - NaN returns NaN. `+inf` and `-inf` return themselves. - A zero or a value
+    that rounds to zero keeps the sign of `x`, so `-0.0` stays `-0.0`. - Overflow: if the rounded magnitude
+    would be larger than the largest finite value of the format, the result is the infinity with the sign
+    of `x`. This includes values at or above the midpoint between the largest finite value and the next
+    power of two.'
+  killed_by: test_fp16_just_below_overflow_midpoint_rounds_down
+  visible: public
+- file: reject_bool_mantissa_accepted.py
+  mistake: bool mantissa_bits accepted
+  clause: Raises `ValueError` when a format parameter is out of range or is a `bool`.
+  killed_by: test_bool_format_parameters_raise_value_error
+  visible: hidden
+- file: reject_exponent_bits_upper_seven.py
+  mistake: exponent_bits of 8 rejected
+  clause: '`exponent_bits`: `int`, `2 <= exponent_bits <= 8`.'
+  killed_by: test_bf16_tie_between_one_and_next_value_rounds_to_even_one
+  visible: public
+- file: reject_mantissa_bits_upper_twenty_two.py
+  mistake: mantissa_bits of 23 rejected
+  clause: '`mantissa_bits`: `int`, `0 <= mantissa_bits <= 23`.'
+  killed_by: test_twenty_three_mantissa_bits_is_a_valid_format
+  visible: hidden
+- file: reject_bias_bound_loose.py
+  mistake: bias equal to two to the exponent_bits accepted
+  clause: '`bias`: `int`, `0 <= bias < 2**exponent_bits`.'
+  killed_by: test_invalid_format_parameters_raise_value_error
+  visible: hidden
+- file: reject_infinite_input_rejected.py
+  mistake: infinite input raises instead of passing through
+  clause: '`x`: `float`. NaN and infinities are allowed.'
+  killed_by: test_nan_and_infinities_pass_through_and_zero_keeps_its_sign
+  visible: hidden
+uncovered:
+- clause: Must not mutate inputs.
+  reason: inputs are a float and ints, which cannot be changed in place
+sweeps:
+- reject

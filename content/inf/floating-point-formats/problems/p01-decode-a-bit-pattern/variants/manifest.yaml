@@ -1,7 +1,56 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_nan_keeps_sign.py
+  origin: freedom
+  freedom: NaN keeps the sign bit of its word, the Contract does not say what sign a NaN has
+reject:
+- file: reject_bool_bias_accepted.py
+  mistake: bool bias accepted as the integer 1
+  clause: Raises `ValueError` when any argument is out of range, when any argument is a `bool`, or when
+    `bits` does not fit in the total width.
+  killed_by: test_bool_bias_is_rejected_as_a_bool_argument
+  visible: hidden
+- file: reject_negative_zero_returned_positive.py
+  mistake: positive zero returned for a set sign bit
+  clause: 'Returns: `float`. The value is exact, so no rounding happens here.'
+  killed_by: test_every_fp16_pattern_matches_ieee_half_precision
+  visible: hidden
+- file: reject_rounds_result_to_six_digits.py
+  mistake: result rounded to six significant digits
+  clause: 'Returns: `float`. The value is exact, so no rounding happens here.'
+  killed_by: test_fp16_smallest_subnormal_is_two_to_the_minus_24
+  visible: public
+- file: reject_bits_upper_bound_inclusive.py
+  mistake: bits equal to two to the width accepted
+  clause: Raises `ValueError` when any argument is out of range, when any argument is a `bool`, or when
+    `bits` does not fit in the total width.
+  killed_by: test_bool_arguments_and_bits_too_wide_raise_value_error
+  visible: hidden
+- file: reject_exponent_bits_upper_seven.py
+  mistake: exponent_bits of 8 rejected
+  clause: '`exponent_bits`: `int`, `2 <= exponent_bits <= 8`.'
+  killed_by: test_seeded_random_fp32_patterns_match_ieee_single_precision
+  visible: hidden
+- file: reject_mantissa_bits_upper_twenty_two.py
+  mistake: mantissa_bits of 23 rejected
+  clause: '`mantissa_bits`: `int`, `0 <= mantissa_bits <= 23`.'
+  killed_by: test_seeded_random_fp32_patterns_match_ieee_single_precision
+  visible: hidden
+- file: reject_bias_upper_bound_loose.py
+  mistake: bias equal to two to the exponent_bits accepted
+  clause: '`bias`: `int`, `0 <= bias < 2**exponent_bits`.'
+  killed_by: test_out_of_range_format_parameters_raise_value_error
+  visible: hidden
+- file: reject_width_without_sign_bit.py
+  mistake: width leaves out the sign bit so signed words are rejected
+  clause: '`bits`: `int`, `0 <= bits < 2**(1 + exponent_bits + mantissa_bits)`. The sign bit is the most
+    significant bit of that width.'
+  killed_by: test_e5m2_largest_finite_value_is_57344
+  visible: public
+uncovered:
+- clause: Must not mutate inputs (inputs are ints, so this is automatic; do not keep state between calls).
+  reason: inputs are ints, which cannot be changed in place
+sweeps:
+- reject

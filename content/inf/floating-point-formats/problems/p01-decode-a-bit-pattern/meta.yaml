@@ -1,5 +1,5 @@
 id: inf/floating-point-formats/p01-decode-a-bit-pattern
-version: 2                      # bump when tests, tolerances or the contract change
+version: 3                      # bump when tests, tolerances or the contract change
 title: "Decode a floating-point bit pattern"
 language: python                # python | sql
 runtime: py-numpy               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch

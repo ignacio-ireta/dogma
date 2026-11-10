@@ -215,3 +215,11 @@ def test_two_exponent_bits_is_a_valid_format():
         assert got == want, (
             "two-exponent-bit format decoded wrong: check the exponent field and the implicit 1"
         )
+
+
+def test_bool_bias_is_rejected_as_a_bool_argument():
+    # bias = True is the integer 1, and 0 <= 1 < 2**5 would pass the range check. The Contract
+    # still says a bool argument raises ValueError, whichever argument it is.
+    # With bias 1 the fp16 pattern 0x3C00 would decode to 16384.0, so a wrong accept is visible.
+    problem = _expect_value_error(lambda: decode_float_bits(0x3C00, 5, 10, True))
+    assert problem is None, f"bool bias must be rejected: {problem}"
