@@ -1,7 +1,67 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_reversed_sum.py
+  origin: freedom
+  freedom: sums the expected target over the actions in reverse order, so only the last digits differ
+reject:
+- file: reject_rejects_numpy_integer_index.py
+  mistake: refuses NumPy integer indices such as np.int64, which are integers
+  clause: '`s`, `a`: integer indices with `0 <= s < S` and `0 <= a < A`.'
+  killed_by: test_numpy_integer_indices_are_accepted_as_integer_indices
+  visible: hidden
+- file: reject_rejects_integer_table.py
+  mistake: refuses integer tables although the Contract allows integers
+  clause: '`Q`: 2-D real array-like of shape `(S, A)` with `S >= 1` and `A >= 1`. Entries are finite.
+    Integers are allowed.'
+  killed_by: test_outputs_are_float_tables_of_the_input_shape
+  visible: hidden
+- file: reject_rejects_integer_reward.py
+  mistake: refuses integer rewards although a finite real reward is allowed
+  clause: '`r`: finite real reward.'
+  killed_by: test_outputs_are_float_tables_of_the_input_shape
+  visible: hidden
+- file: reject_treats_zero_next_state_as_terminal.py
+  mistake: treats next state 0 as terminal because zero is falsy
+  clause: '`s_next`: integer state in `[0, S)`, or `None` when the next state is terminal.'
+  killed_by: test_random_tables_match_explicit_policy_oracle
+  visible: hidden
+- file: reject_checks_a_next_when_terminal.py
+  mistake: validates a_next even when the next state is terminal
+  clause: '`a_next` (`sarsa_update` only): integer action in `[0, A)`. It is ignored when `s_next is None`,
+    so it may be `None` then.'
+  killed_by: test_terminal_next_state_targets_the_reward_alone
+  visible: public
+- file: reject_alpha_upper_bound_exclusive.py
+  mistake: rejects the boundary value 1 for alpha gamma and epsilon
+  clause: '`alpha`, `gamma`, `epsilon`: real numbers in `[0, 1]`.'
+  killed_by: test_sarsa_target_uses_the_action_taken_next
+  visible: hidden
+- file: reject_sarsa_bootstraps_from_max.py
+  mistake: Sarsa bootstraps from the max over next actions instead of the action taken
+  clause: 'Target: `y = r` when `s_next is None`. Otherwise `y = r + gamma * Q[s_next, a_next]` for Sarsa,
+    and `y = r + gamma * sum_b pi(b) * Q[s_next, b]` for expected Sarsa.'
+  killed_by: test_sarsa_example_bootstraps_from_the_action_taken_next
+  visible: public
+- file: reject_tie_share_not_split.py
+  mistake: gives every tied action the full exploit share instead of splitting it
+  clause: 'Policy `pi` for expected Sarsa, with `k` the number of actions tied for the largest value of
+    `Q[s_next, :]`: `pi(b) = epsilon / A + (1 - epsilon) / k` for each tied action, and `pi(b) = epsilon
+    / A` for every other action. Ties are exact equality, and the exploit share `1 - epsilon` is split
+    evenly among the tied actions.'
+  killed_by: test_expected_sarsa_matches_hand_computed_tie_case
+  visible: hidden
+uncovered:
+- clause: 'Update: `Q_new[s, a] = Q[s, a] + alpha * (y - Q[s, a])`. Every other entry is unchanged.'
+  reason: cap of eight wrong solutions per problem
+- clause: 'Returns: new `float64` array of shape `(S, A)`.'
+  reason: cap of eight wrong solutions per problem
+- clause: Raises `ValueError` when `Q` is not a non-empty 2-D real array, when an index is out of range
+    or not an integer, when a reward or value is not finite, or when `alpha`, `gamma` or `epsilon` lies
+    outside `[0, 1]`.
+  reason: cap of eight wrong solutions per problem
+- clause: Must not mutate inputs.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

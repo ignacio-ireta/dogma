@@ -1,5 +1,5 @@
 id: rl/sarsa-and-expected-sarsa/p01-sarsa-and-expected-sarsa-updates
-version: 3
+version: 4
 title: "Sarsa and expected Sarsa updates"
 language: python
 runtime: py-numpy

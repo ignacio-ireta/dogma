@@ -360,3 +360,29 @@ def test_empty_one_dimensional_table_is_rejected():
         lambda: sarsa_update(np.zeros(0), 0, 0, 0.0, None, None, 0.5, 0.5),
         "an empty one-dimensional Q must raise ValueError: Q must be a non-empty 2-D table",
     )
+
+
+def test_numpy_integer_indices_are_accepted_as_integer_indices():
+    # The Contract asks for integer indices. NumPy integers (as returned by np.argmax) are integers.
+    # Table [[0, 0], [1, 3]], alpha = 1, so the new entry is the target:
+    # target = r + gamma * Q[1, 0] = 1.0 + 0.5 * 1.0 = 1.5, and Q[0, 1] becomes 1.5.
+    table = [[0.0, 0.0], [1.0, 3.0]]
+    result = _run(
+        lambda: sarsa_update(
+            table,
+            s=np.int64(0),
+            a=np.int64(1),
+            r=1.0,
+            s_next=np.int64(1),
+            a_next=np.int64(0),
+            alpha=1.0,
+            gamma=0.5,
+        ),
+        "a NumPy integer index must be accepted where an integer index is allowed",
+    )
+    _close(
+        result,
+        [[0.0, 1.5], [1.0, 3.0]],
+        err_msg="a NumPy integer index must select the same entries as a Python int",
+        atol=1e-9,
+    )
