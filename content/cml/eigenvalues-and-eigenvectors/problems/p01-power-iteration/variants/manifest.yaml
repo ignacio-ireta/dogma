@@ -1,7 +1,63 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_other_fixed_seed.py
+  origin: freedom
+  freedom: start vector drawn from a different fixed seed, still deterministic and generic
+reject:
+- file: reject_zeroes_tiny_entries_in_input.py
+  mistake: zeroes tiny entries of a float64 input in place
+  clause: Must not mutate its input.
+  killed_by: test_float64_input_with_tiny_entries_is_not_mutated
+  visible: hidden
+- file: reject_rejects_size_one.py
+  mistake: rejects a 1 x 1 matrix that the Contract allows
+  clause: '`A`: 2-D array-like of real numbers, shape `(n, n)` with `n >= 1`, and symmetric. Integers
+    allowed.'
+  killed_by: test_matches_eigh_dominant_pair_on_random_symmetric_matrices
+  visible: hidden
+- file: reject_unscaled_symmetry_tolerance.py
+  mistake: drops the max abs scale from the symmetry tolerance
+  clause: 'Symmetry: raise `ValueError` when `max|A - Aᵀ| > 1e-9 * max(1, max|A|)`.'
+  killed_by: test_symmetry_tolerance_scales_with_large_entries
+  visible: hidden
+- file: reject_num_iters_one_refused.py
+  mistake: refuses num_iters equal to 1 where the Contract allows it
+  clause: '`num_iters`: integer `>= 1`. `tol`: float `> 0`. Raise `ValueError` for other values.'
+  killed_by: test_a_single_iteration_is_an_allowed_budget
+  visible: hidden
+- file: reject_ones_start_vector.py
+  mistake: starts from the constant ones vector, which the Contract says must be generic
+  clause: 'Start vector: a fixed, deterministic vector (no unseeded randomness), the same on every call.
+    It must be generic. A constant vector such as `np.ones(n)` can be exactly orthogonal to the dominant
+    eigenvector of a symmetric matrix; the iteration then converges to a different eigenpair without raising
+    any error.'
+  killed_by: test_start_orthogonal_to_dominant_eigenvector_does_not_stall
+  visible: hidden
+- file: reject_change_in_eigenvalue_stop.py
+  mistake: stops when the change in the eigenvalue is small instead of the residual
+  clause: 'Stopping: after each update, compute the Rayleigh quotient `λ = vᵀAv` for the unit vector `v`,
+    and the residual `r = Av - λv`. Stop when `‖r‖ <= tol * max(1, |λ|)`, or after `num_iters` updates.
+    Using up the budget is not an error: return the current estimate.'
+  killed_by: test_symmetric_two_by_two_returns_three_and_the_positive_diagonal_direction
+  visible: public
+- file: reject_first_entry_sign.py
+  mistake: makes the first entry positive instead of the first largest entry
+  clause: 'Returns: `(eigenvalue, eigenvector)`. `eigenvalue` is a Python float: the eigenvalue of largest
+    absolute value, with its sign. `eigenvector` is a float64 array of shape `(n,)` with unit length.
+    Sign convention: the first entry whose absolute value is within a relative `1e-9` of the largest absolute
+    entry is positive.'
+  killed_by: test_largest_entry_of_eigenvector_is_positive
+  visible: hidden
+- file: reject_no_finite_check.py
+  mistake: drops the check for NaN and infinity in the input
+  clause: Raises `ValueError` when `A` is not square, contains NaN or infinity, is not symmetric, or when
+    `num_iters` or `tol` is out of range.
+  killed_by: test_nan_entry_raises_value_error
+  visible: hidden
+uncovered:
+- clause: The zero matrix returns `(0.0, unit vector)`.
+  reason: wrong solution survives, see notes
+sweeps:
+- reject

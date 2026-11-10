@@ -1,5 +1,5 @@
 id: cml/eigenvalues-and-eigenvectors/p01-power-iteration
-version: 3
+version: 4
 title: Power iteration
 language: python
 runtime: py-numpy

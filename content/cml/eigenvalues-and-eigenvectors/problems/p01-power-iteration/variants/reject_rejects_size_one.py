@@ -1,0 +1,73 @@
+from __future__ import annotations
+
+import numpy as np
+from numpy.typing import ArrayLike, NDArray
+
+# Symmetry is checked with a tolerance scaled by the matrix size. A matrix built as Q diag(λ) Qᵀ is
+# symmetric only up to rounding, and it must still be accepted.
+_SYMMETRY_RTOL = 1e-9
+# Relative width of the band of entries treated as tied for the largest magnitude (sign convention).
+_TIE_RTOL = 1e-9
+
+
+def power_iteration(
+    A: ArrayLike, num_iters: int = 1000, tol: float = 1e-10
+) -> tuple[float, NDArray[np.float64]]:
+    """Wrong on purpose: rejects a 1 x 1 matrix that the Contract allows.
+
+    Return the dominant eigenpair of the real symmetric matrix ``A``.
+
+    Repeatedly applying A tilts a vector toward the eigenvector whose eigenvalue has the largest
+    magnitude. Each eigencomponent is multiplied by its eigenvalue, so the dominant one gains on the
+    others at rate |λ2 / λ1| per step. Normalising every step stops the numbers from growing.
+    """
+    # np.array copies by default, so the caller's matrix is never modified.
+    matrix = np.array(A, dtype=np.float64)
+
+    if matrix.ndim != 2 or matrix.shape[0] != matrix.shape[1]:
+        raise ValueError(f"expected a square matrix, got shape {matrix.shape}")
+    if matrix.shape[0] < 2:
+        raise ValueError("matrix must have at least two rows")
+    if not np.isfinite(matrix).all():
+        raise ValueError("matrix must contain only finite numbers")
+    scale = max(1.0, float(np.max(np.abs(matrix))))
+    if float(np.max(np.abs(matrix - matrix.T))) > _SYMMETRY_RTOL * scale:
+        raise ValueError("matrix must be symmetric")
+    if num_iters < 1:
+        raise ValueError(f"num_iters must be at least 1, got {num_iters}")
+    # Written as "not > 0" so that NaN is rejected too.
+    if not tol > 0:
+        raise ValueError(f"tol must be positive, got {tol}")
+
+    n = int(matrix.shape[0])
+    # A fixed seed keeps the run deterministic. A random start is almost surely not orthogonal
+    # to the dominant eigenvector, which is the one start that would stall the iteration.
+    v = np.random.default_rng(0).standard_normal(n)
+    v = v / np.sqrt(v @ v)
+
+    # The Rayleigh quotient v·Av is the eigenvalue estimate for a unit vector v.
+    eigenvalue = float(v @ (matrix @ v))
+    for _ in range(num_iters):
+        # Stop on the residual, not on the change in λ. The eigenvalue error is quadratic in the
+        # vector error, so a small change in λ can hide a vector that is still far off.
+        residual = matrix @ v - eigenvalue * v
+        if np.sqrt(residual @ residual) <= tol * max(1.0, abs(eigenvalue)):
+            break
+
+        w = matrix @ v
+        w_norm = float(np.sqrt(w @ w))
+        if w_norm == 0.0:
+            # A v = 0: v lies in the null space, and its eigenvalue is 0. This happens for the
+            # zero matrix, where every vector is an eigenvector.
+            break
+        v = w / w_norm
+        eigenvalue = float(v @ (matrix @ v))
+
+    # Sign convention: the first entry within a relative band of the largest magnitude is positive.
+    # The band makes an exact tie, such as (1, -1)/sqrt(2), resolve to the first index
+    # even after rounding.
+    magnitudes = np.abs(v)
+    index = int(np.flatnonzero(magnitudes >= float(np.max(magnitudes)) * (1.0 - _TIE_RTOL))[0])
+    if v[index] < 0:
+        v = -v
+    return eigenvalue, v

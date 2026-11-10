@@ -284,3 +284,16 @@ def test_symmetry_tolerance_is_at_least_one_for_small_entries():
             "the symmetry tolerance is 1e-9 times max(1, largest entry): a small matrix with an "
             f"asymmetry below 1e-9 must be accepted ({exc})"
         )
+
+
+def test_float64_input_with_tiny_entries_is_not_mutated():
+    # Symmetric float64 matrix whose off-diagonal entries are tiny but not zero. A copy-free
+    # implementation that cleans small entries would write into the caller's array.
+    A = np.array([[2.0, 1e-13, 0.5], [1e-13, 3.0, 0.0], [0.5, 0.0, 1.0]], dtype=np.float64)
+    A_copy = A.copy()
+    power_iteration(A)
+    np.testing.assert_array_equal(
+        A,
+        A_copy,
+        err_msg="the input matrix was modified in place: tiny entries must be left as given",
+    )
