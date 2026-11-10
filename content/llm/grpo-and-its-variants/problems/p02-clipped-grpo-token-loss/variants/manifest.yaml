@@ -1,7 +1,63 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_masked_fill.py
+  origin: freedom
+  freedom: removes masked positions with masked_fill instead of where
+- file: accept_ratio_as_quotient.py
+  origin: freedom
+  freedom: computes the ratio as exp of new divided by exp of old instead of exp of the difference
+reject:
+- file: reject_clip_not_keyword_only.py
+  mistake: clip_eps can be passed by position, though the Contract says keyword-only
+  clause: '`clip_eps`: keyword-only float with `0 < clip_eps < 1`.'
+  killed_by: test_clip_eps_cannot_be_passed_by_position
+  visible: hidden
+- file: reject_logp_roles_swapped.py
+  mistake: the ratio is inverted so sampling policy is divided by current policy
+  clause: '`logp_new`, `logp_old`, `logp_ref`: floating-point tensors, shape `(G, T)`, same dtype, all
+    finite. `logp_new` is the current policy''s log-probability of each sampled token; `logp_old` is the
+    sampling policy''s; `logp_ref` is the reference''s.'
+  killed_by: test_positive_advantage_above_clip_is_clipped_at_one_plus_eps
+  visible: public
+- file: reject_mean_advantage_for_all.py
+  mistake: every response gets the group mean advantage instead of its own
+  clause: '`advantages`: floating-point tensor, shape `(G,)`, same dtype, finite. Entry `i` applies to
+    every token of response `i`.'
+  killed_by: test_loss_matches_per_response_reference_on_random_ragged_batches
+  visible: hidden
+- file: reject_mask_multiplied_not_selected.py
+  mistake: masked-out positions are multiplied by zero instead of excluded so extreme values leak as NaN
+  clause: '`mask`: boolean tensor, shape `(G, T)`. `True` marks a response token. Every row must contain
+    at least one `True`. Positions marked `False` do not contribute, whatever their values.'
+  killed_by: test_masked_positions_contribute_nothing_even_with_extreme_values
+  visible: hidden
+- file: reject_kl_coef_zero_refused.py
+  mistake: a kl_coef of exactly zero is refused though zero is allowed
+  clause: '`kl_coef`: keyword-only float, finite and `>= 0`.'
+  killed_by: test_single_unclipped_token_gives_negative_advantage
+  visible: public
+- file: reject_policy_gradient_detached.py
+  mistake: the policy ratio is detached so the surrogate gives no policy gradient
+  clause: Returns a 0-dimensional tensor with the dtype of the inputs. It stays connected to autograd
+    through `logp_new`. The function does not detach its arguments; the caller passes `logp_old` and `logp_ref`
+    without gradient.
+  killed_by: test_positive_advantage_below_lower_clip_keeps_its_gradient
+  visible: hidden
+- file: reject_empty_row_gives_nan.py
+  mistake: a response with no masked-in token is accepted and gives NaN instead of raising
+  clause: 'Raises `ValueError` when: any argument is not a tensor; shapes disagree with `(G, T)` or `(G,)`;
+    `G == 0` or `T == 0`; a dtype is not floating-point, or the three log-prob dtypes differ; the mask
+    is not boolean; a row of the mask has no `True`; any log-prob or advantage is not finite; `clip_eps`
+    is outside `(0, 1)`; `kl_coef` is negative or not finite.'
+  killed_by: test_empty_mask_row_raises_value_error
+  visible: hidden
+- file: reject_advantages_mutated_in_place.py
+  mistake: the caller advantages are centred in place
+  clause: Must not mutate inputs.
+  killed_by: test_single_unclipped_token_gives_negative_advantage
+  visible: public
 uncovered: []
-sweeps: []
+sweeps:
+- reject

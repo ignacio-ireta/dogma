@@ -2,6 +2,54 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_reciprocal_multiply.py
+  origin: freedom
+  freedom: multiplies by the reciprocal of std plus eps instead of dividing
+- file: accept_mean_of_squares.py
+  origin: freedom
+  freedom: takes the variance as the mean of squared deviations instead of a sum divided by G
+reject:
+- file: reject_single_prompt_squeezed.py
+  mistake: a single prompt row is squeezed to one dimension
+  clause: '`rewards`: floating-point tensor, shape `(P, G)`, with `P >= 1` prompts and `G >= 2` responses
+    per prompt. Row `p` holds the rewards of the group for prompt `p`.'
+  killed_by: test_advantages_match_population_reference_on_random_groups
+  visible: hidden
+- file: reject_eps_inside_sqrt.py
+  mistake: eps is added to the variance inside the square root
+  clause: '`eps`: keyword-only float, finite and `> 0`. It is added to the standard deviation, outside
+    the square root.'
+  killed_by: test_advantages_match_population_reference_on_random_groups
+  visible: hidden
+- file: reject_float64_cast_to_float32.py
+  mistake: the result is cast to float32 so float64 inputs lose their dtype
+  clause: 'Returns a tensor of shape `(P, G)` with the dtype of `rewards`. Entry `[p, i]` is $\hat A_i$
+    for group `p`. Groups are independent: each row depends only on its own rewards.'
+  killed_by: test_binary_group_gets_plus_and_minus_one_with_population_std
+  visible: public
+- file: reject_all_equal_group_nan.py
+  mistake: eps is dropped when the spread is zero so an all-equal group gives NaN
+  clause: An all-equal group has standard deviation zero. Its advantages are all zero, and they are finite
+    (not NaN).
+  killed_by: test_all_equal_group_gives_finite_zero_advantages_across_magnitudes
+  visible: hidden
+- file: reject_eps_zero_accepted.py
+  mistake: an eps of exactly zero is accepted instead of raising
+  clause: 'Raises `ValueError` when: `rewards` is not a tensor; it is not 2-D; `P == 0`; `G < 2`; the
+    dtype is not floating-point; any value is not finite; `eps` is not a finite positive number.'
+  killed_by: test_non_positive_eps_raises_value_error
+  visible: hidden
+- file: reject_input_centred_in_place.py
+  mistake: the input rewards tensor is centred in place so the caller tensor changes
+  clause: Must not mutate the input.
+  killed_by: test_advantages_match_population_reference_on_random_groups
+  visible: hidden
+- file: reject_sample_std_group.py
+  mistake: the spread divides by G minus 1 the sample standard deviation
+  clause: 'Returns a tensor of shape `(P, G)` with the dtype of `rewards`. Entry `[p, i]` is $\hat A_i$
+    for group `p`. Groups are independent: each row depends only on its own rewards.'
+  killed_by: test_binary_group_gets_plus_and_minus_one_with_population_std
+  visible: public
 uncovered: []
-sweeps: []
+sweeps:
+- reject

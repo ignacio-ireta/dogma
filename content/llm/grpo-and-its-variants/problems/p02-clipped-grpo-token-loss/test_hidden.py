@@ -509,3 +509,15 @@ def test_non_finite_advantage_raises_value_error():
         lambda: grpo_token_loss(new, old, ref, adv, mask),
         "an infinite advantage was accepted: every advantage must be finite",
     )
+
+
+def test_clip_eps_cannot_be_passed_by_position():
+    new, old, ref, adv, mask = _batch(230)
+    try:
+        grpo_token_loss(new, old, ref, adv, mask, 0.1)
+    except TypeError:
+        return
+    raise AssertionError(
+        "clip_eps was accepted by position: the Contract makes it keyword-only, so passing it "
+        "positionally must raise TypeError"
+    )
