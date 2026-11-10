@@ -74,3 +74,4 @@ uncovered:
   reason: a broken valid num_heads case also breaks the C7 raise rule for the same input
 sweeps:
 - reject
+- mutants
