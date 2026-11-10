@@ -171,6 +171,13 @@ def _rejects(call, case: str) -> None:
         "beta2 equal to one",
         "gradient shape differs from its parameter",
     ],
+    ids=[
+        "negative-weight-decay",
+        "non-finite-weight-decay",
+        "negative-learning-rate",
+        "beta-two-equal-to-one",
+        "gradient-shape-mismatch",
+    ],
 )
 def test_invalid_arguments_raise_value_error(case):
     p = [torch.zeros(3, dtype=torch.float64)]
@@ -225,7 +232,7 @@ def test_second_moment_of_wrong_shape_in_state_is_rejected():
     _state_rejects([zeros], [bad], 0, "second moment in the carried-over state has the wrong shape")
 
 
-@pytest.mark.parametrize("which", ["first", "second"])
+@pytest.mark.parametrize("which", ["first", "second"], ids=["first-moment", "second-moment"])
 def test_moment_wrong_shape_on_one_parameter_of_several_is_rejected(which):
     zeros = torch.zeros(3, dtype=torch.float64)
     bad = torch.zeros(1, dtype=torch.float64)
