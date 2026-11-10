@@ -63,8 +63,8 @@ Work stops and resumes across sessions through the status table and the handoff 
 | I-29 | Introduction: a Start here page and a guided first problem | — | I-15, I-16 | done |
 | I-30a | Time-warp backend + CLI: personal calendar offset, sync to the furthest exercise, `dogma warp`, `dogma course reset` (plan `2026-11-03-time-warp.md`) | — | I-10, I-13 | done |
 | I-30b | Time-warp API + web: `/calendar`, `/calendar/warp`, `/course/reset`, Progress page controls, Today offer | — | I-30a, I-17 | done |
-| I-31a | Data realism platform: `dogma_data` (real offline datasets, frozen realistic generators, seeds), `hf` dependency group + HF snapshot sync, submission ban, test-import allowlist, `exercise_audit realism` (plan `2026-11-09-data-realism.md`) | — | I-03, I-28 | in-progress |
-| I-31b | Data realism content sweep: real and realistic data in the tests, statements and lessons of the affected problems (slices S1–S7) | — | I-31a | todo |
+| I-31a | Data realism platform: `dogma_data` (real offline datasets, frozen realistic generators, seeds), `hf` dependency group + HF snapshot sync, submission ban, test-import allowlist, `exercise_audit realism` (plan `2026-11-09-data-realism.md`) | — | I-03, I-28 | done |
+| I-31b | Data realism content sweep: real and realistic data in the tests, statements and lessons of the affected problems (slices S1–S7) | — | I-31a | in-progress |
 | I-31c | Data realism review: second-agent review per slice, fresh exercise audit, statuses back to `reviewed` | — | I-31b | todo |
 
 ### Content runway (one wave per path week; ARCHITECTURE §7)
@@ -282,6 +282,40 @@ data salt; versions are bumped. `make test-all` passes.
 
 *Newest first. One entry per session or agent: what changed · what was verified (exact commands
 and results) · what's left or blocked.*
+
+### 2026-11-09 · Data realism · I-31a done, I-31b in progress
+
+- **Why:** bulk test data was iid same-scale normals, labels independent of scores, white-noise
+  series and toy text, so some wrong solutions passed and some lessons taught the wrong intuition.
+  Plan `docs/superpowers/plans/2026-11-09-data-realism.md`, ADR-0020.
+- **Added (I-31a):** test-only `src/dogma_data` (25 offline datasets with pinned shapes, hashes
+  and quirks; frozen pure-numpy generators; `rng(key)` with the `DOGMA_DATA_SALT` audit salt);
+  `datasets` in the opt-in `hf` group and `scripts/sync_hf_datasets.py` (gsm8k, adult,
+  california_housing, three Gutenberg slices, pinned revisions, licence policy, `--check`);
+  platform-wide submission ban on `dogma_data`/`datasets`/`huggingface_hub`; test-import allowlist
+  (`TEST_IMPORT_NOT_ALLOWED`); `exercise_audit realism` and the per-seed data salt; a Seatbelt
+  integration test; CONTENT_SPEC §6.6, `docs/DATASETS.md`.
+- **Spike:** pyarrow switches pandas 3.1 string storage; with it the content verify pass set is
+  unchanged but slower (upper bound 1348 s vs 774 s under load), so `datasets` stays opt-in.
+- **Coordinator fixes:** `peaked_probs` was degenerate (top probability 0.9995 on every row):
+  replaced by a margin model; feature names are plain `str`; HF snapshots load through
+  `load_frame`/`load_text`; Gutenberg slices start at each book's first sentence.
+- **Content (I-31b) so far:** 19 topics committed; each new test kills a hand-written realistic
+  wrong solution that passes the old tests (`exercise_audit realism`), survives `seeds` with the
+  salt, and runs under 10 s with a blind solution. Many slices found their old suites already
+  catch every realistic mistake tried (SVD, covariance, GMM, k-means, kNN, BM25, BPE, the
+  serving and DL problems), and those stay unchanged. Lasso, elastic net and regression metrics
+  got lesson paragraphs only (their new tests killed nothing).
+- **Verified:** `make test-all` on `9ab85f7` in a clean worktree: Ruff and format, strict mypy,
+  6 import contracts, content types (251), 1996 unit tests, 175 topics verified, web check and
+  build, privacy audit clean, e2e/slow pytest, 22 Playwright tests (the web stage re-run after a
+  real offline `pnpm install`; a symlinked `node_modules` is refused by pnpm). Each content
+  commit: `dogma content verify` on its topics, `check_commit_files`, staged privacy audit.
+- **Open:** adoption review of uncommitted realism edits made before a session restart (about 35
+  problems across serving/DL, geometry, text, counts, trees and SQL), each held to the kill gate;
+  the rest of the SQL slice (S7); the rolling-statistics p01 reference fails some Hypothesis
+  seeds at HEAD on constant windows (held fix in `var/audit-i31/S4b/held/`, a test-strictness
+  question for I-32); I-31c review.
 
 ### 2026-11-03 · Time-warp API and web · I-30b done
 
