@@ -200,3 +200,25 @@ def test_non_str_input_raises_type_error(a: Any, b: Any) -> None:
     except Exception as exc:
         pytest.fail(f"a non-str input must raise TypeError, instead it raised {type(exc).__name__}")
     pytest.fail("a non-str input was accepted: check that both arguments are Python str")
+
+
+def test_characters_are_compared_by_equality_not_by_case() -> None:
+    # "A" and "a" are different characters, so only "b" is shared: the length is 1.
+    if _answer("Ab", "ab") != (1, "b"):
+        pytest.fail(
+            "characters are compared by equality: letters that differ only in case "
+            "are different characters"
+        )
+
+
+def test_second_argument_must_be_a_str_too() -> None:
+    # A check on the first argument alone lets a list or bytes second argument through,
+    # because len() and indexing both work on them.
+    for b in (["a", "b"], b"ab"):
+        try:
+            longest_common_subsequence("ab", b)
+        except TypeError:
+            continue
+        pytest.fail(
+            "a list or bytes second argument must raise TypeError: check both arguments are str"
+        )

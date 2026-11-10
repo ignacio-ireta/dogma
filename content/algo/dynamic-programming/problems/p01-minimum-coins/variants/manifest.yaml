@@ -2,6 +2,42 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_sorts_coins_in_place.py
+  mistake: sorts the coins list in place
+  clause: '`coins`: a `list` of Python `int`, possibly empty. Each coin value must be at least 1. Order
+    is arbitrary, and a value may appear more than once. The list must not be changed.'
+  killed_by: test_coins_list_is_not_mutated
+  visible: hidden
+- file: reject_bool_coin_accepted.py
+  mistake: accepts bool coins as ints
+  clause: Raises `TypeError` when `coins` is not a list, when a coin is not a Python `int` (a `bool`,
+    `float` or string is rejected), or when `amount` is not a Python `int`.
+  killed_by: test_non_int_input_raises_type_error
+  visible: hidden
+- file: reject_zero_coin_accepted.py
+  mistake: accepts a coin of value 0
+  clause: Raises `ValueError` when a coin is less than 1, or when `amount` is negative.
+  killed_by: test_invalid_values_raise_value_error
+  visible: hidden
+- file: reject_strict_count_check.py
+  mistake: a count equal to amount is reported as impossible
+  clause: 'Returns: a Python `int`. It is the minimum number of coins (counting repeats) whose values
+    sum to `amount`. It is `0` when `amount` is `0`, even with no coins. It is `-1` when the amount cannot
+    be made. Impossible is a normal answer, so it is not an exception.'
+  killed_by: test_zero_amount_needs_zero_coins_even_without_coins
+  visible: public
+- file: reject_amount_off_by_one_table.py
+  mistake: table one entry short for amount
+  clause: '`amount`: a Python `int` that is at least 0.'
+  killed_by: test_three_coins_for_eleven_with_a_five_and_a_one
+  visible: public
+- file: reject_quadratic_rescan.py
+  mistake: rescans every smaller value for each entry, quadratic time
+  clause: 'Complexity: O(amount x number of coins) time. The hidden tests include an amount of 50,000,
+    which must finish within the time limit.'
+  killed_by: test_large_amount_finishes_within_the_time_limit
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

@@ -1,5 +1,5 @@
 id: algo/dynamic-programming/p02-longest-common-subsequence
-version: 2
+version: 3
 title: Longest common subsequence with a witness
 language: python
 runtime: py-stdlib

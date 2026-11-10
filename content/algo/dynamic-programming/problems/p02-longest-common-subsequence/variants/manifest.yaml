@@ -1,7 +1,42 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_tie_break_drops_second.py
+  origin: freedom
+  freedom: on a tie in the walk back, moves in the second string instead of the first
+reject:
+- file: reject_case_insensitive_match.py
+  mistake: characters match ignoring case
+  clause: '`a`, `b`: Python `str`, possibly empty. Characters are compared by equality. Neither argument
+    is changed.'
+  killed_by: test_characters_are_compared_by_equality_not_by_case
+  visible: hidden
+- file: reject_checks_only_first_argument.py
+  mistake: second argument never type checked
+  clause: Raises `TypeError` when `a` or `b` is not a Python `str` (`bytes`, `None` and lists are rejected).
+  killed_by: test_second_argument_must_be_a_str_too
+  visible: hidden
+- file: reject_witness_reversed.py
+  mistake: witness returned in reverse order
+  clause: 'Returns: a `tuple[int, str]`, `(length, witness)`. - `length` is the number of characters in
+    a longest common subsequence of `a` and `b`. - `witness` is one such subsequence, a `str` of exactly
+    `length` characters. Any valid longest subsequence is accepted, because several can exist.'
+  killed_by: test_example_length_and_a_valid_witness
+  visible: public
+- file: reject_empty_returns_first_argument.py
+  mistake: empty input returns first argument as witness
+  clause: 'Empty input gives `(0, "")`: when either string is empty, the only subsequence is the empty
+    one.'
+  killed_by: test_property_length_and_witness_on_random_short_strings
+  visible: hidden
+- file: reject_memoised_recursion_depth.py
+  mistake: length from memoised recursion one level per character
+  clause: 'Complexity: O(len(a) x len(b)) time. The hidden tests include strings of 1,200 characters,
+    which must finish within the time limit. Python''s default recursion limit is 1,000 frames, so a recursion
+    that goes one level per character can fail on those inputs.'
+  killed_by: test_long_strings_finish_within_the_time_limit
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
