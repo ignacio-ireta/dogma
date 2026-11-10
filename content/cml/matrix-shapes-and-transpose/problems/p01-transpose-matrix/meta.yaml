@@ -1,5 +1,5 @@
 id: cml/matrix-shapes-and-transpose/p01-transpose-matrix
-version: 1
+version: 2
 title: Transpose a matrix
 language: python
 runtime: py-numpy

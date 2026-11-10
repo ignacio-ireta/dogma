@@ -116,3 +116,25 @@ def test_result_does_not_share_rows_with_input():
     assert matrix == [[1, 2], [3, 4]], (
         "result shares row objects with the input: editing the output changed the input"
     )
+
+
+def test_tuple_rows_are_accepted_as_rows():
+    # The Contract allows each row to be a list or a tuple. Here both rows are tuples,
+    # and the transpose must still take column j from every row: (1, 4), (2, 5), (3, 6).
+    matrix = [(1, 2, 3), (4, 5, 6)]
+    try:
+        out = transpose(matrix)
+    except ValueError as exc:
+        pytest.fail(f"rows given as tuples are valid matrix rows; raised ValueError: {exc}")
+    assert out == [[1, 4], [2, 5], [3, 6]], (
+        "rows given as tuples are valid matrix rows: transpose them the same as lists"
+    )
+
+
+def test_int_entries_stay_ints():
+    # Entries are copied unchanged. 1.0 == 1 in Python, so equality cannot see a float
+    # conversion: compare the types of the entries instead.
+    out = transpose([[1, 2, 3], [4, 5, 6]])
+    assert all(type(x) is int for row in out for x in row), (
+        "int entries must stay ints in the transpose: copy each value, do not convert it to float"
+    )
