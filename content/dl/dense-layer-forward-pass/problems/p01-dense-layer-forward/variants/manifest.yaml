@@ -1,7 +1,58 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_bias_first.py
+  origin: freedom
+  freedom: adds the bias first and then the product, so the rounding order differs
+- file: accept_einsum.py
+  origin: freedom
+  freedom: uses einsum instead of the matrix product operator
+reject:
+- file: reject_layout_autodetect.py
+  mistake: guesses the PyTorch layout and transposes W when the shapes allow it
+  clause: '`W`: 2-D array-like, shape `(d_in, d_out)`. Column `j` holds the weights of output unit `j`.
+    Rows index inputs and columns index outputs. PyTorch stores `nn.Linear.weight` as `(d_out, d_in)`;
+    to use such a weight, pass its transpose `W_torch.T`.'
+  killed_by: test_pytorch_layout_weight_raises_value_error_on_feature_mismatch
+  visible: hidden
+- file: reject_bias_ndim_loose.py
+  mistake: accepts a two-dimensional bias and broadcasts it
+  clause: '`b`: 1-D array-like, shape exactly `(d_out,)`. A `(1, d_out)` or `(d_out, 1)` bias is rejected,
+    not broadcast.'
+  killed_by: test_bias_must_be_exactly_one_dimensional
+  visible: hidden
+- file: reject_zero_din_drops_bias.py
+  mistake: returns zeros without the bias when the feature axis is empty
+  clause: Any dimension may be 0. `n = 0` gives `(0, d_out)`. `d_in = 0` gives the bias repeated on every
+    row, because an empty sum is 0.
+  killed_by: test_zero_width_inputs_return_the_bias_on_every_row
+  visible: hidden
+- file: reject_int_output_dtype.py
+  mistake: rounds the result through float32
+  clause: 'Returns: `float64` array of shape `(n, d_out)`. Integer inputs are converted to `float64`.'
+  killed_by: test_random_batches_match_an_explicit_per_entry_reference
+  visible: hidden
+- file: reject_bias_length_unchecked.py
+  mistake: does not check the bias length against the output width
+  clause: 'Raises `ValueError` when: `X` is not 2-D; `W` is not 2-D; `b` is not 1-D; `X.shape[1] != W.shape[0]`
+    (feature mismatch); or `b.shape[0] != W.shape[1]`.'
+  killed_by: test_bias_length_mismatch_is_rejected_even_when_broadcastable
+  visible: hidden
+- file: reject_bias_scaled_in_place.py
+  mistake: scales the bias in place by its largest entry and undoes it in the output
+  clause: Must not mutate inputs.
+  killed_by: test_random_batches_match_an_explicit_per_entry_reference
+  visible: hidden
+- file: reject_list_inputs_refused.py
+  mistake: refuses a plain list as X although the Contract says array-like
+  clause: '`X`: 2-D array-like, shape `(n, d_in)`, real numbers. One example per row.'
+  killed_by: test_list_inputs_are_accepted_as_array_like
+  visible: hidden
+uncovered:
+- clause: Inputs are numeric and real. Arithmetic cases are limited to finite inputs with representable
+    intermediate products, partial sums and outputs; nonnumeric values and overflow behavior are outside
+    the contract.
+  reason: numeric and finite limits are outside the contract, so no wrong solution is promised to fail
+sweeps:
+- reject

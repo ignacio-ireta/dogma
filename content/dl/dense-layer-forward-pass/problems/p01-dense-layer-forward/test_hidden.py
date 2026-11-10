@@ -243,3 +243,11 @@ def test_bias_is_the_difference_between_with_and_without_bias(X, W, b):
         atol=1e-10,
         err_msg="the bias is not added once to each row: Y(b) - Y(0) should equal b",
     )
+
+
+def test_list_inputs_are_accepted_as_array_like():
+    # X, W and b given as plain Python lists are array-like, so they must give the same answer
+    # as arrays. Row [1, 2] times W = [[1, 0], [0, 3]] is [1, 6]; adding b = [0.5, -1]
+    # gives [1.5, 5].
+    got = _call([[1.0, 2.0]], [[1.0, 0.0], [0.0, 3.0]], [0.5, -1.0], "list inputs failed")
+    _assert_close(got, [[1.5, 5.0]], err_msg="list inputs gave wrong values")

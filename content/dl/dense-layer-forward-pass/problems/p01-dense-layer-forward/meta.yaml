@@ -1,5 +1,5 @@
 id: dl/dense-layer-forward-pass/p01-dense-layer-forward
-version: 3
+version: 4
 title: Dense layer forward for a batch
 language: python
 runtime: py-numpy
