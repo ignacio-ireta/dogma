@@ -67,9 +67,9 @@ Work stops and resumes across sessions through the status table and the handoff 
 | I-31b | Data realism content sweep: real and realistic data in the tests, statements and lessons of the affected problems (slices S1–S7) | — | I-31a | done |
 | I-31c | Data realism review: second-agent review per slice, fresh exercise audit, statuses back to `reviewed` | — | I-31b | todo |
 | I-32a | Test-strength platform: hidden-test lint, `variants/` manifest, `scripts/exercise_gate.py`, docs and variants for the example problem (plan `2026-11-09-test-strength.md`; a1–a4) | — | I-31a | done |
-| I-32b | Hygiene sweep: messages, ids, Hypothesis flags and `pytest.raises` in hidden tests, outcomes unchanged | — | I-32a, I-31c | todo |
+| I-32b | Hygiene sweep: messages, ids, Hypothesis flags and `pytest.raises` in hidden tests, outcomes unchanged | — | I-32a, I-31c | in-progress |
 | I-32c | One blind solution per problem, committed as `variants/accept_blind` | — | I-32a, I-31c | in-progress |
-| I-32d | Reject sweep and mutant triage: one wrong solution per Contract bullet, gaps closed by gated tests | — | I-32b, I-32c | todo |
+| I-32d | Reject sweep and mutant triage: one wrong solution per Contract bullet, gaps closed by gated tests | — | I-32b, I-32c | in-progress |
 | I-32e | Test-strength close-out: enforce the rules in the gate, re-audit, report | — | I-32d | todo |
 
 ### Content runway (one wave per path week; ARCHITECTURE §7)
@@ -304,6 +304,26 @@ proves equal.
 
 *Newest first. One entry per session or agent: what changed · what was verified (exact commands
 and results) · what's left or blocked.*
+
+### 2026-11-10 · Test-strength pilots · I-32b and I-32d in progress
+
+- **Pilots, on problems I-31 does not touch, Haiku executors:** hygiene on five problems (seven
+  lint sites fixed, four in mode `text`, one `pytest.raises` replaced in mode `refactor` with 38
+  mutants and none weakened); reject sweep on five topics, six problems.
+- **Reject sweep result:** 41 wrong solutions recorded and four alternative accepts, none
+  refused. Six wrong solutions passed every existing test, in four of the six problems, and each
+  got one new hidden test through `add-test`: `cml/vector-operations/p01` (rescales `b` in
+  place), `algo/lru-cache/p01` (returns `None` for a stored falsy value; refuses a list value),
+  `dl/layer-normalization/p01` (squeezes a one-feature input; `view` on a non-contiguous input),
+  `inf/kv-cache-size-arithmetic/p02` (accepts upper-case dtype names). Those four problems went
+  from version 2 to 3. The coordinator read each new test against its Contract.
+- **Runbook changes from the pilots:** executors may read their problem's harvest folder; a
+  wrong SQL query that fails every test on the shared type check is recorded as `uncovered`;
+  `K` bullets need no entry; named cases keep their meaning as ids.
+- **Verified:** `exercise_gate.py gate` passed for all eleven pilot problems in the mode of
+  their edit; `dogma content verify` on the ten topics; `exercise_gate.py variants`: 219 ok, 0
+  mismatches. `make check` was not re-run after the pilots.
+- **Left, from `worklist`:** hygiene 70 problems (209 sites), blind 81, reject 245, mutants 251.
 
 ### 2026-11-10 · Test-strength platform and first blind accepts · I-32a done, I-32c in progress
 
