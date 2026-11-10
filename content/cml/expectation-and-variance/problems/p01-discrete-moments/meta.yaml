@@ -1,5 +1,5 @@
 id: cml/expectation-and-variance/p01-discrete-moments
-version: 3
+version: 4
 title: Discrete moments
 language: python
 runtime: py-numpy

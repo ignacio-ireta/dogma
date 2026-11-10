@@ -247,3 +247,36 @@ def test_probabilities_off_by_one_and_a_half_parts_per_billion_are_rejected():
         "probabilities whose sum is 1.5e-9 away from 1 are outside the 1e-9 tolerance and must "
         "raise ValueError",
     )
+
+
+def test_variance_uses_the_probabilities_as_given_not_rescaled():
+    # Contract: variance = sum p (x - mean)^2 with the probabilities as given. Here
+    # p = [0.5, 0.5 + 9e-10] sums to 1 + 9e-10, inside the tolerance, so the variance
+    # must not be divided by that total. A 9e-10 relative change needs a tight check.
+    values = np.array([0.0, 1e6])
+    probs = np.array([0.5, 0.5 + 9e-10])
+    mean = probs[0] * values[0] + probs[1] * values[1]
+    expected = probs[0] * (values[0] - mean) ** 2 + probs[1] * (values[1] - mean) ** 2
+    _, variance, _ = _moments(
+        values, probs, "a distribution whose sum is within tolerance of 1 failed"
+    )
+    np.testing.assert_allclose(
+        variance,
+        expected,
+        rtol=1e-12,
+        atol=0.0,
+        err_msg="variance: use sum p (x - mean)^2 with the probabilities as given, no rescaling",
+    )
+
+
+def test_probability_just_below_zero_raises_value_error():
+    # Contract: every probability is non-negative, so -1e-13 must raise, even though
+    # it is within float noise of zero. The probabilities sum to 1, so only the sign fails.
+    # The variance stays positive here, so a learner who leaves out the sign check returns
+    # a number instead of failing on a square root of a negative variance.
+    values = [0.0, 1.0, 2.0]
+    probs = [-1e-13, 0.5, 0.5 + 1e-13]
+    _raised_value_error(
+        lambda: discrete_moments(values, probs),
+        "a negative probability, even a tiny one, is not a distribution: raise ValueError",
+    )

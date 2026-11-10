@@ -1,7 +1,47 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_dot_product_variance.py
+  origin: freedom
+  freedom: variance summed with a dot product instead of a sum of products, only last digits differ
+reject:
+- file: reject_values_truncated_to_int.py
+  mistake: values cast to integers before use, so float values are truncated
+  clause: '`values`: 1-D sequence of $n \ge 1$ finite real numbers (list or NumPy array; integers allowed).'
+  killed_by: test_matches_scipy_discrete_distribution_on_random_inputs
+  visible: hidden
+- file: reject_loose_sum_tolerance.py
+  mistake: sum tolerance is 1e-6 instead of 1e-9
+  clause: '`probs`: 1-D sequence of length $n$. Every entry is finite and non-negative, and the sum is
+    within $10^{-9}$ of 1.'
+  killed_by: test_probabilities_off_by_a_small_real_amount_are_rejected
+  visible: hidden
+- file: reject_nan_probability_passes_check.py
+  mistake: only values are checked for finiteness, a NaN probability passes
+  clause: Raises `ValueError` when `values` or `probs` is not 1-D, when their lengths differ, when either
+    is empty, when a value or probability is NaN or infinite, when a probability is negative, or when
+    the probabilities do not sum to 1 within $10^{-9}$.
+  killed_by: test_nan_probability_raises_value_error
+  visible: hidden
+- file: reject_input_centred_in_place.py
+  mistake: values centred in place, mutating a float64 caller array
+  clause: Must not mutate its inputs.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
+- file: reject_variance_normalised_by_prob_total.py
+  mistake: variance divided by the total probability
+  clause: 'Returns: a tuple `(mean, variance, std)` of three floats, where `mean` $= \sum_i p_i x_i$,
+    `variance` $= \sum_i p_i (x_i - \mathrm{mean})^2$ and `std` $= \sqrt{\text{variance}}$.'
+  killed_by: test_variance_uses_the_probabilities_as_given_not_rescaled
+  visible: hidden
+- file: reject_tiny_negative_probability_allowed.py
+  mistake: probabilities down to minus 1e-12 are accepted
+  clause: Raises `ValueError` when `values` or `probs` is not 1-D, when their lengths differ, when either
+    is empty, when a value or probability is NaN or infinite, when a probability is negative, or when
+    the probabilities do not sum to 1 within $10^{-9}$.
+  killed_by: test_probability_just_below_zero_raises_value_error
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
