@@ -216,7 +216,7 @@ def test_inputs_and_targets_are_not_mutated():
     assert torch.equal(y, y_before), "the targets were modified"
 
 
-@pytest.mark.parametrize("steps", [1, 3])
+@pytest.mark.parametrize("steps", [1, 3], ids=["single-step", "several-steps"])
 def test_short_runs_match_reference_for_different_step_counts(steps):
     x, y = batch(19)
     model = make_model(20)
