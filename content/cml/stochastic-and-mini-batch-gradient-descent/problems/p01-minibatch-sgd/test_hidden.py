@@ -42,6 +42,7 @@ def _reference(X, y, lr, batch_size, epochs, *, seed):
 @pytest.mark.parametrize(
     ("n", "d", "batch_size", "epochs", "seed"),
     [(4, 1, 2, 3, 0), (7, 2, 3, 5, 1), (10, 3, 4, 4, 2), (9, 2, 1, 3, 3), (12, 3, 5, 2, 4)],
+    ids=list("abcde"),
 )
 def test_matches_row_by_row_reference_of_the_protocol(n, d, batch_size, epochs, seed):
     X, y = _data(seed, n, d)
@@ -56,7 +57,7 @@ def test_matches_row_by_row_reference_of_the_protocol(n, d, batch_size, epochs, 
     )
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(
     seed=st.integers(0, 1000),
     n=st.integers(1, 12),
@@ -76,7 +77,7 @@ def test_any_batch_size_matches_the_reference(seed, n, d, epochs, data):
     )
 
 
-@pytest.mark.parametrize("seed", [0, 1, 2])
+@pytest.mark.parametrize("seed", [0, 1, 2], ids=list("abc"))
 def test_batch_equal_to_n_is_full_batch_gradient_descent(seed):
     n, d, epochs, lr = 8, 3, 6, 0.1
     X, y = _data(seed, n, d)
@@ -152,7 +153,9 @@ def test_different_seed_changes_the_shuffle_order():
     assert not np.allclose(a, b), "the seed must control the shuffle, so one epoch should differ"
 
 
-@pytest.mark.parametrize("c", [-2.0, 0.5, 7.0])
+@pytest.mark.parametrize(
+    "c", [-2.0, 0.5, 7.0], ids=["negative-scale", "fractional-scale", "large-scale"]
+)
 def test_scaling_targets_scales_the_weights_linearly(c):
     X, y = _data(6, 7, 2)
     np.testing.assert_allclose(
@@ -169,10 +172,12 @@ def test_zero_epochs_returns_float64_zeros_of_length_d():
     w = minibatch_sgd(X, y, 0.1, 2, 0, seed=0)
     assert w.shape == (3,), "shape mismatch: the weights have one entry per column of X"
     assert w.dtype == np.float64, "weights must be float64"
-    np.testing.assert_array_equal(w, np.zeros(3))
+    np.testing.assert_array_equal(
+        w, np.zeros(3), err_msg="zero epochs must leave the weights at zero"
+    )
 
 
-@pytest.mark.parametrize("bad_batch", [0, -1, 9])
+@pytest.mark.parametrize("bad_batch", [0, -1, 9], ids=["zero", "negative", "too-large"])
 def test_batch_size_outside_one_to_n_raises_value_error(bad_batch):
     X, y = _data(7, 8, 2)
     try:
@@ -198,7 +203,7 @@ def test_shape_mismatches_raise_value_error():
     )
 
 
-@pytest.mark.parametrize("bad_lr", [0.0, -0.1])
+@pytest.mark.parametrize("bad_lr", [0.0, -0.1], ids=["zero-rate", "negative-rate"])
 def test_non_positive_learning_rate_raises_value_error(bad_lr):
     X, y = _data(8, 5, 2)
     _raised_value_error(
