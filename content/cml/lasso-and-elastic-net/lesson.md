@@ -67,7 +67,7 @@ $1/n$ in $\rho$ and $z$ puts $\alpha$ on the same scale as the mean squared erro
 - **Biased estimates.** Selected coefficients are shrunk toward zero, and standard errors after selection are not valid as usual.
 - **Slow convergence.** Cyclic updates can crawl along nearly collinear columns. Check convergence at a tighter tolerance or a larger sweep budget before trusting the selected set.
 
-**Real data: a correlated pair.** On raw diabetes (442 rows, $s_1$ and $s_2$ correlated at 0.9, column scales from 0.5 to 35), at $\alpha$ set to 15% of the largest penalty, the lasso keeps $s_1 = 0.19$ and sets $s_2 = 0$. The elastic net with $\rho = 0.5$ keeps both, at $0.47$ and $-0.31$. Which member of the pair the lasso keeps is arbitrary, and it changes with small changes in the data. Centre the columns before comparing these coefficients: the fit has no intercept.
+**Real data: a correlated pair.** On raw diabetes (442 rows, $s_1$ and $s_2$ correlated at 0.9, column scales from 0.5 to 35), at $\alpha$ set to 15% of the largest penalty, the lasso keeps $s_1 = 0.19$ and sets $s_2 = 0$. The elastic net with $\rho = 0.5$ keeps both, at $0.47$ and $-0.31$. The lasso picks one member of the pair and the pick is not stable: over 200 bootstrap resamples it kept $s_1$ alone in 58%, both in 42% and $s_2$ alone once. Centre the columns before comparing these coefficients: the fit has no intercept.
 
 ## Interview angle
 

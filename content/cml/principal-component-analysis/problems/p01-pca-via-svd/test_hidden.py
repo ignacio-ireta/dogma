@@ -14,8 +14,15 @@ COLS = st.integers(min_value=2, max_value=5)
 
 
 def _data(seed, n, d):
-    """Correlated columns on scales from 0.01 to 1000, as real measurements have."""
-    return correlated_mixed_scale(rng(f"pca-p01:data:{seed}:{n}:{d}"), n, d)
+    """Correlated columns on scales from 0.03 to 30, as real measurements have.
+
+    Three decades of scale, not five: an eigh-based solution squares the condition number and
+    cannot meet the 1e-9 comparisons on data spanning 1e10 in variance (measured: 7 of 12 draws
+    fail), while the SVD route and every route the Constraints allow pass on this range.
+    """
+    return correlated_mixed_scale(
+        rng(f"pca-p01:data:{seed}:{n}:{d}"), n, d, scale_range=(0.03, 30.0)
+    )
 
 
 def _call(X, k, mistake):

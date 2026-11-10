@@ -10,4 +10,4 @@ core: true
 tolerance: {atol: 1.0e-6, rtol: 1.0e-6}  # coefficients are compared with an L-BFGS-B solution run to a tight tolerance
 banned_imports: [scipy, sklearn, statsmodels, torch, jax, autograd]
 timeout_s: 30
-status: verified
+status: reviewed

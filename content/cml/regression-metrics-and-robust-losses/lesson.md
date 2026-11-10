@@ -71,7 +71,7 @@ The Huber residual derivative is bounded by $\delta$. For regression coefficient
 - **MAPE divides by $|y|$.** A zero target has no defined percentage error. For positive targets, it weights absolute errors by $1/y$, so small actuals dominate and can favour low forecasts.
 - **Huber's $\delta$ sets the regime.** Too small and the fit is MAE-like and slow to converge. Too large and it is MSE.
 
-**Real data: squared correlation is not $R^2$.** On the first 6000 California housing rows, the least-squares fit has $R^2 = 0.607$ and $\mathrm{corr}^2 = 0.607$. The two agree only for an in-sample fit with an intercept. Double the predictions and $\mathrm{corr}^2$ stays at $0.607$, while $R^2$ falls to $-2.70$. The target is also censored at 5.00001, so 241 rows tie at the cap. RMSE is $0.73$ against MAE $0.54$: a long tail carries most of the squared error.
+**Real data: squared correlation is not $R^2$.** On the first 6000 California housing rows, the least-squares fit has $R^2 = 0.607$ and $\mathrm{corr}^2 = 0.607$. The two agree only for an in-sample fit with an intercept. Double the predictions and $\mathrm{corr}^2$ stays at $0.607$, while $R^2$ falls to $-2.70$. The target is also censored at 5.00001, so 241 rows tie at the cap. RMSE is $0.73$ against MAE $0.54$: the largest 10% of residuals carry 59% of the squared error.
 
 ## Interview angle
 

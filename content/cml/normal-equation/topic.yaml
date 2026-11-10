@@ -17,4 +17,4 @@ sources:
   - "book: Trefethen & Bau, Numerical Linear Algebra, lecture on least squares"
   - "source: library-refresh/01-Mathematics/05-Linear-Algebra/1955-1970 -- Penrose, Golub and Reinsch -- Least Squares, Pseudoinverses and Numerical Stability -- Concept Note.md"
   - "source: library-refresh/01-Mathematics/05-Linear-Algebra/2024 -- Axler -- Vector Spaces, Inner Products and Representation Geometry -- Study Note.md"
-status: verified
+status: reviewed
