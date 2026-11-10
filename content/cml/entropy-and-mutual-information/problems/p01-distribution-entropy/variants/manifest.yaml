@@ -1,7 +1,53 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_python_loop_sum.py
+  origin: freedom
+  freedom: sums the terms in a Python loop with math.log instead of one vectorised NumPy sum
+reject:
+- file: reject_mutated_normalised_input.py
+  mistake: divides the input array by its own sum, so a vector within tolerance is changed in place
+  clause: Must not mutate its inputs.
+  killed_by: test_input_within_sum_tolerance_is_not_changed_in_place
+  visible: hidden
+- file: reject_single_entry_rejected.py
+  mistake: rejects a one-entry vector, which is a valid input
+  clause: '`p`: 1-D array-like of length $k \ge 1$. Every entry is finite and $\ge 0$. The entries sum
+    to 1 within $10^{-9}$.'
+  killed_by: test_entropy_lies_between_zero_and_log_of_the_number_of_outcomes
+  visible: hidden
+- file: reject_loose_sum_tolerance.py
+  mistake: accepts sums off by up to 1e-6 instead of 1e-9
+  clause: '`p`: 1-D array-like of length $k \ge 1$. Every entry is finite and $\ge 0$. The entries sum
+    to 1 within $10^{-9}$.'
+  killed_by: test_sum_outside_tolerance_is_rejected
+  visible: hidden
+- file: reject_high_side_sum_check.py
+  mistake: checks only the sum above 1, so a sum below 1 is accepted
+  clause: 'Raises: `ValueError` when `p` is empty, not 1-D, contains a negative or non-finite entry, or
+    does not sum to 1 within $10^{-9}$; and when `base` is not finite, not greater than 0, or equal to
+    1.'
+  killed_by: test_invalid_distribution_raises_value_error
+  visible: hidden
+- file: reject_no_base_finite_check.py
+  mistake: drops the finite check on the base, so an infinite base returns a value
+  clause: 'Raises: `ValueError` when `p` is empty, not 1-D, contains a negative or non-finite entry, or
+    does not sum to 1 within $10^{-9}$; and when `base` is not finite, not greater than 0, or equal to
+    1.'
+  killed_by: test_invalid_base_raises_value_error
+  visible: hidden
+- file: reject_eps_smoothed_log.py
+  mistake: adds 1e-12 inside the logarithm, which changes tiny probabilities
+  clause: 'Returns: a Python `float`, $-\sum_i p_i \log_b p_i$.'
+  killed_by: test_fair_coin_is_one_bit
+  visible: public
+- file: reject_base_below_one_abs.py
+  mistake: takes the absolute value, so a base below 1 gives a positive value
+  clause: '`base`: finite real number with $b > 0$ and $b \ne 1$. The default `2.0` gives bits; `math.e`
+    gives nats. For $0 < b < 1$ the formula gives a non-positive value, as the definition does.'
+  killed_by: test_base_below_one_gives_the_negated_value
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

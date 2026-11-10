@@ -1,6 +1,6 @@
 # Problem metadata (CONTENT_SPEC §6.2).
 id: cml/entropy-and-mutual-information/p01-distribution-entropy
-version: 3                      # bump when tests, tolerances or the contract change
+version: 4                      # bump when tests, tolerances or the contract change
 title: Entropy of a discrete distribution
 language: python                # python | sql
 runtime: py-numpy               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch

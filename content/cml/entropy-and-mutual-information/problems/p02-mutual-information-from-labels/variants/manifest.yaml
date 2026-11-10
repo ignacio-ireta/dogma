@@ -1,7 +1,41 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_reversed_cell_order.py
+  origin: freedom
+  freedom: adds the cell terms in the reverse order, which changes only the last rounding digits
+reject:
+- file: reject_unequal_length_truncated.py
+  mistake: checks only the case where the first sequence is longer, so a shorter first sequence is silently
+    truncated
+  clause: 'Raises: `ValueError` when either sequence is empty, when a sequence is not one-dimensional,
+    or when the two lengths differ.'
+  killed_by: test_shorter_first_sequence_raises_value_error_instead_of_truncating
+  visible: hidden
+- file: reject_tuple_inputs_refused.py
+  mistake: accepts only lists, so a tuple or an array of labels is refused
+  clause: '`x`, `y`: one-dimensional sequences (a list, a tuple or a 1-D array) of scalar labels, both
+    of length $n \ge 1$. Labels are compared by equality.'
+  killed_by: test_one_dimensional_array_of_labels_is_accepted
+  visible: hidden
+- file: reject_log2_bits.py
+  mistake: uses log base 2, so the value is in bits instead of nats
+  clause: 'Returns: a Python `float`, $I(X;Y)$ in nats. It is zero for independent labels and is never
+    negative beyond floating-point rounding.'
+  killed_by: test_perfectly_dependent_binary_labels_give_ln_two
+  visible: public
+- file: reject_forgets_sample_size.py
+  mistake: drops the factor n inside the logarithm, so the value is shifted by minus ln n
+  clause: 'Returns: a Python `float`, $I(X;Y)$ in nats. It is zero for independent labels and is never
+    negative beyond floating-point rounding.'
+  killed_by: test_perfectly_dependent_binary_labels_give_ln_two
+  visible: public
+- file: reject_labels_rewritten_in_place.py
+  mistake: rewrites a list input in place as strings
+  clause: Must not mutate its inputs.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

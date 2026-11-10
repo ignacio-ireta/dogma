@@ -240,3 +240,10 @@ def test_mixed_scalars_and_nested_sequences_raise_value_error():
         [0, 1, 0],
         "labels must be scalars: a sequence that mixes scalars and sequences must raise ValueError",
     )
+
+
+def test_shorter_first_sequence_raises_value_error_instead_of_truncating():
+    # x has 2 labels and y has 3: the lengths differ, so the call must raise, not pair up 2 rows.
+    _expect_value_error(
+        [0, 1], [0, 1, 1], "a shorter first sequence must raise ValueError, not be truncated"
+    )

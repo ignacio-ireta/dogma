@@ -198,3 +198,13 @@ def test_sum_slightly_outside_tolerance_is_rejected():
         "a distribution whose sum is 1.5e-9 away from 1 is outside the 1e-9 tolerance and must "
         "raise ValueError rather than being repaired",
     )
+
+
+def test_input_within_sum_tolerance_is_not_changed_in_place():
+    # The sum is 1 + 4e-10: accepted as given, so it must not be renormalised in place.
+    p = np.array([0.2, 0.3, 0.5 + 4e-10])
+    before = p.copy()
+    _call(p, base=2.0)
+    np.testing.assert_array_equal(
+        p, before, err_msg="the input array was modified: do not change the argument in place"
+    )
