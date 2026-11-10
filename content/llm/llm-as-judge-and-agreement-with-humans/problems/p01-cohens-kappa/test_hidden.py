@@ -9,6 +9,17 @@ from hypothesis import strategies as st
 from sklearn.metrics import cohen_kappa_score
 from submission import cohens_kappa
 
+
+def _raises(expected, call, mistake):
+    try:
+        call()
+    except expected:
+        return
+    except Exception as exc:
+        pytest.fail(f"{mistake}; raised {type(exc).__name__} instead")
+    pytest.fail(mistake)
+
+
 LABELS = ["x", "y", "z"]
 
 
@@ -47,8 +58,11 @@ def test_random_label_sequences_match_the_sklearn_oracle(a, seed):
     b = [a[i] if rng.random() < 0.6 else LABELS[int(rng.integers(0, 3))] for i in range(len(a))]
     labels = [*LABELS, "unused"]  # an unused label must not change the result
     if is_degenerate(a, b):
-        with pytest.raises(ValueError):
-            cohens_kappa(a, b, labels)
+        _raises(
+            ValueError,
+            lambda: cohens_kappa(a, b, labels),
+            "a degenerate pair must raise ValueError",
+        )
         return
     got = checked(lambda: cohens_kappa(a, b, labels))
     want = float(cohen_kappa_score(a, b, labels=labels))
