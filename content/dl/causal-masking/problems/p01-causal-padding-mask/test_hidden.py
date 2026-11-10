@@ -47,7 +47,7 @@ def test_causal_part_matches_tril_oracle_for_every_small_shape():
                 pytest.fail("causal mask disagrees with the bottom-right rule", pytrace=False)
 
 
-@pytest.mark.parametrize("seed", range(12))
+@pytest.mark.parametrize("seed", range(12), ids=list("abcdefghijkl"))
 def test_padding_is_anded_along_keys_with_causal_rule(seed):
     g = torch.Generator().manual_seed(seed)
     L, S, N = (int(x) for x in torch.randint(1, 7, (3,), generator=g))
