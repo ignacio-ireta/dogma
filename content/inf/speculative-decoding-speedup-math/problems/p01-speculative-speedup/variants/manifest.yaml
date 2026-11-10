@@ -2,6 +2,66 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_direct_sum.py
+  origin: freedom
+  freedom: computes E N by summing the powers of alpha in a loop instead of the closed form
+reject:
+- file: reject_alpha_accepts_bool.py
+  mistake: bool accepted as alpha
+  clause: '`alpha`: real float, finite, `0 <= alpha <= 1`. A bool is invalid.'
+  killed_by: test_invalid_alpha_gamma_or_cost_raises_value_error
+  visible: hidden
+- file: reject_gamma_minus_one_accepted.py
+  mistake: gamma of minus one accepted (off by one in the range check)
+  clause: '`gamma`: Python `int`, `gamma >= 0`. A bool, a float such as `4.0`, or a negative value is
+    invalid.'
+  killed_by: test_invalid_alpha_gamma_or_cost_raises_value_error
+  visible: hidden
+- file: reject_c_infinity_accepted.py
+  mistake: infinite cost accepted (finiteness check dropped)
+  clause: '`c`: finite real float, `c >= 0`. A bool is invalid.'
+  killed_by: test_invalid_alpha_gamma_or_cost_raises_value_error
+  visible: hidden
+- file: reject_gamma_float_raises_type_error.py
+  mistake: float gamma raises TypeError instead of ValueError
+  clause: 'Raises: `ValueError` for any invalid argument above, including NaN or infinite values.'
+  killed_by: test_invalid_alpha_gamma_or_cost_raises_value_error
+  visible: hidden
+- file: reject_alpha_one_only_gamma_zero.py
+  mistake: alpha equal to one special case applied only when gamma is zero
+  clause: Every valid input must return finite floats. No `ZeroDivisionError` at `alpha = 1` or `gamma
+    = 0`.
+  killed_by: test_full_acceptance_emits_gamma_plus_one_tokens
+  visible: public
+- file: reject_alpha_one_off_by_one.py
+  mistake: alpha equal to one returns gamma tokens instead of gamma plus one
+  clause: 'Returns: a tuple `(tokens_per_round, speedup)` of two Python floats. - `tokens_per_round` is
+    `E[N]`, the expected tokens emitted per round. It counts the target''s own token (the correction or
+    the bonus), so it is `1 + (expected accepted draft tokens)`. It equals `(1 - alpha**(gamma+1)) / (1
+    - alpha)` for `alpha < 1`, and `gamma + 1` for `alpha == 1`. - `speedup` is `tokens_per_round / (gamma
+    * c + 1)`.'
+  killed_by: test_full_acceptance_emits_gamma_plus_one_tokens
+  visible: public
+- file: reject_verify_pass_charged_as_draft.py
+  mistake: verification pass charged as an extra draft step in round cost
+  clause: 'Returns: a tuple `(tokens_per_round, speedup)` of two Python floats. - `tokens_per_round` is
+    `E[N]`, the expected tokens emitted per round. It counts the target''s own token (the correction or
+    the bonus), so it is `1 + (expected accepted draft tokens)`. It equals `(1 - alpha**(gamma+1)) / (1
+    - alpha)` for `alpha < 1`, and `gamma + 1` for `alpha == 1`. - `speedup` is `tokens_per_round / (gamma
+    * c + 1)`.'
+  killed_by: test_mixed_acceptance_gives_closed_form_tokens_and_speedup
+  visible: public
+- file: reject_naive_one_minus_alpha_power.py
+  mistake: closed form written with naive subtraction from one, losing precision near alpha one
+  clause: 'Returns: a tuple `(tokens_per_round, speedup)` of two Python floats. - `tokens_per_round` is
+    `E[N]`, the expected tokens emitted per round. It counts the target''s own token (the correction or
+    the bonus), so it is `1 + (expected accepted draft tokens)`. It equals `(1 - alpha**(gamma+1)) / (1
+    - alpha)` for `alpha < 1`, and `gamma + 1` for `alpha == 1`. - `speedup` is `tokens_per_round / (gamma
+    * c + 1)`.'
+  killed_by: test_near_one_acceptance_with_long_draft_keeps_relative_precision
+  visible: hidden
+uncovered:
+- clause: Must not mutate inputs.
+  reason: inputs are plain floats and ints, which cannot be changed in place, so no mutation can be written
+sweeps:
+- reject

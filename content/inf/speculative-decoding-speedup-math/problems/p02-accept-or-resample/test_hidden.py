@@ -227,3 +227,32 @@ def test_probability_vector_summing_below_one_is_rejected():
         "p must sum to 1: a vector summing to 0.5 is invalid and must raise ValueError",
         pytrace=False,
     )
+
+
+def test_probability_vector_summing_slightly_above_one_is_rejected():
+    # The sum must be 1 within 1e-9; a vector summing just above 1 is a wrong sum.
+    try:
+        accept_or_resample([0.5, 0.5001], [0.5, 0.5], 0, ScriptedRng(0.1, 0.1))
+    except ValueError:
+        return
+    except Exception:
+        pytest.fail(
+            "a probability vector with a wrong sum must raise ValueError, not another exception",
+            pytrace=False,
+        )
+    pytest.fail(
+        "p must sum to one within the tolerance: a sum just above one must raise ValueError",
+        pytrace=False,
+    )
+
+
+def test_p_within_tolerance_of_one_is_not_rescaled_in_place():
+    # The sum is 1 + 1e-10, inside the allowed tolerance but not exactly 1. Dividing by the
+    # sum would change the caller's entries, so the array must come back bit for bit.
+    p = np.array([0.25, 0.25, 0.5000000001])
+    q = np.array([0.2, 0.3, 0.5])
+    p_before = p.copy()
+    run(p, q, 0, 0.1)
+    assert np.array_equal(p, p_before), (
+        "do not normalize the caller's p in place, even when its sum is almost one"
+    )

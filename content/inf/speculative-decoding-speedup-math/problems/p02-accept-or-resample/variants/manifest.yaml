@@ -1,7 +1,53 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_loop_running_sum.py
+  origin: freedom
+  freedom: inverse CDF built as a Python loop with a running sum instead of np.cumsum
+- file: accept_normalise_residual_first.py
+  origin: freedom
+  freedom: residual normalised before taking the cumulative sum, a different rounding path
+reject:
+- file: reject_p_sum_tolerance_loose.py
+  mistake: sum tolerance widened so a sum just above one is accepted
+  clause: '`p`: real numeric array-like, 1-D, length `V >= 1`. Entries are finite and nonnegative, and
+    they sum to 1 within `1e-9`. Other ndim, empty input, negative or NaN entries, and a wrong sum are
+    invalid.'
+  killed_by: test_probability_vector_summing_slightly_above_one_is_rejected
+  visible: hidden
+- file: reject_normalises_caller_p_in_place.py
+  mistake: p normalised in place by its own sum, changing caller values slightly
+  clause: Must not mutate `p` or `q`.
+  killed_by: test_p_within_tolerance_of_one_is_not_rescaled_in_place
+  visible: hidden
+- file: reject_q_length_not_checked.py
+  mistake: lengths of p and q not compared
+  clause: '`q`: same rules as `p`, with the same length `V`.'
+  killed_by: test_invalid_probabilities_or_draft_token_raise_value_error
+  visible: hidden
+- file: reject_zero_draft_prob_not_raised.py
+  mistake: zero draft probability not rejected, so the draft token is accepted
+  clause: '`draft_token`: Python `int` or NumPy integer in `[0, V)`. A bool or a float is invalid. Raise
+    `ValueError` when `q[draft_token] == 0`, because the draft could not have proposed that token.'
+  killed_by: test_zero_draft_probability_for_the_draft_token_raises_value_error
+  visible: public
+- file: reject_uses_global_random.py
+  mistake: acceptance uniform taken from the global NumPy generator instead of rng
+  clause: '`rng`: an object with a `random()` method that returns a float in `[0, 1)`. Only `random()`
+    may be called.'
+  killed_by: test_accepted_draft_token_is_returned_with_one_draw
+  visible: public
+- file: reject_returns_input_integer_type.py
+  mistake: accepted token returned as the input integer type, not a Python int
+  clause: 'Returns: a Python `int` in `[0, V)`.'
+  killed_by: test_returns_a_python_int
+  visible: hidden
+- file: reject_bool_index_type_error.py
+  mistake: invalid draft token raises TypeError instead of ValueError
+  clause: 'Raises: `ValueError` for any invalid argument above.'
+  killed_by: test_invalid_probabilities_or_draft_token_raise_value_error
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
