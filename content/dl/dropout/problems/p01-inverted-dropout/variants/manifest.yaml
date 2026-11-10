@@ -2,6 +2,61 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_mask_loop.py
+  origin: freedom
+  freedom: builds the mask with a Python loop over the same draws instead of vectorised arithmetic
+reject:
+- file: reject_rejects_integer_input.py
+  mistake: rejects integer arrays that the Contract says are valid
+  clause: '`X`, `G`: real numeric NumPy arrays of the same nonempty rank-2 shape `(n,d)`. Dimensions are
+    1..64; entries are finite with absolute value <=1e6. Integer and strided arrays are valid; complex,
+    bool, and object arrays are invalid.'
+  killed_by: test_eval_is_identity_for_every_seed
+  visible: hidden
+- file: reject_p_upper_exclusive.py
+  mistake: treats the upper bound 0.95 of the drop probability as exclusive
+  clause: '`p`: finite Python int/float in `[0,0.95]`, interpreted as drop probability. `training`: Python
+    bool. `seed`: non-boolean integer in `[0,2**32-1]`.'
+  killed_by: test_random_seed_mask_oracle
+  visible: hidden
+- file: reject_draws_transposed_shape.py
+  mistake: draws the uniform values with transposed shape so the mask order differs when n and d are both
+    above one
+  clause: 'Training: draw exactly `U=np.random.default_rng(seed).random(X.shape)` and set `M=(U>=p).astype(float)/(1-p)`.
+    Return `(X*M, G*M, M)`.'
+  killed_by: test_random_seed_mask_oracle
+  visible: hidden
+- file: reject_eval_aliases_input.py
+  mistake: evaluation returns the caller arrays without copying
+  clause: 'Evaluation: M is all ones. Return independent copies of X and G plus M, even when p is nonzero.
+    The seed is validated but has no effect on values.'
+  killed_by: test_float_eval_outputs_are_independent_storage
+  visible: hidden
+- file: reject_mutates_input_in_place.py
+  mistake: writes the scaled upstream gradient into the caller array in place
+  clause: 'Returns: three float64 arrays, each the same shape as X. No input mutation or use of the global
+    RNG. Each call recreates the seed, so repeated calls share a mask. Do not enforce an exact count of
+    retained units.'
+  killed_by: test_random_seed_mask_oracle
+  visible: hidden
+- file: reject_raises_other_type.py
+  mistake: raises TypeError instead of ValueError for a shape mismatch
+  clause: Raise `ValueError` for invalid inputs, shapes, dtypes, bounds, mode or seed.
+  killed_by: test_invalid_shapes_values_probability_and_mode
+  visible: hidden
+- file: reject_uses_global_rng.py
+  mistake: reseeds and draws from the global NumPy generator
+  clause: 'Returns: three float64 arrays, each the same shape as X. No input mutation or use of the global
+    RNG. Each call recreates the seed, so repeated calls share a mask. Do not enforce an exact count of
+    retained units.'
+  killed_by: test_seeded_example
+  visible: public
+- file: reject_accepts_bool_seed.py
+  mistake: accepts a boolean seed as an integer
+  clause: '`p`: finite Python int/float in `[0,0.95]`, interpreted as drop probability. `training`: Python
+    bool. `seed`: non-boolean integer in `[0,2**32-1]`.'
+  killed_by: test_boolean_seed_is_rejected
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
