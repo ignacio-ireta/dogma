@@ -64,7 +64,7 @@ Work stops and resumes across sessions through the status table and the handoff 
 | I-30a | Time-warp backend + CLI: personal calendar offset, sync to the furthest exercise, `dogma warp`, `dogma course reset` (plan `2026-11-03-time-warp.md`) | — | I-10, I-13 | done |
 | I-30b | Time-warp API + web: `/calendar`, `/calendar/warp`, `/course/reset`, Progress page controls, Today offer | — | I-30a, I-17 | done |
 | I-31a | Data realism platform: `dogma_data` (real offline datasets, frozen realistic generators, seeds), `hf` dependency group + HF snapshot sync, submission ban, test-import allowlist, `exercise_audit realism` (plan `2026-11-09-data-realism.md`) | — | I-03, I-28 | done |
-| I-31b | Data realism content sweep: real and realistic data in the tests, statements and lessons of the affected problems (slices S1–S7) | — | I-31a | in-progress |
+| I-31b | Data realism content sweep: real and realistic data in the tests, statements and lessons of the affected problems (slices S1–S7) | — | I-31a | done |
 | I-31c | Data realism review: second-agent review per slice, fresh exercise audit, statuses back to `reviewed` | — | I-31b | todo |
 
 ### Content runway (one wave per path week; ARCHITECTURE §7)
@@ -282,6 +282,42 @@ data salt; versions are bumped. `make test-all` passes.
 
 *Newest first. One entry per session or agent: what changed · what was verified (exact commands
 and results) · what's left or blocked.*
+
+### 2026-11-09 · Data realism content sweep · I-31b done
+
+- **Result:** 42 problems in 47 topics changed, each with one version bump (re-solve material),
+  plus 43 lesson paragraphs with re-measured real-data numbers. No reference solution changed.
+  Every new test kills a hand-written realistic wrong solution that passed the old suite
+  (`exercise_audit realism`), sits next to the existing tests (none dropped: checked against
+  `9ab85f7`), survives `exercise_audit seeds` with the data salt, and runs under 10 s with a
+  blind solution.
+- **What real data caught:** overflow on separable real features and ill-conditioned designs
+  (logistic, normal equation, ridge); tie grouping by tolerance (ROC, AP, F1, NDCG); zero-IQR
+  pixels that vary (robust scaling); rare and unseen categories (pipelines, target encoding);
+  integer and float32 storage (ACF, rolling, bootstrap, Welch, ANOVA); curly quotes, case and
+  punctuation in real prose (TF-IDF, BPE, tokenizers, chunking); thousands separators (gsm8k
+  votes); narrow integer counts; dirty SQL keys, duplicate log rows, milliseconds, multi-year
+  and leap-year windows, `FLOAT` cent totals.
+- **Unchanged with evidence:** SVD, covariance, GMM, k-means, kNN, BM25, latency, quantization,
+  drift, the DL loops, class imbalance, tree splits, permutation importance, subqueries, top-N,
+  running totals, day-over-day change: every realistic mistake built for them was already caught.
+  Several of those topics got lesson paragraphs only.
+- **Process:** a session restart lost the coordinator's own uncommitted drafts for about 35
+  problems; six reviewers held each to the kill gate (14 reverted, with the learner's approval;
+  the drafts are kept in `var/audit-i31/uncommitted-2026-11-09-2300.patch`). Reviewers restored
+  randomized HEAD tests that drafts had replaced.
+- **Verified:** `make test-all` on `a91f293` in a clean worktree: Ruff and format, strict mypy
+  (179 files), 6 import contracts, content types (251), 1996 unit tests, 175 topics verified,
+  web check (187 tests) and build, privacy audit clean, 11 e2e/slow tests, 22 Playwright tests.
+- **Open (for I-31c or I-32):** rolling p01's reference fails some Hypothesis seeds at HEAD on
+  constant windows (held fix in `var/audit-i31/S4b/held/`); in the subquery problems, DuckDB's
+  average of identical cent amounts differs from the value in about 9% of cases, so a strict
+  `amount > AVG` is float-sensitive and the contract is silent; S3's inverse/determinant GMM
+  density and SVD p02's normal-equation route can't be separated from the reference at a
+  tolerance the conditioning allows; PSI and absmax Constraints say stdlib and NumPy, but their
+  `banned_imports` don't block sklearn or statsmodels; `synth.event_log` has whole-second
+  timestamps only (lag p02 builds millisecond clocks inline); confusion-matrix p01's uint8
+  killer is a weak realism case. I-31c review is next.
 
 ### 2026-11-09 · Data realism · I-31a done, I-31b in progress
 
