@@ -1,5 +1,5 @@
 id: cml/over-and-underfitting-early-stopping/p01-early-stopping
-version: 3                      # bump when tests, tolerances or the contract change
+version: 4                      # bump when tests, tolerances or the contract change
 title: Early-stopping point
 language: python                # python | sql
 runtime: py-numpy               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch

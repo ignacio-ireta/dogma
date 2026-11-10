@@ -1,7 +1,56 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_default_min_delta_tiny.py
+  mistake: default min_delta is a tiny positive number instead of zero
+  clause: '`min_delta`: float, finite and non-negative. Default `0.0`.'
+  killed_by: test_default_min_delta_is_zero_so_a_tiny_decrease_counts
+  visible: hidden
+- file: reject_min_delta_checks_only_negative.py
+  mistake: min_delta check accepts infinity and NaN because it only tests for negative values
+  clause: Raises `ValueError` when `val_losses` is empty, not 1-D, or contains NaN or infinity; when `patience
+    < 1`; or when `min_delta` is negative or not finite.
+  killed_by: test_non_finite_min_delta_raises_value_error
+  visible: hidden
+- file: reject_rejects_single_epoch.py
+  mistake: rejects a single epoch sequence that is valid
+  clause: '`val_losses`: 1-D array-like of finite real numbers, one per epoch, epoch 0 first. Non-empty.'
+  killed_by: test_matches_the_brute_force_reference_on_seeded_sequences
+  visible: hidden
+- file: reject_patience_one_treated_as_two.py
+  mistake: patience of one behaves like patience of two
+  clause: '`patience`: int, at least 1.'
+  killed_by: test_matches_the_brute_force_reference_on_seeded_sequences
+  visible: hidden
+- file: reject_tie_counts_without_min_delta.py
+  mistake: an equal loss counts as an improvement when min_delta is zero
+  clause: '**Improvement.** Let `best` be the loss at the last improvement, or `+infinity` before any.
+    Epoch `e` improves when `val_losses[e] < best - min_delta`. A tie with the best is not an improvement,
+    and a decrease of exactly `min_delta` is not an improvement either.'
+  killed_by: test_matches_the_brute_force_reference_on_seeded_sequences
+  visible: hidden
+- file: reject_wait_not_reset.py
+  mistake: improvement does not reset the wait counter
+  clause: '**Bookkeeping.** An improving epoch sets `best` to its loss, records `best_epoch = e`, and
+    resets `wait` to 0. Any other epoch adds 1 to `wait`.'
+  killed_by: test_matches_the_brute_force_reference_on_seeded_sequences
+  visible: hidden
+- file: reject_stop_one_epoch_late.py
+  mistake: stops one epoch after wait reaches patience
+  clause: '**Stopping.** Training stops at the first epoch where `wait` reaches `patience`. That epoch
+    is `stop_epoch`. If it never does, `stop_epoch` is the last epoch.'
+  killed_by: test_best_checkpoint_and_stop_after_three_epochs_without_improvement
+  visible: public
+- file: reject_numpy_int_stop_epoch.py
+  mistake: stop epoch is returned as a NumPy integer
+  clause: 'Returns: `(best_epoch, stop_epoch)` as Python ints. `best_epoch` is the last improvement at
+    or before `stop_epoch`.'
+  killed_by: test_matches_the_brute_force_reference_on_seeded_sequences
+  visible: hidden
+uncovered:
+- clause: Must not mutate inputs.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

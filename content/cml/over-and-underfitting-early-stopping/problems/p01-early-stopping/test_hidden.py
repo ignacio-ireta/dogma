@@ -183,3 +183,23 @@ def test_tiny_improvement_below_single_precision_resolution_is_an_improvement():
         "a loss lower than the best by 1e-9 is an improvement: compare the losses at full "
         "float64 precision, not after rounding them to a coarser format",
     )
+
+
+def test_default_min_delta_is_zero_so_a_tiny_decrease_counts():
+    # The default min_delta is 0.0, so a decrease of 1e-13 from 1.0 is an improvement:
+    # epoch 1 is the best checkpoint, and with patience 1 the stop is the last epoch.
+    got = early_stopping([1.0, 1.0 - 1e-13], patience=1)
+    _require(
+        tuple(got) == (1, 1),
+        "the default min_delta is 0.0, so any decrease in loss must count as an improvement",
+    )
+
+
+def test_non_finite_min_delta_raises_value_error():
+    # min_delta must be finite: infinity and NaN are both invalid and must raise ValueError.
+    for value in (float("inf"), float("nan")):
+        try:
+            early_stopping([1.0, 0.5], patience=2, min_delta=value)
+        except ValueError:
+            continue
+        pytest.fail("a min_delta that is not finite must raise ValueError")
