@@ -459,3 +459,21 @@ def test_eval_returned_running_statistics_are_new_tensors():
             "eval mode returned the input running statistics themselves; return new tensors",
             pytrace=False,
         )
+
+
+def test_running_statistics_keep_the_dtype_of_the_running_buffers():
+    # float32 batch with float64 running buffers: the returned running statistics
+    # must keep the buffers' dtype, not the dtype of x.
+    x = _randn((4, 3), 131, dtype=torch.float32)
+    gamma = torch.ones(3, dtype=torch.float32)
+    beta = torch.zeros(3, dtype=torch.float32)
+    rm = torch.zeros(3, dtype=torch.float64)
+    rv = torch.ones(3, dtype=torch.float64)
+    y, new_rm, new_rv = _call(x, gamma, beta, rm, rv, training=True, eps=1e-5)
+    assert y.dtype == torch.float32, "output rule broken: y must keep the dtype of x"
+    assert new_rm.dtype == torch.float64, (
+        "running mean rule broken: the returned running mean keeps the running buffer dtype"
+    )
+    assert new_rv.dtype == torch.float64, (
+        "running variance rule broken: the returned running variance keeps the running buffer dtype"
+    )

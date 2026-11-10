@@ -1,7 +1,63 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_reciprocal_multiply.py
+  origin: freedom
+  freedom: normalizes with a reciprocal square root multiplied in, not a division by the square root
+reject:
+- file: reject_returns_running_stats_wrong_dtype.py
+  mistake: returns running statistics in the dtype of x instead of the running buffer dtype
+  clause: 'Returns: `(y, new_running_mean, new_running_var)`. `y` has shape `(N, C)` and the dtype of
+    `x`. The running statistics have shape `(C,)` and the dtype of the input running statistics.'
+  killed_by: test_running_statistics_keep_the_dtype_of_the_running_buffers
+  visible: hidden
+- file: reject_running_mean_written_in_place.py
+  mistake: writes the new running mean into the caller tensor
+  clause: '`gamma`, `beta`, `running_mean`, `running_var`: tensors of shape `(C,)`. Must not be modified.'
+  killed_by: test_training_output_matches_reference_on_random_batches
+  visible: hidden
+- file: reject_momentum_weights_swapped.py
+  mistake: momentum weights the old statistic instead of the new one
+  clause: '`momentum`: float in `[0, 1]`. It is the weight on the **new** batch statistic.'
+  killed_by: test_training_example_normalizes_per_feature_and_updates_running_stats
+  visible: public
+- file: reject_eps_outside_sqrt.py
+  mistake: eps is added to the standard deviation, not inside the square root
+  clause: '`eps`: float `> 0`, added to the variance inside the square root. PyTorch also rejects `eps
+    <= 0` in training mode.'
+  killed_by: test_training_output_matches_reference_on_random_batches
+  visible: hidden
+- file: reject_normalize_with_unbiased_variance.py
+  mistake: normalizes with the unbiased variance
+  clause: 'Training mode, per feature over the `N` rows: - normalize with the **biased** variance (divide
+    by `N`); - update `running_var` with the **unbiased** variance (divide by `N - 1`); - update `running_mean`
+    and `running_var` with `new = (1 - momentum) * old + momentum * batch_statistic`.'
+  killed_by: test_training_example_normalizes_per_feature_and_updates_running_stats
+  visible: public
+- file: reject_inference_uses_batch_stats.py
+  mistake: inference normalizes with batch statistics
+  clause: 'Inference mode: normalize with `running_mean` and `running_var`. The returned running statistics
+    have the same values as the inputs.'
+  killed_by: test_inference_example_uses_running_stats_and_leaves_them_unchanged
+  visible: public
+- file: reject_eps_zero_accepted.py
+  mistake: accepts eps equal to zero
+  clause: 'Raises `ValueError` when: `x` is not 2-D or not floating-point; `N == 0`; any `(C,)` argument
+    has a different length from `C`; `training` is true and `N < 2`; `momentum` is outside `[0, 1]`; `eps
+    <= 0`.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_mutates_input_x.py
+  mistake: centres x in place, mutating the caller tensor
+  clause: Must not mutate inputs. PyTorch's own batch norm updates running buffers in place. Your function
+    must return new tensors instead.
+  killed_by: test_training_output_matches_reference_on_random_batches
+  visible: hidden
+uncovered:
+- clause: '`training`: `bool`.'
+  reason: 'bool flag: any break of the flag also breaks C6 or C7, so no separate wrong solution is forced'
+- clause: '`x`: floating-point tensor, shape `(N, C)`, with `N >= 1` and `C >= 1`. Must not be modified.'
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

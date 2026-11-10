@@ -1,5 +1,5 @@
 id: dl/batch-normalization/p01-batch-norm-forward
-version: 3
+version: 4
 title: Batch normalization forward (training and inference)
 language: python
 runtime: py-torch

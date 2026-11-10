@@ -1,7 +1,59 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_reciprocal_normalize.py
+  origin: freedom
+  freedom: normalizes with a reciprocal square root multiplied in, not a division by the square root
+reject:
+- file: reject_grad_y_clamped_in_place.py
+  mistake: clamps the upstream gradient in place, changing grad_y values above five
+  clause: '`grad_y`: floating-point tensor, shape `(N, C)`. Upstream gradient `dL/dy`. Must not be modified.'
+  killed_by: test_large_upstream_gradient_is_not_modified
+  visible: hidden
+- file: reject_x_centred_in_place.py
+  mistake: centres x in place, mutating the caller tensor
+  clause: '`x`: floating-point tensor, shape `(N, C)`, with `N >= 2` and `C >= 1`. Must not be modified.'
+  killed_by: test_gradients_match_autograd_on_random_batches
+  visible: hidden
+- file: reject_gamma_rescaled_in_place.py
+  mistake: rescales gamma in place by its largest magnitude
+  clause: '`gamma`: tensor of shape `(C,)`. Must not be modified.'
+  killed_by: test_gradients_match_autograd_on_random_batches
+  visible: hidden
+- file: reject_eps_ignored_in_backward.py
+  mistake: drops eps from the variance in the backward pass
+  clause: '`eps`: float `> 0`.'
+  killed_by: test_gradients_match_autograd_on_random_batches
+  visible: hidden
+- file: reject_grad_x_drops_variance_path.py
+  mistake: leaves out the variance path in grad_x
+  clause: 'Returns: `(grad_x, grad_gamma, grad_beta)`, with shapes `(N, C)`, `(C,)`, `(C,)`, and the dtype
+    of `x`. - `grad_beta[c] = sum over rows of grad_y[:, c]` - `grad_gamma[c] = sum over rows of grad_y[:,
+    c] * x_hat[:, c]` - `grad_x` is the gradient through the batch statistics, so it includes the mean
+    and variance terms.'
+  killed_by: test_two_row_example_has_zero_input_gradient
+  visible: public
+- file: reject_grad_beta_is_mean.py
+  mistake: returns the mean of grad_y over rows for grad_beta
+  clause: 'Returns: `(grad_x, grad_gamma, grad_beta)`, with shapes `(N, C)`, `(C,)`, `(C,)`, and the dtype
+    of `x`. - `grad_beta[c] = sum over rows of grad_y[:, c]` - `grad_gamma[c] = sum over rows of grad_y[:,
+    c] * x_hat[:, c]` - `grad_x` is the gradient through the batch statistics, so it includes the mean
+    and variance terms.'
+  killed_by: test_two_row_example_has_zero_input_gradient
+  visible: public
+- file: reject_drops_eps_check.py
+  mistake: no longer rejects eps less than or equal to zero
+  clause: 'Raises `ValueError` when: `x` or `grad_y` is not 2-D or not floating-point; `grad_y` and `x`
+    have different shapes; `N < 2`; `gamma` does not have shape `(C,)`; `eps <= 0`.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_accepts_single_row.py
+  mistake: accepts a single row instead of raising
+  clause: 'Raises `ValueError` when: `x` or `grad_y` is not 2-D or not floating-point; `grad_y` and `x`
+    have different shapes; `N < 2`; `gamma` does not have shape `(C,)`; `eps <= 0`.'
+  killed_by: test_single_row_is_rejected
+  visible: public
 uncovered: []
-sweeps: []
+sweeps:
+- reject

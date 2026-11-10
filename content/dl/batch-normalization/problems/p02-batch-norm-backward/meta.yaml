@@ -1,5 +1,5 @@
 id: dl/batch-normalization/p02-batch-norm-backward
-version: 3
+version: 4
 title: Batch normalization backward (training mode)
 language: python
 runtime: py-torch

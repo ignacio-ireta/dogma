@@ -292,3 +292,15 @@ def test_default_eps_matches_the_documented_signature():
         want_gb,
         "default eps differs from the documented signature (eps 1e-5): grad_beta is off",
     )
+
+
+def test_large_upstream_gradient_is_not_modified():
+    # Upstream values well outside the usual unit range: the caller's grad_y must keep them.
+    x = _randn((4, 3), 151)
+    gamma = _randn((3,), 152)
+    grad_y = _randn((4, 3), 153, scale=10.0)
+    original = grad_y.clone()
+    _call(grad_y, x, gamma, eps=1e-5)
+    assert torch.equal(grad_y, original), (
+        "input grad_y was modified in place: large upstream values must be kept as given"
+    )
