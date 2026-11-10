@@ -25,6 +25,8 @@ same items.
 - Raises `ValueError` for: an input that is not one-dimensional, unequal lengths, empty input, a
   negative or non-finite relevance, a NaN or infinite score, and a `k` that is neither `None` nor an
   integer of at least 1.
+- Two scores are tied only when they are exactly equal as floats. No tolerance is applied, so the value is
+  unchanged when every score is multiplied by the same positive constant, even 1e-9.
 - Must run in O(n log n) time. Must not mutate its inputs.
 
 ## Examples
@@ -49,6 +51,10 @@ same items.
 0.0               # no relevant item at all: IDCG is 0, so the value is defined as 0.0
 ```
 
+On raw `breast_cancer` (569 rows), take `area error` quartiles as grades 0 to 3 (141, 143, 142 and 143 rows)
+and `worst concave points` as the score, which has 492 distinct values. At k = 25 the NDCG is 0.902. Scaling
+the scores by 1e-9 must leave it at 0.902.
+
 ## Constraints
 
 - Allowed: the Python standard library and NumPy.
@@ -65,4 +71,6 @@ transform of the scores changes nothing, and that an all-tied list gives the ave
 that all-zero relevance gives 0.0, that a single item is valid, that `k` larger than n equals the full
 list, and that negative relevance, NaN or infinite scores, `k = 0`, empty input, mismatched lengths and
 a matrix input raise `ValueError`. A 200,000-item list must finish quickly, and the caller's arrays must
-be unchanged.
+be unchanged. Realism families covered: graded real relevance on raw `breast_cancer` with natural score
+ties, checked against scikit-learn at several cut-offs, and a tiny-scale invariance that rejects any absolute
+tolerance merging score groups.

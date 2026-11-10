@@ -1,5 +1,5 @@
 id: cml/precision-recall-and-f1/p02-best-f1-threshold
-version: 3
+version: 4
 title: Best F1 threshold
 language: python
 runtime: py-numpy
@@ -10,4 +10,4 @@ core: false
 tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
 banned_imports: [sklearn]
 timeout_s: 30
-status: reviewed
+status: verified

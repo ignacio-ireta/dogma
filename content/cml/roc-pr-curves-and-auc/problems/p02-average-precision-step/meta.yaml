@@ -1,5 +1,5 @@
 id: cml/roc-pr-curves-and-auc/p02-average-precision-step
-version: 3
+version: 4
 title: Average precision, step-wise
 language: python
 runtime: py-numpy
@@ -10,4 +10,4 @@ core: false
 tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
 banned_imports: [sklearn]
 timeout_s: 30
-status: reviewed
+status: verified

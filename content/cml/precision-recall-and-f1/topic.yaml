@@ -14,4 +14,4 @@ interview_angle: >-
 sources:
   - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter 7 (model assessment)"
   - "book: van Rijsbergen 1979, Information Retrieval (2nd ed., Butterworths), evaluation (the F-measure)"
-status: reviewed
+status: verified

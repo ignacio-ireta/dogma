@@ -8,6 +8,8 @@ Implement `best_f1_threshold(y_true, scores)`. A classifier gives each sample a 
 - A sample is predicted positive at threshold t when its score is greater than or equal to t.
 - The candidate thresholds are the distinct score values. Tied samples always share one candidate, so a threshold never splits a tie.
 - F1 at a candidate is 2 TP / (2 TP + FP + FN), computed as one division of the integer counts at that threshold.
+- Two scores are tied only when they are exactly equal as floats. No tolerance is applied, so the result
+  moves with the scores when they are multiplied by a positive constant, even 1e-9.
 - Returns `(threshold, f1)`, where the threshold is the candidate with the largest F1. If several candidates reach that largest F1, return the largest threshold.
 - If there are no positive samples, every F1 is 0.0, so the result is `(highest score, 0.0)`.
 - Raises `ValueError` for empty input, unequal lengths, input that is not 1-D, labels other than 0 and 1, and NaN or infinite scores.
@@ -34,6 +36,10 @@ Implement `best_f1_threshold(y_true, scores)`. A classifier gives each sample a 
 # Tied scores move together. Flagging both gives TP = 1, FP = 1, so F1 = 2/3.
 ```
 
+On raw `breast_cancer` (569 rows, 212 malignant), with `malignant` as the positive class and
+`worst concave points` as the score, the best F1 is 0.886 at threshold 0.1418, over 492 distinct
+candidates. Scaling the scores by 1e-9 must leave the F1 at 0.886.
+
 ## Constraints
 
 - Allowed: the Python standard library and NumPy.
@@ -41,4 +47,6 @@ Implement `best_f1_threshold(y_true, scores)`. A classifier gives each sample a 
 
 ## Done looks like
 
-All public tests pass, then **Submit** passes the hidden tests. They compare the chosen threshold and F1 with a brute-force search over every candidate, on random data with and without ties. They check the returned F1 against scikit-learn's F1 at that threshold, and that no candidate beats it. They check that tied scores are never split, that the largest threshold wins a tie, that a score equal to the threshold counts as positive, that the lowest threshold (flag everything) is a candidate, and that data with no positives returns `(highest score, 0.0)`. They also check that NaN, infinity, labels outside 0 and 1, and malformed shapes raise `ValueError`, that a 200,000-score input finishes quickly, and that the caller's arrays are left unchanged.
+All public tests pass, then **Submit** passes the hidden tests. They compare the chosen threshold and F1 with a brute-force search over every candidate, on random data with and without ties. They check the returned F1 against scikit-learn's F1 at that threshold, and that no candidate beats it. They check that tied scores are never split, that the largest threshold wins a tie, that a score equal to the threshold counts as positive, that the lowest threshold (flag everything) is a candidate, and that data with no positives returns `(highest score, 0.0)`. They also check that NaN, infinity, labels outside 0 and 1, and malformed shapes raise `ValueError`, that a 200,000-score input finishes quickly, and that the caller's arrays are left unchanged. Realism families covered: a raw real feature at one positive in twenty, checked against
+scikit-learn's F1 over every candidate, and a tiny-scale invariance that rejects any absolute tolerance
+merging thresholds.

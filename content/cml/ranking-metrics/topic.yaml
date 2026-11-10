@@ -16,4 +16,4 @@ sources:
   - "paper: Järvelin & Kekäläinen 2002, Cumulated gain-based evaluation of IR techniques (ACM Transactions on Information Systems)"
   - "book: Manning, Raghavan & Schütze, Introduction to Information Retrieval, chapter 8 (evaluation of ranked retrieval results)"
   - "paper: Voorhees 1999, The TREC-8 Question Answering Track Report (TREC-8 proceedings)"
-status: reviewed
+status: verified

@@ -12,6 +12,8 @@ from hypothesis import strategies as st
 from sklearn.metrics import average_precision_score
 from submission import average_precision
 
+from dogma_data import load, rng
+
 VALUE_MISTAKE = (
     "AP differs from the reference: a step sum over the distinct thresholds of (recall gained) "
     "times (precision at that threshold), highest threshold first"
@@ -209,4 +211,38 @@ def test_two_dimensional_labels_with_one_dimensional_scores_raise_value_error():
         lambda: average_precision(labels, scores),
         "a two-dimensional label array was accepted or crashed: y_true must be one-dimensional, "
         "so raise ValueError",
+    )
+
+
+PROBLEM = "cml/roc-pr-curves-and-auc/p02-average-precision-step"
+
+
+@pytest.fixture(scope="module")
+def breast_cancer():
+    return load("breast_cancer")
+
+
+def test_matches_scikit_learn_on_raw_breast_cancer_with_one_in_twenty_positives(breast_cancer):
+    names = list(breast_cancer.feature_names)
+    malignant = 1 - np.asarray(breast_cancer.y).astype(int)  # 1 = malignant, the positive class
+    gen = rng(f"{PROBLEM}:breast-cancer-rare:0")
+    positives = gen.choice(np.flatnonzero(malignant == 1), size=18, replace=False)
+    rows = np.concatenate([positives, np.flatnonzero(malignant == 0)])
+    for name in ("worst concave points", "area error"):
+        column = breast_cancer.X[rows, names.index(name)]
+        expected = average_precision_score(malignant[rows], column)
+        assert math.isclose(
+            _solve(malignant[rows], column), expected, rel_tol=1e-9, abs_tol=1e-12
+        ), VALUE_MISTAKE
+
+
+def test_only_the_order_and_equality_of_scores_matter_at_tiny_magnitudes(breast_cancer):
+    names = list(breast_cancer.feature_names)
+    malignant = 1 - np.asarray(breast_cancer.y).astype(int)
+    column = breast_cancer.X[:, names.index("worst concave points")]
+    base = _solve(malignant, column)
+    tiny = _solve(malignant, column * 1e-9)
+    assert math.isclose(base, tiny, rel_tol=1e-12, abs_tol=1e-12), (
+        "AP changed when the scores were scaled by a tiny constant: tied scores are exact "
+        "equality, so no absolute tolerance may merge distinct thresholds"
     )

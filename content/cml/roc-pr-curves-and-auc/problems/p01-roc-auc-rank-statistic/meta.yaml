@@ -1,5 +1,5 @@
 id: cml/roc-pr-curves-and-auc/p01-roc-auc-rank-statistic
-version: 3
+version: 4
 title: ROC AUC from ranks
 language: python
 runtime: py-numpy
@@ -10,4 +10,4 @@ core: true
 tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
 banned_imports: [sklearn, scipy]
 timeout_s: 30
-status: reviewed
+status: verified

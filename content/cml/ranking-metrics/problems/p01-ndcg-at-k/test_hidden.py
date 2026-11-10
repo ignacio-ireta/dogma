@@ -22,6 +22,8 @@ from numpy.typing import ArrayLike
 from sklearn.metrics import ndcg_score
 from submission import ndcg_at_k
 
+from dogma_data import load, rng
+
 LARGE_N = 200_000
 LARGE_TIME_LIMIT_S = 10.0
 SMALL_TIME_LIMIT_S = 5.0
@@ -318,3 +320,49 @@ def test_inputs_are_not_mutated() -> None:
     assert np.array_equal(scores, before_scores), (
         "scores were reordered or changed: sort a copy, never the caller's array"
     )
+
+
+PROBLEM = "cml/ranking-metrics/p01-ndcg-at-k"
+
+
+@pytest.fixture(scope="module")
+def breast_cancer() -> Any:
+    return load("breast_cancer")
+
+
+def _graded_quartiles(column: np.ndarray) -> np.ndarray:
+    """Grades 0 to 3 from the quartiles of a real column: the lowest quarter has grade 0."""
+    cuts = np.quantile(column, [0.25, 0.5, 0.75])
+    return np.searchsorted(cuts, column, side="right").astype(float)
+
+
+@pytest.mark.parametrize("k", [5, 25, None], ids=["k-5", "k-25", "whole-list"])
+def test_matches_scikit_learn_on_raw_breast_cancer_with_graded_relevance(
+    breast_cancer: Any, k: int | None
+) -> None:
+    names = list(breast_cancer.feature_names)
+    relevance = _graded_quartiles(breast_cancer.X[:, names.index("area error")])
+    scores = breast_cancer.X[:, names.index("worst concave points")]  # natural ties
+    expected = _sklearn(relevance, scores, k)
+    assert math.isclose(_solve(relevance, scores, k), expected, rel_tol=1e-9, abs_tol=1e-12), (
+        VALUE_MISTAKE
+    )
+
+
+def test_only_the_order_and_equality_of_scores_matter_at_tiny_magnitudes() -> None:
+    names = list(load("breast_cancer").feature_names)
+    data = load("breast_cancer")
+    relevance = _graded_quartiles(data.X[:, names.index("area error")])
+    scores = data.X[:, names.index("worst concave points")]
+    base = _solve(relevance, scores, 25)
+    tiny = _solve(relevance, scores * 1e-9, 25)
+    assert math.isclose(base, tiny, rel_tol=1e-12, abs_tol=1e-12), (
+        "NDCG changed when the scores were scaled by a tiny constant: tied scores are exact "
+        "equality, so no absolute tolerance may merge distinct score groups"
+    )
+    gen = rng(f"{PROBLEM}:tiny-scale:0")
+    noisy = np.round(gen.normal(size=300), 3)  # rounded scores: real ties, small magnitudes
+    grades = gen.integers(0, 4, size=300).astype(float)
+    assert math.isclose(
+        _solve(grades, noisy * 1e-9), _sklearn(grades, noisy), rel_tol=1e-9, abs_tol=1e-12
+    ), "NDCG with tiny-magnitude scores must still average over exact tie groups only"

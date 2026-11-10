@@ -43,6 +43,10 @@ array([[False, False, False],
 # row 2 scores are 0.5, 0.6, 0.9: 0.5 equals q, which is inside
 ```
 
+On raw `breast_cancer` (569 rows, standardized), a logistic regression fitted on 200 rows gives probabilities
+for 60 calibration rows and 309 test rows, with `alpha = 0.1`. The sets cover 95.1% of the test labels, 96.4%
+of the sets are singletons and 3.6% are empty, which the contract allows.
+
 ## Constraints
 
 - Allowed: NumPy and the Python standard library, including `math` and `fractions.Fraction`.
@@ -61,4 +65,8 @@ Passing means both examples match and the rank rule holds at every level. Hidden
 - nested sets as alpha decreases;
 - invalid probabilities, labels, class counts and alpha;
 - output dtype and shape, including zero test rows;
-- a seeded simulation whose empirical coverage must be at least `1 - alpha`, within a stated bound.
+- a seeded simulation whose empirical coverage must be at least `1 - alpha`, within a stated bound;
+- the same coverage check on over-confident synthetic probabilities (confidence above accuracy, varying by
+  row), at a small and a moderate calibration size;
+- sets from a real logistic regression on `breast_cancer`, against the sorted-score oracle;
+- scores compared in float64: a test score a hair above the threshold is outside the set, not rounded in.

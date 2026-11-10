@@ -7,7 +7,11 @@ from decimal import ROUND_CEILING, Decimal, localcontext
 
 import numpy as np
 import pytest
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
 from submission import prediction_sets
+
+from dogma_data import load, rng, synth
 
 
 def exact_rank(n, alpha):
@@ -292,4 +296,71 @@ def test_one_unnormalized_calibration_row_among_valid_rows_is_rejected():
     _must_reject(
         lambda: prediction_sets(cal_probs, [0, 0, 1], [[0.5, 0.5]], 0.2),
         "every calibration row must sum to 1, not only some of them",
+    )
+
+
+PROBLEM = "safe/split-conformal-prediction/p02-conformal-prediction-sets"
+
+
+def _oracle_masks(cal_probs, cal_labels, test_probs, alpha):
+    return oracle(np.asarray(cal_probs), np.asarray(cal_labels), np.asarray(test_probs), alpha)
+
+
+@pytest.mark.parametrize(("n", "alpha"), [(9, 0.15), (30, 0.1)], ids=["n-9", "n-30"])
+def test_coverage_on_over_confident_probabilities_meets_the_finite_sample_bound(n, alpha):
+    gen = rng(f"{PROBLEM}:peaked-coverage:{n}:0")
+    classes, trials = 10, 3000
+    labels = gen.integers(0, classes, size=(trials, n + 1))
+    probs = synth.peaked_probs(gen, labels.reshape(-1), classes).reshape(trials, n + 1, classes)
+    covered = 0
+    for t in range(trials):
+        mask = call(probs[t, :n], labels[t, :n], probs[t, n : n + 1], alpha)
+        covered += int(mask[0, labels[t, n]])
+    coverage = covered / trials
+    tolerance = 4.0 * math.sqrt(alpha * (1 - alpha) / trials)
+    assert coverage >= (1 - alpha) - tolerance, (
+        "coverage below 1 - alpha on over-confident scores: the rank must use n + 1, "
+        "k = ceil((n + 1)(1 - alpha)), not n"
+    )
+    assert coverage <= (1 - alpha) + 1.0 / (n + 1) + tolerance, (
+        "coverage above the finite-sample ceiling on over-confident scores: the rank is too large"
+    )
+
+
+def test_sets_from_a_real_classifier_match_the_sorted_score_oracle():
+    data = load("breast_cancer")
+    x = StandardScaler().fit_transform(data.X)
+    y = np.asarray(data.y).astype(int)
+    gen = rng(f"{PROBLEM}:breast-cancer:0")
+    order = gen.permutation(len(y))
+    train, cal, test = order[:200], order[200:260], order[260:]
+    model = LogisticRegression(max_iter=500).fit(x[train], y[train])
+    cal_probs = model.predict_proba(x[cal])
+    test_probs = model.predict_proba(x[test])
+    for alpha in (0.05, 0.1, 0.3):
+        mask = call(cal_probs, y[cal], test_probs, alpha)
+        np.testing.assert_array_equal(
+            mask,
+            _oracle_masks(cal_probs, y[cal], test_probs, alpha),
+            err_msg="set differs from the sorted-score oracle on real classifier probabilities: "
+            "check the score 1 - p(true class) and the rank with n + 1",
+        )
+
+
+def test_scores_are_compared_in_float64_so_nearby_probabilities_stay_apart():
+    # Over-confident classifiers report probabilities a billionth apart. Calibration scores are
+    # 0.3 + 1e-9 (n = 9, alpha = 0.7, so q is that common value). A test score 0.3 + 2e-9 is above
+    # q and must be out; 0.3 + 0.5e-9 is below q and must be in. Float32 scores round both
+    # test values to the same number, so the first would wrongly enter.
+    cal_probs = np.tile([0.7 - 1e-9, 0.3 + 1e-9], (9, 1))
+    mask = call(
+        cal_probs,
+        np.zeros(9, dtype=int),
+        [[0.7 - 2e-9, 0.3 + 2e-9], [0.7 - 0.5e-9, 0.3 + 0.5e-9]],
+        0.7,
+    )
+    np.testing.assert_array_equal(
+        mask,
+        [[False, False], [True, False]],
+        err_msg="scores must be compared in float64: a score 1e-9 above the threshold is outside",
     )

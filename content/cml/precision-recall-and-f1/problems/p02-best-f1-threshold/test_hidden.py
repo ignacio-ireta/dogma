@@ -14,6 +14,8 @@ from hypothesis import strategies as st
 from sklearn.metrics import f1_score
 from submission import best_f1_threshold
 
+from dogma_data import load, rng
+
 THRESHOLD_MISTAKE = (
     "threshold differs from the brute-force search: a sample is positive when its score is at "
     "least the threshold, candidates are the distinct scores, and equal F1 goes to the largest"
@@ -194,4 +196,44 @@ def test_one_dimensional_labels_with_two_dimensional_scores_raise_value_error():
     _expect_value_error(
         lambda: best_f1_threshold([0, 1], [[0.1, 0.9], [0.4, 0.2]]),
         "two-dimensional scores were accepted: scores must be one-dimensional, so raise ValueError",
+    )
+
+
+PROBLEM = "cml/precision-recall-and-f1/p02-best-f1-threshold"
+
+
+@pytest.fixture(scope="module")
+def breast_cancer():
+    return load("breast_cancer")
+
+
+def test_best_f1_matches_scikit_learn_sweep_on_raw_breast_cancer_with_rare_positives(breast_cancer):
+    names = list(breast_cancer.feature_names)
+    malignant = 1 - np.asarray(breast_cancer.y).astype(int)  # 1 = malignant, the positive class
+    gen = rng(f"{PROBLEM}:breast-cancer-rare:0")
+    positives = gen.choice(np.flatnonzero(malignant == 1), size=18, replace=False)
+    rows = np.concatenate([positives, np.flatnonzero(malignant == 0)])
+    y = malignant[rows]
+    for name in ("worst concave points", "mean texture"):
+        column = breast_cancer.X[rows, names.index(name)]
+        candidates = np.unique(column)
+        f1s = np.array([f1_score(y, column >= t, zero_division=0) for t in candidates])
+        expected_threshold = candidates[np.flatnonzero(f1s == f1s.max())[-1]]
+        threshold, f1 = _solve(y, column)
+        assert math.isclose(f1, f1s.max(), rel_tol=1e-9, abs_tol=1e-12), F1_MISTAKE
+        assert threshold == expected_threshold, THRESHOLD_MISTAKE
+
+
+def test_only_the_order_and_equality_of_scores_matter_at_tiny_magnitudes(breast_cancer):
+    names = list(breast_cancer.feature_names)
+    malignant = 1 - np.asarray(breast_cancer.y).astype(int)
+    column = breast_cancer.X[:, names.index("worst concave points")]
+    threshold, f1 = _solve(malignant, column)
+    tiny_threshold, tiny_f1 = _solve(malignant, column * 1e-9)
+    assert math.isclose(f1, tiny_f1, rel_tol=1e-12, abs_tol=1e-12), (
+        "best F1 changed when the scores were scaled by a tiny constant: tied scores are exact "
+        "equality, so no absolute tolerance may merge distinct thresholds"
+    )
+    assert math.isclose(tiny_threshold / 1e-9, threshold, rel_tol=1e-9), (
+        "the threshold must move with the scores: it is one of the score values"
     )

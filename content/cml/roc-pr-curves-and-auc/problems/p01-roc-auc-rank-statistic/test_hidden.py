@@ -13,6 +13,8 @@ from hypothesis import strategies as st
 from sklearn.metrics import roc_auc_score
 from submission import roc_auc
 
+from dogma_data import load, rng, synth
+
 VALUE_MISTAKE = (
     "AUC differs from the reference: it is the share of positive-negative pairs ordered "
     "correctly, with a tie counted as one half"
@@ -200,3 +202,50 @@ def test_two_dimensional_labels_with_one_dimensional_scores_raise_value_error():
         "a two-dimensional label array was accepted or crashed: y_true must be one-dimensional, "
         "so raise ValueError",
     )
+
+
+PROBLEM = "cml/roc-pr-curves-and-auc/p01-roc-auc-rank-statistic"
+
+
+@pytest.fixture(scope="module")
+def breast_cancer():
+    return load("breast_cancer")
+
+
+def test_matches_scikit_learn_on_raw_breast_cancer_features(breast_cancer):
+    names = list(breast_cancer.feature_names)
+    malignant = 1 - np.asarray(breast_cancer.y).astype(int)  # 1 = malignant, the positive class
+    gen = rng(f"{PROBLEM}:breast-cancer-full:0")
+    for name in ("worst concave points", "area error", "mean texture"):
+        column = breast_cancer.X[:, names.index(name)]
+        expected = roc_auc_score(malignant, column)
+        assert math.isclose(_solve(malignant, column), expected, rel_tol=1e-9, abs_tol=1e-12), (
+            VALUE_MISTAKE
+        )
+    # Rare positives: keep 18 malignant rows and every benign row, a ratio near 1:20.
+    positives = gen.choice(np.flatnonzero(malignant == 1), size=18, replace=False)
+    rows = np.concatenate([positives, np.flatnonzero(malignant == 0)])
+    for name in ("worst concave points", "area error"):
+        column = breast_cancer.X[rows, names.index(name)]
+        expected = roc_auc_score(malignant[rows], column)
+        assert math.isclose(
+            _solve(malignant[rows], column), expected, rel_tol=1e-9, abs_tol=1e-12
+        ), VALUE_MISTAKE
+
+
+def test_only_the_order_and_equality_of_scores_matter_at_tiny_magnitudes(breast_cancer):
+    names = list(breast_cancer.feature_names)
+    malignant = 1 - np.asarray(breast_cancer.y).astype(int)
+    column = breast_cancer.X[:, names.index("worst concave points")]
+    base = _solve(malignant, column)
+    tiny = _solve(malignant, column * 1e-9)
+    assert math.isclose(base, tiny, rel_tol=1e-12, abs_tol=1e-12), (
+        "AUC changed when the scores were scaled by a tiny constant: ties are exact equality, "
+        "so no absolute tolerance may merge distinct scores"
+    )
+    gen = rng(f"{PROBLEM}:tiny-scale:0")
+    y = synth.imbalanced_labels(gen, 4000, positive_rate=0.02)
+    scores = synth.informative_scores(gen, y, auc=0.9, decimals=4)
+    assert math.isclose(
+        _solve(y, scores * 1e-9), roc_auc_score(y, scores), rel_tol=1e-9, abs_tol=1e-12
+    ), "AUC changed when the scores were scaled by a tiny constant: ties are exact equality"
