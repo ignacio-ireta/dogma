@@ -1,4 +1,4 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
@@ -57,6 +57,14 @@ reject:
     bool. `seed`: non-boolean integer in `[0,2**32-1]`.'
   killed_by: test_boolean_seed_is_rejected
   visible: hidden
+- file: reject_limit_twice_as_large.py
+  mistake: accepts values slightly above the magnitude limit that the contract forbids
+  clause: '`X`, `G`: real numeric NumPy arrays of the same nonempty rank-2 shape `(n,d)`. Dimensions are
+    1..64; entries are finite with absolute value <=1e6. Integer and strided arrays are valid; complex,
+    bool, and object arrays are invalid.'
+  killed_by: test_entry_just_above_the_magnitude_limit_is_rejected
+  visible: hidden
 uncovered: []
 sweeps:
 - reject
+- mutants

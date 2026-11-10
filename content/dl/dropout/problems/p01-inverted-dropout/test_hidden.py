@@ -210,3 +210,8 @@ def test_draw_equal_to_drop_probability_is_kept():
             "a draw equal to the drop probability must be kept: the rule is draw >= p",
             pytrace=False,
         )
+
+
+def test_entry_just_above_the_magnitude_limit_is_rejected():
+    # Contract: entries have absolute value at most 1e6, so an entry of 1.5e6 must be rejected.
+    rejects(lambda: dropout(np.array([[1.5e6, 1.0]]), np.ones((1, 2)), 0.5, True, 0))
