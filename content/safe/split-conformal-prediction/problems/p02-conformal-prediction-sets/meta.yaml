@@ -11,4 +11,4 @@ core: false
 tolerance: {atol: 0.0, rtol: 0.0}   # the output is a boolean mask; scores use the same float operation as the oracle
 banned_imports: [numpy.quantile, numpy.percentile, numpy.nanquantile, numpy.nanpercentile]
 timeout_s: 30
-status: verified
+status: reviewed

@@ -16,4 +16,4 @@ sources:
   - "book: Casella & Berger, Statistical Inference, chapters on the two-sample t-test and on analysis of variance"
   - "book: Moore, McCabe & Craig, Introduction to the Practice of Statistics, chapters on two-sample and paired comparisons and on one-way ANOVA"
   - "source: library-refresh/01-Mathematics/06-Probability-and-Statistics/1933 -- Neyman and Pearson -- Hypothesis Tests as Controlled Decisions -- Study Note.md"
-status: verified
+status: reviewed

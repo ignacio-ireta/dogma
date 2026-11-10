@@ -80,7 +80,7 @@ $F(k-1, N-k)$ distribution. With $k=2$ it is the square of the pooled t statisti
   constant group with a varying other group is fine.
 - **Multiple comparisons.** Running many pairwise t-tests after a significant ANOVA inflates the false
   positive rate.
-- **Float32 storage.** The setosa and virginica sepal lengths (50 each, unequal spreads) give Welch $t = -15.386196$ in float64. The same values stored as float32 give $t = -15.386199$, a relative change of $2.1 \times 10^{-7}$. ANOVA $F = 119.2645$ on the three species moves by $2.0 \times 10^{-7}$ the same way. That is far above a $10^{-9}$ tolerance, so a solution that never converts to float64 fails on storage alone.
+- **Float32 storage.** The setosa and virginica sepal lengths (50 each, unequal spreads) give Welch $t = -15.386196$ in float64. Computed in float32 from the float32 storage, the same statistic gives $t = -15.386199$, a relative change of $2.1 \times 10^{-7}$. ANOVA $F = 119.2645$ on the three species moves by $2.0 \times 10^{-7}$ the same way. That is far above a $10^{-9}$ tolerance, so a solution that never converts to float64 fails on storage alone.
 
 ## Interview angle
 

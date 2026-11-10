@@ -310,8 +310,9 @@ def test_property_agrees_with_per_window_statistics(values, window, partial):
     # large value M leaves the window, that update keeps rounding residue of about eps * M**2 in
     # the sum of squared deviations, so a window of equal values reports a spread near
     # sqrt(eps) * M, about 1.5e-8 * M, before any mistake. 1e-6 * scale bounds that residue with
-    # room for a few hundred updates (the repeated-pairs test uses the same bound), while every
-    # wrong divisor, look-ahead or centring is off by far more.
+    # room for a few hundred updates (the repeated-pairs test uses the same bound), while a wrong
+    # divisor or a look-ahead is off by far more. Centring is not caught here at this magnitude
+    # (|values| <= 1e3); the large-offset test covers it.
     _close(
         stds,
         ref_stds,

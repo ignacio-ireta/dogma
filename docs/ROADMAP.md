@@ -65,7 +65,7 @@ Work stops and resumes across sessions through the status table and the handoff 
 | I-30b | Time-warp API + web: `/calendar`, `/calendar/warp`, `/course/reset`, Progress page controls, Today offer | — | I-30a, I-17 | done |
 | I-31a | Data realism platform: `dogma_data` (real offline datasets, frozen realistic generators, seeds), `hf` dependency group + HF snapshot sync, submission ban, test-import allowlist, `exercise_audit realism` (plan `2026-11-09-data-realism.md`) | — | I-03, I-28 | done |
 | I-31b | Data realism content sweep: real and realistic data in the tests, statements and lessons of the affected problems (slices S1–S7) | — | I-31a | done |
-| I-31c | Data realism review: second-agent review per slice, fresh exercise audit, statuses back to `reviewed` | — | I-31b | todo |
+| I-31c | Data realism review: second-agent review per slice, fresh exercise audit, statuses back to `reviewed` | — | I-31b | done |
 | I-32a | Test-strength platform: hidden-test lint, `variants/` manifest, `scripts/exercise_gate.py`, docs and variants for the example problem (plan `2026-11-09-test-strength.md`; a1–a4) | — | I-31a | done |
 | I-32b | Hygiene sweep: messages, ids, Hypothesis flags and `pytest.raises` in hidden tests, outcomes unchanged | — | I-32a, I-31c | in-progress |
 | I-32c | One blind solution per problem, committed as `variants/accept_blind` | — | I-32a, I-31c | in-progress |
@@ -364,6 +364,32 @@ and results) · what's left or blocked.*
   after the sweeps for the first 170 problems are complete.
 - **Left:** I-32b (216 lint sites in 75 problems), I-32c for the 81 held problems, I-32d, I-32e,
   and the merge to `main`. Notes so far are in `docs/audits/test-strength-decisions.md`.
+### 2026-11-10 · Data realism review and follow-ups · I-31c done
+
+- **Follow-ups (owner decisions):** rolling-statistics p01's property check now uses the
+  running-update bound (1e-6 times scale; the reference failed 7 of 20 seeds, flagged in I-28);
+  the subquery contracts state the exact 0.25-multiple amount domain, with a lesson note on cents;
+  every runtime now sets what a submission may import (ADR-0021, rule `runtime-import`; 178 of 231
+  Python problems could import libraries their statements rule out); ridge p01 returned to its
+  pre-I-31 tests (its longley killer was only 2x its tolerance and rejected a correct eigh solve).
+- **Review:** seven second agents (Sonnet for linear models and PCA) reviewed all 47 I-31 topics.
+  They corrected lesson numbers that did not reproduce (Nile window mean, conformal coverage 90.0%
+  and 80.0%, the cents claim, permutation-importance drops, a dirty-label example, cohort and lag
+  shares), statement errors (a quoted line not in the book, an example exposing hidden inputs, the
+  ulp limit of the tie rule, `?` handling in adult), and two test issues: PCA p01's data span
+  (a correct eigh solution failed 7 of 12 draws; now 0.03 to 30) and pandas-groupby p01's HEAD
+  test, which had lost its DuckDB oracle. All 47 topics are `reviewed`.
+- **Audit (fresh, 44 problems, against I-28):** 44/44 references pass; raw kill rate higher on 21,
+  equal on 9, lower on 0 (the 14 SQL problems have no I-28 row); `seeds` 880 runs, 0 failing. A
+  per-mutant comparison at 9ab85f7 confirmed no mutant the old tests killed survives the new ones.
+- **Verified:** `make test-all` stages on 21fa147: Ruff and format, strict mypy (179 files), 6 import contracts, content types (251), 2015 unit and integration tests, 175 topics verified, web check (187 tests) and build, privacy audit clean, 11 e2e/slow tests, 22 Playwright tests.
+- **Open (for I-32):** logistic p01's rare-separable test kills full Newton without line search on
+  about 25% of data draws (fair under the Contract; the grader's draw is one of them); the normal
+  equation's longley test rejects an eigh-of-Gram route (Gram cond 2.4e19); PCA p01's eigh route
+  still fails about 1 in 60 salted draws (the grader's draw passes); the word tokenizer and
+  majority vote miss non-ASCII whitespace and casefold variants (pre-I-31); `synth.event_log` has
+  whole-second timestamps; `_random_*(rng: ...)` helpers shadow the imported `rng`; the static
+  rules still miss `sys.modules` and dynamic imports.
 
 ### 2026-11-09 · Data realism content sweep · I-31b done
 

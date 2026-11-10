@@ -25,8 +25,9 @@ same items.
 - Raises `ValueError` for: an input that is not one-dimensional, unequal lengths, empty input, a
   negative or non-finite relevance, a NaN or infinite score, and a `k` that is neither `None` nor an
   integer of at least 1.
-- Two scores are tied only when they are exactly equal as floats. No tolerance is applied, so the value is
-  unchanged when every score is multiplied by the same positive constant, even 1e-9.
+- Two scores are tied only when they are exactly equal as floats. No absolute tolerance is applied,
+  so scores that differ by more than one unit in the last place stay distinct when every score is
+  multiplied by a tiny positive constant such as 1e-9.
 - Must run in O(n log n) time. Must not mutate its inputs.
 
 ## Examples

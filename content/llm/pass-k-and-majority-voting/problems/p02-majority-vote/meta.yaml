@@ -10,4 +10,4 @@ core: false
 tolerance: {atol: 0.0, rtol: 0.0}
 banned_imports: [collections.Counter, statistics.mode, statistics.multimode]
 timeout_s: 30
-status: verified
+status: reviewed

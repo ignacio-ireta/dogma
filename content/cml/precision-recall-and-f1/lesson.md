@@ -70,7 +70,7 @@ Macro F1 is the mean of the three F1 values, $(8/11+2/5+1/2)/3 = 179/330 = 0.542
 - **Tuning on the same data.** The best-F1 threshold found on the training data is optimistic. Choose it on held-out scores.
 - **Tied scores.** A threshold cannot separate tied samples, so a sweep that splits ties reports impossible numbers.
 
-**Tolerances merge real ties.** On raw `breast_cancer` (569 rows, 212 malignant), the best F1 of the feature `worst concave points` is $0.886$, at threshold $0.1418$ over 492 distinct candidates. Scale the scores by $10^{-9}$, which keeps their order, and the best F1 is still $0.886$. A sweep that merges scores within an absolute tolerance of $10^{-8}$ sees one tie group, so its only candidate flags everything. Its F1 is $2\cdot212/(2\cdot212+357)=0.543$. Tied scores must be grouped by exact equality, or the sweep picks a threshold that splits or merges real ties.
+**Tolerances merge real ties.** On raw `breast_cancer` (569 rows, 212 malignant), the best F1 of the feature `worst concave points` is $0.886$, at threshold $0.1418$ over 492 distinct candidates. Scale the scores by $10^{-9}$, which keeps their order, and the best F1 is still $0.886$. On those scaled scores, a sweep that merges scores within an absolute tolerance of $10^{-8}$ sees one tie group, so its only candidate flags everything. Its F1 is $2\cdot212/(2\cdot212+357)=0.543$. Tied scores must be grouped by exact equality, or the sweep picks a threshold that splits or merges real ties.
 
 ## Interview angle
 

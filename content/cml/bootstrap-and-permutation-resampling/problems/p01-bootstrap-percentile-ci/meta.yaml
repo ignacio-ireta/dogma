@@ -10,4 +10,4 @@ core: true
 tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
 banned_imports: [scipy.stats.bootstrap]
 timeout_s: 30
-status: verified
+status: reviewed

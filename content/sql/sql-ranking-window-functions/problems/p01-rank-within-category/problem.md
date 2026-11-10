@@ -52,7 +52,7 @@ tools     307         NULL       4           3     2
 
 A `product_id` such as `905113208` is compared as a number, not as text.
 
-The event_log dataset can supply product ids, dirty category labels, and lognormal amounts. Its
+A generated event log can supply product ids, dirty category labels, and lognormal amounts. Its
 category spellings stay separate ranking groups.
 
 ## Constraints
@@ -68,5 +68,5 @@ The families they cover: ties on revenue with the tie-break decided by `product_
 differs from their numeric order; NULL revenues after every number, including 0, and peers of each other;
 a category where every revenue is NULL; a single-product category; large, non-sequential ids; a table
 inserted in shuffled order, so an unordered result would show; an empty table; dirty category keys kept
-as stored, lognormal amounts, and `event_log` rows checked against an independent pandas computation
+as stored, lognormal amounts, and generated event-log rows checked against an independent pandas computation
 with `groupby().rank()`.

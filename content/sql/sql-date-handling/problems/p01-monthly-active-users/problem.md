@@ -52,7 +52,7 @@ month       active_users
 2024-02-01  1
 ```
 
-The event_log dataset has many events from a small set of heavy users. It is still one active
+A generated event log has many events from a small set of heavy users. It is still one active
 user per month, no matter how many events that user produced.
 
 ## Constraints
@@ -68,4 +68,4 @@ query tuned to the fixture fails. The hidden tests cover these families: an empt
 empty last month, an events table with no rows, month-boundary timestamps, a leap-day event, several
 events by one user in one month (counted once), Zipf-skewed user activity, naive timestamps, a user
 active in every month, events before and after the range, the month column type, the row order, and
-`event_log` tables checked against an independent pandas computation.
+generated event-log tables checked against an independent pandas computation.

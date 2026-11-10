@@ -8,8 +8,9 @@ Implement `best_f1_threshold(y_true, scores)`. A classifier gives each sample a 
 - A sample is predicted positive at threshold t when its score is greater than or equal to t.
 - The candidate thresholds are the distinct score values. Tied samples always share one candidate, so a threshold never splits a tie.
 - F1 at a candidate is 2 TP / (2 TP + FP + FN), computed as one division of the integer counts at that threshold.
-- Two scores are tied only when they are exactly equal as floats. No tolerance is applied, so the result
-  moves with the scores when they are multiplied by a positive constant, even 1e-9.
+- Two scores are tied only when they are exactly equal as floats. No absolute tolerance is applied,
+  so scores that differ by more than one unit in the last place stay distinct when every score is
+  multiplied by a tiny positive constant such as 1e-9.
 - Returns `(threshold, f1)`, where the threshold is the candidate with the largest F1. If several candidates reach that largest F1, return the largest threshold.
 - If there are no positive samples, every F1 is 0.0, so the result is `(highest score, 0.0)`.
 - Raises `ValueError` for empty input, unequal lengths, input that is not 1-D, labels other than 0 and 1, and NaN or infinite scores.

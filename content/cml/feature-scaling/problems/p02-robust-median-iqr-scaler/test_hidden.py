@@ -211,7 +211,8 @@ def digits_pixels():
 
 
 def test_zero_iqr_pixels_that_still_vary_get_unit_scale_on_real_digits(digits_pixels):
-    # Most pixels of the handwritten digits are zero, so many columns have IQR zero while varying.
+    # About half of the handwritten-digit pixel values are zero, so many columns have an IQR of
+    # zero while still varying.
     train, values = digits_pixels, digits_pixels[:60]
     expected = RobustScaler().fit(train)
     out, center, scale = _call(train, values)

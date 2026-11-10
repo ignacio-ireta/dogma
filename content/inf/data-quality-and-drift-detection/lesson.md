@@ -51,7 +51,7 @@ Failures can coexist. Investigate pipeline errors before treating an alert as mo
 
 In the offline `adult` snapshot, comparing the `workclass == "?"` indicator between the `<=50K` and `>50K` income
 cohorts gives shares of 6.36% and 2.48%, and a two-bin PSI of 0.0380. Dropping those marked rows turns both indicators
-into all zeros and reports PSI 0.0000, hiding the change. For this indicator, `?` is a recorded category value.
+into all zeros and reports PSI 0.0000, hiding a 2.6-fold difference in share. For this indicator, `?` is a recorded category value.
 
 ## Interview angle
 

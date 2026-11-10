@@ -164,7 +164,7 @@ def test_empty_input_returns_declared_schema_with_no_rows():
 def _millisecond_visitor_views(key: str) -> list[tuple[int, int, datetime]]:
     """Visitors with Zipf-skewed view counts and microsecond clocks, with gaps near 30 minutes.
 
-    Most gaps are short. About one gap in six sits at 30 minutes plus or minus a few microseconds,
+    Most gaps are short. About one gap in seven sits at 30 minutes plus or minus a few microseconds,
     a second, or a fraction of a second, so the boundary is tested at the resolution that app
     logs keep. Rows come back shuffled.
     """

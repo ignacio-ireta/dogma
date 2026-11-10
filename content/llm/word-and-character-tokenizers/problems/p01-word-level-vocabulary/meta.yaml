@@ -10,4 +10,4 @@ core: true
 tolerance: {atol: 0.0, rtol: 0.0}   # exact: integer ids and string lists, no floating point
 banned_imports: []                  # no library does the work; the contract is the rule
 timeout_s: 30
-status: verified
+status: reviewed

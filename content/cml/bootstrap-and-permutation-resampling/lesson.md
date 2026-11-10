@@ -76,7 +76,7 @@ not checked against the paper).
 - **Float ties.** On $a = (0.1, 0.5, 0.1)$, $b = (0.3, 0.3, 0.5, 0.3)$, a plain `>=` gives $p = 0.29$, while
   counting the ties gives $p = 0.63$. Use a relative tolerance near $10^{-9}$. A loose tolerance counts
   near-ties that are not ties.
-- **Repeats are rows.** The 150 `iris` sepal lengths hold only 35 distinct values. Resampling distinct values instead of rows gives a 90% interval for the mean of [5.873, 6.155], against [5.727, 5.957] from the protocol (B = 2,000, seed 13). Both ends move up by 0.15 to 0.20. Float32 storage moves the protocol interval by only $1.4 \times 10^{-8}$, but a test at $10^{-12}$ sees it.
+- **Repeats are rows.** The 150 `iris` sepal lengths hold only 35 distinct values. Resampling distinct values instead of rows gives a 90% interval for the mean of [5.873, 6.155] (the distinct values in order of first appearance), against [5.727, 5.957] from the protocol (B = 2,000, seed 13). Both ends move up by 0.15 to 0.20. Float32 storage moves the protocol interval by only $1.4 \times 10^{-8}$, but a test at $10^{-12}$ sees it.
 
 ## Interview angle
 

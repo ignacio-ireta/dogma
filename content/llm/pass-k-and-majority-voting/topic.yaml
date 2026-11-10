@@ -11,4 +11,4 @@ minutes: {lesson: 12, practice: 20, min_viable: 12}
 interview_angle: "Say what you sampled, what you counted, and why the estimator draws without replacement; then trade off n against cost and name the tie rule for voting."
 sources:
   - "library: AI-ML/12-Frontiers/Wei Chain-of-Thought 2022.md"
-status: verified
+status: reviewed

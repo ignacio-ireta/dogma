@@ -47,7 +47,7 @@ Signal: the rank formula, the score definitions, the direction of the guarantee 
 - **Small $n$.** When $\alpha<1/(n+1)$ the rank exceeds $n$, and no finite interval exists.
 - **Constant width under heteroscedastic noise.** Absolute residuals give one width everywhere: too wide where the model is precise, too narrow where it is uncertain.
 
-**Small calibration sets.** On raw `breast_cancer`, a logistic regression fitted on 200 rows gives probabilities for 309 held-out rows. With 9 calibration rows and $\alpha=0.15$, averaged over 2,000 random splits, the rank with the $(n+1)$ correction (9 of 9) covers $88.8\%$ of the test labels. Dropping the correction (rank 8 of 9) covers $77.8\%$, below the $85\%$ target. The correction is what keeps a small calibration set valid.
+**Small calibration sets.** On raw `breast_cancer`, a logistic regression fitted on 200 rows gives probabilities for 309 held-out rows. With 9 calibration rows and $\alpha=0.15$, averaged over 2,000 random splits (200 training, 9 calibration and 309 test rows), the rank with the $(n+1)$ correction (9 of 9) covers $90\%$ of the test labels. Dropping the correction (rank 8 of 9) covers $80\%$, below the $85\%$ target. The correction is what keeps a small calibration set valid.
 
 ## Interview angle
 

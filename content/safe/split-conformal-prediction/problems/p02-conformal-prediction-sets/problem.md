@@ -43,9 +43,9 @@ array([[False, False, False],
 # row 2 scores are 0.5, 0.6, 0.9: 0.5 equals q, which is inside
 ```
 
-On raw `breast_cancer` (569 rows, standardized), a logistic regression fitted on 200 rows gives probabilities
-for 60 calibration rows and 309 test rows, with `alpha = 0.1`. The sets cover 95.1% of the test labels, 96.4%
-of the sets are singletons and 3.6% are empty, which the contract allows.
+On raw `breast_cancer` (569 rows), standardize the features with all rows, fit a logistic regression on rows
+0 to 199, calibrate on rows 200 to 259 and test on rows 260 to 568, with `alpha = 0.1`. The sets cover 94.5%
+of the test labels, 97.4% of the sets are singletons and 2.6% are empty, which the contract allows.
 
 ## Constraints
 

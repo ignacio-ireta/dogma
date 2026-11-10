@@ -63,7 +63,7 @@ return the same arrays.
 On real `adult` (`load_frame`), `native.country` has 39 levels in the first 4000 rows, 8 of them seen at
 most twice. In the next 2000 rows, 3.9% of the countries fall outside the ten most frequent training
 levels, and one country never occurs in train. Such rows get an all-zero block, and every training level
-keeps its column. In that file `?` marks a missing answer, so pass it as NaN.
+keeps its column. The file uses `?` for a missing answer, and the tests replace it with NaN before calling your function.
 
 ```python
 >>> train = pd.DataFrame({"plan": ["pro", "basic", "pro", "basic", np.nan]})

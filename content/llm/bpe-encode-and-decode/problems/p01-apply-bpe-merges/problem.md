@@ -55,9 +55,9 @@ gives a different answer, as the examples show.
 ValueError            # the end-of-word marker is missing
 ```
 
-On real text, such as the pinned `gutenberg_frankenstein` slice, every word contains capital letters, curly
-quotes such as `’` and `“`, and dashes. Encoding each word and joining its symbols must give back the word
-and the marker, character for character.
+On real text, such as the pinned `gutenberg_frankenstein` slice, some words start with a capital letter,
+and some carry a curly quote such as `’` or `“`, or a dash. Encoding each word and joining its symbols must
+give back the word and the marker, character for character.
 
 ## Constraints
 

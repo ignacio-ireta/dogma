@@ -61,8 +61,8 @@ TypeError  # text must be a str
 ```
 
 On real prose, such as the pinned `gutenberg_frankenstein` slice, `“What` and `What` are different words,
-and so are `father’s` and `father`: punctuation and case are kept, so the vocabulary and the ids of held-out text match
-the naive count-and-sort.
+and so are `father’s` and `father`: punctuation and case are kept, so the vocabulary and the ids of
+held-out text match the naive count-and-sort.
 
 ## Constraints
 
