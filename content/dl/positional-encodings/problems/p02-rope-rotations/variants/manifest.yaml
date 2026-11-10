@@ -48,3 +48,4 @@ uncovered:
     the C3 rotation, so any break of them breaks C3
 sweeps:
 - reject
+- mutants
