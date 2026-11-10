@@ -2,6 +2,56 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_sum_of_squares_norm.py
+  origin: freedom
+  freedom: gradient norm summed with np.sum of the elementwise squares instead of a dot product, a different
+    rounding path
+reject:
+- file: reject_column_gradient_input.py
+  mistake: gradient called on a column vector instead of a 1-D array
+  clause: '`grad`: a callable that takes a 1-D float array `x` of length d and returns the gradient as
+    an array of shape (d,).'
+  killed_by: test_one_dimensional_quadratic_reaches_its_minimum
+  visible: public
+- file: reject_list_start_returned_as_is.py
+  mistake: list start point not converted to a float64 array
+  clause: '`x0`: 1-D array-like of finite real numbers, length d ≥ 1. Lists are allowed.'
+  killed_by: test_one_dimensional_quadratic_reaches_its_minimum
+  visible: public
+- file: reject_step_divides_by_lr.py
+  mistake: step divides by lr instead of multiplying
+  clause: '`lr`: the learning rate (step size), a number.'
+  killed_by: test_one_dimensional_quadratic_reaches_its_minimum
+  visible: public
+- file: reject_loop_one_update_short.py
+  mistake: loop runs one update short of max_iters
+  clause: '`max_iters`: int, default 10_000. The maximum number of updates.'
+  killed_by: test_max_iters_caps_the_count_and_returns_the_last_iterate
+  visible: hidden
+- file: reject_max_abs_gradient_stop.py
+  mistake: stop rule uses the largest absolute entry instead of the Euclidean norm
+  clause: '`tol`: float, default 1e-8. The gradient-norm tolerance.'
+  killed_by: test_stop_rule_uses_the_euclidean_norm_of_the_gradient
+  visible: hidden
+- file: reject_float32_result_on_convergence.py
+  mistake: converged result cast to float32 instead of float64
+  clause: 'Returns: `(x, n_iters)`. `x` is a new float64 array of shape (d,). `n_iters` is the number
+    of updates applied. If `x0` already meets the tolerance, `n_iters == 0` and `x` equals `x0`. If `max_iters`
+    updates are not enough, return the last iterate and `n_iters == max_iters`.'
+  killed_by: test_integer_start_point_gives_a_float64_result
+  visible: hidden
+- file: reject_nan_learning_rate_passes.py
+  mistake: lr check uses less or equal so a NaN learning rate passes
+  clause: Raises `ValueError` when `lr` is zero, negative or NaN (this check comes first, so it applies
+    even when `x0` is already optimal); when `x0` contains NaN or infinity; and when an iterate or gradient
+    becomes non-finite, with the message `diverged`.
+  killed_by: test_invalid_learning_rate_raises_even_when_start_is_optimal
+  visible: hidden
+- file: reject_start_point_mutated_in_place.py
+  mistake: start point not copied so the caller array changes in place
+  clause: Must not mutate `x0`. The returned `x` must not share memory with `x0`.
+  killed_by: test_start_at_minimum_returns_a_copy_not_the_input
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
