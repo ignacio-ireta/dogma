@@ -2,6 +2,62 @@ problem_version: 1
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_activations_left_out_of_total.py
+  mistake: activation bytes left out of the total
+  clause: '`activation_bytes`: `int` (not `bool`) and at least 0. Added as its own term.'
+  killed_by: test_seven_billion_parameter_examples_are_exact
+  visible: hidden
+- file: reject_fp32_master_copy_allowed.py
+  mistake: master copy allowed with fp32 weights instead of raising
+  clause: '`master_weights`: `bool`. In training with a `dtype` other than `"fp32"`, `True` keeps an fp32
+    copy of every weight, four bytes per parameter, held by the optimizer. With `"fp32"`, a master copy
+    adds nothing to store, so `master_weights=True` with `"fp32"` raises `ValueError`.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_fp8_two_bytes.py
+  mistake: fp8 counted as two bytes per number
+  clause: '`dtype`: the working dtype of the weights and gradients. One of: | name | bytes per number
+    | |---|---| | `"fp32"` | 4 | | `"fp16"`, `"bf16"` | 2 | | `"fp8"`, `"int8"` | 1 |'
+  killed_by: test_total_matches_the_hand_worked_bytes_per_parameter
+  visible: hidden
+- file: reject_gradients_always_fp32.py
+  mistake: gradients stored in fp32 whatever the working dtype
+  clause: 'Returns a `dict[str, int]` with these keys, in this order: - `"weights"`: `num_params * bytes(dtype)`.
+    - `"gradients"`: training only, `num_params * bytes(dtype)`. Zero for inference. - `"master_weights"`:
+    training, `master_weights` true and `dtype` not `"fp32"`, `4 * num_params`. Else zero. - `"optimizer_states"`:
+    training only, `4 * states * num_params`, where `states` comes from the table above. Zero for inference.
+    - `"activations"`: `activation_bytes`. - `"total"`: the exact sum of the other five entries.'
+  killed_by: test_mixed_precision_adam_is_sixteen_bytes_per_parameter
+  visible: public
+- file: reject_inference_allows_optimizer.py
+  mistake: inference accepts an optimizer instead of raising
+  clause: 'Rules that make the modes consistent: - `mode="inference"` requires `optimizer="none"` and
+    `master_weights=False`. - `mode="training"` requires `optimizer` other than `"none"`.'
+  killed_by: test_inference_with_an_optimizer_is_rejected
+  visible: public
+- file: reject_optimizer_states_in_working_dtype.py
+  mistake: optimizer states stored in the working dtype instead of fp32
+  clause: '`optimizer`: one of `"none"`, `"sgd"`, `"momentum"`, `"adam"`, `"adamw"`. Optimizer states
+    are always stored in fp32, four bytes per number, regardless of `dtype`. The number of states per
+    parameter is: `sgd` 0, `momentum` 1, `adam` 2, `adamw` 2.'
+  killed_by: test_mixed_precision_adam_is_sixteen_bytes_per_parameter
+  visible: public
+- file: reject_unknown_dtype_defaults_fp32.py
+  mistake: unknown dtype silently treated as fp32
+  clause: 'Raises `ValueError` when: any argument has the wrong type or range; an unknown name is given
+    for `mode`, `dtype` or `optimizer`; a rule above is violated.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_weights_through_float.py
+  mistake: weight bytes computed through float, losing exactness for large counts
+  clause: Integers are exact Python integers, so large parameter counts must not lose precision.
+  killed_by: test_large_parameter_counts_stay_exact_integers
+  visible: hidden
+uncovered:
+- clause: '`num_params`: `int` (not `bool`) and at least 0. The number of trainable scalars.'
+  reason: cap of eight wrong solutions per problem
+- clause: '`mode`: `"inference"` or `"training"`.'
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject
