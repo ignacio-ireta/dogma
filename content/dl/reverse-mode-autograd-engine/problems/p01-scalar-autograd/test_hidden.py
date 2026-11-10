@@ -134,3 +134,20 @@ def test_forward_data_is_read_only():
     close(x.data, 2.0)
     checked(squared.backward, allow_none=True)
     close(x.grad, 4.0)
+
+
+def test_tanh_of_large_valid_input_stays_finite():
+    for a in (1000.0, -1000.0):
+        x = checked(lambda a=a: Value(a))
+        y = checked(x.tanh)
+        assert np.isfinite(y.data), "tanh of a large valid input must stay finite"
+        close(y.data, np.tanh(a))
+
+
+def test_building_operation_keeps_operand_grad():
+    x = checked(lambda: Value(2.0))
+    y = checked(lambda: x * x)
+    checked(y.backward, allow_none=True)
+    close(x.grad, 4.0)  # d(x*x)/dx = 2x = 4 at x = 2
+    checked(lambda: Value(1.0) + x)
+    assert x.grad == 4.0, "building an operation must not change an operand grad"
