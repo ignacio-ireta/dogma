@@ -167,6 +167,8 @@ A problem is shippable only if **all** of the following hold:
       If none exists, add a property test or an analytic case.
 - [ ] Bulk random data is realistic where realism matters: real or semi-synthetic data via
       `dogma_data`, or a `dogma_data.synth` generator; see CONTENT_SPEC §6.6.
+- [ ] Hidden tests pass the lint (CONTENT_SPEC §6.4), and `variants/` holds one blind accept
+      and, for every Contract bullet, a reject or an `uncovered` reason (CONTENT_SPEC §6.8).
 - [ ] Gradient problems include a finite-difference check.
 - [ ] Tolerances are declared in `meta.yaml` (`atol`, `rtol`) and justified when looser than
       `1e-6`.
@@ -388,7 +390,8 @@ make check    = lint (ruff check + ruff format --check)
               + verify-content (dogma content verify --all, torch group)
               + web-check (biome, tsc --noEmit, vitest, gen:api --check, production build)
               + audit (working tree and newly built assets; runs after all checks above)
-make test-all = check + Python e2e/slow suites (excluding llm) + Playwright browser smoke
+make test-all = check + verify-variants (every problem's variants replayed through the grader)
+              + Python e2e/slow suites (excluding llm) + Playwright browser smoke
 ```
 
 `pre-commit` runs ruff, ruff-format, the privacy audit, a whitespace/large-file check and web lint.
@@ -419,6 +422,7 @@ extended to cover it); demonstrated end-to-end via CLI or browser.
 2. Run `git status` first. Preserve unrelated work. Never reset, stash or delete it.
 3. **Never weaken a test, widen a tolerance, or edit `test_hidden.py` just to make a solution
    pass.** If a test is wrong, say so and fix it in a separate, explained commit.
+   Check every test edit with `scripts/exercise_gate.py gate` (CONTENT_SPEC §6.8).
 4. Never read or write `private/` unless the task explicitly requires it. Never send its
    contents to an external model.
 5. Don't read outside the repo. Imported material lives in `sources/` and `corpus/`. If you need

@@ -1,6 +1,9 @@
 # Hidden tests: at least five. Include an oracle comparison on seeded random inputs where a library
 # implementation exists. Name each test after the behaviour it checks; the name is what learners
 # see. Messages name the kind of mistake, never the values (CONTENT_SPEC §6.4).
+# Lint: every assert carries a message, every parametrize has neutral ids=, every @given test has
+# @settings(deadline=None, report_multiple_bugs=False), and there is no pytest.raises (use a
+# helper that names the mistake). Prove each test with scripts/exercise_gate.py (CONTENT_SPEC §6.8).
 from submission import todo_entry
 
 

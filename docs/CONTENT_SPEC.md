@@ -24,7 +24,8 @@ content/<track>/<topic-slug>/          # <track>/<topic-slug> == the id in curri
         ├── test_public.py
         ├── test_hidden.py
         ├── hints.md
-        └── fixtures/                  # optional: CSV / data files the tests load
+        ├── fixtures/                  # optional: CSV / data files the tests load
+        └── variants/                  # proof for the tests (§6.8); written by scripts/exercise_gate.py
 ```
 
 Slugs: lowercase, `a-z0-9-`. Problem dirs are `pNN-slug`. Never renumber them.
@@ -224,6 +225,12 @@ Therefore:
 - `banned_imports`: a bare name (`random`, `bisect`) bans the *import* only. A dotted name
   (`numpy.linalg`, `scipy.stats.ttest_ind`) also bans attribute access to its last component.
 - Fast: the whole run takes under 10 s on a laptop.
+- **Lint.** `scripts/exercise_gate.py lint` checks four of these rules in `test_hidden.py`:
+  `HIDDEN_PARAM_IDS` (every `parametrize` has `ids=`), `HIDDEN_BARE_RAISES` (no `pytest.raises`),
+  `HIDDEN_GIVEN_SETTINGS` (every `@given` test has
+  `@settings(deadline=None, report_multiple_bugs=False, …)`) and `HIDDEN_ASSERT_MESSAGE` (every
+  `assert` has a message; every `np.testing` or `torch.testing` call has `err_msg` or `msg`).
+  No digit may appear inside the `[...]` part of a hidden test name, dtype names excepted.
 
 ### 6.6 Test data
 
@@ -284,6 +291,69 @@ categories; dirty categorical keys (case, stray spaces).
 
 Exactly three. Each builds on the last. None contains a complete solution. Headings may use `## Hint N: label` or `## Hint N — label`.
 `dogma hint` shows these reviewed hints first (I-22), so their quality directly shapes the tutor.
+
+### 6.7 Designing tests
+
+Follow these steps in order. The reasons and examples are in the
+[test strategy](superpowers/specs/2026-11-09-test-strategy-design.md).
+
+1. **Contract first.** Every test checks a sentence in Contract or Constraints. If a behaviour
+   matters and no sentence states it, add the sentence, then the test. If you are unsure whether
+   the Contract promises it, it does not.
+2. **One row per Contract bullet:** what a wrong solution would do, the oracle, the data, public
+   or hidden. A bullet with no row is a gap. A test with no bullet is over-reach.
+3. **Oracle,** the first that fits: a library call on the same inputs; a brute-force reference
+   in the test file, shaped differently from `solution.py`; a property that needs no expected
+   value; a literal worked out by hand for a tiny case. Never the reference's own output. If a
+   library oracle disagrees with `solution.py`, stop and report it.
+4. **Inputs,** in this order: hand-built edge cases; a property or seeded loop over the stated
+   domain; realistic data (§6.6); scale only when Constraints promise a complexity. Choose inputs
+   for which a wrong step changes the result: a test of "does not mutate" needs an input the
+   wrong code would actually alter.
+5. **Messages.** The first line names the rule that was broken and holds no hidden value. Order
+   the file from the most basic behaviour to the most exotic.
+6. **Public and hidden.** Hidden tests repeat every family the public tests show, with other
+   values.
+7. **Proof** (§6.8). No test without a wrong solution it fails. No wrong solution without a
+   Contract clause.
+
+### 6.8 Variants: proof that the tests work
+
+`variants/` holds solutions the tests must accept and wrong solutions they must reject.
+
+| Entry | File | Must |
+|---|---|---|
+| `accept`, `origin: blind` | `accept_blind.py` | Pass every test. Written from `problem.md`, the starter and the public tests only |
+| `accept`, `origin: freedom` | `accept_<what>.py` | Pass every test. Correct, and different from the reference where the Contract allows |
+| `reject` | `reject_<mistake>.py` | Fail the test named in `killed_by`. The reference with one mistake that breaks the quoted `clause` |
+| `uncovered` | none | Name a Contract bullet that has no reject, with the reason |
+
+`manifest.yaml` is written only by `scripts/exercise_gate.py` (`add-accept`, `add-reject`,
+`add-uncovered`, `remove-variant`, `adopt-blind`, `add-test`, `mark-swept`), from what the grader
+showed. Never edit it by hand. A new hidden test enters through `add-test`: it appends the test,
+bumps the version, runs `gate` and records the wrong solution the test catches, or restores every
+file. A variant is evidence, not reference code: when one is installed, style findings are marked
+in the file with `noqa`, while syntax errors and undefined names refuse it. Static rules, checked
+by `dogma content verify`:
+
+| Code | Rule |
+|---|---|
+| `VARIANT_MANIFEST_MISSING` | `variants/` has files but no `manifest.yaml` |
+| `VARIANT_FILE_UNLISTED`, `VARIANT_FILE_MISSING` | The manifest and the directory list the same files |
+| `VARIANT_SUFFIX` | `.py` for Python problems, `.sql` for SQL problems |
+| `VARIANT_CLAUSE_NOT_IN_STATEMENT` | Every `clause` is in `problem.md`, word for word |
+| `VARIANT_KILLED_BY_UNKNOWN` | `killed_by` is a test function of the file that `visible` names |
+| `VARIANT_VERSION_STALE` | `problem_version` equals `meta.yaml: version` |
+
+`make test-all` replays every manifest through the grader (`scripts/exercise_gate.py variants`).
+After any edit to a problem's tests, run
+
+    uv run --frozen --group torch python scripts/exercise_gate.py gate --out var/gate <problem id> --mode <mode>
+
+and keep the edit only on `GATE: PASS`. Modes: `add` for new tests (no line removed), `text` for
+messages, ids and Hypothesis reporting flags, `refactor` for any other edit that must not change
+an outcome, `none` when the tests did not change. A failing accept is never fixed by editing the
+test: report it.
 
 ## 7. Verification and the learner's loop (`dogma`)
 

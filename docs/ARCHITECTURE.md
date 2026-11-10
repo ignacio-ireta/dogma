@@ -126,7 +126,8 @@ content/
                 ├── solution.py           # reference; readable; explains the system in comments
                 ├── test_public.py        # shown to learner (examples + 1–2 edge cases)
                 ├── test_hidden.py        # edge cases, property tests, oracle comparisons
-                └── hints.md              # 3-step hint ladder: concept → formula → code shape
+                ├── hints.md              # 3-step hint ladder: concept → formula → code shape
+                └── variants/             # solutions the tests must accept or reject (CONTENT_SPEC §6.8)
 ```
 
 `topic.yaml`:
@@ -261,6 +262,9 @@ GradeReport
   snapshots and seeded synthetic generators, so bulk random inputs have real structure. Tests
   read vendored files and local bundles, never the network. Each dataset and generator is
   listed in [DATASETS.md](DATASETS.md).
+- **Variants** (`problems/<p>/variants/`): solutions the tests must accept and wrong solutions
+  they must reject, each tied to a Contract clause. `scripts/exercise_gate.py` writes the
+  manifest, checks every test edit and replays all variants in `make test-all` (ADR-0022).
 
 **Feedback contract** (ported from MVS `selfcheck`): blank or unattempted → a gentle reminder,
 not a failure. Wrong → a precise message that names the *type* of error ("shape mismatch",
@@ -676,7 +680,7 @@ dogma/
 ├── content/     <track>/<topic>/…                          # the curriculum (committed)
 ├── sources/     manifest.yaml  manifest.lock.json  <id>/…  # imported seed material (committed, scrubbed)
 ├── templates/   topic + problem scaffolds for `content new`
-├── scripts/     grade.py (legacy loop)  import_sources.py  audit_privacy.py  check_commit_files.py  check_content_types.py
+├── scripts/     grade.py (legacy loop)  import_sources.py  audit_privacy.py  check_commit_files.py  check_content_types.py  exercise_audit.py  exercise_gate.py
 ├── src/
 │   ├── dogma/
 │   │   ├── core/      config, errors (codes), fsio (atomic writes)
@@ -736,6 +740,7 @@ founding decisions are recorded here:
 | 0016 | No PII or employer/client data anywhere in the repo. Personal context only in gitignored `private/`. `make audit` gate | Publishable by construction. Replaces the "personal narratives" part of ADR-0011 |
 | 0019 | Personal course calendar: a whole-week offset in SQLite over the authored path (time-warp); review due dates stay real | Breaks never leave the calendar ahead of the work, and authored content never holds learner state |
 | [0018](decisions/0018-context-independent-publication.md) | General requirements and examples; working-tree/build privacy checks, staged-blob checks at commit, and history-free source publication | Keep individual context out of product artifacts while preserving required upstream attribution and local development history |
+| [0022](decisions/0022-problem-variants-and-test-gate.md) | Each problem carries `variants/`: solutions its tests must accept and reject, written by a gate tool that also checks every test edit | Proof kept in `var/` was lost after I-28; a mirror tree under `tests/` would drift from the content |
 
 ## 10. Roadmap
 
