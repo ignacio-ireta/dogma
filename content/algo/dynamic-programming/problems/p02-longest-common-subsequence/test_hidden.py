@@ -216,7 +216,7 @@ def test_second_argument_must_be_a_str_too() -> None:
     # because len() and indexing both work on them.
     for b in (["a", "b"], b"ab"):
         try:
-            longest_common_subsequence("ab", b)
+            longest_common_subsequence("ab", b)  # type: ignore[arg-type]
         except TypeError:
             continue
         pytest.fail(
