@@ -36,11 +36,8 @@ Implement `binary_scores(tp, fp, fn, tn)`. It takes the four cells of the 2 x 2 
 {'accuracy': 1.0, 'precision': 0.0, 'recall': 0.0, 'specificity': 1.0, 'f1': 0.0, 'mcc': 0.0}
 ```
 
-For 10,000 synthetic labels with one positive per 100 rows, `dogma_data.synth.informative_scores`
-with rounded ties and threshold 0.5 yields `(tp, fp, fn, tn) = (92, 4954, 8, 4946)` using keys
-`cml/confusion-matrix-and-count-based-scores/p02-binary-count-scores:rare-labels:0` and
-`cml/confusion-matrix-and-count-based-scores/p02-binary-count-scores:informative-scores:0`.
-Multiplying all four counts by the same factor leaves each score unchanged.
+Multiplying all four counts by the same positive integer leaves each score unchanged, so counts in the
+millions give the same rates as counts in the tens.
 
 ## Constraints
 

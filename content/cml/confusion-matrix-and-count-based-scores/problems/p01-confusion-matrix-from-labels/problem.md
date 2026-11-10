@@ -6,7 +6,8 @@ Implement `confusion_matrix(y_true, y_pred, labels=None)`. It counts how often e
 
 - `y_true`, `y_pred`: 1-D sequences (lists, tuples or NumPy arrays) of labels. Labels are integers or strings, one type per call. Both have the same length n, with n >= 1.
 - `labels`: `None`, or a sequence of distinct labels that sets the row and column order.
-- Returns: a NumPy integer array of shape (k, k), where k is the number of labels.
+- Returns: a NumPy integer array of shape (k, k), where k is the number of labels. Each entry is the exact
+  count for any n, however large: a dtype that wraps at 256 is wrong.
 - With `labels=None`, the labels are the sorted union of the labels in `y_true` and `y_pred`. Strings sort in Python's default order.
 - With `labels` given, rows and columns follow that order. A sample whose true or predicted label is not in `labels` is ignored. A listed label that never occurs gets a zero row and a zero column.
 - Raises `ValueError` when `y_true` and `y_pred` differ in length, when `y_true` is empty, or when `labels` contains a duplicate.

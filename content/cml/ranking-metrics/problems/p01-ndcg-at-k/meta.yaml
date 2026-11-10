@@ -11,4 +11,4 @@ core: true
 tolerance: {atol: 1.0e-9, rtol: 1.0e-9}
 banned_imports: [sklearn]       # the library call is the oracle; the learner implements the ranking
 timeout_s: 30
-status: verified
+status: reviewed

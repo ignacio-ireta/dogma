@@ -61,7 +61,7 @@ AP $=5/6=0.833$.
 - **Ties.** A model with a few distinct scores has many tied pairs. Ties must count as halves, and AP must treat each tie group as one threshold.
 - **Single class.** AUC needs both classes. This course's AP requires at least one positive; all-positive data gives AP $1$, while no-positive data raises `ValueError`. Scikit-learn instead reports $0$ with a warning for no positives. State the convention rather than silently inventing $0.5$.
 
-**Tolerances merge real ties.** On raw `breast_cancer`, the feature `worst concave points` gives ROC AUC $0.967$ and AP $0.957$ (569 rows, 492 distinct scores, prevalence $0.373$). Multiply the scores by $10^{-9}$, which keeps their order, and both values stay the same. A solution that merges scores within an absolute tolerance of $10^{-8}$ puts all 569 in one tie group. It then returns AUC $0.5$ and AP $0.373$, the prevalence. Ties are exact equality; a tolerance has no place in a ranking.
+**Tolerances merge real ties.** On raw `breast_cancer`, the feature `worst concave points` gives ROC AUC $0.967$ and AP $0.957$ (569 rows, 492 distinct scores, prevalence $0.373$). Multiply the scores by $10^{-9}$, which keeps their order, and both values stay the same. On those scaled scores, a solution that merges scores within an absolute tolerance of $10^{-8}$ puts all 569 in one tie group. It then returns AUC $0.5$ and AP $0.373$, the prevalence. Ties are exact equality; a tolerance has no place in a ranking.
 
 ## Interview angle
 

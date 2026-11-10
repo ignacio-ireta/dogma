@@ -59,7 +59,7 @@ Binary example: ranked $(d_3,d_1,d_7,d_2)$, relevant $\{d_1,d_2,d_9\}$, $k=3$. T
 - **Offline is not online.** A rise in offline NDCG may not move clicks or answers. Confirm with an A/B test, as in `cml/a-b-test-design-and-analysis`.
 - **Leakage.** Tuning on the same queries you report on makes the number optimistic.
 
-**Tolerances merge real score ties.** On raw `breast_cancer` (569 rows), graded relevance from quartiles of `area error` and the score `worst concave points` give NDCG@25 $0.902$. Multiply the scores by $10^{-9}$, which keeps their order, and the value is still $0.902$. A solution that merges scores within an absolute tolerance of $10^{-8}$ sees one tie group, and its NDCG@25 falls to $0.501$, the value of a random order, so the ranking is lost. Tie groups are exact equality.
+**Tolerances merge real score ties.** On raw `breast_cancer` (569 rows), graded relevance from quartiles of `area error` and the score `worst concave points` give NDCG@25 $0.902$. Multiply the scores by $10^{-9}$, which keeps their order, and the value is still $0.902$. On those scaled scores, a solution that merges scores within an absolute tolerance of $10^{-8}$ sees one tie group, and its NDCG@25 falls to $0.501$, the value of a random order, so the ranking is lost. Tie groups are exact equality.
 
 ## Interview angle
 
