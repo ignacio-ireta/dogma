@@ -1,7 +1,56 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_running_sum.py
+  origin: freedom
+  freedom: sample average kept as a running sum divided by the pull count, a different rounding path
+reject:
+- file: reject_uint_actions_refused.py
+  mistake: refuses unsigned integer action arrays
+  clause: '`actions`: one-dimensional integer NumPy array of length `N >= 0`. Entry `i` is an action index
+    in `0 .. n_actions - 1`. Float, boolean and object arrays are invalid.'
+  killed_by: test_unsigned_integer_actions_are_valid
+  visible: hidden
+- file: reject_int_rewards_refused.py
+  mistake: refuses integer reward arrays
+  clause: '`rewards`: one-dimensional real NumPy array of length `N`, every entry finite. Complex and
+    boolean arrays are invalid. Integer arrays are valid.'
+  killed_by: test_integer_rewards_return_float64
+  visible: hidden
+- file: reject_bool_n_actions_accepted.py
+  mistake: accepts bool for n_actions
+  clause: '`n_actions`: integer `>= 1`. `bool` is invalid.'
+  killed_by: test_invalid_arguments_rejected
+  visible: hidden
+- file: reject_zero_step_size_accepted.py
+  mistake: accepts step_size zero
+  clause: '`step_size`: `None`, or a real number `alpha` with `0 < alpha <= 1`. `bool`, NaN and other
+    values are invalid.'
+  killed_by: test_invalid_step_size_rejected
+  visible: hidden
+- file: reject_infinite_initial_accepted.py
+  mistake: accepts an infinite initial_value
+  clause: '`initial_value`: finite real number, default `0.0`.'
+  killed_by: test_invalid_arguments_rejected
+  visible: hidden
+- file: reject_float32_estimates.py
+  mistake: returns float32 instead of float64
+  clause: 'Returns: a new float64 array of shape `(n_actions,)`. An action that is never pulled keeps
+    `initial_value`.'
+  killed_by: test_sample_average_equals_batch_mean
+  visible: hidden
+- file: reject_index_equal_n_accepted.py
+  mistake: accepts action index equal to n_actions and raises IndexError
+  clause: Raises `ValueError` when the shapes differ, an action index is out of range, the dtype is invalid,
+    a reward is not finite, `n_actions` or `step_size` is invalid, or `initial_value` is not finite.
+  killed_by: test_invalid_arguments_rejected
+  visible: hidden
+- file: reject_rewards_rounded_in_place.py
+  mistake: rounds float64 reward inputs to float32 in place
+  clause: Must not mutate the input arrays.
+  killed_by: test_large_magnitudes_stay_finite_and_accurate
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

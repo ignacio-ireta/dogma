@@ -239,3 +239,10 @@ def test_action_index_past_the_end_is_rejected_before_a_valid_index():
 
 def test_zero_actions_is_rejected_even_for_an_empty_stream():
     _rejects(np.array([], dtype=np.int64), np.array([], dtype=np.float64), 0)
+
+
+def test_unsigned_integer_actions_are_valid():
+    # uint8 is an integer array, which the Contract accepts. Pulls: action 0 gets 2.0,
+    # action 1 gets 6.0, each mean is the single reward.
+    got = _call(np.array([0, 1], dtype=np.uint8), np.array([2.0, 6.0]), 2)
+    _close(got, [2.0, 6.0], atol=ATOL, err_msg="unsigned integer action indices must be accepted")

@@ -1,5 +1,5 @@
 id: rl/action-value-estimates/p01-incremental-action-values
-version: 3
+version: 4
 title: "Incremental action-value estimates"
 language: python
 runtime: py-numpy
