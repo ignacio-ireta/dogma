@@ -1,7 +1,58 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_transposed_product.py
+  origin: freedom
+  freedom: computes the W2 gradient as a transposed product, which differs only in the last digits
+reject:
+- file: reject_integer_input_refused.py
+  mistake: integer arrays are refused as if they were not numeric
+  clause: '`X`: real numeric NumPy array `(n,d)`; `y`: `(n,1)`. Dimensions n,d are 1..32; entries are
+    finite with absolute value <=10. Integer or strided arrays are valid; complex, bool, or object arrays
+    are invalid. Convert to float64.'
+  killed_by: test_dtype_singleton_and_fit_constant
+  visible: hidden
+- file: reject_bias_draws_consume_rng.py
+  mistake: bias initialization draws a random number that the Contract forbids
+  clause: Create `rng=np.random.default_rng(seed)`. In this exact order, draw `W1=rng.standard_normal((d,hidden))/sqrt(d)`
+    and `W2=rng.standard_normal((hidden,1))/sqrt(hidden)`. Biases `b1:(hidden,)` and `b2:(1,)` start at
+    zero; bias initialization consumes no random draws.
+  killed_by: test_initialization_and_initial_loss_oracle
+  visible: hidden
+- file: reject_sequential_update.py
+  mistake: the W1 gradient is computed from the already updated W2 instead of the checkpoint
+  clause: Compute `H=tanh(X@W1+b1)`, `prediction=H@W2+b2`, and `loss=mean((prediction-y)**2)/2`. Compute
+    all four gradients from the same pre-update checkpoint, then subtract `lr*gradient` from each parameter.
+  killed_by: test_one_step_all_parameter_gradients_finite_difference
+  visible: hidden
+- file: reject_losses_drop_last.py
+  mistake: the final post-update loss is dropped when steps is positive
+  clause: 'Return `((W1,b1,W2,b2), losses)`: all float64 arrays. `losses` has shape `(steps+1,)`, starting
+    with the initial loss and followed by each post-update loss. Zero steps returns initial parameters
+    and one loss. No shuffling, regularization, early stopping, disk I/O, or normalization beyond the
+    loss.'
+  killed_by: test_one_step_zero_input_example
+  visible: public
+- file: reject_nonfinite_loss_not_raised.py
+  mistake: a nonfinite loss checkpoint is returned instead of raising ValueError
+  clause: Raise `ValueError` for invalid shapes, dtypes, bounds, or hyperparameters. Raise `ValueError`
+    also if training reaches a nonfinite loss checkpoint. Inputs and the global NumPy random state must
+    remain unchanged.
+  killed_by: test_nonfinite_training_trajectory_raises_value_error
+  visible: hidden
+- file: reject_bool_control_accepted.py
+  mistake: boolean integer controls are accepted as integers
+  clause: '`hidden`: integer 1..32; `steps`: integer 0..200; `seed`: integer 0..2**32-1. Boolean integer
+    controls are invalid. `lr`: finite Python int/float, `0<lr<=1`.'
+  killed_by: test_boolean_integer_controls_are_rejected
+  visible: hidden
+- file: reject_learning_rate_one_excluded.py
+  mistake: a learning rate of exactly one is refused
+  clause: '`hidden`: integer 1..32; `steps`: integer 0..200; `seed`: integer 0..2**32-1. Boolean integer
+    controls are invalid. `lr`: finite Python int/float, `0<lr<=1`.'
+  killed_by: test_learning_rate_of_exactly_one_is_accepted
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

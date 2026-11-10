@@ -211,3 +211,18 @@ def test_one_large_positive_entry_in_inputs_is_rejected():
 
 def test_one_large_negative_entry_in_inputs_is_rejected():
     rejects(lambda: train_mlp(np.array([[-11.0, 1.0], [0.5, 0.2]]), np.ones((2, 1)), 2, 0, 0.1, 0))
+
+
+def test_boolean_integer_controls_are_rejected():
+    # Contract: boolean integer controls are invalid, though bool is a subclass of int.
+    X, y = np.ones((2, 2)), np.ones((2, 1))
+    for h, s, seed in [(True, 1, 0), (2, True, 0), (2, 1, True)]:
+        rejects(lambda h=h, s=s, seed=seed: train_mlp(X, y, h, s, 0.1, seed))
+
+
+def test_learning_rate_of_exactly_one_is_accepted():
+    # Contract: lr is in (0, 1], so the upper bound 1 is a valid learning rate.
+    _, losses = checked(lambda: train_mlp(np.ones((2, 2)), np.ones((2, 1)), 2, 1, 1.0, 0))
+    assert losses.shape == (2,), (
+        "a learning rate of exactly 1 is within the contract but was rejected"
+    )
