@@ -110,3 +110,9 @@ def test_xavier_rescaling_recovers_same_uniform_base(rows, cols, seed):
     assert np.allclose(
         unit, np.random.default_rng(seed).random((rows, cols)), atol=1e-12, rtol=1e-12
     ), "Xavier transform must preserve the seeded unit-uniform draws"
+
+
+def test_scheme_name_is_case_sensitive():
+    # The Contract says the scheme is exactly one of two lowercase names.
+    for scheme in ("XAVIER_UNIFORM", "He_Normal", "HE_NORMAL"):
+        _invalid(_learner, 2, 3, scheme, 0)

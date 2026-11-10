@@ -1,5 +1,5 @@
 id: dl/xavier-and-he-initialization/p01-initialize-dense-weights
-version: 1
+version: 2
 title: Initialize a dense weight matrix
 language: python
 runtime: py-numpy

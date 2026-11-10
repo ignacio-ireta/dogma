@@ -1,7 +1,54 @@
-problem_version: 1
+problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_split_sqrt.py
+  origin: freedom
+  freedom: computes the square root of the numerator and the denominator separately, a rounding-only difference
+reject:
+- file: reject_scheme_case_insensitive.py
+  mistake: accepts scheme names regardless of case
+  clause: '`scheme`: exactly `"xavier_uniform"` or `"he_normal"`.'
+  killed_by: test_scheme_name_is_case_sensitive
+  visible: hidden
+- file: reject_fan_accepts_numpy_int.py
+  mistake: accepts NumPy int64 fans
+  clause: '`fan_in`, `fan_out`: positive Python integers, excluding bool and NumPy integer scalars.'
+  killed_by: test_invalid_arguments
+  visible: hidden
+- file: reject_seed_accepts_bool.py
+  mistake: accepts a bool seed
+  clause: '`seed`: nonnegative Python integer, excluding bool. Use a fresh `np.random.default_rng(seed)`.'
+  killed_by: test_invalid_arguments
+  visible: hidden
+- file: reject_float32_roundtrip.py
+  mistake: rounds the weights through float32
+  clause: Return a `float64` NumPy array of shape `(fan_in, fan_out)`.
+  killed_by: test_he_example
+  visible: public
+- file: reject_xavier_integer_division.py
+  mistake: integer division in the Xavier bound
+  clause: For Xavier, set `a = sqrt(6 / (fan_in + fan_out))` and draw with `rng.uniform(-a, a, size=(fan_in,
+    fan_out))`.
+  killed_by: test_seeded_oracle_uses_raw_base_draws_and_independent_scaling
+  visible: hidden
+- file: reject_he_uses_fan_out.py
+  mistake: He scale uses fan_out instead of fan_in
+  clause: For He, set `s = sqrt(2 / fan_in)` and draw with `rng.normal(0, s, size=(fan_in, fan_out))`.
+  killed_by: test_seeded_oracle_uses_raw_base_draws_and_independent_scaling
+  visible: hidden
+- file: reject_global_rng_reseeded.py
+  mistake: reseeds the global NumPy RNG after drawing
+  clause: Raise `ValueError` for invalid fans, scheme or seed. Keep the global NumPy RNG state unchanged.
+    Calls must not share RNG state or output storage. Matrix sizes must be feasible in memory, with fans
+    representable as NumPy dimensions; allocation failures are out of scope.
+  killed_by: test_global_numpy_rng_unchanged
+  visible: hidden
+- file: reject_biases_appended_row.py
+  mistake: appends a zero bias row to the weights
+  clause: This initializes weights only. Biases are a separate policy and are not returned.
+  killed_by: test_xavier_shape_and_bounds
+  visible: public
 uncovered: []
-sweeps: []
+sweeps:
+- reject
