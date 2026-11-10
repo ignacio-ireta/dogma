@@ -1,5 +1,5 @@
 id: math/reservoir-sampling/p01-reservoir-sample
-version: 1                     # bump when tests, tolerances or the contract change
+version: 2                     # bump when tests, tolerances or the contract change
 title: Reservoir sample of k items
 language: python
 runtime: py-numpy

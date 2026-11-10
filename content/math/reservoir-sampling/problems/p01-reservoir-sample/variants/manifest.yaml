@@ -1,7 +1,41 @@
-problem_version: 1
+problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_reads_stream_into_list.py
+  mistake: copies the whole stream into a list first so memory is not O(k)
+  clause: '`stream`: any iterable of items. Read it once, in order, to its end. Do not call `len` on it,
+    and do not store the whole stream: memory must stay O(k).'
+  killed_by: test_memory_stays_bounded_by_k_on_a_long_stream
+  visible: hidden
+- file: reject_draw_excludes_current_index.py
+  mistake: later items draw over 0 to i minus 1 so the keep probability is off
+  clause: '`rng`: a NumPy `Generator`. The draws follow this protocol exactly: 1. The item with 0-based
+    index `i < k` goes to slot `i`, in arrival order. 2. For each item with index `i >= k`, make one draw
+    `j = rng.integers(0, i + 1)`, which is uniform over `0, ..., i` inclusive. If `j < k`, the item replaces
+    slot `j`. Otherwise the item is discarded. 3. No other random draw is made.'
+  killed_by: test_matches_a_two_pass_reference_of_the_same_protocol
+  visible: hidden
+- file: reject_slot_order_sorted.py
+  mistake: returns the reservoir sorted by value instead of in slot order
+  clause: 'Returns: a `list` of length `min(k, number of items)`, in slot order: element `j` is the item
+    in slot `j`. A stream shorter than `k` gives every item, in arrival order.'
+  killed_by: test_seeded_stream_of_ten_keeps_three_items_in_slot_order
+  visible: public
+- file: reject_wrong_error_type.py
+  mistake: raises TypeError instead of ValueError for negative k
+  clause: Raises `ValueError` when `k < 0`.
+  killed_by: test_negative_k_raises_value_error
+  visible: public
+- file: reject_appends_to_list_items.py
+  mistake: appends a zero to list items the sample keeps, changing the stream
+  clause: Must not mutate the stream's items.
+  killed_by: test_list_items_come_back_unchanged
+  visible: hidden
+uncovered:
+- clause: '`k`: an int. `k = 0` returns `[]`, whatever the stream and the draws. `k < 0` is an error.'
+  reason: k = 0 already returns an empty list for any stream and any draws, and no one-edit mistake breaks
+    it without also breaking the length in C4 or the draws in C3
+sweeps:
+- reject

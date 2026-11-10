@@ -222,3 +222,15 @@ def test_input_list_is_not_mutated():
     assert items == before, (
         "the input list was modified: keep the reservoir separate from the stream"
     )
+
+
+def test_list_items_come_back_unchanged():
+    items = [[i, i + 1] for i in range(12)]
+    before = [list(item) for item in items]
+    _run(
+        lambda: reservoir_sample(items, 3, np.random.default_rng(5)),
+        "valid inputs must not raise: reservoir_sample raised",
+    )
+    assert items == before, (
+        "the stream's items were modified: the sample must hold the items unchanged"
+    )
