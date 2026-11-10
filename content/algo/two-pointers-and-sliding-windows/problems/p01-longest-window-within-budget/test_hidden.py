@@ -152,7 +152,7 @@ def _random_costs(rng: np.random.Generator, n: int, high: int) -> list[int]:
     return [int(x) for x in rng.integers(0, high, size=n)]
 
 
-@settings(max_examples=80, deadline=None)
+@settings(max_examples=80, deadline=None, report_multiple_bugs=False)
 @given(seed=st.integers(min_value=0, max_value=10_000))
 def test_small_random_lists_match_brute_force(seed: int) -> None:
     rng = np.random.default_rng(seed)
@@ -161,7 +161,7 @@ def test_small_random_lists_match_brute_force(seed: int) -> None:
     _verify(costs, budget, _brute(costs, budget))
 
 
-@settings(max_examples=40, deadline=None)
+@settings(max_examples=40, deadline=None, report_multiple_bugs=False)
 @given(seed=st.integers(min_value=0, max_value=10_000))
 def test_medium_random_lists_match_the_prefix_sum_oracle(seed: int) -> None:
     rng = np.random.default_rng(seed)
