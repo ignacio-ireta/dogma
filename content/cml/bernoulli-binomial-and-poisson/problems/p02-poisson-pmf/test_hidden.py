@@ -46,7 +46,7 @@ def _expect_value_error(k, lam, why):
     _fail(why)
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(
     st.floats(min_value=0.01, max_value=60.0, allow_nan=False),
     st.integers(min_value=0, max_value=200),
@@ -56,7 +56,9 @@ def test_matches_scipy_poisson_pmf_for_moderate_rates(lam, k_max):
     _check_pmf(k, lam, stats.poisson.pmf(k, lam), ORACLE_HINT)
 
 
-@pytest.mark.parametrize("lam", [180.0, 1000.0, 5000.0])
+@pytest.mark.parametrize(
+    "lam", [180.0, 1000.0, 5000.0], ids=["large-rate", "very-large-rate", "huge-rate"]
+)
 def test_matches_scipy_for_large_rates_and_counts(lam):
     k = np.unique(np.linspace(0, 3 * lam, 301).astype(int))
     _check_pmf(k, lam, stats.poisson.pmf(k, lam), ORACLE_HINT + " (large rate)")
@@ -67,7 +69,11 @@ def test_counts_past_170_factorial_do_not_overflow():
     _check_pmf(k, 180.0, stats.poisson.pmf(k, 180.0), OVERFLOW_HINT)
 
 
-@pytest.mark.parametrize(("lam", "k_max"), [(0.5, 40), (7.5, 80), (50.0, 300)])
+@pytest.mark.parametrize(
+    ("lam", "k_max"),
+    [(0.5, 40), (7.5, 80), (50.0, 300)],
+    ids=["small-rate-short-support", "medium-rate-medium-support", "large-rate-long-support"],
+)
 def test_pmf_sums_to_one_over_the_support(lam, k_max):
     k = np.arange(k_max + 1)
     got, crash = _call(k, lam)
@@ -82,7 +88,7 @@ def test_pmf_sums_to_one_over_the_support(lam, k_max):
     )
 
 
-@pytest.mark.parametrize("lam", [0.7, 7.5, 120.0])
+@pytest.mark.parametrize("lam", [0.7, 7.5, 120.0], ids=["small-rate", "medium-rate", "large-rate"])
 def test_mean_and_variance_are_both_lambda(lam):
     k = np.arange(int(lam * 5) + 40)
     got, crash = _call(k, lam)
@@ -147,7 +153,11 @@ def test_integral_float_k_gives_the_same_pmf_as_integer_k():
     np.testing.assert_allclose(a, b, rtol=1e-15, err_msg="integral floats must match integer k")
 
 
-@pytest.mark.parametrize("lam", [-1.0, float("nan"), float("inf")])
+@pytest.mark.parametrize(
+    "lam",
+    [-1.0, float("nan"), float("inf")],
+    ids=["negative-rate", "nan-rate", "infinite-rate"],
+)
 def test_invalid_rate_raises_value_error(lam):
     _expect_value_error(
         2,

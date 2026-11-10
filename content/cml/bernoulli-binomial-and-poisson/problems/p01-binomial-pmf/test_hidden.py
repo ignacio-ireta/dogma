@@ -55,7 +55,7 @@ def _expect_value_error(k, n, p, why):
     raise AssertionError(why)
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(
     st.integers(min_value=0, max_value=300),
     st.floats(min_value=0.001, max_value=0.999, allow_nan=False),
@@ -65,7 +65,9 @@ def test_matches_scipy_binom_pmf_for_small_and_medium_n(n, p):
     _check_pmf(k, n, p, stats.binom.pmf(k, n, p), ORACLE_HINT)
 
 
-@pytest.mark.parametrize("p", [0.5, 1e-6, 0.999])
+@pytest.mark.parametrize(
+    "p", [0.5, 1e-6, 0.999], ids=["fair-coin", "rare-success", "common-success"]
+)
 def test_matches_scipy_at_one_million_trials(p):
     n = 10**6
     k = np.concatenate(
@@ -86,7 +88,11 @@ def test_pmf_sums_to_one_over_the_support_at_one_million_trials():
     )
 
 
-@pytest.mark.parametrize(("n", "p"), [(200, 0.37), (1000, 0.02), (7, 0.9)])
+@pytest.mark.parametrize(
+    ("n", "p"),
+    [(200, 0.37), (1000, 0.02), (7, 0.9)],
+    ids=["medium-trials", "many-trials-rare-success", "few-trials-likely-success"],
+)
 def test_mean_and_variance_match_np_and_np_one_minus_p(n, p):
     k = np.arange(n + 1)
     pmf = _pmf(k, n, p, MOMENT_HINT)
@@ -158,7 +164,7 @@ def test_result_is_float64():
     assert got.dtype == np.float64, f"pmf must be float64, got {got.dtype}"
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(
     st.integers(min_value=0, max_value=200),
     st.floats(min_value=0.001, max_value=0.999, allow_nan=False),
