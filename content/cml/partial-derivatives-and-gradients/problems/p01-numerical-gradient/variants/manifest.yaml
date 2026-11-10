@@ -2,6 +2,54 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_cbrt_step.py
+  origin: freedom
+  freedom: uses np.cbrt for the step root, same value by a different rounding path
+- file: accept_offset_vectors.py
+  origin: freedom
+  freedom: builds each perturbation as an offset vector added to x, a different code path with the same
+    values
+reject:
+- file: reject_int_cast_missing.py
+  mistake: no float cast on the input so integer arrays truncate the step
+  clause: '`x`: a 1-D array-like of finite real numbers, length $n \geq 1$. Integers are allowed.'
+  killed_by: test_integer_input_returns_float64_vector_of_length_n
+  visible: hidden
+- file: reject_forward_difference.py
+  mistake: forward difference instead of central difference
+  clause: 'Returns: a NumPy array of shape `(n,)` and dtype `float64`. Component $i$ is $\dfrac{f(\mathbf{x}
+    + h_i\mathbf{e}_i) - f(\mathbf{x} - h_i\mathbf{e}_i)}{2h_i}$ with $h_i = \varepsilon^{1/3}\max(1,
+    |x_i|)$, where $\varepsilon$ is the float64 machine epsilon.'
+  killed_by: test_gradient_of_sum_of_squares_is_twice_x
+  visible: public
+- file: reject_sqrt_eps_step.py
+  mistake: step uses eps to the one half instead of eps to the one third
+  clause: 'Returns: a NumPy array of shape `(n,)` and dtype `float64`. Component $i$ is $\dfrac{f(\mathbf{x}
+    + h_i\mathbf{e}_i) - f(\mathbf{x} - h_i\mathbf{e}_i)}{2h_i}$ with $h_i = \varepsilon^{1/3}\max(1,
+    |x_i|)$, where $\varepsilon$ is the float64 machine epsilon.'
+  killed_by: test_quadratic_form_gradient_matches_a_plus_a_transpose_times_x
+  visible: hidden
+- file: reject_nan_only_check.py
+  mistake: infinite entries allowed, only NaN rejected
+  clause: Raises `ValueError` when `x` is not 1-D, is empty, or contains a NaN or infinite entry.
+  killed_by: test_non_finite_coordinate_raises_value_error
+  visible: hidden
+- file: reject_ndim_zero_only.py
+  mistake: ndim check only catches scalars, so 2-D input is not a ValueError
+  clause: Raises `ValueError` when `x` is not 1-D, is empty, or contains a NaN or infinite entry.
+  killed_by: test_matrix_input_raises_value_error
+  visible: hidden
+- file: reject_in_place_perturb.py
+  mistake: perturbs the caller array in place and restores it by rounding
+  clause: Must not mutate `x`.
+  killed_by: test_input_array_is_not_mutated
+  visible: hidden
+- file: reject_float32_copies.py
+  mistake: passes float32 copies to f instead of float64
+  clause: '`f`: a callable that takes a 1-D float64 array of shape `(n,)` and returns a real number. Only
+    evaluate it.'
+  killed_by: test_gradient_of_sum_of_squares_is_twice_x
+  visible: public
 uncovered: []
-sweeps: []
+sweeps:
+- reject
