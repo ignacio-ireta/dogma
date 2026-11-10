@@ -45,7 +45,7 @@ def _project(a, b, mistake):
         pytest.fail(f"{mistake}; raised {type(exc).__name__} instead: {exc}")
 
 
-@settings(max_examples=80, deadline=None)
+@settings(max_examples=80, deadline=None, report_multiple_bugs=False)
 @given(vector_pairs())
 def test_matches_independent_reference_on_random_vectors(pair):
     a, b = pair
@@ -58,7 +58,7 @@ def test_matches_independent_reference_on_random_vectors(pair):
     )
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(vector_pairs())
 def test_residual_is_orthogonal_to_b(pair):
     a, b = pair
@@ -68,7 +68,7 @@ def test_residual_is_orthogonal_to_b(pair):
     )
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(vector_pairs())
 def test_projection_is_idempotent(pair):
     a, b = pair
@@ -82,7 +82,7 @@ def test_projection_is_idempotent(pair):
     )
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(vector_pairs(), st.sampled_from([-3.0, 0.5, 7.0]))
 def test_rescaling_b_does_not_change_the_projection(pair, factor):
     a, b = pair
