@@ -136,6 +136,7 @@ def _bare_raises(tree: ast.Module) -> list[LintFinding]:
 
 def _given_settings(tree: ast.Module) -> list[LintFinding]:
     findings: list[LintFinding] = []
+    aliases = _module_call_aliases(tree)
     for node in ast.walk(tree):
         if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
             continue
@@ -146,8 +147,31 @@ def _given_settings(tree: ast.Module) -> list[LintFinding]:
             continue
         if any(_has_clean_settings(decorator) for decorator in decorators):
             continue
+        if any(
+            isinstance(decorator, ast.Name) and _alias_is_clean(aliases.get(decorator.id))
+            for decorator in node.decorator_list
+        ):
+            continue
         findings.append(LintFinding("HIDDEN_GIVEN_SETTINGS", node.lineno, _GIVEN_MESSAGE))
     return findings
+
+
+def _module_call_aliases(tree: ast.Module) -> dict[str, list[ast.expr]]:
+    """Every value a module-level name is bound to, for names used as bare decorators."""
+    aliases: dict[str, list[ast.expr]] = {}
+    for statement in tree.body:
+        if isinstance(statement, ast.Assign):
+            for target in statement.targets:
+                if isinstance(target, ast.Name):
+                    aliases.setdefault(target.id, []).append(statement.value)
+    return aliases
+
+
+def _alias_is_clean(values: list[ast.expr] | None) -> bool:
+    """A bare ``@NAME`` counts only if every module-level binding is a clean settings call."""
+    if not values:
+        return False
+    return all(isinstance(value, ast.Call) and _has_clean_settings(value) for value in values)
 
 
 def _has_clean_settings(call: ast.Call) -> bool:

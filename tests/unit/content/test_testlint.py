@@ -114,6 +114,45 @@ def test_settings_without_report_multiple_bugs_is_reported_on_the_def_line() -> 
     assert lint_hidden_tests(source) == [LintFinding("HIDDEN_GIVEN_SETTINGS", 3, GIVEN_MESSAGE)]
 
 
+def test_a_module_level_settings_alias_with_both_flags_is_accepted() -> None:
+    source = (
+        "SETTINGS = settings(max_examples=60, deadline=None, report_multiple_bugs=False)\n"
+        "@SETTINGS\n"
+        "@given(st.integers())\n"
+        "def test_a(x):\n"
+        '    assert x, "m"\n'
+    )
+    assert lint_hidden_tests(source) == []
+
+
+def test_a_settings_alias_missing_a_flag_is_reported() -> None:
+    source = (
+        "SETTINGS = settings(max_examples=60, deadline=None)\n"
+        "@SETTINGS\n"
+        "@given(st.integers())\n"
+        "def test_a(x):\n"
+        '    assert x, "m"\n'
+    )
+    assert lint_hidden_tests(source) == [LintFinding("HIDDEN_GIVEN_SETTINGS", 4, GIVEN_MESSAGE)]
+
+
+def test_a_settings_alias_rebound_to_an_unclean_value_is_reported() -> None:
+    source = (
+        "SETTINGS = settings(deadline=None, report_multiple_bugs=False)\n"
+        "SETTINGS = settings(deadline=None)\n"
+        "@SETTINGS\n"
+        "@given(st.integers())\n"
+        "def test_a(x):\n"
+        '    assert x, "m"\n'
+    )
+    assert lint_hidden_tests(source) == [LintFinding("HIDDEN_GIVEN_SETTINGS", 5, GIVEN_MESSAGE)]
+
+
+def test_a_bare_decorator_with_no_module_binding_is_reported() -> None:
+    source = '@SETTINGS\n@given(st.integers())\ndef test_a(x):\n    assert x, "m"\n'
+    assert lint_hidden_tests(source) == [LintFinding("HIDDEN_GIVEN_SETTINGS", 3, GIVEN_MESSAGE)]
+
+
 def test_given_on_a_helper_not_named_test_is_ignored() -> None:
     source = '@given(st.integers())\ndef helper(x):\n    assert x, "m"\n'
     assert lint_hidden_tests(source) == []
