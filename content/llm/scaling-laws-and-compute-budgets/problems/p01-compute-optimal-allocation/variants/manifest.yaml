@@ -2,6 +2,55 @@ problem_version: 1
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_bool_budget_accepted.py
+  mistake: bool budgets accepted as ints
+  clause: '`compute_optimal_allocation(flop_budget, tokens_per_param)` with: - `flop_budget`: a Python
+    `int` `C >= 1`, the total training FLOPs. A `float` (even `1e20`) raises `TypeError`, because a float
+    cannot hold every digit of a budget above `2**53`. `bool` raises `TypeError`. An `int` below 1 raises
+    `ValueError`. - `tokens_per_param`: a Python `int` `r >= 1`. A `float`, a `bool` or any other type
+    raises `TypeError`. An `int` below 1 raises `ValueError`.'
+  killed_by: test_bool_arguments_raise_type_error
+  visible: hidden
+- file: reject_forgets_tokens_ratio.py
+  mistake: cost ignores tokens per parameter
+  clause: 'Cost model: `C = 6 * N * D` and `D = r * N`, so `C = 6 * r * N**2`.'
+  killed_by: test_billion_parameter_model_at_twenty_tokens_per_param
+  visible: public
+- file: reject_strict_budget_bound.py
+  mistake: budget exactly equal to cost treated as too small
+  clause: 'Rounding rule: `N` is the largest integer with `6 * N * (r * N) <= C`. Then `D = r * N`. The
+    rounding never exceeds the budget, so `6 * N * D <= C` always holds. Real-valued answers are rounded
+    **down**.'
+  killed_by: test_billion_parameter_model_at_twenty_tokens_per_param
+  visible: public
+- file: reject_rounds_square_up_at_boundary.py
+  mistake: root taken one above the bound so a model can exceed budget
+  clause: 'Rounding rule: `N` is the largest integer with `6 * N * (r * N) <= C`. Then `D = r * N`. The
+    rounding never exceeds the budget, so `6 * N * D <= C` always holds. Real-valued answers are rounded
+    **down**.'
+  killed_by: test_real_square_root_is_rounded_down_so_the_budget_is_not_exceeded
+  visible: public
+- file: reject_returns_float_tokens.py
+  mistake: token count returned as float
+  clause: Returns a tuple `(N, D)` of two Python `int`s.
+  killed_by: test_results_are_python_ints_and_tokens_equal_ratio_times_parameters
+  visible: hidden
+- file: reject_no_fit_check_never_fires.py
+  mistake: no-fit check never fires so a too small budget returns zeros
+  clause: Raises `ValueError` when no model fits, that is when `C < 6 * r` and `N` would be `0`.
+  killed_by: test_budget_below_one_model_raises_value_error
+  visible: public
+- file: reject_float_square_root.py
+  mistake: square root taken in floats
+  clause: 'Pure integer arithmetic. The float square-root ban is deliberate: a float root of a budget
+    above `2**53` can land on the wrong side of an exact boundary `C = 6 r N**2`, and the hidden tests
+    check those boundaries. A float estimate that you correct afterwards is not what this problem asks
+    for either, since the aim is exact arithmetic (the tests cannot tell the two apart). It blocks no
+    correct approach, because `math.isqrt` is exact on Python ints and is allowed. Worked floor: for `C
+    = 1000`, `r = 20`, `C // (6 * r) = 8`, and `math.isqrt(8) = 2`, so `N = 2` and `D = 40`.'
+  killed_by: test_exact_square_boundary_above_two_to_the_53_is_not_rounded_down
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

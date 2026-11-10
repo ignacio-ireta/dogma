@@ -1,7 +1,65 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_dot_sums.py
+  origin: freedom
+  freedom: sums the centred products with a dot product instead of a sum
+reject:
+- file: reject_returns_list.py
+  mistake: returns a list instead of a tuple
+  clause: Returns a tuple `(a, b)` of two Python `float`s, with `a > 0`.
+  killed_by: test_returns_a_tuple_of_two_values_not_a_list
+  visible: hidden
+- file: reject_mutates_caller_x.py
+  mistake: log written into the float64 array the caller passed
+  clause: '`fit_power_law(x, y)` with `x` and `y` as NumPy arrays: - Both are one-dimensional with the
+    same length `n >= 2`. Any other rank raises `ValueError`, and so does a length mismatch. - Both hold
+    real numbers. Integer and float dtypes are accepted; the function converts them to `float64` and does
+    not change the caller''s arrays. - Every `x_i > 0`, every `y_i > 0`, and every value is finite. Otherwise
+    `ValueError`, because the logarithm is undefined. - Not all `x_i` are equal, otherwise the slope is
+    undefined and the function raises `ValueError`.'
+  killed_by: test_seeded_noisy_fit_matches_polyfit_on_the_logs
+  visible: hidden
+- file: reject_positive_guard_allows_zero.py
+  mistake: positive guard allows zero so log of zero is never rejected
+  clause: '`fit_power_law(x, y)` with `x` and `y` as NumPy arrays: - Both are one-dimensional with the
+    same length `n >= 2`. Any other rank raises `ValueError`, and so does a length mismatch. - Both hold
+    real numbers. Integer and float dtypes are accepted; the function converts them to `float64` and does
+    not change the caller''s arrays. - Every `x_i > 0`, every `y_i > 0`, and every value is finite. Otherwise
+    `ValueError`, because the logarithm is undefined. - Not all `x_i` are equal, otherwise the slope is
+    undefined and the function raises `ValueError`.'
+  killed_by: test_non_positive_values_raise_value_error
+  visible: hidden
+- file: reject_expanded_sums.py
+  mistake: expanded sums instead of centred sums
+  clause: Method. Let `u_i = log(x_i)` and `v_i = log(y_i)` (natural log). Then - slope `b = sum((u -
+    mean u) * (v - mean v)) / sum((u - mean u)**2)`, - intercept `c = mean v - b * mean u`, - `a = exp(c)`.
+    Use the centred sums. The expanded form `sum(u*v) - n*mean(u)*mean(v)` cancels badly when the `u_i`
+    are close together and large in magnitude.
+  killed_by: test_huge_and_tiny_magnitudes_stay_finite_and_correct
+  visible: hidden
+- file: reject_intercept_through_first_point.py
+  mistake: intercept passes through first point not mean point
+  clause: Method. Let `u_i = log(x_i)` and `v_i = log(y_i)` (natural log). Then - slope `b = sum((u -
+    mean u) * (v - mean v)) / sum((u - mean u)**2)`, - intercept `c = mean v - b * mean u`, - `a = exp(c)`.
+    Use the centred sums. The expanded form `sum(u*v) - n*mean(u)*mean(v)` cancels badly when the `u_i`
+    are close together and large in magnitude.
+  killed_by: test_seeded_noisy_fit_matches_polyfit_on_the_logs
+  visible: hidden
+- file: reject_variance_divided_by_n_minus_1.py
+  mistake: variance divided by n minus 1 but not the covariance
+  clause: Method. Let `u_i = log(x_i)` and `v_i = log(y_i)` (natural log). Then - slope `b = sum((u -
+    mean u) * (v - mean v)) / sum((u - mean u)**2)`, - intercept `c = mean v - b * mean u`, - `a = exp(c)`.
+    Use the centred sums. The expanded form `sum(u*v) - n*mean(u)*mean(v)` cancels badly when the `u_i`
+    are close together and large in magnitude.
+  killed_by: test_exact_square_root_law_recovers_coefficients
+  visible: public
+- file: reject_linear_space_scale.py
+  mistake: scale fitted in linear space for the given exponent
+  clause: The fit minimises the squared residuals in log space only. It is not a fit in linear space.
+  killed_by: test_seeded_noisy_fit_matches_polyfit_on_the_logs
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

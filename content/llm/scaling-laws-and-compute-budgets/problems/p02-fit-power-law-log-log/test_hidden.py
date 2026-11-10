@@ -186,3 +186,9 @@ def test_non_finite_x_value_raises_value_error(bad):
     x = np.array([1.0, bad, 3.0])
     y = np.array([1.0, 2.0, 3.0])
     _expect_value_error(x, y)
+
+
+def test_returns_a_tuple_of_two_values_not_a_list():
+    result = _call(np.array([1.0, 2.0, 3.0]), np.array([2.0, 3.0, 5.0]))
+    assert isinstance(result, tuple), "the return value must be a tuple (a, b), not a list"
+    assert len(result) == 2, "the tuple must hold exactly two values: a and b"
