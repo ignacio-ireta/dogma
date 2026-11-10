@@ -2,6 +2,49 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_raises_on_empty.py
+  mistake: empty list treated as an error
+  clause: '`sessions`: a `list` of `tuple[int, int]`, possibly empty. Each tuple is `(start, end)` with
+    `start < end`. The input may be in any order and may repeat sessions.'
+  killed_by: test_no_sessions_has_peak_zero
+  visible: public
+- file: reject_start_before_end_at_tie.py
+  mistake: start counted before end at a shared moment
+  clause: Two sessions where one ends at `t` and the other starts at `t` do **not** overlap. A session
+    that ends at `t` is no longer active at `t`, so a session that starts at `t` does not share an active
+    moment with it. Equivalently, at a shared moment, the end is processed before the start.
+  killed_by: test_touching_sessions_do_not_overlap
+  visible: public
+- file: reject_returns_float.py
+  mistake: peak returned as float
+  clause: 'Returns: an `int`, the maximum number of sessions active at one moment. `0` for an empty list.'
+  killed_by: test_small_random_sessions_match_the_brute_force_count
+  visible: hidden
+- file: reject_accepts_zero_length.py
+  mistake: zero-length session accepted
+  clause: 'Raises: `ValueError` when any session has `start >= end`. The check applies to every session.'
+  killed_by: test_zero_length_session_raises_value_error
+  visible: hidden
+- file: reject_sorts_input_in_place.py
+  mistake: caller list sorted in place
+  clause: Must not mutate `sessions`, either the list or its tuples.
+  killed_by: test_sessions_list_and_tuples_are_not_mutated
+  visible: hidden
+- file: reject_quadratic_pairwise_count.py
+  mistake: per-event pairwise counting
+  clause: 'Complexity: **O(n log n) time** for `n = len(sessions)`: sort the events once, then one pass.
+    The hidden tests include a list of 200,000 sessions. Counting, for each session, how many sessions
+    contain its start does about `n**2` comparisons there, and it will not finish in time.'
+  killed_by: test_large_list_of_200000_sessions_finishes_within_the_time_limit
+  visible: hidden
+- file: reject_tie_order_by_input.py
+  mistake: ties ordered by input position
+  clause: Two sessions where one ends at `t` and the other starts at `t` do **not** overlap. A session
+    that ends at `t` is no longer active at `t`, so a session that starts at `t` does not share an active
+    moment with it. Equivalently, at a shared moment, the end is processed before the start.
+  killed_by: test_small_random_sessions_match_the_brute_force_count
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

@@ -2,6 +2,62 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_raises_on_empty.py
+  mistake: empty list treated as an error
+  clause: '`intervals`: a `list` of `tuple[int, int]`, possibly empty. Each tuple is `(start, end)` and
+    represents the closed range `[start, end]`. The input may be in any order and may contain duplicates
+    and nested ranges.'
+  killed_by: test_examples_from_problem_md
+  visible: public
+- file: reject_strict_touching.py
+  mistake: touching intervals kept apart
+  clause: 'Two intervals **merge** when they share at least one point. They overlap, or one ends exactly
+    where the other starts (touching: `(1, 3)` and `(3, 5)` merge into `(1, 5)`). Intervals that do not
+    share a point stay apart: `(1, 3)` and `(4, 5)` remain two intervals, even though no whole number
+    lies strictly between 3 and 4.'
+  killed_by: test_examples_from_problem_md
+  visible: public
+- file: reject_returns_lists.py
+  mistake: merged intervals returned as lists not tuples
+  clause: 'Returns: a `list` of `tuple[int, int]`, sorted by start. No two returned intervals share a
+    point.'
+  killed_by: test_examples_from_problem_md
+  visible: public
+- file: reject_start_ge_end.py
+  mistake: zero-length interval rejected as invalid
+  clause: 'Raises: `ValueError` when any interval has `start > end`. The check applies to every interval,
+    wherever it appears in the list.'
+  killed_by: test_examples_from_problem_md
+  visible: public
+- file: reject_sorts_input_in_place.py
+  mistake: caller list sorted in place
+  clause: Must not mutate `intervals`, either the list or its tuples.
+  killed_by: test_input_list_and_tuples_are_not_mutated
+  visible: hidden
+- file: reject_quadratic_repeat_merge.py
+  mistake: pairwise repeat-merge until nothing changes
+  clause: 'Complexity: **O(n log n) time** for `n = len(intervals)`: sort once, then one pass. The hidden
+    tests include a list of 200,000 intervals. Comparing every pair of intervals, and repeating until
+    nothing changes, does about `n**2` comparisons there, and it will not finish in time.'
+  killed_by: test_large_list_of_200000_intervals_finishes_within_the_time_limit
+  visible: hidden
+- file: reject_nested_shrinks.py
+  mistake: nested interval shrinks merged range
+  clause: 'Two intervals **merge** when they share at least one point. They overlap, or one ends exactly
+    where the other starts (touching: `(1, 3)` and `(3, 5)` merge into `(1, 5)`). Intervals that do not
+    share a point stay apart: `(1, 3)` and `(4, 5)` remain two intervals, even though no whole number
+    lies strictly between 3 and 4.'
+  killed_by: test_examples_from_problem_md
+  visible: public
+- file: reject_gap_of_one.py
+  mistake: intervals one whole number apart bridged
+  clause: 'Two intervals **merge** when they share at least one point. They overlap, or one ends exactly
+    where the other starts (touching: `(1, 3)` and `(3, 5)` merge into `(1, 5)`). Intervals that do not
+    share a point stay apart: `(1, 3)` and `(4, 5)` remain two intervals, even though no whole number
+    lies strictly between 3 and 4.'
+  killed_by: test_examples_from_problem_md
+  visible: public
 uncovered: []
-sweeps: []
+sweeps:
+- reject
