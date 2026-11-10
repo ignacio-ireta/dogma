@@ -44,3 +44,4 @@ uncovered:
   reason: k outside its range is caught by the C4 raise check, so a k-only mistake would break C4 too
 sweeps:
 - reject
+- mutants
