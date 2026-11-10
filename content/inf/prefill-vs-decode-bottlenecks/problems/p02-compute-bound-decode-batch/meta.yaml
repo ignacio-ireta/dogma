@@ -1,5 +1,5 @@
 id: inf/prefill-vs-decode-bottlenecks/p02-compute-bound-decode-batch
-version: 3                      # bump when tests, tolerances or the contract change
+version: 4                      # bump when tests, tolerances or the contract change
 title: Batch size at which decode becomes compute-bound
 language: python
 runtime: py-stdlib

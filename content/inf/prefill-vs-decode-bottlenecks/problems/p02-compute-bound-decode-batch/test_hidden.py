@@ -265,3 +265,13 @@ def test_zero_head_dim_raises_value_error() -> None:
         lambda: compute_bound_decode_batch(7 * 10**9, cfg, 512, 2, peak_flops=PEAK, bandwidth=BW),
         "a head_dim of zero is out of range and must raise ValueError",
     )
+
+
+def test_sliding_window_key_does_not_change_the_threshold() -> None:
+    # Other keys are ignored, including sliding_window: attention is treated as full.
+    plain = compute_bound_decode_batch(7_000_000_000, GQA, 512, 2, peak_flops=PEAK, bandwidth=BW)
+    windowed = dict(GQA, sliding_window=64)
+    got = compute_bound_decode_batch(7_000_000_000, windowed, 512, 2, peak_flops=PEAK, bandwidth=BW)
+    assert got == plain, (
+        "the answer depends on sliding_window: the key must be ignored, attention is full"
+    )

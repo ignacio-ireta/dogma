@@ -2,6 +2,51 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_flops_without_multiply_add.py
+  mistake: prefill FLOPs count one per parameter not two
+  clause: '`params`: Python `int`, at least 1. Parameters multiplied by a matrix in every token''s pass.'
+  killed_by: test_prefill_of_a_long_prompt_is_compute_bound
+  visible: public
+- file: reject_one_token_prompt_writes_no_kv.py
+  mistake: a one-token prompt writes no K and V
+  clause: '`prompt_len`: Python `int`, at least 1.'
+  killed_by: test_single_token_prefill_is_memory_bound_on_the_weight_read
+  visible: hidden
+- file: reject_empty_cache_counts_one_token.py
+  mistake: an empty cache is treated as one token
+  clause: '`context_len`: Python `int`, at least 0. Tokens already cached per sequence before the decode
+    step.'
+  killed_by: test_decode_reads_the_cached_tokens_plus_the_new_one
+  visible: hidden
+- file: reject_weights_read_per_sequence.py
+  mistake: weights are read once per sequence not once per step
+  clause: '`batch`: Python `int`, at least 1.'
+  killed_by: test_batching_shares_the_weight_read_across_sequences
+  visible: public
+- file: reject_weights_always_two_bytes.py
+  mistake: weights are sized at two bytes whatever the element width
+  clause: '`element_bytes`: Python `int`, at least 1. Weights and cache use the same width.'
+  killed_by: test_seeded_random_models_match_exact_rational_model
+  visible: hidden
+- file: reject_floor_division_of_peak.py
+  mistake: decode compute floor uses floor division
+  clause: '`peak_flops`, `bandwidth`: keyword-only Python `int`, at least 1, in FLOP/s and bytes/s.'
+  killed_by: test_seeded_random_models_match_exact_rational_model
+  visible: hidden
+- file: reject_throughput_rounded.py
+  mistake: decode throughput rounded to three decimals
+  clause: Returns a `dict` with exactly the keys `"prefill_s"`, `"decode_step_s"` and `"decode_tokens_per_s"`,
+    all `float`. Times are in seconds. No rounding.
+  killed_by: test_batch_one_decode_step_reads_the_weights_once
+  visible: public
+uncovered:
+- clause: '`config`: `dict` with the Python `int` keys `num_layers`, `num_kv_heads` and `head_dim`, each
+    at least 1. Other keys, including `sliding_window`, are ignored. Must not be mutated.'
+  reason: wrong solution survives, see notes
+- clause: Raises `TypeError` when a value is not a Python `int` (`bool`, `float`, `str` and `None` are
+    rejected) or `config` is not a `dict`. Raises `ValueError` when a value is below its minimum or a
+    required key is missing.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject
