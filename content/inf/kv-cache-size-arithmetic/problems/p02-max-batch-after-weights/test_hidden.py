@@ -307,3 +307,14 @@ def test_zero_window_raises_value_error() -> None:
         lambda: max_batch_size(cfg, 8, "fp16", 0, 10**6),
         "a sliding window below 1 is out of range and must raise ValueError",
     )
+
+
+def test_dtype_names_are_case_sensitive_and_upper_case_raises() -> None:
+    # The dtype names are the lower-case strings fp32, fp16, bf16 and fp8. "FP16" is not one of
+    # them, so it is an unknown dtype and must raise ValueError.
+    cfg = {"num_layers": 32, "num_kv_heads": 32, "head_dim": 128}
+    _expect_error(
+        ValueError,
+        lambda: max_batch_size(cfg, 8, "FP16", 0, 10**6),
+        "an upper-case dtype name is not one of the four names and must raise ValueError",
+    )

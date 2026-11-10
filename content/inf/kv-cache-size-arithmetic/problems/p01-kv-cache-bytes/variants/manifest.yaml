@@ -2,6 +2,51 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_window_zero_means_full_attention.py
+  mistake: a window of zero is read as no window
+  clause: '`config`: a `dict` with the keys above. Values for the three required keys and the window must
+    be Python `int` values. The window is `None` or an `int` of at least 1.'
+  killed_by: test_out_of_range_or_unknown_values_raise_value_error
+  visible: hidden
+- file: reject_zero_seq_len_rejected.py
+  mistake: a zero context is rejected
+  clause: '`seq_len`: a Python `int`, at least 0. Zero means no cached tokens, so the result is 0.'
+  killed_by: test_zero_context_has_no_cache_for_any_batch
+  visible: public
+- file: reject_zero_batch_accepted.py
+  mistake: a batch of zero is accepted
+  clause: '`batch`: a Python `int`, at least 1.'
+  killed_by: test_out_of_range_or_unknown_values_raise_value_error
+  visible: hidden
+- file: reject_fp8_two_bytes.py
+  mistake: fp8 counted as two bytes per element
+  clause: '`dtype`: a `str`, one of `"fp32"` (4 bytes), `"fp16"` (2), `"bf16"` (2) or `"fp8"` (1).'
+  killed_by: test_seeded_random_configs_match_independent_formula
+  visible: hidden
+- file: reject_float_return_value.py
+  mistake: the byte count returned as a float
+  clause: 'Returns: a Python `int` number of bytes. Never a float.'
+  killed_by: test_seven_b_multi_head_fp16_is_two_gib_per_sequence
+  visible: public
+- file: reject_bool_accepted_as_int.py
+  mistake: a bool accepted where an int is required
+  clause: Raises `TypeError` when `config` is not a `dict`, or when `seq_len`, `batch`, or a config value
+    is not a Python `int`. `bool`, `float`, `str` and `None` are rejected, except that `sliding_window`
+    may be `None`.
+  killed_by: test_non_int_values_raise_type_error
+  visible: hidden
+- file: reject_missing_head_dim_keyerror.py
+  mistake: a missing head_dim key raises KeyError not ValueError
+  clause: Raises `ValueError` when a required key is missing, when `num_layers`, `num_kv_heads`, `head_dim`,
+    `batch` or the window is below its minimum, when `seq_len` is negative, or when `dtype` is unknown.
+  killed_by: test_out_of_range_or_unknown_values_raise_value_error
+  visible: hidden
+- file: reject_config_key_popped.py
+  mistake: the window key is removed from config
+  clause: Must not mutate `config`.
+  killed_by: test_config_is_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

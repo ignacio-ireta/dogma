@@ -1,7 +1,48 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_upper_case_dtype_accepted.py
+  mistake: an upper-case dtype name is accepted
+  clause: '`config`, `dtype`: as above. Validation is the same as the KV-cache bytes problem: TypeError
+    for values that are not Python `int` (`bool`, `float`, `str` and `None` are rejected, except `sliding_window`
+    may be `None`); ValueError for a missing required key, a value below its minimum, or an unknown dtype.'
+  killed_by: test_dtype_names_are_case_sensitive_and_upper_case_raises
+  visible: hidden
+- file: reject_zero_seq_len_accepted.py
+  mistake: a seq_len of zero is accepted
+  clause: '`seq_len`: a Python `int` of at least 1. Zero is a ValueError, because an empty sequence has
+    no bound.'
+  killed_by: test_zero_seq_len_is_rejected_with_value_error
+  visible: public
+- file: reject_negative_reserve_accepted.py
+  mistake: a negative reserve is accepted and adds budget
+  clause: '`weight_bytes`, `memory_bytes`, `reserve_bytes`: Python `int` values of at least 0. `reserve_bytes`
+    defaults to 0.'
+  killed_by: test_out_of_range_or_unknown_values_raise_value_error
+  visible: hidden
+- file: reject_negative_budget_not_clamped.py
+  mistake: a negative budget is not clamped to zero
+  clause: 'Returns: a Python `int` of at least 0. Never negative.'
+  killed_by: test_weights_larger_than_memory_leave_no_batch
+  visible: public
+- file: reject_one_sequence_forced.py
+  mistake: one sequence is returned even when none fits
+  clause: Returns 0 when the weights and the reserve alone do not fit in `memory_bytes`, and also when
+    the budget holds less than one sequence.
+  killed_by: test_weights_exactly_equal_to_memory_leave_no_room
+  visible: hidden
+- file: reject_round_not_floor.py
+  mistake: the count is rounded instead of floored
+  clause: The answer is a floor. A partial sequence does not count.
+  killed_by: test_sliding_window_sequences_cost_the_window_size
+  visible: public
+- file: reject_window_key_popped.py
+  mistake: the window key is removed from config
+  clause: Must not mutate `config`.
+  killed_by: test_context_beyond_the_window_does_not_shrink_the_batch_further
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
