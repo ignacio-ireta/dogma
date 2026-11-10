@@ -48,3 +48,4 @@ uncovered:
   reason: inputs are integers, which cannot be changed in place
 sweeps:
 - reject
+- mutants
