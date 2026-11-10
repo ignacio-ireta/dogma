@@ -2,6 +2,59 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_loop_first_max.py
+  origin: freedom
+  freedom: finds the first largest greedy index with a Python loop instead of np.argmax
+reject:
+- file: reject_inclusive_threshold.py
+  mistake: explore when u is at most epsilon instead of strictly below
+  clause: 'Draw order (exact). Every call does the following, in this order: 1. Call `rng.random()` once.
+    Call the result `u`. This draw happens on every call, whatever `epsilon` is and whether there are
+    ties. 2. If `u < epsilon` (strictly), explore. Call `rng.integers(n_actions)` once, and return the
+    result as an `int`. This is the only other draw, and it happens only when exploring. Exploration is
+    uniform over all actions, including the greedy one. 3. Otherwise, exploit. Return the lowest index
+    among the actions with the largest `q_values`. Ties are broken by lowest index, and no further draw
+    is made.'
+  killed_by: test_draw_equal_to_epsilon_exploits
+  visible: hidden
+- file: reject_global_random_for_u.py
+  mistake: draws u from the global numpy random state instead of the passed generator
+  clause: Do not use the global `numpy.random` state or the standard `random` module.
+  killed_by: test_replayed_draw_order_matches_reference_sequence
+  visible: hidden
+- file: reject_bool_q_values.py
+  mistake: accepts boolean q_values
+  clause: '`q_values`: one-dimensional real NumPy array of length `A >= 1`, every entry finite. Integer
+    arrays are valid. Boolean, complex and object arrays are invalid.'
+  killed_by: test_invalid_q_values_rejected
+  visible: hidden
+- file: reject_nan_epsilon_passes.py
+  mistake: NaN epsilon passes the range check
+  clause: '`epsilon`: a real number in `[0, 1]`. `bool` and NaN are invalid.'
+  killed_by: test_invalid_epsilon_rejected
+  visible: hidden
+- file: reject_rng_none_check.py
+  mistake: accepts any rng that is not None
+  clause: '`rng`: a `numpy.random.Generator`. Any other type raises `TypeError`.'
+  killed_by: test_rng_must_be_a_numpy_generator
+  visible: hidden
+- file: reject_numpy_int_result.py
+  mistake: returns a NumPy integer from the exploit branch
+  clause: 'Returns: a Python `int` in `0 .. A-1`.'
+  killed_by: test_returns_a_python_int_in_range
+  visible: hidden
+- file: reject_isinf_only.py
+  mistake: lets NaN q_values through because only infinities are rejected
+  clause: Raises `ValueError` when `q_values` is empty, not one-dimensional, or contains non-finite values,
+    or when `epsilon` is invalid. Must not mutate `q_values`.
+  killed_by: test_invalid_q_values_rejected
+  visible: hidden
+- file: reject_mutates_input.py
+  mistake: subtracts the mean from the caller float array in place
+  clause: Raises `ValueError` when `q_values` is empty, not one-dimensional, or contains non-finite values,
+    or when `epsilon` is invalid. Must not mutate `q_values`.
+  killed_by: test_q_values_are_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
