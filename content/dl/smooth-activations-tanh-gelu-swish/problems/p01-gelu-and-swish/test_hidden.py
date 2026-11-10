@@ -99,3 +99,10 @@ def test_small_inputs_match_local_behavior():
         assert np.allclose(got, want, atol=0, rtol=1e-9), (
             "small inputs must preserve the local linear behavior"
         )
+
+
+def test_input_values_unchanged_for_non_integer_entries():
+    x = np.array([0.1234567890123456, -2.0000000000004, 0.3333333333333333])
+    before = x.copy()
+    smooth_activations(x)
+    assert np.array_equal(x, before), "activation must not change the values of its input"

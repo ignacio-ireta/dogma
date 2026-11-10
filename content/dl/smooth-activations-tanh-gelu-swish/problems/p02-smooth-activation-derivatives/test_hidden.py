@@ -119,3 +119,8 @@ def test_small_inputs_match_local_behavior():
         assert np.allclose(got, want, atol=0, rtol=1e-9), (
             "small inputs must preserve the local linear behavior"
         )
+
+
+def test_nonfinite_later_entries_rejected():
+    for x in ([0.5, np.nan], [0.25, -0.5, np.inf], [1.0, 2.0, -np.inf]):
+        _invalid(_learner, x)

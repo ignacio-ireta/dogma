@@ -1,7 +1,46 @@
-problem_version: 1
+problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_one_minus_product.py
+  origin: freedom
+  freedom: tanh derivative written as one minus tanh times one plus tanh, another rounding path
+reject:
+- file: reject_first_entry_checked_only.py
+  mistake: checks only the first entry for finiteness
+  clause: Raise `ValueError` for complex, nonfinite or out-of-range values. Other nonnumeric values are
+    outside the contract. No default floating point warnings; do not mutate inputs. Returned arrays must
+    not share storage with inputs.
+  killed_by: test_nonfinite_later_entries_rejected
+  visible: hidden
+- file: reject_squeezed_tanh_derivative.py
+  mistake: tanh derivative is squeezed so size one axes disappear from the output shape
+  clause: 'Return `(d_tanh, d_gelu, d_swish)`: three NumPy `float64` arrays of the input shape.'
+  killed_by: test_zero_derivatives
+  visible: public
+- file: reject_gelu_density_wrong_constant.py
+  mistake: gelu density uses square root of pi instead of square root of two pi
+  clause: Use `1 - tanh(x)**2`, `Phi(x) + x * phi(x)`, and `s + x * s * (1 - s)`, where `s = sigmoid(x)`,
+    `Phi` is the standard normal CDF, and `phi(x) = exp(-x*x/2) / sqrt(2*pi)`. GELU is the exact CDF version;
+    Swish has beta 1.
+  killed_by: test_positive_example
+  visible: public
+- file: reject_nan_accepted.py
+  mistake: range check drops the finiteness test so NaN entries pass
+  clause: Raise `ValueError` for complex, nonfinite or out-of-range values. Other nonnumeric values are
+    outside the contract. No default floating point warnings; do not mutate inputs. Returned arrays must
+    not share storage with inputs.
+  killed_by: test_invalid_domain_rejected
+  visible: hidden
+- file: reject_empty_input_raises.py
+  mistake: raises on empty input which the Contract accepts
+  clause: '`x`: real numeric array-like, any shape; scalar and empty arrays accepted. Values must be finite
+    and in `[-1000, 1000]`. Complex arrays are invalid.'
+  killed_by: test_empty_preserves_shape
+  visible: public
+uncovered:
+- clause: At zero these derivatives are respectively `1`, `0.5`, `0.5`.
+  reason: values at zero follow from the C3 formulas, so any wrong formula that changes them also changes
+    C3 values, no separate wrong solution
+sweeps:
+- reject

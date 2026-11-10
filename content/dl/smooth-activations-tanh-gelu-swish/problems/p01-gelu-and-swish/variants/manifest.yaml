@@ -1,7 +1,43 @@
-problem_version: 1
+problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_tanh_sigmoid.py
+  origin: freedom
+  freedom: sigmoid computed as half of one plus tanh of half x, another rounding path
+reject:
+- file: reject_range_boundary_strict.py
+  mistake: range check uses >= so the boundary value 1000 is wrongly rejected
+  clause: '`x`: real numeric array-like of any shape, including scalar and empty inputs. Every value must
+    be finite and in `[-1000, 1000]`. Complex arrays are invalid.'
+  killed_by: test_tails_do_not_overflow
+  visible: hidden
+- file: reject_range_upper_only.py
+  mistake: range check looks only at the upper bound so values below -1000 are accepted
+  clause: Raise `ValueError` for complex, nonfinite or out-of-range values. Other nonnumeric inputs are
+    outside the contract. Do not mutate inputs. Returned arrays must not share storage with inputs.
+  killed_by: test_invalid_domain_rejected
+  visible: hidden
+- file: reject_scalar_becomes_1d.py
+  mistake: scalar input returns shape one instead of shape zero
+  clause: Return a tuple of three NumPy `float64` arrays in the order `(tanh, gelu, swish)`, each exactly
+    the shape of `x`. The formulas are `tanh(x)`, `x * Phi(x)` and `x * sigmoid(x)`. `Phi(x) = (1 + erf(x
+    / sqrt(2))) / 2` is the standard normal CDF. Use this **exact GELU** definition rather than the tanh
+    approximation.
+  killed_by: test_scalar_and_integer_conversion
+  visible: hidden
+- file: reject_sigmoid_exp_overflow.py
+  mistake: naive sigmoid one over one plus exp of minus x overflows warnings at the negative tail
+  clause: Compute sigmoid without overflowing exponentials at the stated tails. Floating point rounding
+    to the limiting value is allowed. Default NumPy floating point warnings must not fire.
+  killed_by: test_tails_do_not_overflow
+  visible: hidden
+- file: reject_round_input_in_place.py
+  mistake: rounds the caller array in place to twelve decimals
+  clause: Raise `ValueError` for complex, nonfinite or out-of-range values. Other nonnumeric inputs are
+    outside the contract. Do not mutate inputs. Returned arrays must not share storage with inputs.
+  killed_by: test_input_values_unchanged_for_non_integer_entries
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

@@ -1,5 +1,5 @@
 id: dl/smooth-activations-tanh-gelu-swish/p01-gelu-and-swish
-version: 1
+version: 2
 title: Smooth activation values
 language: python
 runtime: py-numpy

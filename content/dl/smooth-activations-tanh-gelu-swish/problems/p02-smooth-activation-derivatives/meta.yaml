@@ -1,5 +1,5 @@
 id: dl/smooth-activations-tanh-gelu-swish/p02-smooth-activation-derivatives
-version: 1
+version: 2
 title: Smooth activation local derivatives
 language: python
 runtime: py-numpy
