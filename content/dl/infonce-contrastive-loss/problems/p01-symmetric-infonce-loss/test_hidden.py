@@ -254,3 +254,28 @@ def test_non_finite_value_in_second_argument_raises_value_error():
         lambda: symmetric_infonce_loss(torch.eye(2, dtype=torch.float64), b, temperature=1.0),
         "a non-finite value in b must raise ValueError, not return a NaN loss",
     )
+
+
+def test_temperature_is_keyword_only_and_required():
+    a = torch.eye(3, dtype=torch.float64)
+    raised = None
+    try:
+        symmetric_infonce_loss(a, a.clone())
+    except Exception as exc:
+        raised = exc
+    if not isinstance(raised, TypeError):
+        raise AssertionError(
+            "temperature is keyword-only and required: omitting it must raise TypeError"
+        )
+
+
+def test_tiny_nonzero_row_is_normalised_not_rejected():
+    # Row (3e-31, 4e-31) has norm 5e-31 and a direction (0.6, 0.8). Only a zero norm may raise.
+    tiny = torch.tensor([[3e-31, 4e-31], [1.0, 0.0]], dtype=torch.float64)
+    unit = torch.tensor([[0.6, 0.8], [1.0, 0.0]], dtype=torch.float64)
+    base = _call(unit, unit.clone(), 0.5)
+    moved = _call(tiny, tiny.clone(), 0.5)
+    if not torch.allclose(base, moved, atol=ATOL, rtol=RTOL):
+        raise AssertionError(
+            "a tiny nonzero row has a direction: normalise it, and raise only for a zero norm"
+        )

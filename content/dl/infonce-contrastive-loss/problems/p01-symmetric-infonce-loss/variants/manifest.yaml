@@ -1,7 +1,58 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_einsum_similarity.py
+  origin: freedom
+  freedom: similarity matrix computed with einsum instead of matmul and transpose
+reject:
+- file: reject_temperature_has_default.py
+  mistake: temperature gets a default value
+  clause: '`temperature`: a real number (`int` or `float`, not `bool`), finite and `> 0`. Keyword-only
+    and required.'
+  killed_by: test_temperature_is_keyword_only_and_required
+  visible: hidden
+- file: reject_tiny_norm_raises.py
+  mistake: tiny nonzero norm rejected
+  clause: 'Normalisation: `a_hat[i] = a[i] / ||a[i]||_2`, and likewise for `b`. A row with zero norm has
+    no direction, so raise `ValueError`.'
+  killed_by: test_tiny_nonzero_row_is_normalised_not_rejected
+  visible: hidden
+- file: reject_float32_only_normalize.py
+  mistake: returns float32 for every input so float64 embeddings lose dtype
+  clause: '`a`, `b`: floating-point tensors of the same shape `(N, D)`, with `N >= 1` and `D >= 1`, and
+    the same dtype. Must not be modified.'
+  killed_by: test_orthonormal_pairs_at_unit_temperature_match_hand_value
+  visible: public
+- file: reject_scale_by_sqrt_temperature.py
+  mistake: divides by the square root of temperature not temperature
+  clause: 'Similarity: `S[i, j] = a_hat[i] . b_hat[j] / temperature`, shape `(N, N)`.'
+  killed_by: test_small_temperature_sharpens_the_loss_towards_zero
+  visible: public
+- file: reject_naive_logsumexp.py
+  mistake: log-sum-exp without the row maximum shift overflows
+  clause: 'Loss: `L_ab = mean over i of ( logsumexp_j S[i, j] - S[i, i] )`, `L_ba = mean over j of ( logsumexp_i
+    S[i, j] - S[j, j] )`, and the result is `(L_ab + L_ba) / 2`. Compute the log-sum-exp stably: subtract
+    the row (or column) maximum before exponentiating.'
+  killed_by: test_small_temperature_stays_finite_and_matches_oracle
+  visible: hidden
+- file: reject_returns_shape_one.py
+  mistake: returns a one element vector not a 0-dim tensor
+  clause: 'Returns: a 0-dimensional tensor with the dtype of `a`. With `N = 1` the loss is exactly `0`.'
+  killed_by: test_random_pairs_match_cross_entropy_oracle_at_several_temperatures
+  visible: hidden
+- file: reject_empty_batch_allowed.py
+  mistake: accepts an empty batch instead of raising
+  clause: 'Raises `ValueError` when: `a` or `b` is not a 2-D floating-point tensor; the shapes differ;
+    `N = 0` or `D = 0`; an embedding contains a non-finite value; a row has zero norm; `temperature` is
+    a bool, not a real number, not finite, or not positive.'
+  killed_by: test_empty_batch_raises_value_error
+  visible: hidden
+- file: reject_normalizes_b_in_place.py
+  mistake: normalises b in place into the caller tensor
+  clause: Must not mutate `a` or `b`.
+  killed_by: test_random_pairs_match_cross_entropy_oracle_at_several_temperatures
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

@@ -1,5 +1,5 @@
 id: dl/infonce-contrastive-loss/p01-symmetric-infonce-loss
-version: 2
+version: 3
 title: Symmetric InfoNCE loss for paired embeddings
 language: python
 runtime: py-torch
