@@ -196,3 +196,14 @@ def test_property_every_transition_follows_the_update_rule(flags: list[bool], in
         assert math.isfinite(scaler.scale) and scaler.scale > 0.0, (
             "the loss scale must stay finite and positive"
         )
+
+
+def test_scale_underflows_to_zero_after_more_than_1090_overflows():
+    scaler = DynamicLossScaler(init_scale=2.0**16)
+    for _ in range(1100):
+        scaler.update(found_inf=True)
+    # 2**16 * 0.5**1100 = 2**-1084, which is below half the smallest positive float (2**-1074),
+    # so every halving is exact until the last one rounds to 0.0.
+    assert scaler.scale == 0.0, (
+        "the class must set no floor: after more than 1090 overflows the scale is 0.0"
+    )

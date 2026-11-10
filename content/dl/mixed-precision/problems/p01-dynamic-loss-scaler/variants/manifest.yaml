@@ -1,7 +1,63 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_private_scale_property.py
+  origin: freedom
+  freedom: public scale is a read-only property over a private _scale attribute
+reject:
+- file: reject_backoff_accepts_zero.py
+  mistake: accepts backoff factor equal to zero
+  clause: '`DynamicLossScaler(init_scale=2.0**16, growth_factor=2.0, backoff_factor=0.5, growth_interval=2000)`
+    - `init_scale`: finite `float` greater than 0. - `growth_factor`: finite `float` greater than 1. -
+    `backoff_factor`: `float` strictly between 0 and 1. - `growth_interval`: `int` at least 1. - Raises
+    `ValueError` when an argument is out of range or is a `bool`.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_bool_arguments_accepted.py
+  mistake: accepts bool arguments as numbers
+  clause: '`DynamicLossScaler(init_scale=2.0**16, growth_factor=2.0, backoff_factor=0.5, growth_interval=2000)`
+    - `init_scale`: finite `float` greater than 0. - `growth_factor`: finite `float` greater than 1. -
+    `backoff_factor`: `float` strictly between 0 and 1. - `growth_interval`: `int` at least 1. - Raises
+    `ValueError` when an argument is out of range or is a `bool`.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_scale_keeps_input_type.py
+  mistake: scale keeps the type of init scale so an int start gives an int scale
+  clause: 'Attributes, always current: - `scale`: `float`, the current loss scale. It starts at `init_scale`.
+    - `good_steps`: `int`, the number of consecutive steps without overflow since the last change of `scale`.
+    It starts at 0.'
+  killed_by: test_types_are_float_scale_int_count_and_bool_decision
+  visible: hidden
+- file: reject_backoff_keeps_good_steps.py
+  mistake: overflow does not reset the good step count
+  clause: '`update(found_inf: bool) -> bool`: applies one step''s outcome and returns whether the optimizer
+    step should be applied. - If `found_inf` is `True`: the step is skipped (return `False`), `scale`
+    is multiplied by `backoff_factor`, and `good_steps` is reset to 0. - If `found_inf` is `False`: the
+    step is applied (return `True`) and `good_steps` increases by 1. When `good_steps` reaches `growth_interval`,
+    `scale` is multiplied by `growth_factor` and `good_steps` is reset to 0. The count is never kept past
+    a growth, and it restarts from 0 after an overflow.'
+  killed_by: test_overflow_skips_step_halves_scale_resets_count
+  visible: public
+- file: reject_growth_checked_before_count.py
+  mistake: growth is checked before the good step is counted so it comes one step late
+  clause: '`update(found_inf: bool) -> bool`: applies one step''s outcome and returns whether the optimizer
+    step should be applied. - If `found_inf` is `True`: the step is skipped (return `False`), `scale`
+    is multiplied by `backoff_factor`, and `good_steps` is reset to 0. - If `found_inf` is `False`: the
+    step is applied (return `True`) and `good_steps` increases by 1. When `good_steps` reaches `growth_interval`,
+    `scale` is multiplied by `growth_factor` and `good_steps` is reset to 0. The count is never kept past
+    a growth, and it restarts from 0 after an overflow.'
+  killed_by: test_growth_happens_after_a_full_interval_of_good_steps
+  visible: public
+- file: reject_scale_floor_at_smallest_subnormal.py
+  mistake: sets a floor so the scale never underflows to zero
+  clause: '`scale` is a Python `float`, and the class sets no floor. Each overflow multiplies it by `backoff_factor`,
+    so from the default start of `2**16`, with backoff 0.5, a run of more than 1,090 consecutive overflows
+    underflows to `0.0`.'
+  killed_by: test_scale_underflows_to_zero_after_more_than_1090_overflows
+  visible: hidden
+uncovered:
+- clause: Must not mutate its arguments.
+  reason: all arguments are plain numbers and bools which cannot be changed in place
+sweeps:
+- reject
