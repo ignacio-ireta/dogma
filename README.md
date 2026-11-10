@@ -126,3 +126,9 @@ in `private/` and third-party documents and indexes in `corpus/` stay local.
 | [docs/CONTENT_SPEC.md](docs/CONTENT_SPEC.md) | Exact topic-package format for authors |
 | [docs/LEARNER_PROFILE.md](docs/LEARNER_PROFILE.md) | General learning and interface design principles |
 | [docs/IMPORT_PLAN.md](docs/IMPORT_PLAN.md) | What material was imported, and the privacy rules |
+
+## License
+
+The code is released under the [MIT License](LICENSE). The curriculum (lessons, problems, tests,
+hints and cards) is not: it is all rights reserved, free to study with but not to republish. See
+[LICENSE-CONTENT.md](LICENSE-CONTENT.md).

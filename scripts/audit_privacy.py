@@ -69,11 +69,11 @@ LICENSE_HASHES = {
         "caafcccfb70fc72458fcbda812ec8f0a06cb300cbabb87eabbb30b946124394b"
     ),
 }
-# Required third-party copyright attribution, retained byte-for-byte. This is public upstream
-# authorship, not learner context. Changes to the license invalidate the exemption.
-ATTRIBUTION_HASHES = {
-    "tools/docmd/LICENSE": "835ed7dfbbc61cb1c98488722a51c8ea7e92b3e32b6a5bfd776beb9f5440c062",
-}
+# Required third-party copyright attribution, retained byte-for-byte, is listed here by path and
+# checksum. A listed file is checked against the built-in rules only: it is public upstream
+# authorship, not learner context. Changing the file invalidates its exemption. Nothing needs
+# one at present.
+ATTRIBUTION_HASHES: dict[str, str] = {}
 # A compressed parser table contains coincidental short letter sequences. Exempt only this
 # exact, reviewed JS string literals; modified data and all surrounding code remain checked.
 VERIFIED_PARSER_LITERALS = frozenset(
