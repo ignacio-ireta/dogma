@@ -284,3 +284,33 @@ def test_second_moment_with_a_wrong_shape_is_rejected():
         lambda: adam_step(params, grads, state, lr=LR),
         "a second moment whose shape differs from its parameter must raise ValueError",
     )
+
+
+def test_zero_beta1_is_valid_and_gives_the_gradient_as_first_moment():
+    # beta1 = 0 keeps no history, so m = g and m_hat = g / (1 - 0**1) = g.
+    # With g = 2 and t = 1: v = 0.001 * 4, v_hat = 4, sqrt(v_hat) = 2,
+    # step = lr * 2 / 2 = lr, so the parameter moves from 1.0 to 0.9.
+    try:
+        params, state = adam_step(
+            [torch.tensor([1.0], dtype=torch.float64)],
+            [torch.tensor([2.0], dtype=torch.float64)],
+            None,
+            lr=0.1,
+            beta1=0.0,
+        )
+    except ValueError:
+        pytest.fail("beta1 = 0 must be accepted: it is inside the range [0, 1)", pytrace=False)
+    torch.testing.assert_close(
+        params[0],
+        torch.tensor([0.9], dtype=torch.float64),
+        atol=1e-7,
+        rtol=0,
+        msg="beta1 = 0 must be accepted: the first moment is then the gradient itself",
+    )
+    torch.testing.assert_close(
+        state[0][0],
+        torch.tensor([2.0], dtype=torch.float64),
+        atol=1e-12,
+        rtol=0,
+        msg="beta1 = 0 must be accepted: the stored first moment must equal the gradient",
+    )

@@ -2,6 +2,54 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_reciprocal_multiply.py
+  origin: freedom
+  freedom: divides by the root-plus-eps through a reciprocal multiply instead of a direct division
+- file: accept_addcdiv.py
+  origin: freedom
+  freedom: computes the step with torch addcdiv instead of separate multiply and divide
+reject:
+- file: reject_state_vmax_ignored.py
+  mistake: a given state ignores its stored v_max and restarts it at zero
+  clause: '`state`: `None`, or the tuple `(m, v, v_max, t)`. `m`, `v`, `v_max` are lists with one tensor
+    per parameter, each the shape of its parameter. `t` is a non-negative `int` (not `bool`).'
+  killed_by: test_a_small_gradient_after_a_large_one_keeps_the_large_denominator
+  visible: public
+- file: reject_eps_zero_accepted.py
+  mistake: eps of zero is accepted
+  clause: '`lr` is finite and `>= 0`. `beta1`, `beta2` are in `[0, 1)`. `eps` is finite and `> 0`.'
+  killed_by: test_invalid_scalars_raise_value_error
+  visible: hidden
+- file: reject_bias_corrected_before_max.py
+  mistake: second moment bias-corrected before the maximum
+  clause: 'With `t_new = t + 1`, per tensor, using gradient `g`: - `m = beta1 * m + (1 - beta1) * g` -
+    `v = beta2 * v + (1 - beta2) * g * g` - `v_max = max(v_max, v)`, elementwise, where `v` is the **uncorrected**
+    second moment above. `v_max` starts at zero and never decreases. Do not bias-correct `v` before taking
+    the maximum; only `v_max` is bias-corrected, as in `torch.optim.Adam(amsgrad=True)`. - `m_hat = m
+    / (1 - beta1**t_new)`, `v_max_hat = v_max / (1 - beta2**t_new)` - `p_new = p - lr * m_hat / (sqrt(v_max_hat)
+    + eps)`'
+  killed_by: test_first_update_equals_adam_because_the_maximum_is_the_first_square
+  visible: public
+- file: reject_second_moment_in_vmax_slot.py
+  mistake: returned v_max slot holds the second moment
+  clause: Returns `(new_params, (new_m, new_v, new_v_max, t_new))`.
+  killed_by: test_matches_torch_amsgrad_over_several_steps
+  visible: hidden
+- file: reject_vmax_shape_unchecked.py
+  mistake: shape of the stored v_max is not checked
+  clause: Raises `ValueError` for mismatched lengths or shapes, out-of-range or non-finite scalars, and
+    malformed state.
+  killed_by: test_state_tensor_with_a_wrong_shape_is_rejected
+  visible: hidden
+- file: reject_running_max_written_into_state.py
+  mistake: running maximum written into the caller v_max tensor
+  clause: Must not mutate inputs.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
+uncovered:
+- clause: '`params`, `grads`: lists of floating-point tensors of equal length. `grads[i]` has the same
+    shape and dtype as `params[i]`.'
+  reason: every wrong form that breaks C1 rejects or mangles inputs the Contract allows, and no sentence
+    in problem.md forbids them
+sweeps:
+- reject

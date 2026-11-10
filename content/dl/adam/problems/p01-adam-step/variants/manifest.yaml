@@ -1,7 +1,53 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_reciprocal_multiply.py
+  origin: freedom
+  freedom: divides by the root-plus-eps through a reciprocal multiply instead of a direct division
+- file: accept_addcdiv.py
+  origin: freedom
+  freedom: computes the step with torch addcdiv instead of separate multiply and divide
+reject:
+- file: reject_state_moments_reset.py
+  mistake: a given state restarts m and v at zero and keeps only t
+  clause: '`state`: `None`, or the tuple `(m, v, t)`. `m` and `v` are lists with one tensor per parameter,
+    each the shape of its parameter. `t` is a non-negative `int` (not `bool`): the number of updates already
+    taken.'
+  killed_by: test_constant_gradient_gives_equal_steps_after_bias_correction
+  visible: public
+- file: reject_eps_inside_root.py
+  mistake: eps added inside the square root
+  clause: 'With `t_new = t + 1`, per tensor, using gradient `g`: - `m = beta1 * m + (1 - beta1) * g` -
+    `v = beta2 * v + (1 - beta2) * g * g` - `m_hat = m / (1 - beta1**t_new)`, `v_hat = v / (1 - beta2**t_new)`
+    - `p_new = p - lr * m_hat / (sqrt(v_hat) + eps)`'
+  killed_by: test_matches_torch_adam_over_several_steps
+  visible: hidden
+- file: reject_bool_t_accepted.py
+  mistake: a boolean step count is accepted
+  clause: Raises `ValueError` when lengths or shapes differ, when a scalar is out of range or not finite,
+    or when `state` is malformed (wrong list length, wrong moment shape, or a non-integer or boolean `t`).
+  killed_by: test_invalid_arguments_and_state_raise_value_error
+  visible: hidden
+- file: reject_mutates_caller_moment.py
+  mistake: first moment updated in place in the caller state
+  clause: Must not mutate inputs.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
+- file: reject_returns_old_counter.py
+  mistake: returned state carries the counter from before the update
+  clause: Returns `(new_params, (new_m, new_v, t_new))`, with the input shapes and dtypes.
+  killed_by: test_constant_gradient_gives_equal_steps_after_bias_correction
+  visible: public
+- file: reject_beta1_zero_rejected.py
+  mistake: beta1 of zero is rejected
+  clause: '`lr`: finite and `>= 0`. `beta1`, `beta2`: in `[0, 1)`. `eps`: finite and `> 0`.'
+  killed_by: test_zero_beta1_is_valid_and_gives_the_gradient_as_first_moment
+  visible: hidden
+uncovered:
+- clause: '`params`, `grads`: lists of floating-point tensors of equal length. `grads[i]` has the same
+    shape and dtype as `params[i]`.'
+  reason: every wrong form that breaks C1 rejects or mangles inputs the Contract allows, and the two tried
+    survived with no sentence that forbids them
+sweeps:
+- reject

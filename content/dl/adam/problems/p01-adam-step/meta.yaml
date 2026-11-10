@@ -1,5 +1,5 @@
 id: dl/adam/p01-adam-step
-version: 2
+version: 3
 title: "One Adam step with bias correction"
 language: python
 runtime: py-torch
