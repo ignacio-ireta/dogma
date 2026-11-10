@@ -292,3 +292,27 @@ def test_large_sequence_finishes_within_the_time_limit() -> None:
         "too slow on a long sequence: a scan over the stored entries on every operation is "
         "the usual cause; get and put must touch a fixed number of nodes"
     )
+
+
+def test_stored_falsy_values_are_returned_as_stored_not_as_misses() -> None:
+    cache = LRUCache(2)
+    cache.put("zero", 0)
+    cache.put("empty", "")
+    _check(
+        cache.get("zero") is not None,
+        "a get hit must return the stored falsy value, not None: that is the miss result",
+    )
+    _check(cache.get("zero") == 0, "a get hit must return the stored value unchanged")
+    _check(
+        cache.get("empty") == "",
+        "a get hit must return a stored empty string unchanged, not None",
+    )
+
+
+def test_list_value_is_stored_and_returned_unchanged() -> None:
+    cache = LRUCache(2)
+    _learner(lambda: cache.put("pair", [1, 2]), "a put of a list value")
+    _check(
+        cache.get("pair") == [1, 2],
+        "a list is a valid value: put must store it and get must return it unchanged",
+    )

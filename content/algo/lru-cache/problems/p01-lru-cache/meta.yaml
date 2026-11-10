@@ -1,5 +1,5 @@
 id: algo/lru-cache/p01-lru-cache
-version: 2                      # bump when tests, tolerances or the contract change
+version: 3                      # bump when tests, tolerances or the contract change
 title: LRU cache
 language: python
 runtime: py-stdlib
