@@ -69,7 +69,9 @@ def test_nearly_all_mass_on_the_last_token_draws_the_last_token():
 
 
 def test_one_entry_vocabulary_returns_zero():
-    assert _call(torch.tensor([1.0], dtype=torch.float64), torch.Generator().manual_seed(0)) == 0
+    assert _call(torch.tensor([1.0], dtype=torch.float64), torch.Generator().manual_seed(0)) == 0, (
+        "a one-entry vocabulary leaves a single token to draw"
+    )
 
 
 def test_return_value_is_a_python_int_in_range():
