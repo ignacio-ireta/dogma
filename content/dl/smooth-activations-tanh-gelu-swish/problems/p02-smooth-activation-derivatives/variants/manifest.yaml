@@ -44,3 +44,4 @@ uncovered:
     C3 values, no separate wrong solution
 sweeps:
 - reject
+- mutants
