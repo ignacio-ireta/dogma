@@ -284,3 +284,17 @@ def test_token_id_above_int64_is_rejected_even_when_truncation_drops_it():
         lambda: pad_and_truncate([[2**63, 1]], 0, 1, truncation_side="left"),
         "an id above the int64 range must raise ValueError even when truncation drops it",
     )
+
+
+def test_tuple_rows_are_accepted_like_list_rows():
+    """Each row may be a tuple, so a tuple row must be padded and masked like a list row."""
+    ids, mask = _call([(5, 6, 7), (8,)], pad_id=0, width=4)
+    assert ids.tolist() == [[5, 6, 7, 0], [8, 0, 0, 0]], "a tuple row must be accepted and padded"
+    assert mask.tolist() == [[1, 1, 1, 0], [1, 0, 0, 0]], "a tuple row must get the length mask"
+
+
+def test_bool_pad_id_raises_value_error():
+    """A bool pad_id is not a valid Python int for this function, so it must be refused."""
+    _expect_value_error(
+        lambda: pad_and_truncate([[1]], True, 2), "a bool pad_id must raise ValueError"
+    )
