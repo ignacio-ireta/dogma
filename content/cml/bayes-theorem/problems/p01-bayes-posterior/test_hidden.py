@@ -110,7 +110,9 @@ def _expect_value_error(prior, likelihood, observations, why):
 
 
 @pytest.mark.parametrize(
-    ("seed", "h", "o", "t"), [(s, 2 + s % 2, 2 + (s // 2) % 2, 1 + s % 6) for s in range(10)]
+    ("seed", "h", "o", "t"),
+    [(s, 2 + s % 2, 2 + (s // 2) % 2, 1 + s % 6) for s in range(10)],
+    ids=list("abcdefghij"),
 )
 def test_matches_exact_rational_bayes_update_on_short_sequences(seed, h, o, t):
     prior, lik, obs = _fraction_model(seed, h, o, t)
@@ -144,7 +146,7 @@ def test_two_thousand_alternating_observations_match_exact_posterior():
     )
 
 
-@pytest.mark.parametrize("seed", [3, 4])
+@pytest.mark.parametrize("seed", [3, 4], ids=list("ab"))
 def test_fifteen_hundred_random_observations_match_exact_posterior(seed):
     prior, lik, obs = _fraction_model(seed, 3, 3, 1500)
     got = _solve(
@@ -163,7 +165,7 @@ def test_fifteen_hundred_random_observations_match_exact_posterior(seed):
     )
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, st.integers(min_value=1, max_value=20))
 def test_updating_in_two_steps_equals_one_batch_update(seed, t):
     rng = np.random.default_rng(seed)
@@ -180,7 +182,7 @@ def test_updating_in_two_steps_equals_one_batch_update(seed, t):
     assert problem is None, problem
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, st.integers(min_value=2, max_value=15))
 def test_order_of_observations_does_not_change_the_posterior(seed, t):
     rng = np.random.default_rng(seed)
@@ -195,7 +197,7 @@ def test_order_of_observations_does_not_change_the_posterior(seed, t):
     assert problem is None, problem
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, st.integers(min_value=0, max_value=12))
 def test_posterior_is_a_float64_distribution_over_hypotheses(seed, t):
     rng = np.random.default_rng(seed)
