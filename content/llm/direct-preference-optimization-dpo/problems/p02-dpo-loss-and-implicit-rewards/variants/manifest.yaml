@@ -2,6 +2,47 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_logaddexp_softplus.py
+  origin: freedom
+  freedom: computes softplus of minus the margin with logaddexp against zero, the same stable formula
+reject:
+- file: reject_rejects_exact_zero_log_prob.py
+  mistake: refuses a log-probability of exactly zero, which is valid
+  clause: '`policy_chosen`, `policy_rejected`, `ref_chosen`, `ref_rejected`: floating-point tensors, shape
+    `(B,)`, `B >= 1`, all with the same dtype. Element `i` is the sequence log-probability of that response
+    for pair `i`. Every value must be finite and `<= 0`.'
+  killed_by: test_log_probability_of_exactly_zero_is_accepted
+  visible: hidden
+- file: reject_accepts_zero_beta.py
+  mistake: accepts beta equal to zero, where beta must be strictly positive
+  clause: '`beta`: keyword-only Python float, finite and `> 0`.'
+  killed_by: test_non_positive_beta_raises_value_error
+  visible: hidden
+- file: reject_rewards_float32.py
+  mistake: returns the rewards downcast to float32 instead of keeping the input dtype
+  clause: 'Returns a tuple `(loss, chosen_reward, rejected_reward)`: - `loss`: 0-dimensional tensor, mean
+    over pairs of $-\log\sigma(\hat r_c - \hat r_r)$. - `chosen_reward`, `rejected_reward`: tensors of
+    shape `(B,)` holding $\hat r_c$ and $\hat r_r$. - All three keep the input dtype.'
+  killed_by: test_implicit_rewards_and_loss_for_a_pair_the_policy_prefers
+  visible: public
+- file: reject_detaches_chosen_policy.py
+  mistake: detaches the chosen policy log-probability so no gradient reaches it
+  clause: Gradients flow into the policy arguments. The caller is responsible for passing reference values
+    that carry no gradient.
+  killed_by: test_gradient_wrt_policy_matches_analytic_form_in_float64
+  visible: hidden
+- file: reject_ignores_nan.py
+  mistake: lets NaN log-probabilities through, checking only for infinity
+  clause: 'Raises `ValueError` when: an argument is not a tensor; any tensor is not 1-D; shapes differ;
+    `B == 0`; the dtype is not floating-point or the dtypes differ; any value is not finite or is greater
+    than zero (a probability, not a log-probability); `beta` is not a finite positive number.'
+  killed_by: test_nan_log_probability_raises_value_error
+  visible: hidden
+- file: reject_mutates_shared_shift.py
+  mistake: shifts all four input log-probabilities in place, changing the caller's tensors
+  clause: Must not mutate inputs.
+  killed_by: test_loss_and_rewards_match_reference_over_several_betas
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

@@ -380,3 +380,34 @@ def test_single_entry_vocabulary_is_a_valid_input():
         torch.zeros(1, dtype=torch.float64),
         "a one-entry vocabulary is valid and every token has probability 1, so the sum is zero",
     )
+
+
+def test_float16_logits_are_valid_floating_point_input():
+    logits = _logits((2, 4, 5), 911, scale=1.0).to(torch.float16)
+    ids = _ids((2, 4), 5, 912)
+    mask = _mask((2, 4), 913)
+    out = _call(logits, ids, mask)
+    assert out.dtype == torch.float16, "float16 logits are floating-point: the result keeps float16"
+    want = _reference(logits.to(torch.float64), ids, mask)
+    _close(
+        out.to(torch.float64),
+        want,
+        "float16 logits are floating-point and must be scored, not refused",
+        atol=2e-2,
+        rtol=2e-2,
+    )
+
+
+def test_int32_token_ids_are_valid_integer_input():
+    logits = _logits((2, 4, 6), 921)
+    ids = _ids((2, 4), 6, 922).to(torch.int32)
+    mask = _mask((2, 4), 923)
+    out = _call(logits, ids, mask)
+    want = _reference(logits, ids.to(torch.int64), mask)
+    _close(
+        out,
+        want,
+        "int32 token ids are integer ids and must be scored like int64 ids",
+        atol=ATOL,
+        rtol=RTOL,
+    )

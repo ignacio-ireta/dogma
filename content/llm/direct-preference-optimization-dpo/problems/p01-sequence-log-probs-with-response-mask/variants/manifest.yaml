@@ -1,7 +1,53 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_logsumexp_formula.py
+  origin: freedom
+  freedom: computes log-softmax as logits minus logsumexp over the vocabulary, the same formula
+reject:
+- file: reject_rejects_half_precision_logits.py
+  mistake: refuses float16 logits, which are floating-point
+  clause: '`logits`: floating-point tensor, shape `(B, T, V)`, with `B >= 1`, `T >= 1`, `V >= 1`. These
+    are unnormalised scores. Do not apply a softmax before the call.'
+  killed_by: test_float16_logits_are_valid_floating_point_input
+  visible: hidden
+- file: reject_rejects_int32_input_ids.py
+  mistake: refuses int32 token ids, which are integer ids
+  clause: '`input_ids`: integer tensor (not `bool`), shape `(B, T)`, values in `[0, V)`.'
+  killed_by: test_int32_token_ids_are_valid_integer_input
+  visible: hidden
+- file: reject_mask_misaligned_by_one.py
+  mistake: mask is applied one position early, to the wrong scored token
+  clause: '`response_mask`: boolean tensor, shape `(B, T)`. `response_mask[b, t]` is `True` when the token
+    at position `t` of row `b` belongs to the response. The mask describes the token being scored.'
+  killed_by: test_uniform_logits_sum_two_scored_tokens
+  visible: public
+- file: reject_per_token_mean_not_sum.py
+  mistake: divides the row sum by the number of response tokens, giving a mean
+  clause: Returns a tensor of shape `(B,)` with the dtype of `logits`. Element `b` is $\sum_{t \in [1,
+    T):\ \text{response\_mask}[b,t]} \log p(\text{input\_ids}[b,t] \mid \text{logits}[b, t-1])$, where
+    $p$ is the softmax over the vocabulary.
+  killed_by: test_uniform_logits_sum_two_scored_tokens
+  visible: public
+- file: reject_empty_row_nan.py
+  mistake: returns NaN for a row with no response tokens instead of zero
+  clause: A row with no `True` in its mask has sum `0`.
+  killed_by: test_row_without_response_tokens_sums_to_zero
+  visible: public
+- file: reject_first_token_check_all.py
+  mistake: rejects a first-token mask only when every row marks it, not when any row does
+  clause: 'Raises `ValueError` when: `logits` is not 3-D or not floating-point; `input_ids` is not an
+    integer tensor of shape `(B, T)`; `response_mask` is not a boolean tensor of shape `(B, T)`; `B ==
+    0`; `response_mask[:, 0]` contains a `True` (the first token has no prediction); any `input_ids` value
+    is outside `[0, V)`.'
+  killed_by: test_first_token_marked_in_any_row_raises_value_error
+  visible: hidden
+- file: reject_mutates_logits_shift.py
+  mistake: subtracts the row maximum from the caller's logits in place
+  clause: Must not mutate inputs.
+  killed_by: test_sums_match_reference_on_random_batches
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
