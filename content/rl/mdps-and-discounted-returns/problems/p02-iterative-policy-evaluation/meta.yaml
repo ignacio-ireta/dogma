@@ -1,5 +1,5 @@
 id: rl/mdps-and-discounted-returns/p02-iterative-policy-evaluation
-version: 2
+version: 3
 title: "Iterative policy evaluation for a tabular MDP"
 language: python
 runtime: py-numpy

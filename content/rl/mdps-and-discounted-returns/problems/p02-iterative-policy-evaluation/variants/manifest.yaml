@@ -1,7 +1,54 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_normalised_policy.py
+  origin: freedom
+  freedom: policy rows divided by their sum before averaging, so the last digits may differ
+reject:
+- file: reject_p_row_tolerance_too_wide.py
+  mistake: transition row tolerance widened to 1e-6
+  clause: '`P`: real array of shape `(S, A, S)`, non-negative, finite. For every `(s, a)`, the row `P[s,
+    a, :]` sums to 1 within `1e-9`. `P[s, a, s'']` is the probability of moving to `s''`.'
+  killed_by: test_transition_row_sum_outside_the_slack_is_rejected
+  visible: hidden
+- file: reject_r_nan_accepted.py
+  mistake: NaN reward accepted, loop never stops
+  clause: '`R`: real array of shape `(S, A)`, finite. `R[s, a]` is the expected reward for taking `a`
+    in `s`.'
+  killed_by: test_shape_mismatch_and_nonfinite_rejected
+  visible: hidden
+- file: reject_negative_pi_accepted.py
+  mistake: negative policy entry accepted
+  clause: '`pi`: real array of shape `(S, A)`, non-negative, finite. For every state `s`, `pi[s, :]` sums
+    to 1 within `1e-9`.'
+  killed_by: test_negative_policy_entry_is_rejected_even_when_the_row_sums_to_one
+  visible: hidden
+- file: reject_zero_gamma_rejected.py
+  mistake: gamma zero rejected, strict lower bound
+  clause: '`gamma`: real number with `0 <= gamma < 1`. `bool`, NaN and other values are invalid.'
+  killed_by: test_zero_discount_returns_expected_reward_for_one_state
+  visible: public
+- file: reject_bool_tol_accepted.py
+  mistake: boolean tol accepted as 1
+  clause: '`tol`: positive finite real number. `bool` is invalid.'
+  killed_by: test_invalid_discount_and_tolerance_rejected
+  visible: hidden
+- file: reject_float32_values.py
+  mistake: returns stored in float32
+  clause: 'Returns: a new float64 array of shape `(S,)`.'
+  killed_by: test_random_mdps_match_linear_system_oracle
+  visible: hidden
+- file: reject_gamma_type_error.py
+  mistake: invalid gamma raises TypeError not ValueError
+  clause: Raises `ValueError` when any shape, dtype, range, row sum, `gamma` or `tol` rule is broken.
+  killed_by: test_invalid_discount_and_tolerance_rejected
+  visible: hidden
+- file: reject_pi_normalised_in_place.py
+  mistake: caller pi normalised in place
+  clause: Must not mutate any input array.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

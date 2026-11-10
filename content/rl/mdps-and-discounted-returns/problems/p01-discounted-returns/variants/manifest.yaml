@@ -2,6 +2,41 @@ problem_version: 1
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_bool_rewards_accepted.py
+  mistake: boolean rewards accepted as 0 and 1
+  clause: '`rewards`: one-dimensional NumPy array of length `T >= 0`, integer or floating dtype, every
+    entry finite. Complex, boolean and object arrays are invalid.'
+  killed_by: test_invalid_rewards_rejected
+  visible: hidden
+- file: reject_bool_gamma_accepted.py
+  mistake: boolean gamma accepted as 1 or 0
+  clause: '`gamma`: a real number in `[0, 1]`. `bool`, NaN and values outside the interval are invalid.'
+  killed_by: test_invalid_gamma_rejected
+  visible: hidden
+- file: reject_float32_returns.py
+  mistake: returns stored in float32
+  clause: 'Returns: a new float64 array of shape `(T,)`. `result[t]` is `G_t`. An empty episode returns
+    an empty float64 array.'
+  killed_by: test_empty_episode_returns_empty_float_array
+  visible: public
+- file: reject_nan_gamma_accepted.py
+  mistake: NaN gamma passes the range check
+  clause: Raises `ValueError` when `rewards` is not one-dimensional, has an invalid dtype, contains a
+    non-finite entry, or when `gamma` is invalid.
+  killed_by: test_invalid_gamma_rejected
+  visible: hidden
+- file: reject_rewards_written_back.py
+  mistake: float64 input overwritten with the returns
+  clause: Must not mutate the input array.
+  killed_by: test_random_episodes_match_forward_definition
+  visible: hidden
+- file: reject_last_step_dropped.py
+  mistake: last step left at zero, loop starts one step early
+  clause: 'Returns: a new float64 array of shape `(T,)`. `result[t]` is `G_t`. An empty episode returns
+    an empty float64 array.'
+  killed_by: test_worked_example_with_half_discount
+  visible: public
 uncovered: []
-sweeps: []
+sweeps:
+- reject

@@ -291,3 +291,10 @@ def test_stopping_rule_is_strict_when_the_change_equals_the_tolerance():
 
 def test_bool_false_discount_is_rejected():
     _rejects(np.array([[[1.0]]]), np.array([[1.0]]), np.array([[1.0]]), False)
+
+
+def test_transition_row_sum_outside_the_slack_is_rejected():
+    # Contract: each P[s, a, :] sums to 1 within 1e-9. Here the first row sums to 1 + 5e-7,
+    # which is outside that slack, so the call must raise.
+    P = np.array([[[0.5, 0.5 + 5e-7]], [[0.0, 1.0]]])
+    _rejects(P, np.zeros((2, 1)), np.ones((2, 1)), 0.5)
