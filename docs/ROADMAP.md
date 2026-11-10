@@ -305,6 +305,30 @@ proves equal.
 *Newest first. One entry per session or agent: what changed · what was verified (exact commands
 and results) · what's left or blocked.*
 
+### 2026-11-10 · I-32 merged to main as far as it is swept · I-32b, I-32c, I-32d in progress
+
+- **Merged:** `i32-test-strength` at `b3f9739` plus `main` at `d11beb0` (the nine I-31c review
+  commits), as merge `3145444`, then fast-forwarded onto `main`. One conflict, in this file: the
+  status table keeps I-31c as `done` beside the I-32 rows, and the log keeps both sides' entries.
+- **What that brings to `main`:** the I-32 platform (lint, `variants/`, `scripts/exercise_gate.py`,
+  CONTENT_SPEC §6.7 and §6.8, ADR-0022) and, for the 170 problems outside the 48 I-31 topics: a
+  blind accept each, the hygiene fixes, the reject sweep (1,199 wrong solutions and 321 accepted
+  ones recorded; 97 problems gained hidden tests and one version bump each) and the first 13
+  problems of mutant triage.
+- **Two sessions:** the planning session built the platform, ran the first blind accepts and the
+  pilots, and did this merge. The data-realism session picked the sweeps up from the roadmap and
+  coordinates all of them on `i32-test-strength`; it writes its own entry.
+- **Verified:** `make test-all` exit 0 on `3145444` in a clean worktree: Ruff and format (3,762
+  files), strict mypy (180 files), 6 import contracts, content typing (251 packages), 2,192
+  Python tests, all 175 topics verified, 187 browser unit tests, production build, audit clean
+  (5,369 files), `exercise_gate.py variants` 1,520 ok and 0 mismatches in 170 problems, 11
+  e2e/slow tests, 22 Playwright tests.
+- **Left (from `worklist` on the merge):** hygiene 15 problems, blind 81, reject 81, all in the
+  I-31 topics; mutant triage 238. The tag `i32-start` stays on `dc33fc6` until the first 170
+  problems are fully swept; the sweeping session moves it when the I-31 topics join.
+- **For the owner:** `docs/audits/test-strength-decisions.md` has a "Waiting for the owner"
+  section. `main` is ahead of `origin/main` and nothing was pushed.
+
 ### 2026-11-10 · Test-strength pilots · I-32b and I-32d in progress
 
 - **Pilots, on problems I-31 does not touch, Haiku executors:** hygiene on five problems (seven
