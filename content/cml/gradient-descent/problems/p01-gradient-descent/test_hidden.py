@@ -50,7 +50,7 @@ def _expect_value_error(call, mistake):
     pytest.fail(mistake)
 
 
-@pytest.mark.parametrize(("d", "seed"), [(1, 1), (2, 2), (3, 3), (5, 4), (8, 5)])
+@pytest.mark.parametrize(("d", "seed"), [(1, 1), (2, 2), (3, 3), (5, 4), (8, 5)], ids=list("abcde"))
 def test_converges_to_linear_solve_on_random_quadratics(d, seed):
     A, b = _quadratic(seed, d)
     lr = 1.0 / np.linalg.eigvalsh(A).max()
@@ -64,7 +64,7 @@ def test_converges_to_linear_solve_on_random_quadratics(d, seed):
     )
 
 
-@settings(max_examples=40, deadline=None)
+@settings(max_examples=40, deadline=None, report_multiple_bugs=False)
 @given(seed=st.integers(0, 10**6), d=st.integers(1, 4), fraction=st.floats(0.1, 1.9))
 def test_any_step_inside_the_stability_bound_reaches_the_solution(seed, d, fraction):
     A, b = _quadratic(seed, d)
@@ -123,7 +123,9 @@ def test_exact_step_count_on_one_dimensional_quadratic():
         "step count is off by one: test the gradient before each update, "
         "so k updates are reported as k"
     )
-    np.testing.assert_allclose(x, [0.0], atol=1e-7)
+    np.testing.assert_allclose(
+        x, [0.0], atol=1e-7, err_msg="the one-dimensional run did not reach the minimum"
+    )
 
 
 def _reference_steps_nd(A, b, x_start, lr, tol):
@@ -180,7 +182,7 @@ def test_start_at_minimum_returns_a_copy_not_the_input():
     )
 
 
-@pytest.mark.parametrize("bad_lr", [0.0, -0.1, float("nan")])
+@pytest.mark.parametrize("bad_lr", [0.0, -0.1, float("nan")], ids=["zero", "negative", "nan"])
 def test_invalid_learning_rate_raises_even_when_start_is_optimal(bad_lr):
     _expect_value_error(
         lambda: gradient_descent(_parabola, [3.0], bad_lr),
