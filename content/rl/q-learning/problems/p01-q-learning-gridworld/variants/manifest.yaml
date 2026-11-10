@@ -1,7 +1,66 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_greedy_by_flatnonzero.py
+  origin: freedom
+  freedom: greedy action found with flatnonzero over the row maximum instead of argmax, same lowest index
+reject:
+- file: reject_single_state_table.py
+  mistake: rejects a valid one-state table
+  clause: '`Q`: 2-D finite real array of shape `(S, A)`. Not modified.'
+  killed_by: test_single_state_table_is_a_valid_table
+  visible: hidden
+- file: reject_integer_table_kept.py
+  mistake: keeps the integer dtype of the input table
+  clause: Returns a float64 table of the same shape. Raises `ValueError` on invalid arguments. `train_q_learning(n_episodes,
+    seed, alpha=0.5, gamma=0.9, epsilon=0.3, max_steps=100)`
+  killed_by: test_integer_table_gives_a_float64_result
+  visible: hidden
+- file: reject_negative_index_accepted.py
+  mistake: accepts negative indices as valid
+  clause: '`s`, `a`, `s_next`: integer indices in range for `Q`.'
+  killed_by: test_invalid_update_arguments_rejected
+  visible: hidden
+- file: reject_goal_state_forces_terminal.py
+  mistake: treats a goal next state as terminal even when done is false
+  clause: '`r`: finite real number. `done`: a `bool`, `True` when `s_next` is terminal. The function uses
+    `done` as given and does not check it against `s_next`.'
+  killed_by: test_non_terminal_update_with_the_same_values_does_bootstrap
+  visible: hidden
+- file: reject_gamma_zero_rejected.py
+  mistake: rejects gamma equal to zero
+  clause: '`alpha` in `(0, 1]`, `gamma` in `[0, 1]`. `bool` and NaN are invalid for both.'
+  killed_by: test_single_update_matches_the_formula
+  visible: hidden
+- file: reject_bootstrap_skips_last_action.py
+  mistake: the bootstrap max skips the last action
+  clause: 'Target: `r` when `done`, otherwise `r + gamma * max over a'' of Q[s_next, a'']`. No bootstrap
+    when `done`.'
+  killed_by: test_single_update_matches_the_formula
+  visible: hidden
+- file: reject_update_in_place_on_float64.py
+  mistake: writes the update into the caller table when it is already float64
+  clause: 'Update: `Q[s, a] <- Q[s, a] + alpha * (target - Q[s, a])` on a copy. Only that entry changes.'
+  killed_by: test_single_update_matches_the_formula
+  visible: hidden
+- file: reject_max_steps_zero_allowed.py
+  mistake: accepts max_steps equal to zero
+  clause: '`n_episodes`: integer `>= 0`. `seed`: integer `>= 0`. `max_steps`: integer `>= 1`.'
+  killed_by: test_invalid_training_arguments_rejected
+  visible: hidden
+uncovered:
+- clause: '`alpha`, `gamma`, `epsilon`: as above, with `epsilon` in `[0, 1]`.'
+  reason: cap of eight wrong solutions per problem
+- clause: Use `rng = numpy.random.default_rng(seed)`, and table `Q = zeros((9, 4))` as float64.
+  reason: cap of eight wrong solutions per problem
+- clause: 'For each episode, set `s = 0`. For up to `max_steps` steps, choose an action and then: 1. Draw
+    `u = rng.random()` once. This happens on every choice. 2. If `u < epsilon`, draw `a = rng.integers(4)`
+    once and use it. 3. Otherwise `a` is the lowest index among the largest `Q[s]`. Draw nothing further.
+    Then move with the gridworld rule, call `q_learning_update` with `done` set when the goal is entered,
+    set `s` to the next state, and stop the episode if it is done.'
+  reason: cap of eight wrong solutions per problem
+- clause: Returns the final table, shape `(9, 4)`, float64.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

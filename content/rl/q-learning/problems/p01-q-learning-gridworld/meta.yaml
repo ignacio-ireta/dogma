@@ -1,5 +1,5 @@
 id: rl/q-learning/p01-q-learning-gridworld
-version: 3
+version: 4
 title: "Q-learning: one update and a gridworld run"
 language: python
 runtime: py-numpy

@@ -300,3 +300,35 @@ def test_default_step_cap_is_100_steps():
         _call(train_q_learning, 200, 9, max_steps=100),
         err_msg="the default max_steps must be 100: an episode that runs 100 steps was cut short",
     )
+
+
+def test_single_state_table_is_a_valid_table():
+    # A 1 x 2 table is a 2-D finite real array of shape (S, A) with S = 1, so it is valid.
+    # Hand-worked: target = r = 1.0 (done), so Q[0, 1] = 0 + 0.5 * (1.0 - 0) = 0.5.
+    Q = np.zeros((1, 2))
+    out = _call(q_learning_update, Q, 0, 1, 1.0, 0, True, 0.5, 0.9)
+    assert out.shape == (1, 2), "a one-state table must keep its shape"
+    _close(
+        out[0, 1],
+        0.5,
+        atol=ATOL,
+        rtol=RTOL,
+        err_msg="a valid one-state table must be updated like any other table",
+    )
+
+
+def test_integer_table_gives_a_float64_result():
+    # The contract returns a float64 table whatever the dtype of Q. Hand-worked:
+    # Q[7, 1] = 0 + 0.5 * (1.0 - 0) = 0.5, which an integer table would round away.
+    Q = np.zeros((N_STATES, N_ACTIONS), dtype=np.int64)
+    out = _call(q_learning_update, Q, 7, 1, 1.0, GOAL, True, 0.5, 0.9)
+    assert out.dtype == np.float64, (
+        "the returned table must be float64 even when Q is an integer array"
+    )
+    _close(
+        out[7, 1],
+        0.5,
+        atol=ATOL,
+        rtol=RTOL,
+        err_msg="an integer input table must not round the update",
+    )
