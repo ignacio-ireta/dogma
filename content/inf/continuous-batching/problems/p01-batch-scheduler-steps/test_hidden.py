@@ -199,3 +199,15 @@ def test_prompt_longer_than_budget_is_rejected_even_beside_a_short_prompt():
     pytest.fail(
         "a prompt longer than prefill_budget was accepted: expected ValueError", pytrace=False
     )
+
+
+def test_prefill_budget_of_one_is_a_valid_budget():
+    # prefill_budget = 1 is allowed (it must be >= 1). Each one-token prompt fills the budget
+    # alone, so one request is admitted per step.
+    # Step 0: request 0 fits (1 of 1 tokens); request 1 would make 2, so the queue stops.
+    # Request 0 has one output token, so it finishes at step 0.
+    # Step 1: request 1 is admitted and finishes at step 1.
+    got = run([0, 0], [1, 1], [1, 1], 2, 1, "continuous")
+    assert got == [(0, 0), (1, 1)], (
+        "budget rule: a prefill_budget of 1 is valid and admits one one-token prompt per step"
+    )

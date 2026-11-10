@@ -1,7 +1,46 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_rejects_budget_of_one.py
+  mistake: rejects a prefill_budget of 1, which the contract allows
+  clause: '`max_batch >= 1` and `prefill_budget >= 1`, both `int`. Otherwise `ValueError`.'
+  killed_by: test_prefill_budget_of_one_is_a_valid_budget
+  visible: hidden
+- file: reject_accepts_bool_as_int.py
+  mistake: accepts bool as int
+  clause: '`arrivals`, `prompt_lens`, `output_lens`: lists of `int`, the same length `n >= 0`. An arrival
+    is `>= 0`; prompt and output lengths are `>= 1`. Bool values are invalid. Otherwise `ValueError`.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_accepts_zero_prompt_length.py
+  mistake: accepts a prompt length of zero
+  clause: '`arrivals`, `prompt_lens`, `output_lens`: lists of `int`, the same length `n >= 0`. An arrival
+    is `>= 0`; prompt and output lengths are `>= 1`. Bool values are invalid. Otherwise `ValueError`.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_ignores_unknown_policy.py
+  mistake: runs an unknown policy as static instead of raising
+  clause: '`policy` must be `"static"` or `"continuous"`. Otherwise `ValueError`.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_rejects_prompt_equal_budget.py
+  mistake: rejects a prompt equal to the budget
+  clause: A prompt longer than `prefill_budget` can never be admitted. Raise `ValueError`.
+  killed_by: test_random_workloads_match_the_independent_step_model
+  visible: hidden
+- file: reject_returns_sorted_by_first_token.py
+  mistake: returns results sorted by first token step instead of input order
+  clause: Returns a list of `(first_token_step, finish_step)` tuples, one per request, in input order.
+    Return `[]` for empty input.
+  killed_by: test_random_workloads_match_the_independent_step_model
+  visible: hidden
+- file: reject_reorders_arrivals_in_place.py
+  mistake: sorts the arrivals list in place
+  clause: Must not mutate the input lists.
+  killed_by: test_invariants_hold_for_any_workload
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
