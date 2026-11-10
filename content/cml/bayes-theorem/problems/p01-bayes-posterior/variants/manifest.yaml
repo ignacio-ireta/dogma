@@ -2,6 +2,52 @@ problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_loop_over_observations.py
+  origin: freedom
+  freedom: sums the log-likelihoods one observation at a time in a loop instead of one vectorised sum
+reject:
+- file: reject_single_hypothesis_prior_rejected.py
+  mistake: rejects a prior with one hypothesis, which is valid
+  clause: '`prior`: 1-D, length $h \ge 1$. Entries are finite and non-negative and sum to 1 within $10^{-9}$.'
+  killed_by: test_single_hypothesis_returns_probability_one
+  visible: hidden
+- file: reject_observations_deduplicated.py
+  mistake: drops repeated observations before multiplying likelihoods
+  clause: '`observations`: 1-D sequence of integer indices in `[0, o)`. Repeats are allowed. An empty
+    sequence is valid and returns the prior.'
+  killed_by: test_two_observations_of_the_same_category_multiply_likelihoods
+  visible: public
+- file: reject_float32_result.py
+  mistake: returns float32 instead of float64
+  clause: 'Returns: NumPy `float64` array of shape `(h,)` that sums to 1.'
+  killed_by: test_positive_medical_test_gives_one_in_six
+  visible: public
+- file: reject_zero_prior_not_exact.py
+  mistake: adds a tiny constant to the prior so a zero prior is not exactly zero
+  clause: A hypothesis with prior 0 has posterior exactly 0, whatever the data.
+  killed_by: test_impossible_observations_raise_value_error
+  visible: public
+- file: reject_zero_likelihood_clipped.py
+  mistake: clips zero likelihoods to a tiny positive value
+  clause: A hypothesis that gives some observation likelihood 0 has posterior exactly 0.
+  killed_by: test_impossible_observations_raise_value_error
+  visible: public
+- file: reject_negative_index_wraps.py
+  mistake: no check for negative observation indices so -1 wraps to the last column
+  clause: 'Raises `ValueError` when: the shapes disagree; a probability is negative, NaN or infinite;
+    the prior or a likelihood row does not sum to 1; an observation is not an integer; an observation
+    index is negative or at least `o`; or the evidence is zero, because every hypothesis gives the observations
+    probability 0.'
+  killed_by: test_negative_observation_index_is_rejected_not_wrapped_around
+  visible: hidden
+- file: reject_likelihood_normalised_in_place.py
+  mistake: renormalises the caller likelihood array in place
+  clause: Must not mutate its inputs.
+  killed_by: test_sums_within_rounding_are_accepted_and_inputs_are_left_unchanged
+  visible: hidden
+uncovered:
+- clause: '`likelihood`: 2-D, shape `(h, o)` with $o \ge 1$. Entries are finite and non-negative. Each
+    row sums to 1 within $10^{-9}$. A row is a distribution over observations, not over hypotheses.'
+  reason: wrong solution survives, see notes
+sweeps:
+- reject
