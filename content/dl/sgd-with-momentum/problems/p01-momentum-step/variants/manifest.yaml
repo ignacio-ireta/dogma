@@ -47,3 +47,4 @@ uncovered:
     single edit breaks C2 alone
 sweeps:
 - reject
+- mutants
