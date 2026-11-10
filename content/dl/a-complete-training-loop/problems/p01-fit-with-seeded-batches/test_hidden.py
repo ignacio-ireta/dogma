@@ -309,3 +309,19 @@ def test_single_row_training_set_is_valid():
     assert len(train) == 2 and len(val) == 2, (
         "a training set of one row is valid (n >= 1): the run must return one loss per epoch"
     )
+
+
+def test_training_loss_averages_over_every_target_column():
+    # Two target columns: the loss is the mean over all squared errors, not column 0 alone.
+    # One full batch, so the epoch's train loss is the loss before the one step (initial weights).
+    torch.manual_seed(5)
+    base = torch.nn.Linear(2, 2).double()
+    gen = torch.Generator().manual_seed(5)
+    X = torch.randn(6, 2, generator=gen, dtype=torch.float64)
+    y = torch.randn(6, 2, generator=gen, dtype=torch.float64)
+    with torch.no_grad():
+        full = torch.nn.functional.mse_loss(base(X), y).item()
+    train, _ = checked_fit(copy.deepcopy(base), X, y, X, y, epochs=1, batch_size=6, lr=0.1, seed=0)
+    assert abs(train[0] - full) <= ATOL + RTOL * abs(full), (
+        "the training loss must average the squared error over every target column"
+    )
