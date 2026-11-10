@@ -2,6 +2,59 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_loop_over_slices.py
+  origin: freedom
+  freedom: loops over each slice with apply_along_axis instead of a vectorised reduction
+- file: accept_logaddexp_reduce.py
+  origin: freedom
+  freedom: computes the log normaliser with logaddexp.reduce, another rounding path
+reject:
+- file: reject_only_up_to_two_dims.py
+  mistake: refuses arrays with three or more dimensions
+  clause: '`logits`: array-like of finite real numbers with at least one dimension. Any shape is valid.'
+  killed_by: test_random_inputs_match_an_independent_reference
+  visible: hidden
+- file: reject_ignores_axis.py
+  mistake: always normalises along the last axis and ignores the axis argument
+  clause: '`axis`: integer, default `-1`. Every other axis is an independent distribution.'
+  killed_by: test_random_inputs_match_an_independent_reference
+  visible: hidden
+- file: reject_sum_without_keepdims.py
+  mistake: log normaliser drops keepdims so it broadcasts against the wrong axis
+  clause: 'Returns: `float64` NumPy array with the same shape as `logits`. Along `axis`, `exp` of the
+    result sums to 1, and every entry is at most 0.'
+  killed_by: test_random_inputs_match_an_independent_reference
+  visible: hidden
+- file: reject_log_of_softmax.py
+  mistake: takes the log of a rounded softmax so tiny probabilities become minus infinity
+  clause: 'Accuracy: representable log-probabilities are finite, including for logits of magnitude $10^4$
+    and for huge common offsets. If a negative log-probability is outside float64 range, return `-inf`
+    without a warning; this is a representability limit, not probability underflow.'
+  killed_by: test_very_negative_logit_keeps_a_finite_log_probability
+  visible: public
+- file: reject_forgets_the_shift_in_result.py
+  mistake: returns z minus the log normaliser of the shifted values, so the maximum is not removed
+  clause: 'Invariance: adding a constant to every logit in one slice leaves that slice unchanged.'
+  killed_by: test_exponentials_of_the_result_sum_to_one
+  visible: public
+- file: reject_checks_inf_only.py
+  mistake: rejects infinite entries but lets NaN through
+  clause: 'Raises `ValueError` when: `logits` is a scalar (0-d); any entry is NaN or infinite; the length
+    along `axis` is zero; or `axis` is out of range.'
+  killed_by: test_invalid_inputs_raise_value_error
+  visible: hidden
+- file: reject_in_place_shift.py
+  mistake: subtracts the maximum in place so the caller array is changed
+  clause: Must not mutate its input. Must not emit a NumPy overflow, invalid-value or divide warning for
+    any finite input.
+  killed_by: test_input_array_is_not_mutated
+  visible: hidden
+- file: reject_no_shift_before_exp.py
+  mistake: exponentiates without the maximum subtracted so large logits overflow
+  clause: Must not mutate its input. Must not emit a NumPy overflow, invalid-value or divide warning for
+    any finite input.
+  killed_by: test_extreme_logits_match_reference_and_stay_finite
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

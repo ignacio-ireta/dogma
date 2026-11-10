@@ -2,6 +2,54 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_log_domain.py
+  origin: freedom
+  freedom: 'normalises in the log domain: subtracts the log of the sum of shifted exponentials and then
+    exponentiates, a different rounding path'
+- file: accept_loop_over_slices.py
+  origin: freedom
+  freedom: loops over each slice with apply_along_axis instead of a vectorised reduction
+reject:
+- file: reject_only_up_to_two_dims.py
+  mistake: refuses arrays with three or more dimensions
+  clause: '`logits`: array-like of finite real numbers with at least one dimension. Any shape is valid.'
+  killed_by: test_random_inputs_match_an_independent_reference
+  visible: hidden
+- file: reject_ignores_axis.py
+  mistake: always normalises along the last axis and ignores the axis argument
+  clause: '`axis`: integer, default `-1`. The normalisation runs along this axis, and every other axis
+    is independent.'
+  killed_by: test_axis_zero_normalises_each_column
+  visible: public
+- file: reject_float32_result.py
+  mistake: returns float32 instead of float64
+  clause: 'Returns: `float64` NumPy array with the same shape as `logits`. Along `axis`, every slice is
+    non-negative and sums to 1.'
+  killed_by: test_rows_of_a_matrix_each_sum_to_one
+  visible: public
+- file: reject_clip_logits.py
+  mistake: clips logits at 700 before the shift so the answer depends on absolute values
+  clause: 'Invariance: adding a constant to every logit in one slice leaves that slice unchanged.'
+  killed_by: test_extreme_logits_are_finite_and_warning_free
+  visible: public
+- file: reject_checks_inf_only.py
+  mistake: rejects infinite entries but lets NaN through
+  clause: 'Raises `ValueError` when: `logits` is a scalar (0-d); any entry is NaN or infinite; the length
+    along `axis` is zero; or `axis` is out of range.'
+  killed_by: test_invalid_inputs_raise_value_error
+  visible: hidden
+- file: reject_in_place_shift.py
+  mistake: subtracts the maximum in place so the caller array is changed
+  clause: Must not mutate its input. Must not emit a NumPy overflow, invalid-value or divide warning for
+    any finite input.
+  killed_by: test_square_matrix_is_normalised_row_by_row_not_by_a_misaligned_maximum
+  visible: hidden
+- file: reject_naive_exp.py
+  mistake: exponentiates without subtracting the maximum so large logits overflow
+  clause: Must not mutate its input. Must not emit a NumPy overflow, invalid-value or divide warning for
+    any finite input.
+  killed_by: test_extreme_logits_are_finite_and_warning_free
+  visible: public
 uncovered: []
-sweeps: []
+sweeps:
+- reject
