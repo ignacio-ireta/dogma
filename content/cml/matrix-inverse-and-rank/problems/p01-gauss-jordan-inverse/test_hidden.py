@@ -26,7 +26,11 @@ def _must_raise_value_error(call, mistake, match=None):
     raise AssertionError(mistake)
 
 
-@pytest.mark.parametrize(("n", "seed"), [(1, 1), (2, 2), (3, 3), (5, 4), (8, 5)])
+@pytest.mark.parametrize(
+    ("n", "seed"),
+    [(1, 1), (2, 2), (3, 3), (5, 4), (8, 5)],
+    ids=list("abcde"),
+)
 def test_matches_numpy_inverse_on_random_well_conditioned_matrices(n, seed):
     A = _well_conditioned(seed, n)
     np.testing.assert_allclose(
@@ -39,7 +43,7 @@ def test_matches_numpy_inverse_on_random_well_conditioned_matrices(n, seed):
     )
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, st.integers(min_value=1, max_value=7))
 def test_product_with_inverse_is_identity(seed, n):
     A = _well_conditioned(seed, n)
@@ -51,7 +55,7 @@ def test_product_with_inverse_is_identity(seed, n):
     )
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, st.integers(min_value=1, max_value=7))
 def test_inverting_twice_returns_the_original_matrix(seed, n):
     A = _well_conditioned(seed, n)
@@ -64,7 +68,7 @@ def test_inverting_twice_returns_the_original_matrix(seed, n):
     )
 
 
-@settings(max_examples=40, deadline=None)
+@settings(max_examples=40, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, st.integers(min_value=1, max_value=6), st.sampled_from([-2.0, 0.5, 10.0]))
 def test_transpose_and_scaling_identities(seed, n, c):
     A = _well_conditioned(seed, n)
@@ -231,7 +235,9 @@ def test_nan_entry_raises_value_error():
 def test_integer_input_returns_float64_inverse():
     inv = gauss_jordan_inverse([[2, 0], [0, 4]])
     assert inv.dtype == np.float64, f"dtype should be float64 for integer input, got {inv.dtype}"
-    np.testing.assert_allclose(inv, [[0.5, 0.0], [0.0, 0.25]], rtol=1e-12)
+    np.testing.assert_allclose(
+        inv, [[0.5, 0.0], [0.0, 0.25]], rtol=1e-12, err_msg="integer input gives the wrong inverse"
+    )
 
 
 def test_input_matrix_is_not_mutated():

@@ -37,6 +37,7 @@ def _must_raise_value_error(call, mistake):
         (1, 4, 1, 6),
         (7, 7, 0, 7),
     ],
+    ids=list("abcdefg"),
 )
 def test_matches_numpy_rank_on_matrices_of_known_rank(m, n, r, seed):
     A = _with_rank(seed, m, n, r)
@@ -45,7 +46,7 @@ def test_matches_numpy_rank_on_matrices_of_known_rank(m, n, r, seed):
     assert got == np.linalg.matrix_rank(A), "disagrees with the NumPy reference rank"
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, st.integers(min_value=1, max_value=8), st.integers(min_value=1, max_value=8))
 def test_full_rank_random_rectangular_matrix_has_rank_min_m_n(seed, m, n):
     A = np.random.default_rng(seed).normal(size=(m, n))
@@ -54,7 +55,7 @@ def test_full_rank_random_rectangular_matrix_has_rank_min_m_n(seed, m, n):
     )
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, st.integers(min_value=1, max_value=7), st.integers(min_value=1, max_value=7))
 def test_rank_of_transpose_equals_rank(seed, m, n):
     rng = np.random.default_rng(seed)
@@ -62,7 +63,7 @@ def test_rank_of_transpose_equals_rank(seed, m, n):
     assert matrix_rank(A.T) == matrix_rank(A), "rank(A^T) must equal rank(A)"
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, st.integers(min_value=2, max_value=7), st.integers(min_value=1, max_value=7))
 def test_row_permutation_and_nonzero_row_scaling_keep_the_rank(seed, m, n):
     rng = np.random.default_rng(seed)
@@ -74,7 +75,7 @@ def test_row_permutation_and_nonzero_row_scaling_keep_the_rank(seed, m, n):
     )
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, st.integers(min_value=2, max_value=7), st.integers(min_value=1, max_value=7))
 def test_adding_a_combination_of_rows_does_not_increase_the_rank(seed, m, n):
     rng = np.random.default_rng(seed)
@@ -86,7 +87,7 @@ def test_adding_a_combination_of_rows_does_not_increase_the_rank(seed, m, n):
     )
 
 
-@pytest.mark.parametrize(("m", "n", "seed"), [(3, 3, 11), (4, 2, 12), (2, 5, 13)])
+@pytest.mark.parametrize(("m", "n", "seed"), [(3, 3, 11), (4, 2, 12), (2, 5, 13)], ids=list("abc"))
 def test_outer_product_has_rank_one(m, n, seed):
     rng = np.random.default_rng(seed)
     u = rng.normal(size=m)
@@ -94,7 +95,7 @@ def test_outer_product_has_rank_one(m, n, seed):
     assert matrix_rank(np.outer(u, v)) == 1, "an outer product of nonzero vectors has rank 1"
 
 
-@pytest.mark.parametrize("n", [1, 2, 3, 6])
+@pytest.mark.parametrize("n", [1, 2, 3, 6], ids=list("abcd"))
 def test_identity_has_full_rank(n):
     assert matrix_rank(np.eye(n)) == n, f"the {n}x{n} identity must have rank {n}"
 
