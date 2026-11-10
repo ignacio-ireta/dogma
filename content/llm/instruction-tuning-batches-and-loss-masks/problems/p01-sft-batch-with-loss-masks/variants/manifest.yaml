@@ -1,7 +1,64 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_python_lists_then_tensor.py
+  origin: freedom
+  freedom: builds each row as a Python list then converts once with torch tensor, instead of slice assignment
+    into a pre-filled tensor
+reject:
+- file: reject_bool_pad_id_accepted.py
+  mistake: accepts a bool pad id
+  clause: '`pad_id`: Python `int` in `0..2**63 - 1`. A `bool` is invalid.'
+  killed_by: test_bool_pad_id_raises_value_error
+  visible: hidden
+- file: reject_empty_batch_shape.py
+  mistake: gives an empty batch width 1 instead of 0
+  clause: 'Returns: `(input_ids, labels, attention_mask)`, each a `torch.int64` tensor of shape `(B, L)`.
+    When `pairs` is empty, all three have shape `(0, 0)`.'
+  killed_by: test_empty_batch_returns_zero_by_zero_tensors
+  visible: hidden
+- file: reject_empty_prompt_allowed.py
+  mistake: lets an empty prompt through
+  clause: '`prompt_ids` must have at least one token. The first response token needs a preceding position
+    to be predicted from, so an empty prompt is invalid.'
+  killed_by: test_empty_prompt_is_rejected_with_value_error
+  visible: public
+- file: reject_empty_response_allowed.py
+  mistake: lets an empty response through
+  clause: '`response_ids` must have at least one token.'
+  killed_by: test_invalid_pairs_raise_value_error
+  visible: hidden
+- file: reject_mask_from_token_values.py
+  mistake: builds the attention mask from token values so a response token equal to pad id is masked
+  clause: 'Let `n_i = len(prompt_i) + len(response_i)` and `L = max(n_i)`. Each row has length `L`. -
+    `input_ids[i]` holds the prompt, then the response, then `pad_id` in the columns `n_i..L-1`. - `labels[i]`
+    holds `-100` for columns `0..len(prompt_i)-1`, then the response ids, then `-100` in columns `n_i..L-1`.
+    - `attention_mask[i]` holds `1` in columns `0..n_i-1` and `0` after. - The masks come from lengths,
+    not from token values. A response token whose id equals `pad_id` is a real token: its label keeps
+    its id and its attention mask is `1`.'
+  killed_by: test_response_token_equal_to_pad_id_is_still_a_target
+  visible: public
+- file: reject_mutates_response.py
+  mistake: reverses the caller response list in place after building the batch
+  clause: Must not mutate `pairs` or any list inside it.
+  killed_by: test_random_batches_match_the_plain_python_reference
+  visible: hidden
+- file: reject_three_element_pair_accepted.py
+  mistake: accepts a pair with three elements and ignores the extra one
+  clause: 'Raises `ValueError` when: `pairs` is not a list or tuple; an item is not a two-element list
+    or tuple; a prompt or response is not a list or tuple; the prompt or the response is empty; an id
+    is not a Python `int`, is a `bool`, is negative, or exceeds `2**63 - 1`; `pad_id` is not a Python
+    `int`, is a `bool`, is negative, or exceeds `2**63 - 1`.'
+  killed_by: test_invalid_pairs_raise_value_error
+  visible: hidden
+- file: reject_only_list_prompts.py
+  mistake: accepts only lists so tuple prompts and responses are refused
+  clause: '`pairs`: a `list` or `tuple` of `B >= 0` items. Each item is a `list` or `tuple` of exactly
+    two elements, `(prompt_ids, response_ids)`. Both are `list` or `tuple` of Python `int` token ids,
+    each id with `0 <= id <= 2**63 - 1`.'
+  killed_by: test_tuple_prompt_and_response_are_valid_inputs
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

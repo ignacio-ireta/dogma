@@ -272,3 +272,24 @@ def test_largest_int64_pad_id_is_accepted():
     assert mask.tolist() == [[1, 1, 0], [1, 1, 1]], (
         "attention mask is wrong for a batch whose pad_id is the largest int64 value"
     )
+
+
+def test_tuple_prompt_and_response_are_valid_inputs():
+    # Contract C1: prompt_ids and response_ids may each be a list or a tuple of ints.
+    # Worked by hand with the same rules as the Examples in problem.md:
+    # row 0 has n = 5 (prompt 2, response 3), row 1 has n = 2 (prompt 1, response 1),
+    # so L = 5 and row 1 is padded with pad_id = 0 in columns 2..4.
+    pairs = [((5, 6), (7, 8, 9)), ((4,), (3,))]
+    snapshot = copy.deepcopy(pairs)
+    input_ids, labels, mask = _call(pairs, 0)
+    assert pairs == snapshot, "the input pairs were modified in place"
+    assert input_ids.tolist() == [[5, 6, 7, 8, 9], [4, 3, 0, 0, 0]], (
+        "tuple prompts and responses must build the same inputs as lists"
+    )
+    assert labels.tolist() == [
+        [IGNORE, IGNORE, 7, 8, 9],
+        [IGNORE, 3, IGNORE, IGNORE, IGNORE],
+    ], "tuple prompts and responses must give the same response-only labels as lists"
+    assert mask.tolist() == [[1, 1, 1, 1, 1], [1, 1, 0, 0, 0]], (
+        "tuple prompts and responses must give the same attention mask as lists"
+    )
