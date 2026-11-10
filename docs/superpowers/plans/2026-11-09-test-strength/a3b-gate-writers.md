@@ -1,7 +1,7 @@
 # I-32a3b: the gate tool, part 2: manifest writers and the replay
 
 **Owns:** `scripts/exercise_gate.py`, `tests/unit/scripts/test_exercise_gate.py`,
-`tests/integration/runner/test_exercise_gate.py` (new).
+`tests/integration/runner/test_gate_tool.py` (new).
 **Needs:** I-32a2 and I-32a3a committed.
 **Commit message (coordinator):** `feat(scripts): write and replay problem variants (I-32a3b)`
 
@@ -98,9 +98,11 @@ For each problem that has no blind accept yet:
    `<id>  skipped: no passing submit for this file`.
 3. Run the `add-accept` logic with origin `blind` and name `accept_blind.<suffix>`. A failure
    prints `<id>  skipped: <reason>` and continues.
-4. Compare with the reference. Take the non-blank lines that are not comments, stripped, from
-   both files. `ratio = difflib.SequenceMatcher(None, a, b).ratio()`. If the reference has at
-   least 15 such lines and `ratio >= 0.9`, call
+4. Compare with the reference (`blind_similarity`). Take the non-blank lines that are not
+   comments, stripped, from both files, and drop every line the starter also has: the signature
+   and docstring are shared by every solution and say nothing about independence.
+   `ratio = difflib.SequenceMatcher(None, a, b).ratio()`. If the reference keeps at least 15
+   lines of its own and `ratio >= 0.9`, call
    `append_note(out, id, "question", "accept_blind is <ratio:.2f> similar to the reference")`.
 5. Print `<id>  adopted  similarity=<ratio:.2f>`.
 
@@ -161,7 +163,7 @@ returns a `GradeReport` whose test names exist in the fixture:
 7. `message-defect` note: make the fake return message `ValueError: boom` for the failing test;
    the ledger gains one row.
 
-**Integration** (`tests/integration/runner/test_exercise_gate.py`, `pytestmark =
+**Integration** (`tests/integration/runner/test_gate_tool.py`, `pytestmark =
 pytest.mark.integration`): the same repo layout, the real grader, no fake.
 
 1. `add-accept` of a correct rewrite (the guard, then `return b + a`) succeeds.
@@ -176,7 +178,7 @@ pytest.mark.integration`): the same repo layout, the real grader, no fake.
 
 ```bash
 uv run --frozen pytest tests/unit/scripts/test_exercise_gate.py -q
-uv run --frozen pytest -m integration tests/integration/runner/test_exercise_gate.py -q
+uv run --frozen pytest -m integration tests/integration/runner/test_gate_tool.py -q
 uv run --frozen ruff check scripts/exercise_gate.py tests/unit/scripts tests/integration/runner
 uv run --frozen ruff format --check scripts/exercise_gate.py tests/unit/scripts tests/integration/runner
 uv run --frozen pytest -q

@@ -1,7 +1,7 @@
 # I-32a3c: the gate tool, part 3: `gate` and `bump-version`
 
 **Owns:** `scripts/exercise_gate.py`, `tests/unit/scripts/test_exercise_gate.py`,
-`tests/integration/runner/test_exercise_gate.py`.
+`tests/integration/runner/test_gate_tool.py`.
 **Needs:** I-32a3b committed.
 **Commit message (coordinator):** `feat(scripts): add the test-edit gate (I-32a3c)`
 
@@ -192,7 +192,7 @@ def test_bool_raises_type_error():
 
 ```bash
 uv run --frozen pytest tests/unit/scripts/test_exercise_gate.py -q
-uv run --frozen pytest -m integration tests/integration/runner/test_exercise_gate.py -q
+uv run --frozen pytest -m integration tests/integration/runner/test_gate_tool.py -q
 uv run --frozen ruff check scripts/exercise_gate.py tests/unit/scripts tests/integration/runner
 uv run --frozen ruff format --check scripts/exercise_gate.py tests/unit/scripts tests/integration/runner
 uv run --frozen pytest -q

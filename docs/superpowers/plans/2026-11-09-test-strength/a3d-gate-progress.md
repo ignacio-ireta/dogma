@@ -1,7 +1,7 @@
 # I-32a3d: the gate tool, part 4: `add-test`, `mark-swept`, `worklist`, `scorecard`
 
 **Owns:** `scripts/exercise_gate.py`, `tests/unit/scripts/test_exercise_gate.py`,
-`tests/integration/runner/test_exercise_gate.py`.
+`tests/integration/runner/test_gate_tool.py`.
 **Needs:** I-32a3c committed.
 **Commit message (coordinator):** `feat(scripts): add tests as one transaction and track sweeps from the tree (I-32a3d)`
 
@@ -149,7 +149,7 @@ real path file or on today's date.
 
 ```bash
 uv run --frozen pytest tests/unit/scripts/test_exercise_gate.py -q
-uv run --frozen pytest -m integration tests/integration/runner/test_exercise_gate.py -q
+uv run --frozen pytest -m integration tests/integration/runner/test_gate_tool.py -q
 uv run --frozen ruff check scripts/exercise_gate.py tests/unit/scripts tests/integration/runner
 uv run --frozen ruff format --check scripts/exercise_gate.py tests/unit/scripts tests/integration/runner
 uv run --frozen pytest -q
