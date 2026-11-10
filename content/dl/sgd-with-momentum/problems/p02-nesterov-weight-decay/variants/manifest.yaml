@@ -2,6 +2,51 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_look_ahead_sum_swapped.py
+  origin: freedom
+  freedom: adds the scaled buffer first and the decayed gradient second, same sum
+reject:
+- file: reject_first_step_squeezes_buffer.py
+  mistake: first step squeezes the seeded buffer so a one-element parameter gets a wrong-shape buffer
+  clause: '`params`, `grads`: lists of floating-point tensors of equal length. `grads[i]` has the same
+    shape and dtype as `params[i]`.'
+  killed_by: test_first_step_uses_decayed_gradient_with_nesterov_look_ahead
+  visible: public
+- file: reject_buffer_taken_from_first_parameter.py
+  mistake: later steps read the first parameter buffer for every parameter
+  clause: '`velocity`: `None` before the first step, otherwise one buffer per parameter, each the shape
+    of its parameter.'
+  killed_by: test_matches_torch_nesterov_sgd_with_weight_decay_over_steps
+  visible: hidden
+- file: reject_zero_weight_decay_refused.py
+  mistake: zero weight decay is refused although the Contract allows it
+  clause: '`lr`, `weight_decay`: finite and `>= 0`. `momentum`: finite and in `(0, 1)`.'
+  killed_by: test_zero_weight_decay_is_plain_nesterov
+  visible: hidden
+- file: reject_plain_momentum_not_nesterov.py
+  mistake: uses the plain momentum buffer instead of the Nesterov look-ahead
+  clause: 'Per tensor, with gradient `g`, parameter `p`, and buffer `v`: - decayed gradient: `d = g +
+    weight_decay * p` - first step (`velocity is None`): `v = d`; later steps: `v = momentum * v_prev
+    + d` - look-ahead: `d_nes = d + momentum * v` - update: `p_new = p - lr * d_nes`'
+  killed_by: test_first_step_uses_decayed_gradient_with_nesterov_look_ahead
+  visible: public
+- file: reject_buffer_carries_learning_rate.py
+  mistake: the returned buffer already includes the learning rate
+  clause: Returns `(new_params, new_velocity)`, with the input shapes and dtypes. `new_velocity` holds
+    the unscaled buffer `v`, built from gradient plus decay.
+  killed_by: test_first_step_uses_decayed_gradient_with_nesterov_look_ahead
+  visible: public
+- file: reject_nan_weight_decay_accepted.py
+  mistake: a NaN weight decay is accepted
+  clause: Raises `ValueError` for mismatched lengths or shapes, out-of-range or non-finite scalars (including
+    `momentum = 0`, which is not Nesterov here).
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_gradient_decayed_in_place.py
+  mistake: the caller gradient tensor is changed in place by the decay term
+  clause: Must not mutate inputs.
+  killed_by: test_weight_decay_joins_gradient_before_momentum
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

@@ -1,7 +1,49 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_sum_order_swapped.py
+  origin: freedom
+  freedom: adds the gradient first and the scaled old buffer second, same sum
+reject:
+- file: reject_lr_infinity_allowed.py
+  mistake: drops the finite check for the learning rate
+  clause: Raises `ValueError` when lengths differ, a gradient or buffer shape differs from its parameter,
+    `lr` or `momentum` is out of range, or `lr` or `momentum` is not finite.
+  killed_by: test_infinite_learning_rate_is_rejected
+  visible: hidden
+- file: reject_buffer_carries_learning_rate.py
+  mistake: returned buffer already includes the learning rate
+  clause: 'Returns: `(new_params, new_velocity)`. Both are lists of tensors with the input shapes and
+    dtypes. `new_velocity` holds the unscaled buffer `v`, not `lr * v`.'
+  killed_by: test_first_step_moves_by_learning_rate_times_gradient
+  visible: public
+- file: reject_first_step_squeezes_scalar_buffer.py
+  mistake: first step squeezes the seeded buffer so a one-element parameter returns a wrong-shape buffer
+  clause: '`params`, `grads`: lists of floating-point tensors of equal length. `grads[i]` has the same
+    shape and dtype as `params[i]`.'
+  killed_by: test_matches_torch_momentum_sgd_over_several_steps
+  visible: hidden
+- file: reject_later_step_gradient_scaled_by_momentum.py
+  mistake: later steps scale the gradient instead of the old buffer
+  clause: 'Per tensor, with gradient `g` and buffer `v`: - first step (`velocity is None`): `v = g` -
+    later steps: `v = momentum * v_prev + g` - update: `p_new = p - lr * v`'
+  killed_by: test_matches_torch_momentum_sgd_over_several_steps
+  visible: hidden
+- file: reject_momentum_accepts_one.py
+  mistake: momentum of exactly one is accepted
+  clause: '`lr`: finite and `>= 0`. `momentum`: finite and in `[0, 1)`.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_velocity_updated_in_place.py
+  mistake: caller velocity buffer is changed in place
+  clause: Must not mutate inputs. Return new tensors.
+  killed_by: test_velocity_state_is_the_unscaled_pytorch_buffer
+  visible: hidden
+uncovered:
+- clause: '`velocity`: `None` before the first step, otherwise a list with one tensor per parameter, each
+    the shape of its parameter.'
+  reason: velocity form is only checked through the shape rule in C6 and the first-step rule in C4; no
+    single edit breaks C2 alone
+sweeps:
+- reject

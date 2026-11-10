@@ -252,3 +252,9 @@ def test_returned_buffer_is_a_new_tensor_not_the_gradient():
                 "the returned buffer must be a new tensor: editing it changed the gradient",
                 pytrace=False,
             )
+
+
+def test_infinite_learning_rate_is_rejected():
+    p = [torch.zeros(3, dtype=torch.float64)]
+    g = [torch.zeros(3, dtype=torch.float64)]
+    _rejects(lambda: sgd_momentum_step(p, g, None, float("inf"), 0.5), "infinite learning rate")
