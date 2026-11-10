@@ -1,7 +1,51 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_pairwise_loop.py
+  origin: freedom
+  freedom: computes each pair with an explicit loop instead of one matrix product
+- file: accept_einsum_sum.py
+  origin: freedom
+  freedom: uses einsum instead of the matrix product so the sums round in another order
+reject:
+- file: reject_tiny_rows_treated_as_zero.py
+  mistake: rows with a tiny nonzero peak are treated as zero vectors
+  clause: 'Zero-norm convention: if row `A[i]` or row `B[j]` is the zero vector, `S[i, j] = 0.0`. This
+    matches scikit-learn.'
+  killed_by: test_subnormal_entries_are_not_treated_as_a_zero_vector
+  visible: hidden
+- file: reject_integer_inputs_wrap_to_int32.py
+  mistake: integers cast to int32 wrap silently for large values
+  clause: '`A`: 2-D array-like of real numbers, shape `(n, d)` with `n >= 1` and `d >= 1`. Integers allowed.'
+  killed_by: test_large_integer_entries_are_not_wrapped
+  visible: hidden
+- file: reject_single_row_b_drops_axis.py
+  mistake: a single row in B drops the result axis
+  clause: '`B`: 2-D array-like of real numbers, shape `(m, d)` with `m >= 1`. Same `d` as `A`.'
+  killed_by: test_axis_vectors_against_diagonal_direction_give_one_over_root_two
+  visible: public
+- file: reject_no_clip_rounding_overflow.py
+  mistake: result is not clipped to minus one and one
+  clause: 'Returns: NumPy array of shape `(n, m)` and dtype `float64`, with values clipped to `[-1, 1]`.'
+  killed_by: test_similarities_are_clipped_to_exactly_minus_one_and_one
+  visible: hidden
+- file: reject_result_float32.py
+  mistake: result returned as float32 instead of float64
+  clause: 'Returns: NumPy array of shape `(n, m)` and dtype `float64`, with values clipped to `[-1, 1]`.'
+  killed_by: test_matches_scikit_learn_on_random_matrices
+  visible: hidden
+- file: reject_b_nonfinite_not_checked.py
+  mistake: NaN and inf checked only in A, not in B
+  clause: Raises `ValueError` when `A` or `B` is not 2-D, when their column counts differ, when either
+    input is empty (no rows or no columns), or when any entry is NaN or infinite.
+  killed_by: test_nan_in_the_second_matrix_raises_value_error
+  visible: hidden
+- file: reject_row_scaling_in_place.py
+  mistake: rows rescaled in place, changing a float64 input array
+  clause: Must not mutate its inputs.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

@@ -1,5 +1,5 @@
 id: cml/cosine-similarity/p01-cosine-similarity-matrix
-version: 3
+version: 4
 title: Cosine similarity matrix
 language: python
 runtime: py-numpy

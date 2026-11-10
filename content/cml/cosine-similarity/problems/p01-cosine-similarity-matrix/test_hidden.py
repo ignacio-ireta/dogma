@@ -215,3 +215,24 @@ def test_empty_second_matrix_raises_value_error():
         lambda: cosine_similarity_matrix(np.ones((2, 3)), np.zeros((0, 3))),
         "an empty B must raise ValueError: check for zero rows or columns in both inputs",
     )
+
+
+def test_subnormal_entries_are_not_treated_as_a_zero_vector():
+    # Row (3e-310, 4e-310) is nonzero, so it has a unit direction (0.6, 0.8).
+    # Its dot product with the unit vector (1, 0) is 0.6.
+    np.testing.assert_allclose(
+        cosine_similarity_matrix([[3e-310, 4e-310]], [[1.0, 0.0]]),
+        [[0.6]],
+        rtol=1e-9,
+        err_msg="a nonzero row with subnormal entries was treated as the zero vector",
+    )
+
+
+def test_large_integer_entries_are_not_wrapped():
+    # 2**40 is a real number. Its direction is (1, 1), so the cosine with (1, 0) is 1/sqrt(2).
+    np.testing.assert_allclose(
+        cosine_similarity_matrix([[2**40, 2**40]], [[1, 0]]),
+        [[1 / np.sqrt(2)]],
+        atol=1e-9,
+        err_msg="large integer entries were wrapped or truncated: keep integers exact as float64",
+    )
