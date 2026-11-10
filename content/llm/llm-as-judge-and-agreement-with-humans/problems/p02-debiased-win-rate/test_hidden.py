@@ -61,7 +61,7 @@ def test_random_judgments_match_the_lookup_table_oracle(judgments):
         )
 
 
-@pytest.mark.parametrize("verdict", ["A", "B"])
+@pytest.mark.parametrize("verdict", ["A", "B"], ids=["verdict-a", "verdict-b"])
 def test_constant_position_verdicts_give_one_half_in_either_direction(verdict):
     got = checked(lambda: debiased_win_rate([(verdict, verdict)] * 7))
     assert math.isclose(got, 0.5, abs_tol=1e-12), (
