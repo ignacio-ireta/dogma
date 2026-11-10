@@ -2,6 +2,53 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_einsum_projections.py
+  origin: freedom
+  freedom: uses einsum instead of the matmul operator for the three linear maps
+reject:
+- file: reject_rejects_1d_input.py
+  mistake: rejects one dimensional X although the Contract allows it
+  clause: '`X`: `torch.float64` tensor of shape `(..., d_model)`, with at least one dimension. Leading
+    axes are independent positions.'
+  killed_by: test_one_dimensional_input_is_a_single_position
+  visible: hidden
+- file: reject_gate_without_transpose.py
+  mistake: gate projection used without the transpose of the nn Linear layout
+  clause: '`W`: `torch.float64`, shape `(d_ff, d_model)`, in PyTorch `nn.Linear` layout. The gate is `g
+    = X @ W.T`.'
+  killed_by: test_matches_pytorch_reference_on_seeded_batches
+  visible: hidden
+- file: reject_up_without_transpose.py
+  mistake: up projection used without the transpose of the nn Linear layout
+  clause: '`V`: shape `(d_ff, d_model)`, same layout. The up projection is `u = X @ V.T`.'
+  killed_by: test_worked_example_gates_the_up_path_with_silu_of_the_gate
+  visible: public
+- file: reject_down_without_transpose.py
+  mistake: down projection used without the transpose of the nn Linear layout
+  clause: '`W2`: shape `(d_model, d_ff)`, same layout. The output is `(SiLU(g) * u) @ W2.T`.'
+  killed_by: test_matches_pytorch_reference_on_seeded_batches
+  visible: hidden
+- file: reject_empty_hidden_raises.py
+  mistake: raises for d_ff zero although the empty gate is allowed
+  clause: '`d_ff` may be 0. Then the output is zeros of shape `(..., d_model)`.'
+  killed_by: test_empty_gate_returns_zeros
+  visible: hidden
+- file: reject_squeezed_output.py
+  mistake: output squeezed so a batch of one loses its leading axis
+  clause: 'Returns: `torch.float64` tensor of shape `(..., d_model)`.'
+  killed_by: test_worked_example_gates_the_up_path_with_silu_of_the_gate
+  visible: public
+- file: reject_missing_gate_up_shape_check.py
+  mistake: gate and up shape check dropped so mismatched weights fail with a broadcast error
+  clause: 'Raises `ValueError` when: `X` is 0-dimensional; `W` or `V` is not 2-D; `W` and `V` have different
+    shapes; the last dimension of `X` is not `W.shape[1]`; `W2` is not `(d_model, d_ff)`.'
+  killed_by: test_gate_and_up_shapes_must_match
+  visible: public
+- file: reject_mutates_v_after_use.py
+  mistake: centres V in place after use so the input changes for a nonzero mean
+  clause: Must not mutate inputs.
+  killed_by: test_matches_pytorch_reference_on_seeded_batches
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

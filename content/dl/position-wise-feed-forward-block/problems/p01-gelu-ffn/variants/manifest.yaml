@@ -2,6 +2,56 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_einsum_projections.py
+  origin: freedom
+  freedom: uses einsum instead of the matmul operator for both linear maps
+reject:
+- file: reject_rejects_1d_input.py
+  mistake: rejects one dimensional X although the Contract allows it
+  clause: '`X`: `torch.float64` tensor of shape `(..., d_model)`, with at least one dimension. The leading
+    axes (for example batch and sequence) are arbitrary and are treated as independent positions.'
+  killed_by: test_single_position_without_leading_axes_is_accepted
+  visible: hidden
+- file: reject_w1_without_transpose.py
+  mistake: W1 used without the transpose of the nn Linear layout
+  clause: '`W1`: `torch.float64`, shape `(d_ff, d_model)`, in PyTorch `nn.Linear` layout. The expansion
+    is `z = x @ W1.T + b1`.'
+  killed_by: test_hidden_layer_bias_and_output_bias_are_both_added
+  visible: public
+- file: reject_w2_without_transpose.py
+  mistake: W2 used without the transpose of the nn Linear layout
+  clause: '`W2`: shape `(d_model, d_ff)`, the projection back, also in `nn.Linear` layout.'
+  killed_by: test_hidden_layer_bias_and_output_bias_are_both_added
+  visible: public
+- file: reject_no_output_bias.py
+  mistake: output bias b2 is never added
+  clause: '`b2`: shape `(d_model,)`.'
+  killed_by: test_hidden_layer_bias_and_output_bias_are_both_added
+  visible: public
+- file: reject_empty_hidden_raises.py
+  mistake: raises for d_ff zero although the empty hidden layer is allowed
+  clause: '`d_ff` may be 0. Then the hidden layer is empty and the output is `b2` at every position.'
+  killed_by: test_empty_hidden_layer_returns_output_bias
+  visible: hidden
+- file: reject_squeezed_output.py
+  mistake: output squeezed so a batch of one loses its leading axis
+  clause: 'Returns: `torch.float64` tensor with the same shape as `X`, i.e. `(..., d_model)`.'
+  killed_by: test_worked_example_applies_exact_gelu_between_the_two_layers
+  visible: public
+- file: reject_missing_scalar_check.py
+  mistake: scalar input check dropped so a zero dimensional X fails with IndexError
+  clause: 'Raises `ValueError` when: `X` is a 0-dimensional tensor; the last dimension of `X` is not `W1.shape[1]`;
+    `W1` is not 2-D; `W2` is not `(d_model, d_ff)` with `d_model = W1.shape[1]` and `d_ff = W1.shape[0]`;
+    `b1` is not `(d_ff,)`; `b2` is not `(d_model,)`.'
+  killed_by: test_scalar_input_raises_value_error
+  visible: hidden
+- file: reject_mutates_b2_after_use.py
+  mistake: centres b2 in place after use so the input changes for a nonzero mean bias
+  clause: Must not mutate inputs.
+  killed_by: test_hidden_layer_bias_and_output_bias_are_both_added
+  visible: public
+uncovered:
+- clause: '`b1`: shape `(d_ff,)`.'
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject
