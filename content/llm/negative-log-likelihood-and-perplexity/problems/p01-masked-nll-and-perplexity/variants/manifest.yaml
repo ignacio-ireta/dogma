@@ -1,7 +1,62 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_boolean_index_sum.py
+  origin: freedom
+  freedom: sums the scored NLL values picked out by a boolean index, not by multiplying with the mask
+reject:
+- file: reject_mean_shift_not_max.py
+  mistake: shifts each row by its mean instead of its maximum, so a wide row overflows
+  clause: 'For each non-ignored position `(n, t)`, with target `y` and logits `z = logits[n, t, :]`: -
+    `nll[n, t] = logsumexp(z) - z[y]`, where `logsumexp(z) = log(sum_v exp(z_v))`. - Compute it stably:
+    subtract the maximum of `z` before exponentiating.'
+  killed_by: test_row_spanning_two_thousand_stays_finite_and_near_zero
+  visible: hidden
+- file: reject_single_class_vocab.py
+  mistake: rejects a single-class vocabulary
+  clause: '`logits`: floating-point tensor of shape `(B, T, V)` with `B >= 1`, `T >= 1`, `V >= 1`. Must
+    not be modified.'
+  killed_by: test_single_class_vocabulary_has_zero_nll_and_perplexity_one
+  visible: hidden
+- file: reject_bool_ignore_index.py
+  mistake: accepts a bool ignore_index
+  clause: '`ignore_index`: Python `int`. Default `-100`. A `bool` is invalid. It may be any integer, including
+    a valid class id.'
+  killed_by: test_bool_ignore_index_raises_value_error
+  visible: hidden
+- file: reject_count_nonnegative_targets.py
+  mistake: counts non-negative targets as scored in the denominator
+  clause: '`mean_nll = sum of nll over non-ignored positions / (number of non-ignored positions)`. The
+    denominator is the count of non-ignored tokens, not `B * T` and not `B`.'
+  killed_by: test_custom_ignore_index_that_is_a_valid_class_id
+  visible: hidden
+- file: reject_perplexity_base_two.py
+  mistake: perplexity as 2 to the power of the mean NLL
+  clause: '`perplexity = exp(mean_nll)`.'
+  killed_by: test_uniform_logits_give_log_vocab_and_perplexity_equal_to_vocab
+  visible: public
+- file: reject_reshape_mean_to_vector.py
+  mistake: mean NLL returned as a one-element vector
+  clause: 'Returns: `(mean_nll, perplexity)`, two 0-dimensional tensors with the dtype of `logits`.'
+  killed_by: test_random_batches_match_cross_entropy_with_ignore_index
+  visible: hidden
+- file: reject_no_all_ignored_check.py
+  mistake: no check for an all-ignored batch
+  clause: 'Raises `ValueError` when: `logits` is not 3-D or not floating-point; `targets` is not 2-D,
+    not `torch.int64`, or its shape is not `(B, T)`; a non-ignored target is outside `[0, V-1]`; `ignore_index`
+    is not a Python `int`; or every target is ignored (the mean is undefined).'
+  killed_by: test_all_targets_ignored_raises_value_error
+  visible: hidden
+- file: reject_mutates_targets_in_place.py
+  mistake: clamps the caller targets in place
+  clause: Must not mutate `logits` or `targets`.
+  killed_by: test_random_batches_match_cross_entropy_with_ignore_index
+  visible: hidden
+uncovered:
+- clause: '`targets`: `torch.int64` tensor of shape `(B, T)`. Each entry is either `ignore_index` or an
+    id in `[0, V-1]`.'
+  reason: cap of eight wrong solutions per problem, the target dtype and range checks are covered by the
+    raise tests
+sweeps:
+- reject

@@ -316,3 +316,18 @@ def test_ignore_index_outside_the_vocabulary_is_still_skipped():
             raise AssertionError(
                 "ignored positions must add nothing even when their id lies outside the vocabulary"
             )
+
+
+def test_row_spanning_two_thousand_stays_finite_and_near_zero():
+    """Logits 1000 and -1000 with target 0: NLL is near 0 and finite."""
+    logits = torch.tensor([[[1000.0, -1000.0]]], dtype=torch.float64)
+    targets = torch.tensor([[0]])
+    mean_nll, _ = _call(logits, targets)
+    value = float(mean_nll)
+    # Hand check: LSE = 1000 + log(1 + e^-2000) = 1000 (to float64), so NLL = 1000 - 1000 = 0.
+    assert math.isfinite(value), (
+        "the log-sum-exp must subtract the row maximum: widely spread logits must stay finite"
+    )
+    assert abs(value) < ATOL, (
+        "the log-sum-exp must subtract the row maximum: the loss for a certain target is wrong"
+    )
