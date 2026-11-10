@@ -26,7 +26,11 @@ def _must_raise_value_error(call, mistake):
     raise AssertionError(mistake)
 
 
-@pytest.mark.parametrize(("n", "m", "d"), [(5, 4, 3), (1, 1, 1), (6, 2, 40), (3, 3, 2)])
+@pytest.mark.parametrize(
+    ("n", "m", "d"),
+    [(5, 4, 3), (1, 1, 1), (6, 2, 40), (3, 3, 2)],
+    ids=["general-shapes", "single-vector", "many-features", "equal-counts"],
+)
 def test_matches_scikit_learn_on_random_matrices(n, m, d):
     A = _random_matrix(seed=n * 100 + d, rows=n, cols=d)
     B = _random_matrix(seed=m * 100 + d + 1, rows=m, cols=d)
@@ -51,7 +55,7 @@ def test_zero_rows_follow_scikit_learn_zero_convention():
     )
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, ROWS, DIMS)
 def test_self_similarity_is_symmetric(seed, n, d):
     A = _random_matrix(seed, n, d)
@@ -64,7 +68,7 @@ def test_self_similarity_is_symmetric(seed, n, d):
     )
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, ROWS, DIMS)
 def test_self_similarity_has_unit_diagonal_for_nonzero_rows(seed, n, d):
     A = _random_matrix(seed, n, d)
@@ -77,7 +81,7 @@ def test_self_similarity_has_unit_diagonal_for_nonzero_rows(seed, n, d):
     )
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, ROWS, ROWS, DIMS)
 def test_positive_row_scaling_leaves_similarities_unchanged(seed, n, m, d):
     rng = np.random.default_rng(seed + 1)
@@ -93,7 +97,7 @@ def test_positive_row_scaling_leaves_similarities_unchanged(seed, n, m, d):
     )
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, ROWS, ROWS, DIMS)
 def test_swapping_arguments_transposes_the_result(seed, n, m, d):
     A = _random_matrix(seed, n, d)
@@ -106,7 +110,7 @@ def test_swapping_arguments_transposes_the_result(seed, n, m, d):
     )
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, ROWS, ROWS, DIMS, st.floats(min_value=1e-6, max_value=1e6))
 def test_values_stay_within_minus_one_and_one(seed, n, m, d, scale):
     A = _random_matrix(seed, n, d, scale=scale)
