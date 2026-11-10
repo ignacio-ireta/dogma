@@ -22,7 +22,8 @@ paths you own**, and an **OUT** directory such as `var/audit-i32/d-cml-softmax`.
 - Line numbers in a runbook were right on 2026-11-09. If the file has changed, find the named
   function with a search (`grep -n "def <name>" <file>`) and read from there.
 - Do not read: other problems' files, `docs/ROADMAP.md`, `docs/audits/`, `private/`, `var/`
-  outside your OUT, anything outside the repository.
+  outside your OUT, anything outside the repository. One exception: when your runbook names
+  `var/audit-i32/harvest/<your problem id>/`, you may read the files in it.
 
 ## 3. Commands
 

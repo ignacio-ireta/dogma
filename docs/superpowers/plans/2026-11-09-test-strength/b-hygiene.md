@@ -58,6 +58,9 @@ np.testing.assert_allclose(got, want, rtol=1e-9, err_msg="values differ from the
 
 - An id is lowercase words joined by hyphens. It says what kind of case this is. It never
   contains a number or a value from the case. Dtype names (`float32`) are allowed.
+- When the cases are already short names that say the kind of case (`"X"`, `"y"`, `"w"`;
+  `"gini"`, `"entropy"`), keep that meaning in the ids: `ids=["in-x", "in-y", "in-w"]`,
+  `ids=["gini", "entropy"]`. Letters such as `case-a` would tell the learner less than before.
 - When the cases are just repeated draws (seeds), use letters: `ids=list("abcd")` for four.
 - When the cases are a named list, `ids=[f"case-{chr(97 + i)}" for i in range(len(CASES))]`.
 - When the cases come from an expression whose length you cannot read with certainty, do not

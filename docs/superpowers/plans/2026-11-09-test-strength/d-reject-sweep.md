@@ -41,7 +41,8 @@ section of [catalogue.md](catalogue.md), chosen by `runtime` in `<dir>/meta.yaml
 
 Also read "Random draws" if the entry takes `rng` or `seed`, and "Classes" if the entry is a
 class. **Do not open `test_hidden.py` in this step.** Wrong solutions written after reading the
-tests tend to be the ones the tests already catch.
+tests tend to be the ones the tests already catch. The tool's own output will show you the names
+and messages of failing hidden tests, as a learner would see them. That is fine.
 
 ### Step 2. Write one wrong solution per Contract bullet
 
@@ -96,7 +97,7 @@ uv run --frozen --group torch python scripts/exercise_gate.py probe --out <OUT> 
 |---|---|
 | `killed` | Record it: `add-reject --out <OUT> <id> <cand>/reject_<short_name>.py --mistake "<plain words>" --clause <label>` |
 | `survived` | Step 4 |
-| `broken (…)` | Your file does not run or passes nothing. Fix it once. Still broken: drop the file |
+| `broken (…)` | Your file does not run or passes nothing. Fix it once. Still broken: drop the file. One exception: the file runs, and every test fails on the same shared check with a message that names it (typical for SQL, where each test checks the column types first). Then drop the file and record the bullet with `add-uncovered --reason "every test checks this first, so a wrong solution fails all of them"` |
 | `infra (…)` | Run the probe once more. Same again: note `blocked` for this file and go on |
 
 If `add-reject` prints ruff errors, fix the file (usually an unused name) and run it again, once.
@@ -164,7 +165,8 @@ If no freedom applies, skip this step.
 
 ### Step 6. Account for every bullet, then mark the problem
 
-Every label `C1…` needs a recorded reject or an `add-uncovered` entry. For a bullet whose wrong
+Every label `C1…` needs a recorded reject or an `add-uncovered` entry. `K` labels (Constraints)
+need nothing, unless one promises a complexity. For a bullet whose wrong
 solution survived without a test, the reason is `wrong solution survives, see notes`. For a
 bullet beyond the eighth, it is `cap of eight wrong solutions per problem`.
 
