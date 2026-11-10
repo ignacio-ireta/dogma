@@ -2,6 +2,70 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_scale_by_reciprocal.py
+  origin: freedom
+  freedom: multiplies scores by the reciprocal of sqrt d_k instead of dividing
+- file: accept_output_einsum.py
+  origin: freedom
+  freedom: computes the output with einsum instead of the matmul operator
+reject:
+- file: reject_scale_by_key_count.py
+  mistake: scales scores by sqrt of key count instead of sqrt of d_k
+  clause: 'Scores: `z = q @ k^T / sqrt(d_k)`, shape `(*batch, L, S)`. Disallowed pairs are excluded from
+    the softmax, so their weight is exactly `0`.'
+  killed_by: test_random_unmasked_output_and_weights_match_oracle
+  visible: hidden
+- file: reject_no_batch_shape_check.py
+  mistake: no batch shape check, mismatched batch axes broadcast silently
+  clause: 'Raises: `ValueError` when a tensor is not floating point, dtypes differ, ranks are below 2,
+    batch shapes differ, any size is zero, the mask is not boolean or cannot be broadcast to `(*batch,
+    L, S)`.'
+  killed_by: test_mismatched_batch_or_key_width_rejected
+  visible: hidden
+- file: reject_mask_inverted.py
+  mistake: mask read backwards, True blocks the key
+  clause: '`mask`: `None`, or a boolean tensor that `torch.broadcast_to` can expand to `(*batch, L, S)`.
+    `True` means the query may attend the key; `False` means it may not.'
+  killed_by: test_boolean_mask_removes_second_key
+  visible: public
+- file: reject_weights_epsilon_added.py
+  mistake: epsilon added to softmax denominator so rows sum to slightly less than 1
+  clause: 'Weights: softmax over the key axis of `z`, shape `(*batch, L, S)`, same dtype as `q`. For every
+    query row with at least one allowed key, the allowed weights sum to 1.'
+  killed_by: test_random_unmasked_output_and_weights_match_oracle
+  visible: hidden
+- file: reject_nan_guard_dropped.py
+  mistake: shift by raw row maximum so fully masked row gives NaN
+  clause: 'Fully masked rows: a query row with no allowed key has weight `0` on every key and output `0`.
+    No `NaN` and no exception for such a row. Other rows are unaffected.'
+  killed_by: test_fully_masked_row_is_zero_not_nan
+  visible: public
+- file: reject_zero_size_not_checked.py
+  mistake: zero-size axes accepted instead of raising ValueError
+  clause: 'Raises: `ValueError` when a tensor is not floating point, dtypes differ, ranks are below 2,
+    batch shapes differ, any size is zero, the mask is not boolean or cannot be broadcast to `(*batch,
+    L, S)`.'
+  killed_by: test_zero_size_and_low_rank_inputs_rejected
+  visible: hidden
+- file: reject_q_scaled_in_place.py
+  mistake: scales the caller q in place
+  clause: Must be finite for finite inputs whose scores `q @ k^T / sqrt(d_k)` are finite, including scores
+    far outside the range of `exp`. Must not mutate inputs.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
+uncovered:
+- clause: 'Output: `weights @ v`, shape `(*batch, L, d_v)`, same dtype as `q`.'
+  reason: wrong solution survives, see notes
+- clause: '`q`: floating-point tensor of shape `(*batch, L, d_k)`.'
+  reason: cap of eight wrong solutions per problem
+- clause: '`k`: floating-point tensor of shape `(*batch, S, d_k)`.'
+  reason: cap of eight wrong solutions per problem
+- clause: '`v`: floating-point tensor of shape `(*batch, S, d_v)`.'
+  reason: cap of eight wrong solutions per problem
+- clause: '`q`, `k` and `v` have the same dtype and identical `batch` shapes. All of `L`, `S`, `d_k`,
+    `d_v` and every batch axis are at least 1. Each tensor has rank at least 2.'
+  reason: cap of eight wrong solutions per problem
+- clause: 'Returns: a tuple `(output, weights)`.'
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject
