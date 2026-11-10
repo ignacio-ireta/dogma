@@ -2,6 +2,51 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_reverse_sum_order.py
+  origin: freedom
+  freedom: sum the coordinate terms in reverse order, only the last digits differ
+reject:
+- file: reject_int_inputs_rejected.py
+  mistake: integer inputs rejected, only float accepted
+  clause: '`mu_p`, `mu_q`, `sigma_p`, `sigma_q`: one-dimensional real array-likes of the same length `d
+    >= 1`. Entries are finite. Integer inputs are accepted.'
+  killed_by: test_integer_inputs_are_accepted
+  visible: hidden
+- file: reject_sigma_p_unchecked.py
+  mistake: sigma_p not checked for strict positivity
+  clause: Every entry of `sigma_p` and `sigma_q` is strictly positive. Zero and negative standard deviations
+    are invalid.
+  killed_by: test_non_positive_standard_deviation_is_rejected
+  visible: public
+- file: reject_float32_mean_square.py
+  mistake: mean difference squared in float32 so large means overflow
+  clause: The formula must be accurate for standard deviations in $[10^{-50}, 10^{50}]$ and means with
+    absolute value at most $10^{50}$. Results can be large, but they must not be computed through an overflowing
+    intermediate.
+  killed_by: test_common_scale_factor_leaves_the_divergence_unchanged
+  visible: hidden
+- file: reject_reverse_direction.py
+  mistake: distributions swapped so the reverse KL is computed
+  clause: 'Returns: a Python `float`, $$\mathrm{KL}=\sum_{i=1}^{d}\Big[\log\frac{\sigma_{q,i}}{\sigma_{p,i}}+\frac{\sigma_{p,i}^2+(\mu_{p,i}-\mu_{q,i})^2}{2\,\sigma_{q,i}^2}-\frac12\Big].$$'
+  killed_by: test_coordinates_add_and_variance_is_not_standard_deviation
+  visible: public
+- file: reject_numpy_scalar_return.py
+  mistake: returns a NumPy scalar instead of a Python float
+  clause: 'Returns: a Python `float`, $$\mathrm{KL}=\sum_{i=1}^{d}\Big[\log\frac{\sigma_{q,i}}{\sigma_{p,i}}+\frac{\sigma_{p,i}^2+(\mu_{p,i}-\mu_{q,i})^2}{2\,\sigma_{q,i}^2}-\frac12\Big].$$'
+  killed_by: test_analytic_one_dimensional_and_coordinate_cases
+  visible: hidden
+- file: reject_non_finite_accepted.py
+  mistake: infinite entries accepted, only NaN rejected
+  clause: 'Raises `ValueError` when: an input is not 1-D or is empty; the four lengths differ; an input
+    has a non-real dtype (bool, complex, object); an entry is `NaN` or infinite; or a standard deviation
+    is not strictly positive.'
+  killed_by: test_invalid_inputs_raise_value_error
+  visible: hidden
+- file: reject_sigma_p_squared_in_place.py
+  mistake: sigma_p squared in place in the caller array
+  clause: Must not mutate its inputs.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
