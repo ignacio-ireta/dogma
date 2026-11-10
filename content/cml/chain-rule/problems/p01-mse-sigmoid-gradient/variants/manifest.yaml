@@ -1,7 +1,54 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_sample_loop.py
+  origin: freedom
+  freedom: a loop over samples instead of one matrix product
+reject:
+- file: reject_single_row_squeezed.py
+  mistake: a single-row X is squeezed to one dimension
+  clause: '`X`: 2-D array-like of shape `(n, d)`, with $n \geq 1$ and $d \geq 1$. Each row is one sample.'
+  killed_by: test_gradient_matches_central_differences_of_the_loss
+  visible: hidden
+- file: reject_targets_cast_to_int.py
+  mistake: targets are truncated to integers
+  clause: '`y`: 1-D array-like of shape `(n,)`, with one target per row of `X`.'
+  killed_by: test_predictions_equal_to_targets_give_zero_gradient
+  visible: public
+- file: reject_result_cast_to_float32.py
+  mistake: the gradient is returned as float32
+  clause: 'Returns: a NumPy array of shape `(d,)` and dtype `float64`, the gradient of $L$ with respect
+    to `w`.'
+  killed_by: test_gradient_keeps_relative_precision_deep_in_saturation
+  visible: hidden
+- file: reject_naive_sigmoid.py
+  mistake: the sigmoid has no stable branch and is computed as one over one plus exp of minus z
+  clause: The sigmoid must be numerically stable for large $|z|$. Never exponentiate a large positive
+    number, because $e^{z}$ overflows to `inf` for $z$ above about 709.
+  killed_by: test_saturated_logits_give_finite_zero_gradient
+  visible: hidden
+- file: reject_derivative_one_minus_s.py
+  mistake: the sigmoid derivative is s times one minus s using the rounded s
+  clause: The gradient must keep relative precision deep in saturation. The product $s(1-s)$ becomes `0`
+    once $s$ rounds to 1, so do not compute the sigmoid's derivative that way.
+  killed_by: test_gradient_keeps_relative_precision_deep_in_saturation
+  visible: hidden
+- file: reject_infinite_inputs_not_rejected.py
+  mistake: infinite entries are accepted and only NaN is rejected
+  clause: 'Raises `ValueError` when: - `X` is not 2-D, or `w` is not 1-D. - `y` is not 1-D. A column vector
+    of shape `(n, 1)` is rejected. - `y` does not have one entry per row of `X`, or `w` does not have
+    one entry per column of `X`. - `X` has no rows or no columns. - Any entry of `w`, `X` or `y` is NaN
+    or infinite.'
+  killed_by: test_non_finite_entries_raise_value_error
+  visible: hidden
+- file: reject_targets_rescaled_in_place.py
+  mistake: targets above 1 are rescaled in place
+  clause: Must not mutate its inputs.
+  killed_by: test_targets_above_one_are_not_mutated
+  visible: hidden
+uncovered:
+- clause: '`w`: 1-D array-like of `d` finite real numbers.'
+  reason: a float32 rounding of w survives and no Contract sentence forbids it, so no test added
+sweeps:
+- reject

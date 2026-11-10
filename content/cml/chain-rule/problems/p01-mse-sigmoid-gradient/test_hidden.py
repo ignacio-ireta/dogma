@@ -198,3 +198,16 @@ def test_integer_inputs_return_a_float64_vector_of_length_d():
         np.array([1.0, 0.0]), np.array([[1.0, 2.0], [0.0, 1.0]]), np.array([1.0, 0.0])
     )
     np.testing.assert_allclose(got, want, atol=1e-7, err_msg="integer input gives wrong values")
+
+
+def test_targets_above_one_are_not_mutated():
+    X = np.array([[1.0, -2.0], [0.5, 3.0]])
+    y = np.array([2.0, 0.0])  # a target above 1 is a finite real number, so it is valid input
+    w = np.array([0.2, -0.4])
+    before = y.copy()
+    mse_sigmoid_grad(w, X, y)
+    np.testing.assert_array_equal(
+        y,
+        before,
+        err_msg="must not mutate its inputs: a target above 1 was changed in place",
+    )
