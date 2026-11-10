@@ -2,6 +2,52 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_sum_over_tokens.py
+  origin: freedom
+  freedom: P as a sum over tokens divided by T instead of a mean
+- file: accept_index_add_fractions.py
+  origin: freedom
+  freedom: f via zeros and index_add instead of bincount
+reject:
+- file: reject_alpha_bool_accepted.py
+  mistake: bool alpha accepted as a number
+  clause: '`load_balance_loss(logits, alpha=1.0)` with: - `logits`: `torch.float64` tensor of shape `(T,
+    E)`, `T >= 1` tokens and `E >= 1` experts. Every value is finite. Otherwise `ValueError` (wrong rank,
+    wrong dtype, a NaN or infinite value, `T = 0`, or `E = 0`). - `alpha`: a non-negative finite `int`
+    or `float`, the loss coefficient. `bool` and other types raise `TypeError`. A negative or non-finite
+    value raises `ValueError`.'
+  killed_by: test_bool_alpha_raises_type_error
+  visible: hidden
+- file: reject_top1_tie_goes_to_higher_index.py
+  mistake: top-1 ties go to the higher expert index
+  clause: 'Definitions. Let `p[t, i]` be the softmax over the experts `i` of the logits of token `t`,
+    and let `a_t` be the top-1 expert of token `t`: the expert with the largest logit. Ties go to the
+    **lower expert index**. - Router probability per expert: `P_i = (1 / T) * sum over t of p[t, i]`.
+    - Dispatch fraction per expert: `f_i = (1 / T) * sum over t of 1[a_t = i]`, the fraction of tokens
+    whose top-1 expert is `i`. - Loss: `loss = alpha * E * sum over i of f_i * P_i`.'
+  killed_by: test_top_one_tie_goes_to_lower_expert_index
+  visible: hidden
+- file: reject_returns_shape_one.py
+  mistake: returns shape one instead of a 0-dim tensor
+  clause: Returns a **0-dimensional** `torch.float64` tensor (shape `()`), not a Python float.
+  killed_by: test_balanced_router_scores_exactly_alpha
+  visible: public
+- file: reject_detach_router_probability.py
+  mistake: router probabilities detached so no gradient flows
+  clause: Gradients flow through `P` only. `f` is a count, so it is a constant with respect to the logits.
+    Do not detach `P`, and do not try to differentiate the top-1 choice.
+  killed_by: test_gradient_matches_finite_differences_through_probabilities
+  visible: hidden
+- file: reject_loss_mean_not_sum.py
+  mistake: mean over experts instead of sum drops the factor E
+  clause: With a perfectly balanced router, `f_i = P_i = 1/E` for every `i`, so the loss is exactly `alpha`.
+  killed_by: test_balanced_router_scores_exactly_alpha
+  visible: public
+- file: reject_logits_centred_in_place.py
+  mistake: centres the caller logits in place
+  clause: Must not mutate `logits`.
+  killed_by: test_gradient_matches_finite_differences_through_probabilities
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

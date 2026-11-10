@@ -2,6 +2,61 @@ problem_version: 1
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_logsumexp_gates.py
+  origin: freedom
+  freedom: gates via logsumexp then exp instead of softmax
+- file: accept_scatter_counts.py
+  origin: freedom
+  freedom: expert counts via zeros and scatter_add instead of bincount
+reject:
+- file: reject_bool_k_accepted.py
+  mistake: bool k accepted as an int
+  clause: '`top_k_route(logits, k)` with: - `logits`: `torch.float64` tensor of shape `(T, E)`, `T >=
+    0` tokens and `E >= 1` experts. Every value is finite. Otherwise `ValueError` (wrong rank, wrong dtype,
+    or a NaN or infinite value). - `k`: a Python `int` with `1 <= k <= E`. `bool` is rejected with `TypeError`,
+    as is any non-int. A value outside `1 .. E` raises `ValueError`.'
+  killed_by: test_bool_k_raises_type_error
+  visible: hidden
+- file: reject_select_by_probability.py
+  mistake: experts ranked by softmax probability not logit
+  clause: '**Selection.** Rank the experts of each token by logit, largest first. Take the first `k`.
+    Ties in logit go to the **lower expert index**. Selection uses the logits, not the probabilities,
+    so the order stays exact even where a probability underflows to zero.'
+  killed_by: test_selection_uses_logits_when_probabilities_underflow
+  visible: hidden
+- file: reject_slots_reversed.py
+  mistake: slot 0 holds the smallest chosen expert
+  clause: '**Slots.** Slot `j` of a token is its `j`-th ranked chosen expert (slot 0 has the largest logit).'
+  killed_by: test_top_two_of_three_experts_are_gated_by_renormalised_softmax
+  visible: public
+- file: reject_gates_not_renormalised.py
+  mistake: gates are full-row softmax values not renormalised over chosen experts
+  clause: '**Gates.** The gate of a chosen expert is its softmax probability renormalised over the `k`
+    chosen experts (the renormalisation of the top-2 router in ST-MoE). For token `t` with chosen set
+    `S_t`, the gate of expert `e` is `p[t, e] / sum over s in S_t of p[t, s]`, where `p[t, :]` is the
+    softmax of the full row of logits. The gates of a token therefore sum to 1. This is the same as a
+    softmax over the `k` selected logits, but you should compute it with the max subtracted for stability.'
+  killed_by: test_top_two_of_three_experts_are_gated_by_renormalised_softmax
+  visible: public
+- file: reject_counts_first_slot_only.py
+  mistake: expert counts use only the first slot
+  clause: 'Returns a tuple `(expert_indices, gate_weights, expert_counts)`: - `expert_indices`: `torch.int64`,
+    shape `(T, k)`. `expert_indices[t, j]` is the expert of slot `j`. - `gate_weights`: `torch.float64`,
+    shape `(T, k)`. Each row sums to 1 and every entry is `>= 0`. - `expert_counts`: `torch.int64`, shape
+    `(E,)`. `expert_counts[e]` is the number of entries of `expert_indices` equal to `e`, counted over
+    **all k slots**. Their sum is `T * k`.'
+  killed_by: test_top_two_of_three_experts_are_gated_by_renormalised_softmax
+  visible: public
+- file: reject_shift_logits_in_place.py
+  mistake: subtracts row max from caller logits in place
+  clause: Must not mutate `logits`.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
+- file: reject_empty_batch_counts_shape.py
+  mistake: zero tokens gives expert counts of shape 0 not E
+  clause: '`T = 0` is valid and returns empty `(0, k)` tensors with all-zero counts.'
+  killed_by: test_zero_tokens_returns_empty_outputs_with_zero_counts
+  visible: public
 uncovered: []
-sweeps: []
+sweeps:
+- reject
