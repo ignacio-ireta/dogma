@@ -43,3 +43,4 @@ uncovered:
     also breaking C3 or C7
 sweeps:
 - reject
+- mutants
