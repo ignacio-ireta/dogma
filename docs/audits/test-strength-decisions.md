@@ -190,3 +190,200 @@ None.
 - `dl/smooth-activations-tanh-gelu-swish/p02-smooth-activation-derivatives`: reject_empty_input_raises.py: test_empty_preserves_shape shows kind=bare_exception
 - `dl/tensors-in-pytorch-and-tinygrad/p02-patchify-images-row-major`: reject_rejects_patch_one.py: test_channels_are_flattened_before_pixels_within_each_patch shows kind=bare_exception
 - `dl/training-an-mlp-from-scratch/p01-train-two-layer-mlp`: reject_losses_drop_last.py: test_one_step_zero_input_example shows kind=raw_assert
+
+## 2026-11-10 · Reject sweep, rest of week 9 to the end of the first 170 problems
+
+Scope: the reject sweep (I-32d) is now committed for all 170 problems outside the 48 I-31 topics.
+Rows below are every note written after the commit of `dl/multi-head-attention`. Across the 170
+manifests there are 1,199 wrong solutions that the tests reject, 321 accepted ones and 101
+bullets recorded as uncovered (45 under the eight-bullet cap, 15 where the wrong solution
+survives and no sentence forbids it, 41 where no separate mistake exists). About 130 hidden
+tests were added since the `i32-start` tag.
+
+### Waiting for the owner
+
+- `dl/kl-divergence/p01-kl-from-logits`: the committed blind accept and the reference disagree
+  on a valid input, and no hidden test separates them. With one finite logit far below the
+  others against a `-inf` logit, the reference returns `+inf` and the blind accept returns `0`,
+  because it decides "this probability is zero" after `exp` underflows. Bullet C1 says a `-inf`
+  logit "means that class has probability zero" and C4 says `p > 0` with `q = 0` gives `+inf`.
+  The choices: say in the statement that a finite logit always has positive probability, replace
+  the blind accept and add the test; or say that an underflowed probability counts as zero.
+  Nothing was changed. The topic's sweep (`5e528e3`) adds variants only.
+- `llm/temperature-top-k-and-top-p-sampling/p02-sample-with-a-generator`: two real gaps (a
+  non-strict search on a zero draw; two draws per call) cannot be tested fairly, because the
+  Contract says "draw one uniform value" and does not fix the call. Both tests written for them
+  failed a correct solution that draws another way and were withdrawn before commit. If the
+  statement fixes the draw call, both tests become fair.
+- `cml/a-b-test-design-and-analysis/p01`: same kind of question as the first item. A test with
+  an effect size within float noise of zero passed the reference and failed the blind accept, so
+  it was not added. Bullet C7 raises only "when `mde = 0`".
+- The per-wave merge to `main` (coordinator runbook section 7) is still not done. The main
+  checkout has untracked plan files and an uncommitted roadmap edit that would block a
+  fast-forward.
+
+### For a person to look at
+
+- Pattern, for the owner to weigh: the reject runbook probes at most eight Contract bullets per
+  problem, in order, and "must not mutate" is usually the last bullet. 45 bullets in 19 problems
+  were left unprobed under that cap, among them `inf/arithmetic-intensity-and-the-roofline/p01`
+  (10), `dl/scaled-dot-product-attention/p01` (5), `llm/lora-adapters/p01`, `rl/q-learning/p01`
+  and `rl/sarsa-and-expected-sarsa/p01` (4 each). No-mutation is also the bullet where this sweep
+  found the most gaps elsewhere, and the mutant triage does not write in-place mistakes.
+- Finding that may be wider than one problem: a hidden test file that passes one shared
+  module-level dict or list to the learner can hide an in-place write. In
+  `inf/prefill-vs-decode-bottlenecks/p01` a wrong solution that writes a key into the caller's
+  config passed all 30 tests, because the mutation test built its input from the already-changed
+  shared dict. It is closed there with a test built from a literal (`ca334c5`). About 22 hidden
+  test files define a module-level dict; they were not audited.
+- `algo/topological-sort/p01` (bullet C8) and `algo/binary-search/p01` (the introduction's
+  "logarithmic number of steps"): no slow wrong solution was written, because the runbook asks
+  for one only when a Constraints bullet promises a complexity. Other executors did write one for
+  a Contract-level complexity bullet (tree diameter, longest common subsequence).
+- `algo/binary-tree-recursion-and-traversal/p02-tree-diameter`: the new linear-time test counts
+  reads of `left` and `right` on a chain. The coordinator had its budget widened from 10 to 50
+  reads per node before commit, because the Contract promises linear time and no constant.
+- `rl/sarsa-and-expected-sarsa/p01`: a new test requires NumPy integer indices to be accepted.
+  The Contract says "integer indices", not "Python int", so it was read as promised. A learner
+  who checks `isinstance(s, int)` now fails, with a message that says why.
+- `llm/chat-templates-and-tool-call-formats/p02-parse-tool-call`: a new test that passed a tool
+  schema without a `required` key was withdrawn before commit. The statement shows the key and
+  does not say it may be absent. The wrong solution it targeted is recorded as unpromised.
+- `cml/chain-rule/p01-mse-sigmoid-gradient`: a wrong solution that rounds `w` to float32
+  survives, and it is recorded as unpromised. The tolerance of the existing tests is wide enough
+  to hide it; whether the Contract's dtype sentence should forbid it was not decided.
+- `cml/lagrange-multipliers/p01`: an in-place write to `Q` is rejected only through the
+  asymmetric-`Q` test. No test checks a symmetric `Q` for mutation directly.
+- `cml/matrix-multiplication/p01`: the in-place rounding wrong solution is rejected through a
+  `TypeError` in another test, not by the mutation test.
+- `llm/bradley-terry-reward-models/p01`: a new float16 test was accepted after eight common
+  correct formulations of the loss were run in float16 on the pinned torch and landed inside its
+  tolerance.
+- Two new test names spell an input magnitude in words (`dl/one-training-step`,
+  `llm/negative-log-likelihood-and-perplexity`). The id rule covers only the `[...]` part, and a
+  test cannot be renamed through the tool, so they stand.
+- Stale manifest entries the tool cannot drop: `uncovered` for C2 in
+  `inf/prefill-vs-decode-bottlenecks/p01` and for C1 and C3 in
+  `dl/adamw-decoupled-weight-decay/p01`. Each bullet now has a killing test.
+- Coordinator-directed edits to new, uncommitted tests (message rewords, one loosened type
+  check, the widened read budget) were made by the executors with a plain edit, which the reject
+  runbook otherwise forbids. Each was gated in mode add and compared line by line with the
+  reviewed version before commit.
+- 57 `message-defect` rows below: existing tests that fail a wrong solution with a bare
+  exception or a bare assert. No runbook of this program fixes them.
+- 5 `unpromised` rows and 1 `inspect` row are not listed here.
+  `scripts/exercise_gate.py ledger --all --kind unpromised --kind inspect` prints them.
+
+### Resolved by the coordinator
+
+- `dl/adamw-decoupled-weight-decay`, held in the previous entry, is committed as it was
+  (`30ba862`). All six new tests were read once more against the Contract: each input is inside
+  the stated domain and each expected value comes from `torch.optim.AdamW` or exact arithmetic.
+  What stays out of line with the runbook: `p01` has four new tests where the cap is three, one
+  of them uses `bfloat16`, and the two stale `uncovered` entries named above. The owner can still
+  undo it; the patch of that work is under `var/audit-i32/coord/held/`.
+- `no-witness` row for `inf/prefill-vs-decode-bottlenecks/p01`: superseded. The gap was closed on
+  the third attempt, see the shared-dict finding above.
+- `blocked` row for the tree diameter: the first wrong solution was exponential and timed out
+  the probe. It was replaced by a quadratic one, which the new test rejects.
+- `overreach` rows for the sampling problem: the two withdrawn tests above.
+- `overreach` and `no-witness` rows for `dl/kl-divergence/p01`: the first item under "Waiting
+  for the owner". They were written just before the previous entry and were missing from it.
+- Six more failure messages that stated a test input or an expected value were reworded by
+  their executors before commit.
+- `make check` failed on `30ba862` at the content type check, for one line: a test added in
+  `032d3d9` passes a list and bytes on purpose, without the usual ignore comment. Fixed in
+  `d39d5b0`.
+- Three commit subjects of this wave read "gap tests for for". They are left as they are.
+
+### Checked
+
+`make check` exit 0 on `d39d5b0` in a clean worktree: Ruff and format, strict mypy (180 files),
+import contracts, content types, the Python tests, 175 topics verified, 187 browser tests and the
+build, privacy audit clean. It failed once before that, on `30ba862`, as described above.
+`make test-all` was not run in this session.
+
+### question
+
+- `algo/binary-search/p01-lower-bound`: problem.md intro says the search must take a logarithmic number of steps, not a scan, but no K or C bullet states a complexity. A linear-scan wrong solution was not written. Decide whether the intro sentence counts as a Constraints bullet
+- `algo/topological-sort/p01-lexicographic-topological-order`: C8 promises O of V plus E log V time. It is a Contract bullet, not a K bullet, and the runbook gives complexity wrong solutions only for K bullets. Not decided, no wrong solution written for C8
+
+### overreach
+
+- `cml/a-b-test-design-and-analysis/p01-sample-size-two-proportions`: tiny nonzero effect test with mde 3e-13 and reference equality, fails accept_blind, reject_zero_effect_tolerance survives
+- `dl/kl-divergence/p01-kl-from-logits`: underflowed probability exp of minus 800 under q zero must give inf, fails accept blind
+- `llm/temperature-top-k-and-top-p-sampling/p02-sample-with-a-generator`: one draw test compares with a float64 draw stream, a correct solution that draws in float32 fails it, test withdrawn, wrong solution two draws per call survives
+- `llm/temperature-top-k-and-top-p-sampling/p02-sample-with-a-generator`: zero draw test mocks torch rand, a correct solution that draws with uniform fails it, test withdrawn, wrong solution right false search survives
+
+### no-witness
+
+- `dl/kl-divergence/p01-kl-from-logits`: reject_support_from_exp_underflow.py survives and breaks C4, no test found
+- `inf/prefill-vs-decode-bottlenecks/p01-serving-step-times`: reject_config_gets_a_scratch_key.py survives and breaks C2, no test found: two add-test runs, the gate reports wrong FAIL (not rejected by the new tests) even though the file does write a key into the config dict when run directly; the existing config-mutation test also passes on it
+
+### reference-doubt
+
+None.
+
+### blocked
+
+- `algo/binary-tree-recursion-and-traversal/p02-tree-diameter`: reject_quadratic_rescan.py probe timed out twice (VERDICT infra timeout): it recomputes subtree heights at each node, which is exponential in depth. Replaced by reject_full_height_rescan.py for C5
+
+### message-defect
+
+- `algo/binary-search/p01-lower-bound`: reject_empty_list_raises.py: test_target_outside_the_range_and_an_empty_list shows kind=bare_exception
+- `algo/dynamic-programming/p02-longest-common-subsequence`: reject_memoised_recursion_depth.py: test_long_strings_finish_within_the_time_limit shows kind=bare_exception
+- `algo/hash-maps-and-sets/p01-top-k-frequent-tokens`: reject_raises_on_empty.py: test_k_zero_and_empty_input_both_return_an_empty_list shows kind=bare_exception
+- `cml/descriptive-statistics/p01-welford-mean-variance`: reject_needs_length.py: test_generator_input_gives_the_same_answer_as_a_list shows kind=bare_exception
+- `cml/descriptive-statistics/p02-iqr-outlier-fences`: reject_rejects_duplicates.py: test_property_agrees_with_numpy_on_any_finite_list shows kind=bare_exception
+- `cml/descriptive-statistics/p02-iqr-outlier-fences`: reject_zero_k_rejected.py: test_k_zero_gives_the_quartiles_themselves shows kind=bare_exception
+- `cml/eigenvalues-and-eigenvectors/p01-power-iteration`: reject_num_iters_one_refused.py: test_a_single_iteration_is_an_allowed_budget shows kind=bare_exception
+- `cml/eigenvalues-and-eigenvectors/p01-power-iteration`: reject_rejects_size_one.py: test_matches_eigh_dominant_pair_on_random_symmetric_matrices shows kind=bare_exception
+- `cml/eigenvalues-and-eigenvectors/p01-power-iteration`: reject_unscaled_symmetry_tolerance.py: test_symmetry_tolerance_scales_with_large_entries shows kind=bare_exception
+- `cml/gradient-descent/p01-gradient-descent`: reject_list_start_returned_as_is.py: test_one_dimensional_quadratic_reaches_its_minimum shows kind=bare_exception
+- `cml/lagrange-multipliers/p01-constrained-quadratic-min`: reject_list_c_refused.py: test_equal_split_of_a_sum_constraint_with_unit_multiplier shows kind=bare_exception
+- `cml/matrix-inverse-and-rank/p02-matrix-rank`: reject_rejects_zero_tol_explicitly.py: test_zero_matrix_has_rank_zero_and_wide_shape_is_handled shows kind=bare_exception
+- `cml/matrix-multiplication/p01-matrix-multiply`: reject_empty_matrix_refused.py: test_zero_width_inputs_give_empty_results shows kind=bare_exception
+- `cml/maximum-likelihood-and-map/p01-gaussian-mle`: reject_rejects_integer_input.py: test_mean_and_biased_covariance_of_three_points shows kind=bare_exception
+- `cml/normal-and-multivariate-gaussian/p01-mvn-logpdf`: reject_list_input_needs_astype.py: test_standard_normal_at_zero_is_minus_half_log_two_pi shows kind=bare_exception
+- `cml/sampling-distributions-standard-errors-and-cis/p01-mean-confidence-interval`: reject_integer_input.py: test_example_interval_for_one_to_five_uses_t_with_four_degrees_of_freedom shows kind=bare_exception
+- `cml/sampling-distributions-standard-errors-and-cis/p01-mean-confidence-interval`: reject_n_below_three.py: test_matches_student_t_reference_on_seeded_samples shows kind=bare_exception
+- `cml/stochastic-and-mini-batch-gradient-descent/p01-minibatch-sgd`: reject_excludes_full_batch.py: test_single_full_batch_step_matches_hand_computation shows kind=bare_exception
+- `cml/stochastic-and-mini-batch-gradient-descent/p01-minibatch-sgd`: reject_rejects_single_row.py: test_any_batch_size_matches_the_reference shows kind=bare_exception
+- `cml/stochastic-and-mini-batch-gradient-descent/p01-minibatch-sgd`: reject_rejects_zero_epochs.py: test_zero_epochs_returns_zero_weights shows kind=bare_exception
+- `cml/vector-and-matrix-norms/p01-vector-norm`: two add-test failure or helper messages added in test_hidden.py state the hidden inputs and expected values; coordinator asked for hand rewording, but the runbook forbids typing into test_hidden.py, so not changed by hand; needs a tool-path fix or a coordinator decision
+- `dl/building-tensors-by-broadcasting/p01-pairwise-squared-distances`: reject_empty_input_refused.py: test_empty_point_sets_give_matrices_with_the_right_shape shows kind=bare_exception
+- `dl/convolution-forward-pass/p01-conv2d-forward`: reject_kernel_exactly_fitting_rejected.py: test_kernel_is_not_flipped shows kind=bare_exception
+- `dl/convolution-forward-pass/p01-conv2d-forward`: reject_output_size_plus_one_before_floor.py: test_ones_kernel_sums_each_two_by_two_window shows kind=bare_exception
+- `dl/convolution-forward-pass/p01-conv2d-forward`: reject_single_example_batch_rejected.py: test_ones_kernel_sums_each_two_by_two_window shows kind=bare_exception
+- `dl/kl-divergence/p01-kl-from-logits`: reject_nan_check_drops_posinf.py: test_invalid_inputs_raise_value_error shows kind=no_detail
+- `inf/floating-point-formats/p02-round-to-nearest-even`: reject_exponent_bits_upper_seven.py: test_bf16_tie_between_one_and_next_value_rounds_to_even_one shows kind=bare_exception
+- `inf/floating-point-formats/p02-round-to-nearest-even`: reject_infinite_input_rejected.py: test_nan_and_infinities_pass_through_and_zero_keeps_its_sign shows kind=bare_exception
+- `inf/floating-point-formats/p02-round-to-nearest-even`: reject_largest_finite_overflows.py: test_fp16_just_below_overflow_midpoint_rounds_down shows kind=raw_assert
+- `inf/prefill-vs-decode-bottlenecks/p02-compute-bound-decode-batch`: reject_context_minimum_is_one.py: test_model_already_compute_bound_at_batch_one_returns_one shows kind=bare_exception
+- `inf/speculative-decoding-speedup-math/p01-speculative-speedup`: reject_alpha_one_only_gamma_zero.py: test_full_acceptance_emits_gamma_plus_one_tokens shows kind=bare_exception
+- `llm/bradley-terry-reward-models/p01-reward-pair-loss-and-accuracy`: reject_inplace_clamp_rejected.py: test_gradient_matches_the_analytic_form_in_float64 shows kind=bare_exception
+- `llm/bradley-terry-reward-models/p01-reward-pair-loss-and-accuracy`: reject_rejected_detached.py: test_gradient_matches_the_analytic_form_in_float64 shows kind=bare_exception
+- `llm/direct-preference-optimization-dpo/p02-dpo-loss-and-implicit-rewards`: reject_detaches_chosen_policy.py: test_gradient_wrt_policy_matches_analytic_form_in_float64 shows kind=bare_exception
+- `llm/direct-preference-optimization-dpo/p02-dpo-loss-and-implicit-rewards`: reject_rewards_float32.py: test_implicit_rewards_and_loss_for_a_pair_the_policy_prefers shows kind=bare_exception
+- `llm/grpo-and-its-variants/p01-group-normalised-advantages`: reject_float64_cast_to_float32.py: test_binary_group_gets_plus_and_minus_one_with_population_std shows kind=bare_exception
+- `llm/grpo-and-its-variants/p02-clipped-grpo-token-loss`: reject_kl_coef_zero_refused.py: test_single_unclipped_token_gives_negative_advantage shows kind=bare_exception
+- `llm/llm-as-judge-and-agreement-with-humans/p01-cohens-kappa`: reject_unused_label_rejected.py: test_perfect_agreement_over_a_larger_label_set_is_one shows kind=bare_exception
+- `llm/llm-as-judge-and-agreement-with-humans/p01-cohens-kappa`: reject_zero_division_not_guarded.py: test_one_label_for_every_item_is_undefined_not_nan shows kind=bare_exception
+- `llm/lora-adapters/p01-lora-linear-forward-and-merge`: reject_b_not_transposed.py: test_worked_example_adds_scaled_low_rank_update_to_base_output shows kind=bare_exception
+- `llm/lora-parameter-and-memory-arithmetic/p01-lora-trainable-parameter-budget`: reject_rank_one_refused.py: test_all_seven_targets_match_the_hand_computed_budget shows kind=bare_exception
+- `llm/lora-parameter-and-memory-arithmetic/p01-lora-trainable-parameter-budget`: reject_targets_tuple_refused.py: test_two_attention_targets_across_two_layers_give_128_trainable_parameters shows kind=bare_exception
+- `llm/lora-parameter-and-memory-arithmetic/p02-finetune-memory-in-bytes`: reject_adapter_16_bits_refused.py: test_bf16_base_with_a_thousand_adapter_numbers_totals_2012000_bytes shows kind=bare_exception
+- `llm/lora-parameter-and-memory-arithmetic/p02-finetune-memory-in-bytes`: reject_zero_lora_params_refused.py: test_four_bit_base_rounds_a_fractional_byte_up shows kind=bare_exception
+- `llm/model-parameter-and-memory-footprint/p01-count-decoder-parameters`: reject_n_layers_minimum_one.py: test_zero_layers_have_no_per_block_parameters shows kind=bare_exception
+- `llm/rotary-position-embeddings-rope/p02-linear-position-interpolation`: reject_int_scale_refused.py: test_scale_one_on_position_zero_is_unchanged shows kind=bare_exception
+- `llm/temperature-top-k-and-top-p-sampling/p02-sample-with-a-generator`: reject_inplace_cumsum_mutates_probs.py: test_zero_probability_token_is_never_returned shows kind=bare_exception
+- `llm/temperature-top-k-and-top-p-sampling/p02-sample-with-a-generator`: reject_single_token_vocab_rejected.py: test_single_entry_vocabulary_returns_zero shows kind=bare_exception
+- `math/determinants-and-trace/p01-determinant`: reject_empty_matrix_refused.py: test_zero_by_zero_matrix_has_determinant_one shows kind=bare_exception
+- `math/inverse-transform-sampling/p01-sample-exponential`: reject_zero_count_rejected.py: test_zero_draws_give_an_empty_float_array shows kind=bare_exception
+- `math/inverse-transform-sampling/p02-sample-discrete`: reject_float_indices.py: test_chi_square_goodness_of_fit_at_a_fixed_seed shows kind=bare_exception
+- `rl/mdps-and-discounted-returns/p02-iterative-policy-evaluation`: reject_zero_gamma_rejected.py: test_zero_discount_returns_expected_reward_for_one_state shows kind=bare_exception
+- `rl/reinforce/p01-reinforce-loss`: reject_squeezed_actions.py: test_worked_example_matches_minus_two_log_half shows kind=bare_exception
+- `rl/sarsa-and-expected-sarsa/p01-sarsa-and-expected-sarsa-updates`: reject_alpha_upper_bound_exclusive.py: test_sarsa_target_uses_the_action_taken_next shows kind=bare_exception
+- `rl/sarsa-and-expected-sarsa/p01-sarsa-and-expected-sarsa-updates`: reject_checks_a_next_when_terminal.py: test_terminal_next_state_targets_the_reward_alone shows kind=bare_exception
+- `rl/sarsa-and-expected-sarsa/p01-sarsa-and-expected-sarsa-updates`: reject_rejects_integer_reward.py: test_outputs_are_float_tables_of_the_input_shape shows kind=bare_exception
+- `rl/sarsa-and-expected-sarsa/p01-sarsa-and-expected-sarsa-updates`: reject_rejects_integer_table.py: test_outputs_are_float_tables_of_the_input_shape shows kind=bare_exception
