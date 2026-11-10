@@ -2,6 +2,75 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_rsqrt_layernorm.py
+  origin: freedom
+  freedom: LayerNorm multiplies by rsqrt of the variance instead of dividing by sqrt, same formula with
+    different last digits
+reject:
+- file: reject_squeezes_single_batch.py
+  mistake: returns a 2-D tensor when the batch has one row
+  clause: '`x`: floating-point tensor of shape `(B, T, D)`, with `B, T, D >= 1`. `B` is the batch, `T`
+    the number of tokens, `D` the model width.'
+  killed_by: test_matches_pre_norm_reference_on_seeded_batches
+  visible: hidden
+- file: reject_mask_off_by_one.py
+  mistake: causal mask lets each query see the next key, off by one
+  clause: 'Definitions, with $\varepsilon = 10^{-5}$: - LayerNorm over the last axis, with **biased**
+    variance: $\mathrm{LN}(u) = \gamma \odot (u-\mu)/\sqrt{\sigma^2+\varepsilon}+\beta$, where $\mu$ and
+    $\sigma^2$ are the mean and the variance over the $D$ features, dividing by $D$. - Exact GELU: $\mathrm{gelu}(z)
+    = \tfrac12 z\,(1+\operatorname{erf}(z/\sqrt2))$. The tanh approximation is not allowed. - Attention:
+    $q,k,v$ are the projections of $\mathrm{LN}_1(x)$. Split features into heads by contiguous slices.
+    Scores are $q\cdot k/\sqrt{d_{\text{head}}}$. A **causal** mask forbids query position $i$ from attending
+    to any key $j>i$. Softmax runs over keys. Concatenate the heads and apply $W_o$ and $b_o$.'
+  killed_by: test_two_token_causal_example_matches_worked_values
+  visible: public
+- file: reject_gelu_tanh_approximation.py
+  mistake: uses the tanh approximation of GELU
+  clause: 'Definitions, with $\varepsilon = 10^{-5}$: - LayerNorm over the last axis, with **biased**
+    variance: $\mathrm{LN}(u) = \gamma \odot (u-\mu)/\sqrt{\sigma^2+\varepsilon}+\beta$, where $\mu$ and
+    $\sigma^2$ are the mean and the variance over the $D$ features, dividing by $D$. - Exact GELU: $\mathrm{gelu}(z)
+    = \tfrac12 z\,(1+\operatorname{erf}(z/\sqrt2))$. The tanh approximation is not allowed. - Attention:
+    $q,k,v$ are the projections of $\mathrm{LN}_1(x)$. Split features into heads by contiguous slices.
+    Scores are $q\cdot k/\sqrt{d_{\text{head}}}$. A **causal** mask forbids query position $i$ from attending
+    to any key $j>i$. Softmax runs over keys. Concatenate the heads and apply $W_o$ and $b_o$.'
+  killed_by: test_matches_pre_norm_reference_on_seeded_batches
+  visible: hidden
+- file: reject_layernorm_on_input_not_residual.py
+  mistake: second LayerNorm normalises x instead of the attention-updated stream
+  clause: 'Computation, in this order: 1. $h = \mathrm{LN}_1(x)$; attention output $a = \mathrm{Attn}(h)$;
+    $x'' = x + a$. 2. $h'' = \mathrm{LN}_2(x'')$; $f = \mathrm{gelu}(h'' W_1 + b_1)\,W_2 + b_2$; output
+    $= x'' + f$.'
+  killed_by: test_matches_pre_norm_reference_on_seeded_batches
+  visible: hidden
+- file: reject_returns_float64.py
+  mistake: returns float64 even for float32 inputs
+  clause: 'Returns: `(B, T, D)` tensor, same dtype as `x`.'
+  killed_by: test_float32_inputs_return_float32_close_to_float64_reference
+  visible: hidden
+- file: reject_no_zero_size_check.py
+  mistake: accepts a zero-size axis and returns an empty result
+  clause: 'Raises `ValueError` when: `x` is not a 3-D floating tensor, or has a zero-size axis; `num_heads`
+    is not a positive `int` or does not divide `D`; `params` is missing a key, has an extra key, or has
+    a value that is not a tensor; any parameter has the wrong shape; or any parameter''s dtype differs
+    from `x`.'
+  killed_by: test_invalid_inputs_raise_value_error
+  visible: hidden
+- file: reject_mutates_input_stream.py
+  mistake: writes the attention sum into the input x in place
+  clause: Must not mutate `x` or any parameter.
+  killed_by: test_inputs_and_parameters_are_not_mutated
+  visible: hidden
+uncovered:
+- clause: '`params`: a mapping with **exactly** these 16 keys, no more and no fewer. `F >= 1` is the feed-forward
+    width, read from `W_1`. | key | shape | role | |---|---|---| | `ln1_gamma`, `ln1_beta` | `(D,)` |
+    scale and shift of the attention-block LayerNorm | | `W_q`, `W_k`, `W_v`, `W_o` | `(D, D)` | query,
+    key, value and output projections | | `b_q`, `b_k`, `b_v`, `b_o` | `(D,)` | their biases | | `ln2_gamma`,
+    `ln2_beta` | `(D,)` | scale and shift of the feed-forward-block LayerNorm | | `W_1` | `(D, F)` | feed-forward
+    expansion | | `b_1` | `(F,)` | its bias | | `W_2` | `(F, D)` | feed-forward projection back to the
+    model width | | `b_2` | `(D,)` | its bias | Every parameter has the same dtype as `x`.'
+  reason: wrong solution survives, see notes
+- clause: '`num_heads`: positive `int` (not `bool`) that divides `D`. Each head has width `d_head = D
+    / num_heads`.'
+  reason: a broken valid num_heads case also breaks the C7 raise rule for the same input
+sweeps:
+- reject
