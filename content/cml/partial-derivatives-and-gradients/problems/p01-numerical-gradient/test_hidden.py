@@ -182,7 +182,7 @@ def test_input_array_is_not_mutated():
     )
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(arrays(np.float64, st.integers(min_value=1, max_value=6), elements=COORDS))
 def test_random_quadratic_gradient_is_twice_the_point(x):
     got = _gradient_or_nan(lambda v: float(v @ v), x)
