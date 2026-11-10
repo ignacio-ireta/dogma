@@ -157,6 +157,14 @@ def _rejects(call, case: str) -> None:
         "negative learning rate",
         "parameter and gradient counts differ",
     ],
+    ids=[
+        "zero-momentum-is-not-nesterov",
+        "momentum-equal-to-one",
+        "negative-weight-decay",
+        "non-finite-weight-decay",
+        "negative-learning-rate",
+        "parameter-and-gradient-counts-differ",
+    ],
 )
 def test_invalid_arguments_raise_value_error(case):
     p = [torch.zeros(3, dtype=torch.float64)]

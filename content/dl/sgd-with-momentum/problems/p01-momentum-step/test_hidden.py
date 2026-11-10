@@ -152,6 +152,15 @@ def _rejects(call, case: str) -> None:
         "momentum equal to one",
         "negative momentum",
     ],
+    ids=[
+        "parameter-and-gradient-counts-differ",
+        "gradient-shape-differs-from-its-parameter",
+        "velocity-count-differs-from-parameter-count",
+        "negative-learning-rate",
+        "non-finite-learning-rate",
+        "momentum-equal-to-one",
+        "negative-momentum",
+    ],
 )
 def test_invalid_arguments_raise_value_error(case):
     p = [torch.zeros(3, dtype=torch.float64)]
