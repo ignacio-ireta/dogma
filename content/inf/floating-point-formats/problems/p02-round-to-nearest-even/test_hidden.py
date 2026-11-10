@@ -123,7 +123,7 @@ def _brute_force_round(x: float, e: int, m: int, b: int, table: list) -> float:
             or (distance == best_distance and even and not best[1])
         ):
             best, best_distance = (value, even), distance
-    assert best is not None
+    assert best is not None, "the brute-force search found no candidate value to round to"
     chosen = best[0]
     e_max = (2**e - 2) - b
     if chosen == Fraction(2) ** (e_max + 1):
@@ -174,13 +174,19 @@ def test_just_below_smallest_normal_rounds_up_to_it():
     assert round_to_format(smallest_normal - 2.0**-25, 5, 10, 15) == smallest_normal, (
         "subnormal boundary wrong: a midpoint just below the smallest normal must round up to it"
     )
-    assert round_to_format(smallest_normal - 2.0**-26, 5, 10, 15) == smallest_normal
+    assert round_to_format(smallest_normal - 2.0**-26, 5, 10, 15) == smallest_normal, (
+        "a value a little further below the smallest normal must still round up to it"
+    )
 
 
 def test_nan_and_infinities_pass_through_and_zero_keeps_its_sign():
-    assert math.isnan(round_to_format(math.nan, 5, 10, 15))
-    assert round_to_format(math.inf, 5, 10, 15) == math.inf
-    assert round_to_format(-math.inf, 5, 10, 15) == -math.inf
+    assert math.isnan(round_to_format(math.nan, 5, 10, 15)), "NaN must pass through as NaN"
+    assert round_to_format(math.inf, 5, 10, 15) == math.inf, (
+        "positive infinity must pass through unchanged"
+    )
+    assert round_to_format(-math.inf, 5, 10, 15) == -math.inf, (
+        "negative infinity must pass through unchanged"
+    )
     pos = round_to_format(0.0, 5, 10, 15)
     neg = round_to_format(-0.0, 5, 10, 15)
     assert pos == 0.0 and math.copysign(1.0, pos) == 1.0, "positive zero changed sign"
