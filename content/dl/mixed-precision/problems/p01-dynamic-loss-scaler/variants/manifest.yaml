@@ -61,3 +61,4 @@ uncovered:
   reason: all arguments are plain numbers and bools which cannot be changed in place
 sweeps:
 - reject
+- mutants
