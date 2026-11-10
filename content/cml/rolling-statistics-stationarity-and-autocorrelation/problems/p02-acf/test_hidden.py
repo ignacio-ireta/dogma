@@ -7,6 +7,8 @@ from hypothesis import strategies as st
 from statsmodels.tsa.stattools import acf as sm_acf
 from submission import acf
 
+from dogma_data import load_series
+
 
 def _require(ok, mistake):
     """Fail with the mistake's name only. Hypothesis and the grader show this first line."""
@@ -230,4 +232,40 @@ def test_varying_two_dimensional_input_raises_value_error():
     _expect_value_error(
         lambda: acf(np.arange(4.0).reshape(2, 2), 1),
         "a two-dimensional input with varying values was accepted: x must be one-dimensional",
+    )
+
+
+@pytest.fixture(scope="module")
+def nile_volumes():
+    # Annual Nile flow volumes: integer-valued, with a level change near 1898.
+    return load_series("nile")
+
+
+@pytest.fixture(scope="module")
+def sunspot_counts():
+    # Yearly sunspot activity: an 11-year cycle, stored as float64 by the source.
+    return load_series("sunspots")
+
+
+def test_matches_statsmodels_on_integer_valued_nile_volumes(nile_volumes):
+    values = np.round(nile_volumes).astype(np.int64)
+    reference = sm_acf(values.astype(np.float64), nlags=20, adjusted=False, fft=False)
+    result = _run(lambda: acf(values, 20), "acf raised on integer-valued real data")
+    _close(
+        result,
+        reference,
+        "integer-valued series gets the wrong autocorrelation: the mean must be exact, not an "
+        "integer floor division",
+    )
+
+
+def test_matches_float64_formula_on_float32_storage_of_sunspots(sunspot_counts):
+    stored = sunspot_counts.astype(np.float32)
+    reference = sm_acf(stored.astype(np.float64), nlags=20, adjusted=False, fft=False)
+    result = _run(lambda: acf(stored, 20), "acf raised on a float32 array")
+    _close(
+        result,
+        reference,
+        "float32 input gives float32-rounded autocorrelations: convert to float64 before the sums",
+        atol=1e-9,
     )

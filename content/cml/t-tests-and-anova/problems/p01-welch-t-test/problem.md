@@ -7,7 +7,7 @@ the p-value is two-sided.
 ## Contract
 
 - `a`, `b`: 1-D sequences of finite real numbers (lists or NumPy arrays), each of length `n ≥ 2`.
-  Integers are allowed.
+  Integers are allowed, and so are float32 arrays: every statistic is computed in float64 on the stored values.
 - Let `va = var(a, ddof=1) / n_a` and `vb = var(b, ddof=1) / n_b`. Then
   - `t = (mean(a) − mean(b)) / sqrt(va + vb)`
   - `df = (va + vb)² / (va² / (n_a − 1) + vb² / (n_b − 1))`
@@ -29,6 +29,9 @@ the p-value is two-sided.
 ValueError: both samples are constant: the t statistic is undefined
 ```
 
+On real data, the setosa and virginica sepal lengths of `iris` (50 rows each, stored as float32, with unequal
+spreads) must give scipy's Welch result on the same stored values.
+
 ## Constraints
 
 - Allowed: NumPy, and SciPy's Student-t distribution (for example `scipy.stats.t.sf`).
@@ -40,6 +43,6 @@ All public tests pass, then **Submit** passes the hidden tests. Those compare `t
 `scipy.stats.ttest_ind(equal_var=False)` on seeded samples with unequal sizes and spreads. They check that
 unequal variances use Welch's degrees of freedom and not the pooled `n_a + n_b − 2`, that equal sizes and
 spreads give `df = 2(n − 1)`, that the test is two-sided and invariant to swapping the groups, shifting and
-rescaling (including data at very large or very small magnitudes), that a very small two-sided p-value is computed in the tail and does not round to zero, that one constant sample is allowed,
+rescaling (including data at very large or very small magnitudes), that a very small two-sided p-value is computed in the tail and does not round to zero, that float32 storage of real measurements (iris, unequal spreads) gives scipy's result, that one constant sample is allowed,
 that invalid inputs raise `ValueError` (with the constant-samples case named), and that inputs are left
 unchanged.

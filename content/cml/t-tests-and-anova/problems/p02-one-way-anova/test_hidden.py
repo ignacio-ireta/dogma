@@ -3,6 +3,8 @@ import pytest
 from scipy import stats
 from submission import one_way_anova
 
+from dogma_data import load
+
 # Three groups whose F is about 225: the upper-tail p-value is about 1e-27, far below where 1 - cdf
 # still carries any information.
 TAIL_GROUPS = [
@@ -264,4 +266,22 @@ def test_one_more_observation_than_groups_is_valid_and_matches_scipy():
         _reference(groups),
         rtol=1e-9,
         err_msg="N = k + 1 leaves one within-group df, which is valid: only N <= k must raise",
+    )
+
+
+@pytest.fixture(scope="module")
+def iris_species_sepal_lengths():
+    # Sepal lengths of the three iris species (50 rows each), in cm to one decimal.
+    table = load("iris")
+    return [table.X[table.y == k, 0] for k in (0, 1, 2)]
+
+
+def test_matches_scipy_on_float32_storage_of_iris_species(iris_species_sepal_lengths):
+    stored = [group.astype(np.float32) for group in iris_species_sepal_lengths]
+    np.testing.assert_allclose(
+        one_way_anova(*stored),
+        _reference([group.astype(np.float64) for group in stored]),
+        rtol=1e-9,
+        atol=1e-12,
+        err_msg="float32 groups give float32-rounded F and p: convert each group to float64 first",
     )

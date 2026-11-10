@@ -2,6 +2,8 @@ import numpy as np
 import pytest
 from submission import bootstrap_percentile_ci
 
+from dogma_data import load
+
 # Cases for the protocol comparison: (seed, n, confidence, statistic name).
 PROTOCOL_CASES = [
     (0, 5, 0.95, "mean"),
@@ -187,4 +189,35 @@ def test_a_single_resample_is_a_valid_request():
         rtol=1e-12,
         atol=1e-12,
         err_msg="n_resamples = 1 is allowed (at least 1): it must return the interval, not raise",
+    )
+
+
+@pytest.fixture(scope="module")
+def iris_sepal_lengths():
+    # Measured to 0.1 cm: 150 values with only 35 distinct ones, so many rows repeat.
+    return load("iris").X[:, 0]
+
+
+def test_matches_protocol_on_iris_sepal_lengths_with_repeated_values(iris_sepal_lengths):
+    x = iris_sepal_lengths
+    expected = _reference(x, np.mean, 600, 0.9, 13)
+    np.testing.assert_allclose(
+        bootstrap_percentile_ci(x, np.mean, n_resamples=600, confidence=0.9, seed=13),
+        expected,
+        rtol=1e-12,
+        atol=1e-12,
+        err_msg="repeated values were resampled as distinct values: every row is one draw, so a "
+        "value that appears k times keeps k rows in the pool",
+    )
+
+
+def test_matches_protocol_on_float32_storage_of_iris_sepal_lengths(iris_sepal_lengths):
+    stored = iris_sepal_lengths.astype(np.float32)
+    expected = _reference(stored.astype(np.float64), np.mean, 600, 0.9, 13)
+    np.testing.assert_allclose(
+        bootstrap_percentile_ci(stored, np.mean, n_resamples=600, confidence=0.9, seed=13),
+        expected,
+        rtol=1e-12,
+        atol=1e-12,
+        err_msg="float32 input is resampled in float32: convert x to float64 before the draws",
     )

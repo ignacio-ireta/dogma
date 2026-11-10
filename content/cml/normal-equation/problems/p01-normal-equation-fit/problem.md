@@ -16,7 +16,8 @@ is rank deficient, the coefficients are not unique, so raise an error.
   when `X` or `y` contains NaN or infinity; when the design matrix is rank deficient. The rank is the
   one NumPy computes with `np.linalg.matrix_rank` and its default tolerance. This covers a column that
   is a multiple or a sum of others, a zero column, a constant column when `fit_intercept` is true, and
-  fewer rows than columns.
+  fewer rows than columns. A full-rank design is fitted however large its condition number is: a real
+  economic design with an intercept can have a condition number near 10^10 and must still be fitted.
 - Must not mutate `X` or `y`.
 
 ## Examples
@@ -29,6 +30,11 @@ is rank deficient, the coefficients are not unique, so raise an error.
 >>> fit_linear_regression([[1., 3.], [2., 6.], [3., 9.]], [1., 2., 3.])
 ValueError                         # the second column is three times the first
 ```
+
+On the raw `diabetes` features (442 rows, 10 columns: body measurements in the tens, serum levels in the
+hundreds, and a binary `sex` coded 1/2), the fit must agree with the least-squares solution of `[1 | X]`.
+On the `longley` macroeconomic design (16 rows, 6 columns, condition number about 5 × 10^9), the call is
+accepted and its fitted values match the least-squares fit.
 
 ## Constraints
 
@@ -48,4 +54,7 @@ coefficients must match the fit; rank-deficient designs of several kinds, includ
 columns and column sums that a plain solve accepts silently, all raising `ValueError`; too few rows;
 invalid shapes and non-finite values; equivariance when `y` or a feature is rescaled, and when a
 feature is shifted; very large and very small feature scales; integer input; and inputs left
-unchanged.
+unchanged. On real designs they add: the raw `diabetes` features (mixed scales and a binary column), a
+small real design with one influential observation (`stackloss`), and a full-rank real design whose condition
+number is about 5e9 (`longley`), which must be fitted rather than rejected. Those check the fit against the
+least-squares solution (coefficients where the conditioning allows, fitted values for `longley`).

@@ -14,4 +14,4 @@ interview_angle: >-
 sources:
   - "book: Murphy, Probabilistic Machine Learning: An Introduction, chapter on logistic regression"
   - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter on linear methods for classification"
-status: reviewed
+status: verified

@@ -8,6 +8,8 @@ from scipy.optimize import minimize
 from scipy.special import expit
 from submission import fit_logistic_regression
 
+from dogma_data import load, rng
+
 
 def _call(X, y, **kwargs):
     """Fit with NumPy warnings turned into errors. Hidden messages never show inputs or values."""
@@ -84,6 +86,73 @@ def _oracle(X, y, l2):
 def _gradient_max(intercept, coef, X, y, l2):
     _, grad = _objective_and_gradient(np.concatenate([[intercept], coef]), X, y, l2)
     return float(np.max(np.abs(grad)))
+
+
+@pytest.fixture(scope="module")
+def raw_breast_cancer():
+    """Real features on raw scales (means from tiny fractions to hundreds), nearly separable."""
+    data = load("breast_cancer")
+    return np.array(data.X, dtype=np.float64), np.array(data.y, dtype=np.float64)
+
+
+def test_matches_an_independent_optimiser_on_raw_breast_cancer_scales(raw_breast_cancer):
+    X, y = raw_breast_cancer
+    want = _oracle(X, y, 1.0)
+    b, w = _call(X, y, l2=1.0)
+    np.testing.assert_allclose(
+        np.concatenate([[b], w]),
+        want,
+        rtol=1e-4,
+        atol=1e-4,
+        err_msg="coefficients differ from the minimiser on real features with very different "
+        "scales: the penalty and the gradient act on the raw coefficients, so do not standardise "
+        "the objective; the oracle itself is only accurate to about 1e-4 on these features",
+    )
+    assert _gradient_max(b, w, X, y, 1.0) <= 1e-7, (
+        "the returned point is not stationary on real features with very different scales: "
+        "the stopping rule must test the gradient of the raw problem"
+    )
+
+
+@pytest.mark.parametrize(
+    ("draw", "quantile"),
+    [(0, 0.5), (2, 0.99)],
+    ids=["balanced-separable", "rare-separable"],
+)
+def test_separable_real_features_with_a_weak_penalty_fit_without_overflow(
+    raw_breast_cancer, draw, quantile
+):
+    # Labels are a linear rule on the real features: perfectly separable, with linear scores in
+    # the hundreds along the way. The rare variant has about one positive in a hundred.
+    X, _ = raw_breast_cancer
+    key = f"cml/logistic-regression/p01-l2-logistic-fit:separable:{draw}"
+    beta = rng(key).normal(size=X.shape[1])
+    eta = X @ beta
+    y = (eta > np.quantile(eta, quantile)).astype(float)
+    b, w = _call(X, y, l2=1e-3)
+    assert np.isfinite(b) and np.all(np.isfinite(w)), (
+        "coefficients must stay finite on separable data under a positive penalty"
+    )
+    assert _gradient_max(b, w, X, y, 1e-3) <= 1e-7, (
+        "the returned point is not stationary on separable real data: Newton steps can overshoot "
+        "when the linear scores are large, so damp them and evaluate the loss without overflow"
+    )
+
+
+def test_nearly_separable_real_data_with_a_weak_penalty_is_finite_and_stationary(
+    raw_breast_cancer,
+):
+    X, y = raw_breast_cancer
+    b, w = _call(X, y, l2=0.01)
+    assert np.isfinite(b) and np.all(np.isfinite(w)), (
+        "coefficients must stay finite on nearly separable real data under a positive penalty"
+    )
+    assert np.max(np.abs(w)) <= 10.0, (
+        "coefficients blow up on nearly separable real data: the penalty must bound them"
+    )
+    assert _gradient_max(b, w, X, y, 0.01) <= 1e-7, (
+        "the returned point is not stationary on nearly separable real data"
+    )
 
 
 def test_matches_an_independent_optimiser_on_random_problems():

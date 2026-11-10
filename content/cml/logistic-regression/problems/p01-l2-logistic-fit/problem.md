@@ -23,6 +23,8 @@ $\nabla_{\mathbf{w}} J = \frac1n X^\top(\mathbf{p} - \mathbf{y}) + \ell_2 \mathb
 - Raises: `ValueError` for any violation of the input rules above. `RuntimeError` when the gradient
   condition is not reached within `max_iter` iterations.
 - Note: with `l2 = 0` and perfectly separated data, no finite minimiser exists, so raising `RuntimeError` is acceptable there.
+- Scale: the objective is in the units of `X` as given. The penalty applies to the coefficients of the features as supplied, whatever their scale, and the features may be strongly correlated.
+- Large scores: on separable data with `l2 > 0` the minimiser is finite, and the fit must return it. Linear scores may reach the hundreds or thousands during the iteration; no intermediate value may overflow.
 - Must not mutate its inputs.
 
 ## Examples
@@ -36,6 +38,8 @@ ValueError: y must contain both classes; a single class has no finite fit
 >>> fit_logistic_regression(np.array([[0.0], [1.0]]), np.array([0, 1]), l2=-0.5)
 ValueError: l2 must be a finite number that is zero or positive
 ```
+
+On the raw `breast_cancer` features (569 rows, 30 columns, column means from about 0.004 to about 880, nearly separable), `fit_logistic_regression(X, y, l2=1.0)` returns a finite fit whose gradient meets `tol`. The same data with a weak penalty (`l2=0.001`) and labels from a linear rule on those features is also perfectly separable; the fit stays finite even though its linear scores are in the thousands.
 
 ## Constraints
 
@@ -53,3 +57,5 @@ rate) and as calibration in the large (mean predicted probability equals the pos
 coefficients on nearly separable data; agreement with the unpenalised fit when `l2 = 0`; identical columns
 sharing their coefficient; a `RuntimeError` when the iteration budget is too small; rejection of bad
 `l2`, labels, classes, shapes, non-finite values and budgets; and that the inputs are left unchanged.
+
+The realism families covered by the hidden tests are: features on scales spanning many orders of magnitude, strongly correlated real features, nearly separable real labels under a weak penalty, perfectly separable labels whose linear scores pass the hundreds, and a rare positive class (about 1 in 100) on separable real features. Each family is checked against an independent optimiser, the gradient condition or finiteness, and the run must not emit a NumPy warning.

@@ -87,6 +87,8 @@ symmetric and idempotent.
 - **Cost.** Forming $A^\top A$ takes $O(np^2)$ and solving $O(p^3)$; iterative methods suit very wide designs.
 - **Outliers.** Squared error gives large residuals a large pull. See `cml/regression-metrics-and-robust-losses`.
 
+**Real data: squared conditioning.** Longley (16 rows, six macroeconomic columns in very different units) has a design with condition number about $5\times10^{9}$. The Gram matrix squares that to about $2\times10^{19}$, past $1/\varepsilon \approx 4.5\times10^{15}$. `matrix_rank` of the Gram matrix reports 6 of 7 columns, while the design itself is full rank (7 of 7). Solving the normal equations still matches the SVD fit to about $3\times10^{-11}$ in the fitted values, but the coefficients agree only to about 9 digits ($2.6\times10^{-9}$ relative). Check rank on the design, and compare fits rather than coefficients.
+
 ## Interview angle
 
 "Derive the least-squares solution, and say when you would not use it." Answer shape: the gradient

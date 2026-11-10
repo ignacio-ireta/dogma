@@ -7,7 +7,7 @@ interval is the pair of quantiles of the bootstrap replicates, one replicate per
 ## Contract
 
 - `x`: 1-D sequence of finite real numbers (a list or a NumPy array) of length `n ≥ 1`. Integers are
-  allowed.
+  allowed, and so are float32 arrays: `statistic` always receives float64 resamples.
 - `statistic`: a function that takes a 1-D float array and returns a float. It is called once per
   resample, on a resample of length `n`.
 - `n_resamples`: integer `≥ 1`. Default `2000`.
@@ -18,6 +18,7 @@ interval is the pair of quantiles of the bootstrap replicates, one replicate per
 - **Resampling protocol** (the grader checks against this exact draw):
   1. `rng = np.random.default_rng(seed)`
   2. `idx = rng.integers(0, n, size=(n_resamples, n))`. Row `b` is resample `b`, drawn with replacement.
+     Repeated values are separate rows: a value that appears `k` times in `x` has `k` rows to be drawn from.
   3. Replicate `b` is `statistic(x[idx[b]])`.
   4. With `alpha = 1 - confidence`: `lo, hi = np.quantile(replicates, [alpha / 2, 1 - alpha / 2], method="linear")`.
 - Raises `ValueError` when `x` is not 1-D, when it is empty, when it contains NaN or infinity, when
@@ -35,6 +36,9 @@ interval is the pair of quantiles of the bootstrap replicates, one replicate per
 ValueError: n_resamples must be at least 1
 ```
 
+On real data, the `iris` sepal lengths (150 values rounded to 0.1 cm, only 35 distinct) keep their repeats, so the
+resampled means are drawn from the full sample, not from its distinct values.
+
 ## Constraints
 
 - Allowed: NumPy (`np.random.default_rng`, `rng.integers`, `np.quantile`, indexing, …).
@@ -47,5 +51,5 @@ All public tests pass, then **Submit** passes the hidden tests. Those compare th
 reference that follows the protocol above exactly, for several samples, seeds, confidence levels, and
 the statistics mean, median and maximum. They check that the interval is nested as confidence grows, that
 a constant sample gives a point interval, that the same seed reproduces the result, that the statistic is called once per resample on a one-dimensional
-resample of length `n`, that invalid
+resample of length `n`, that the interval on repeated real measurements (iris sepal lengths, also stored as float32) follows the protocol and does not resample distinct values, that invalid
 arguments raise `ValueError` and that the input is left unchanged.

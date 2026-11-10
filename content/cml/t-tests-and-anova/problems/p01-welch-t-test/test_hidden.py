@@ -3,6 +3,8 @@ import pytest
 from scipy import stats
 from submission import welch_t_test
 
+from dogma_data import load
+
 # (seed, n_a, n_b, spread_a, spread_b, shift_b): unequal sizes and unequal spreads throughout.
 ORACLE_CASES = [
     (0, 5, 9, 1.0, 3.0, 0.5),
@@ -263,3 +265,23 @@ def test_two_constant_samples_raise_when_their_means_are_not_exact():
             "two constant samples must raise ValueError even when their float mean is inexact: "
             "the t statistic is undefined",
         )
+
+
+@pytest.fixture(scope="module")
+def iris_sepal_lengths():
+    # Sepal lengths in cm (one decimal) for the setosa and virginica species, 50 rows each.
+    table = load("iris")
+    return table.X[:, 0], table.y
+
+
+def test_matches_scipy_on_float32_storage_of_iris_setosa_and_virginica(iris_sepal_lengths):
+    values, species = iris_sepal_lengths
+    a = values[species == 0].astype(np.float32)  # real measurements stored as float32
+    b = values[species == 2].astype(np.float32)
+    np.testing.assert_allclose(
+        welch_t_test(a, b),
+        _reference(a.astype(np.float64), b.astype(np.float64)),
+        rtol=1e-9,
+        atol=1e-12,
+        err_msg="float32 input gives float32-rounded statistics: convert to float64 first",
+    )

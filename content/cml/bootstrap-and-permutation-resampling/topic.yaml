@@ -17,4 +17,4 @@ sources:
   - "book: Good, Permutation, Parametric and Bootstrap Tests of Hypotheses, chapters on permutation tests"
   - "paper: Phipson & Smyth 2010, Permutation P-values should never be zero (Statistical Applications in Genetics and Molecular Biology)"
   - "source: library-refresh/01-Mathematics/06-Probability-and-Statistics/1979 -- Efron -- Bootstrap and Sampling Uncertainty -- Study Note.md"
-status: reviewed
+status: verified

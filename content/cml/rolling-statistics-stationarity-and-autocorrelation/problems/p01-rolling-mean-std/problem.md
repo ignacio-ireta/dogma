@@ -8,7 +8,8 @@ scratch.
 
 ## Contract
 
-- `x`: 1-D sequence of finite real numbers (list, tuple or NumPy array), length n >= 0. Integers are allowed.
+- `x`: 1-D sequence of finite real numbers (list, tuple or NumPy array), length n >= 0. Integers are allowed,
+  and an integer window mean is fractional: it is never rounded.
   Must not be mutated.
 - `window`: integer >= 1. A bool or a float is rejected.
 - `min_periods`: integer with 1 <= min_periods <= window, or `None`, which means `window`.
@@ -32,6 +33,9 @@ scratch.
 The second example keeps the partial windows at the start. The first window holds one value, so its
 standard deviation is NaN.
 
+On real data, the annual Nile flow series (100 integer-valued volumes, with a level change near 1898) is integer-valued,
+and a 10-year window straddles the change: `rolling_mean_std` on the integers must keep the fractional means.
+
 ## Constraints
 
 - Allowed: NumPy and the Python standard library (`math`, `numbers`, ...).
@@ -44,7 +48,7 @@ All public tests pass, then **Submit** passes the hidden tests. Those compare th
 rolling mean and standard deviation on random series, across window and `min_periods` combinations
 (including a window of one, partial windows, and a window longer than the series). They check the
 variance denominator on a window of two, where the answer is known in closed form. They change the values
-after a position and require the earlier outputs to stay the same, so no window may look forward. A long
+after a position and require the earlier outputs to stay the same, so no window may look forward. Integer-valued real flows (the Nile series, with its level change) must match pandas with fractional means. A long
 series at a large common offset must keep its spread against a per-window two-pass computation. A constant
 series must have zero spread. Readings near `1e200` and `1e-200`, whose squares overflow or underflow,
 must keep their spread. Equal neighbours at window two must have a spread of zero up to rounding. The hidden tests also cover invalid inputs, empty input, integer input, and

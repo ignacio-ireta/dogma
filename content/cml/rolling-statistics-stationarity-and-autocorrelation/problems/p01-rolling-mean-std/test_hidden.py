@@ -5,6 +5,8 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import rolling_mean_std
 
+from dogma_data import load_series
+
 
 def _require(ok, mistake):
     """Fail with the mistake's name only. Hypothesis and the grader show this first line."""
@@ -309,5 +311,33 @@ def test_property_agrees_with_per_window_statistics(values, window, partial):
         ref_stds,
         "rolling spread disagrees with the per-window spread",
         atol=1e-8 * scale,
+        nan_mistake=STD_NAN,
+    )
+
+
+@pytest.fixture(scope="module")
+def nile_volumes():
+    # Annual Nile flow volumes: integer-valued, with a level change near 1898.
+    return load_series("nile")
+
+
+def test_matches_pandas_on_integer_valued_nile_volumes_across_the_level_change(nile_volumes):
+    values = np.round(nile_volumes).astype(np.int64)
+    ref_means, ref_stds = _pandas_reference(values.astype(np.float64), 10, 10)
+    means, stds = _unpack(
+        _run(lambda: rolling_mean_std(values, 10), "rolling_mean_std raised on integer input"),
+        values.size,
+        "rolling_mean_std",
+    )
+    _close(
+        means,
+        ref_means,
+        "integer input gives rounded window means: keep the fractional mean of the integers",
+        nan_mistake=MEAN_NAN,
+    )
+    _close(
+        stds,
+        ref_stds,
+        "rolling std differs from pandas on integer input: check the ddof=1 denominator",
         nan_mistake=STD_NAN,
     )

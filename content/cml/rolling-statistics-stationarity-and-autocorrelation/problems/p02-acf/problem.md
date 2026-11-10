@@ -7,8 +7,8 @@ estimator, and it is the most common wrong answer.
 
 ## Contract
 
-- `x`: 1-D sequence of finite real numbers (list, tuple or NumPy array), length n >= 2. Integers are allowed.
-  Must not be mutated.
+- `x`: 1-D sequence of finite real numbers (list, tuple or NumPy array), length n >= 2. Integers are allowed,
+  and so are float32 arrays: the sums are done in float64 on the stored values. Must not be mutated.
 - `nlags`: integer with 0 <= nlags <= n - 1. A bool or a float is rejected.
 - Returns: a float64 array of length `nlags + 1`. Entry k is the autocorrelation at lag k, and entry 0 is
   exactly 1.
@@ -35,6 +35,8 @@ array([1.  , 0.25])
 In the first example the mean is 3.5 and the denominator is 17.5. At lag 1 the numerator sums five products,
 and it is divided by 17.5, not by 5.
 
+On real data, the annual Nile flow series (100 integer-valued volumes, with a level change near 1898) is integer-valued and strongly persistent. Its autocorrelations must match the biased estimator computed on the exact values, not an integer-divided mean.
+
 ## Constraints
 
 - Allowed: NumPy and the Python standard library.
@@ -48,6 +50,6 @@ All public tests pass, then **Submit** passes the hidden tests. Those compare th
 including series with a large non-zero mean. They check a closed form: an alternating series has a known
 autocorrelation at every lag, and the adjusted (n - k) denominator fails that check. They check that lag 0
 is exactly one, that shifting or scaling the series leaves the result unchanged, and that the boundary values
-of `nlags` work. They also cover invalid `nlags`, a series too short to have lags, a constant series including
+of `nlags` work. They also cover integer-valued real data (the Nile series) and float32 storage of a real cyclic series (sunspots). They also cover invalid `nlags`, a series too short to have lags, a constant series including
 one whose mean is not exactly representable, non-finite input, integer input, and inputs that must not be
 mutated.

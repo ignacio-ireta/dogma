@@ -7,7 +7,7 @@ p-value is the upper tail of the F distribution.
 ## Contract
 
 - `*groups`: at least two 1-D sequences of finite real numbers (lists or NumPy arrays). Each group is
-  non-empty. A group of one value is allowed. Integers are allowed.
+  non-empty. A group of one value is allowed. Integers are allowed, and so are float32 arrays: every statistic is computed in float64 on the stored values.
 - Let `N` be the total number of observations and `n_i` the size of group `i`, with group mean `m_i` and
   grand mean `m` (mean of all `N` values):
   - `SSB = Σ n_i (m_i − m)²`, and `SSW = Σ_i Σ_j (x_ij − m_i)²`
@@ -33,6 +33,9 @@ ValueError: within-group variation is zero: F is undefined
 ValueError: need at least two groups
 ```
 
+On real data, the three species of `iris` (50 sepal lengths each, stored as float32) must give scipy's F and p on the
+same stored values, with spreads that grow from setosa to virginica.
+
 ## Constraints
 
 - Allowed: NumPy, and SciPy's F distribution (for example `scipy.stats.f.sf`).
@@ -43,6 +46,6 @@ ValueError: need at least two groups
 All public tests pass, then **Submit** passes the hidden tests. Those compare `F` and `p` with
 `scipy.stats.f_oneway` on seeded groups with unequal sizes and several group counts. They check that with two
 groups `F` equals the square of the pooled-variance t statistic, that a very small p-value is computed in the
-upper tail and not as one minus the CDF, that a singleton group is allowed, that shifting, rescaling and
+upper tail and not as one minus the CDF, that float32 storage of real measurements (the iris species) gives scipy's result, that a singleton group is allowed, that shifting, rescaling and
 reordering the groups changes nothing, that a large common offset is handled, that invalid inputs raise
 `ValueError` (including the degrees-of-freedom and zero-variation cases), and that inputs are left unchanged.

@@ -5,14 +5,36 @@ from hypothesis import strategies as st
 from sklearn.linear_model import LinearRegression
 from submission import fit_linear_regression
 
+from dogma_data import load, rng, synth
+
 
 def _data(seed, n, d):
-    """Random design, a true linear signal and mild noise."""
-    rng = np.random.default_rng(seed)
-    X = rng.normal(size=(n, d))
-    beta = rng.normal(size=d)
-    y = 1.5 + X @ beta + 0.3 * rng.normal(size=n)
+    """Correlated columns on moderate scales (synth), a true linear signal and mild noise."""
+    gen = rng(f"cml/normal-equation/p01-normal-equation-fit:data:{seed}")
+    X = synth.correlated_mixed_scale(
+        gen, n, d, n_factors=1, strength=1.0, scale_range=(0.5, 2.0), offset_range=(-1.0, 1.0)
+    )
+    beta = gen.normal(size=d)
+    y = 1.5 + X @ beta + 0.3 * gen.normal(size=n)
     return X, y
+
+
+@pytest.fixture(scope="module")
+def raw_diabetes():
+    data = load("diabetes")  # raw: BMI near 26, serum levels in the hundreds, binary sex coded 1/2
+    return np.array(data.X, dtype=np.float64), np.array(data.y, dtype=np.float64)
+
+
+@pytest.fixture(scope="module")
+def stackloss():
+    data = load("stackloss")  # 21 plant days, one observation with a large studentized residual
+    return np.array(data.X, dtype=np.float64), np.array(data.y, dtype=np.float64)
+
+
+@pytest.fixture(scope="module")
+def longley():
+    data = load("longley")  # macroeconomic series in very different units, condition about 5e9
+    return np.array(data.X, dtype=np.float64), np.array(data.y, dtype=np.float64)
 
 
 def _fit(X, y, fit_intercept=True):
@@ -125,6 +147,53 @@ def test_squared_error_gradient_vanishes_at_the_returned_fit():
         np.zeros(3),
         atol=1e-6,
         err_msg="the squared-error gradient is not zero at the fit: it is not a minimiser",
+    )
+
+
+def test_matches_least_squares_on_raw_diabetes_scales(raw_diabetes):
+    X, y = raw_diabetes
+    intercept, coef = _fit(X, y)
+    expected = np.linalg.lstsq(np.hstack([np.ones((len(y), 1)), X]), y, rcond=None)[0]
+    np.testing.assert_allclose(
+        [intercept, *coef],
+        expected,
+        rtol=1e-7,
+        atol=1e-9,
+        err_msg="coefficients differ from least squares on real features with very different "
+        "scales: solve the normal equations on the design [1 | X], not on centred or rescaled "
+        "copies that drop the intercept",
+    )
+
+
+def test_matches_least_squares_on_stackloss(stackloss):
+    X, y = stackloss
+    intercept, coef = _fit(X, y)
+    expected = np.linalg.lstsq(np.hstack([np.ones((len(y), 1)), X]), y, rcond=None)[0]
+    np.testing.assert_allclose(
+        [intercept, *coef],
+        expected,
+        rtol=1e-7,
+        atol=1e-9,
+        err_msg="coefficients differ from least squares on a small real design: check the "
+        "intercept column and the normal equations",
+    )
+
+
+def test_full_rank_real_design_with_large_condition_is_fitted(longley):
+    # The design is full rank by NumPy's default rule, so it must be fitted. Its condition number
+    # is about 5e9, so only fitted values are compared: the coefficients carry about 8 digits.
+    X, y = longley
+    intercept, coef = _fit(X, y)
+    design = np.hstack([np.ones((len(y), 1)), X])
+    fitted_ls = design @ np.linalg.lstsq(design, y, rcond=None)[0]
+    fitted = design @ np.array([intercept, *coef])
+    np.testing.assert_allclose(
+        fitted,
+        fitted_ls,
+        rtol=1e-7,
+        atol=1e-7 * float(np.max(np.abs(fitted_ls))),
+        err_msg="a full-rank real design was rejected or fitted inaccurately: the rank rule is "
+        "NumPy's matrix_rank with its default tolerance, not a limit on the condition number",
     )
 
 
