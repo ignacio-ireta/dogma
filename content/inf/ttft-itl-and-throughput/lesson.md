@@ -77,6 +77,13 @@ fraction of users.  Hyndman and Fan (1996, not in the corpus, so this is a gener
   and the aggregate reaches 120 tokens/s. Both numbers are true, and neither answers the other question.
 - **Goodput without an SLO.** Goodput needs a stated bound. A request that is fast on average can still miss on TTFT.
 
+In a fixed 2,000-sample draw from the `latencies` generator, the median is 50.4 ms, p95 is 122.8 ms, and the mean is
+72.8 ms; the slowest draw is 4.12 s. Substituting the mean for p95 understates this tail by about 50.0 ms.
+
+For goodput, 2,000 requests arrive 10 ms apart, each with one latency draw as TTFT and one as its token gap. Mean TTFT
+is 78.6 ms and mean ITL 75.9 ms, both below SLOs of 120 ms and 100 ms. Yet only 1,680 requests meet both individually,
+giving 77.5 requests/s; counting all requests because the averages pass would claim 92.3 requests/s.
+
 ## Interview angle
 
 **60-second answer.** Name the metric by the phase it measures: TTFT includes queue and prefill, ITL is decode
@@ -91,4 +98,4 @@ batching do? It raises throughput and typically raises per-stream ITL, so it is 
 
 This topic needs the descriptive statistics of quantiles and means (`cml/descriptive-statistics`). It leads to
 tail latency and goodput, continuous batching, chunked prefill, and the prefill and decode bottlenecks that set
-TTFT and ITL. 
+TTFT and ITL.

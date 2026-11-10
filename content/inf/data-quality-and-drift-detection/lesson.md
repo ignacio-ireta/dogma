@@ -49,6 +49,10 @@ Failures can coexist. Investigate pipeline errors before treating an alert as mo
 - **Discrete features.** The KS p-value assumes a continuous distribution. For a few categories, compare shares by category instead.
 - **Monitoring with no action.** Each monitor needs a named response, or the team learns to ignore alerts.
 
+In the offline `adult` snapshot, comparing the `workclass == "?"` indicator between the `<=50K` and `>50K` income
+cohorts gives shares of 6.36% and 2.48%, and a two-bin PSI of 0.0380. Dropping those marked rows turns both indicators
+into all zeros and reports PSI 0.0000, hiding the change. For this indicator, `?` is a recorded category value.
+
 ## Interview angle
 
 **60-second answer, "Accuracy dropped in production. What do you check first?"** I would check the pipeline before the model: schema, null rates, value ranges and freshness against the last good week. If the data are clean, I would compare each input feature with its training reference, using PSI or a KS distance on the effect size, not only the p-value. Labels may be delayed, so I would check label shares and error by segment only when they arrive. The response depends on the stage: fix the pipeline, recalibrate, or retrain on recent labelled data. I would not retrain first, because retraining on corrupted data repeats the bug.

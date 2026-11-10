@@ -90,6 +90,11 @@ $A_c/254$. The formula is unchanged; the group is smaller.
   then clip.
 - **Wrong dequantization.** For an asymmetric code, $\hat{x} = s\,q$ is wrong. Use $s\,(q - z)$.
 
+For a 512 by 8 activation batch with two outlier channels (absmax about 154 and 158, against about 3 elsewhere), mean
+absolute reconstruction error is 0.082 with per-channel scales and 0.315 with one tensor-wide scale. On an ordinary
+channel, the errors are 0.0053 and 0.306.
+A few outlier channels can therefore erase most resolution from the rest of the activation tensor.
+
 ## Interview angle
 
 **60-second answer.** For int8 weights I use symmetric per-output-channel scales, $s_c = A_c/127$, with
