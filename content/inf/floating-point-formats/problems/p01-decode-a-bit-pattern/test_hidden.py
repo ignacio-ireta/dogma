@@ -94,7 +94,7 @@ def test_property_any_fp32_word_matches_numpy_float32_view(word: int):
     value, err = _decode_or_report(word, 8, 23, 127)
     assert err is None, f"fp32 decode raised: {err}"
     want = np.array([word], dtype=np.uint32).view(np.float32)[0]
-    assert value is not None
+    assert value is not None, "fp32 decode returned no value for a valid 32-bit word"
     kind = "fp32 property mismatch: check the implicit leading 1 and the exponent bias"
     assert (math.isnan(value) and math.isnan(want)) or (
         value == float(want) and math.copysign(1.0, value) == math.copysign(1.0, float(want))
