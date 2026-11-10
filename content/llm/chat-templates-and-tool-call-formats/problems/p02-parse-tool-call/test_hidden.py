@@ -105,7 +105,9 @@ def test_integer_in_a_boolean_slot_raises_tool_schema_error():
     _expect(ToolSchemaError, _wrap("lookup", {"query": "x", "exact": 1}))
 
 
-@pytest.mark.parametrize("token", ["NaN", "Infinity", "-Infinity"])
+@pytest.mark.parametrize(
+    "token", ["NaN", "Infinity", "-Infinity"], ids=["nan", "infinity", "negative-infinity"]
+)
 def test_non_finite_json_constant_raises_tool_call_parse_error(token):
     _expect(
         ToolCallParseError,
