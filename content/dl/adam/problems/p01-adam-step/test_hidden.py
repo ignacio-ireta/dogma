@@ -183,6 +183,16 @@ def _rejects(call, case: str) -> None:
         "boolean step count",
         "gradient shape differs from its parameter",
     ],
+    ids=[
+        "beta-equal-to-one",
+        "negative-beta",
+        "zero-eps",
+        "negative-learning-rate",
+        "moment-length-mismatch",
+        "non-integer-step",
+        "boolean-step",
+        "gradient-shape-mismatch",
+    ],
 )
 def test_invalid_arguments_and_state_raise_value_error(case):
     p = [torch.zeros(3, dtype=torch.float64)]

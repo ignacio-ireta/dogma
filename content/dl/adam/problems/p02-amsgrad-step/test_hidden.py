@@ -186,6 +186,7 @@ def test_maximum_is_taken_over_the_uncorrected_second_moment():
         "negative beta2",
         "zero eps",
     ],
+    ids=["negative-learning-rate", "beta-equal-to-one", "negative-beta", "zero-eps"],
 )
 def test_invalid_scalars_raise_value_error(case):
     p = [torch.zeros(3, dtype=torch.float64)]
@@ -225,7 +226,9 @@ def test_gradient_with_a_different_shape_is_rejected(grad_size):
     )
 
 
-@pytest.mark.parametrize("wrong", ["first", "second", "max"])
+@pytest.mark.parametrize(
+    "wrong", ["first", "second", "max"], ids=["first-moment", "second-moment", "max-moment"]
+)
 def test_state_tensor_with_a_wrong_shape_is_rejected(wrong):
     p = [torch.zeros(3, dtype=torch.float64)]
     g = [torch.ones(3, dtype=torch.float64)]
