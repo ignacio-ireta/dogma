@@ -298,3 +298,15 @@ def test_offsets_beyond_float32_precision_keep_exact_positions():
     # The tolerance is loose on purpose: one wrong position moves the angle by about one radian.
     _assert_close(q_rot, _ref_half_split(q, offset), "rotated queries", QUERY_HINT, 1e-6)
     _assert_close(k_rot, _ref_half_split(k, offset), "rotated keys", KEY_HINT, 1e-6)
+
+
+def test_empty_batch_returns_empty_tensors():
+    # B = 0 is a valid batch size: no rows to rotate, so the output keeps the input shape.
+    q = torch.zeros(0, 2, 3, 4, dtype=torch.float64)
+    q_rot, k_rot = _run(q, q, 1)
+    assert q_rot.shape == q.shape, (
+        "empty batch rule broken: a batch of zero rows must return a tensor of the same shape"
+    )
+    assert k_rot.shape == q.shape, (
+        "empty batch rule broken: a batch of zero rows must return keys of the same shape"
+    )

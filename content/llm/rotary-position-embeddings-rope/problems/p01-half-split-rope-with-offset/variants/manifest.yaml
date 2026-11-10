@@ -1,7 +1,61 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_pow_frequencies.py
+  origin: freedom
+  freedom: frequencies by torch.pow instead of exp of log, equal formula with different last digits
+- file: accept_complex_multiply.py
+  origin: freedom
+  freedom: rotation written as one complex multiplication then split into real and imaginary parts
+reject:
+- file: reject_empty_batch_refused.py
+  mistake: refuses a batch of zero rows
+  clause: '`q`, `k`: floating-point tensors of the same shape `(B, H, T, d)`, with `B >= 0`, `H >= 0`,
+    `T >= 0`, and `d` even and at least 2. `B` is the batch, `H` the heads, `T` the tokens, `d` the head
+    width. Both have the same dtype.'
+  killed_by: test_empty_batch_returns_empty_tensors
+  visible: hidden
+- file: reject_k_unshifted.py
+  mistake: keys rotated from position zero, offset ignored for k
+  clause: '`offset`: `int` (not `bool`) and at least 0. Token `t` (`0 <= t < T`) sits at absolute position
+    `p_t = offset + t`.'
+  killed_by: test_matches_complex_reference_on_seeded_tensors
+  visible: hidden
+- file: reject_frequency_divisor_half.py
+  mistake: frequency exponent divides by half width instead of width
+  clause: 'Frequencies: with `d/2` pairs, `theta_i = 10000 ** (-2 i / d)` for `i = 0, ..., d/2 - 1`.'
+  killed_by: test_matches_complex_reference_on_seeded_tensors
+  visible: hidden
+- file: reject_sine_sign_flipped_top.py
+  mistake: top half adds b sin instead of subtracting it
+  clause: 'Rotation, with `a = x[..., :d/2]` and `b = x[..., d/2:]`, and the angle $\phi_{t,i} = p_t\,\theta_i$:
+    - `out[..., :d/2] = a * cos(phi) - b * sin(phi)` - `out[..., d/2:] = a * sin(phi) + b * cos(phi)`
+    - `cos` and `sin` have shape `(T, d/2)` and broadcast over `B` and `H`.'
+  killed_by: test_matches_complex_reference_on_seeded_tensors
+  visible: hidden
+- file: reject_dtype_promoted_no_cast.py
+  mistake: cos and sin not cast back to the input dtype
+  clause: 'Returns: a tuple `(q_rot, k_rot)`, each of shape `(B, H, T, d)` and the input dtype. The function
+    never rotates a third tensor.'
+  killed_by: test_float32_inputs_return_float32_close_to_reference
+  visible: hidden
+- file: reject_bool_offset_accepted.py
+  mistake: bool accepted as offset
+  clause: 'Raises `ValueError` when: `q` or `k` is not a 4-D floating tensor; their shapes differ; their
+    dtypes differ; `d` is odd or zero; `offset` is not an `int`, is a `bool`, or is negative.'
+  killed_by: test_invalid_inputs_raise_value_error
+  visible: hidden
+- file: reject_writes_back_into_q.py
+  mistake: rotated second half written back into the input
+  clause: Must not mutate `q`, `k` or `offset`.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
+uncovered:
+- clause: 'Consequences you can check: position `p_t = 0` is the identity; each `(b, h, t)` row keeps
+    its Euclidean norm; the query-key dot product after rotation depends only on the difference of the
+    positions.'
+  reason: consequences follow from C3 and C4, any file that breaks them breaks C3 or C4 so no separate
+    wrong solution
+sweeps:
+- reject

@@ -1,7 +1,62 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_pow_frequencies.py
+  origin: freedom
+  freedom: frequencies by torch.pow instead of exp of log, equal formula with different last digits
+- file: accept_reciprocal_scale.py
+  origin: freedom
+  freedom: positions multiplied by the reciprocal of the scale instead of divided by it
+reject:
+- file: reject_empty_batch_refused.py
+  mistake: refuses a batch of zero rows
+  clause: '`q`, `k`: floating-point tensors of the same shape `(B, H, T, d)`, with `B >= 0`, `H >= 0`,
+    `T >= 0`, and `d` even and at least 2. They have the same dtype.'
+  killed_by: test_empty_batch_returns_empty_tensors
+  visible: hidden
+- file: reject_k_unshifted.py
+  mistake: keys rotated from position zero, offset ignored for k
+  clause: '`offset`: `int` (not `bool`) and at least 0.'
+  killed_by: test_matches_complex_reference_for_several_scales
+  visible: hidden
+- file: reject_int_scale_refused.py
+  mistake: integer scale refused, only floats accepted
+  clause: '`scale`: a finite real number greater than 0, given as `int` or `float` (not `bool`). `scale
+    = 1` means no interpolation.'
+  killed_by: test_scale_one_on_position_zero_is_unchanged
+  visible: public
+- file: reject_offset_added_after_scaling.py
+  mistake: offset added after dividing by the scale
+  clause: Token `t` (`0 <= t < T`) sits at the scaled position $s_t = (\mathrm{offset} + t)/\mathrm{scale}$.
+  killed_by: test_offset_is_divided_by_the_scale_together_with_the_position
+  visible: public
+- file: reject_base_scaled_with_position.py
+  mistake: base 10000 multiplied by the scale instead of scaling the positions
+  clause: 'Frequencies: $\theta_i = 10000^{-2i/d}$ for $i = 0,\dots,d/2-1$. The base is **not** changed.'
+  killed_by: test_matches_complex_reference_for_several_scales
+  visible: hidden
+- file: reject_rotates_by_minus_phi.py
+  mistake: every rotation runs backwards by minus the angle
+  clause: 'Angle $\phi_{t,i} = s_t\,\theta_i$. Rotation, with $a = x[\dots,:d/2]$ and $b = x[\dots,d/2:]$:
+    - `out[..., :d/2] = a * cos(phi) - b * sin(phi)` - `out[..., d/2:] = a * sin(phi) + b * cos(phi)`'
+  killed_by: test_scale_two_halves_the_rotation_of_the_next_token
+  visible: public
+- file: reject_list_not_tuple.py
+  mistake: returns a list instead of a tuple
+  clause: 'Returns: a tuple `(q_rot, k_rot)`, each of shape `(B, H, T, d)` and the input dtype.'
+  killed_by: test_matches_complex_reference_for_several_scales
+  visible: hidden
+uncovered:
+- clause: 'Consequences you can check: `scale = 1` gives the core problem''s output; the lowest pair (`i
+    = 0`, with `theta_0 = 1`) rotates token `t` by exactly `(offset + t) / scale` radians; each row keeps
+    its norm; query-key scores depend only on the difference of positions, which is divided by `scale`.'
+  reason: consequences follow from C4 C5 and C6, a file that breaks them breaks one of those bullets
+- clause: 'Raises `ValueError` when: `q` or `k` is not a 4-D floating tensor; their shapes or dtypes differ;
+    `d` is odd or zero; `offset` is not a non-negative `int`; `scale` is a `bool`, not a number, not finite,
+    or not greater than 0.'
+  reason: cap of eight wrong solutions per problem
+- clause: Must not mutate `q`, `k`, `offset` or `scale`.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

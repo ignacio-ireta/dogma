@@ -1,6 +1,6 @@
 # Problem metadata (CONTENT_SPEC §6.2).
 id: llm/rotary-position-embeddings-rope/p01-half-split-rope-with-offset
-version: 2                      # bump when tests, tolerances or the contract change
+version: 3                      # bump when tests, tolerances or the contract change
 title: Half-split RoPE on queries and keys with a position offset
 language: python                # python | sql
 runtime: py-torch               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch

@@ -230,3 +230,15 @@ def test_zero_feature_width_is_rejected_with_value_error():
     except Exception as exc:
         pytest.fail(f"a zero feature width raised {type(exc).__name__} instead of ValueError")
     pytest.fail("a zero feature width was accepted instead of raising ValueError")
+
+
+def test_empty_batch_returns_empty_tensors():
+    # B = 0 is a valid batch size: no rows to rotate, so the output keeps the input shape.
+    q = torch.zeros(0, 2, 3, 4, dtype=torch.float64)
+    q_rot, k_rot = _run(q, q, 1, 2.0)
+    assert q_rot.shape == q.shape, (
+        "empty batch rule broken: a batch of zero rows must return a tensor of the same shape"
+    )
+    assert k_rot.shape == q.shape, (
+        "empty batch rule broken: a batch of zero rows must return keys of the same shape"
+    )
