@@ -2,6 +2,52 @@ problem_version: 1
 accept:
 - file: accept_blind.sql
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_self_join_count.sql
+  origin: freedom
+  freedom: a self-join that counts the eligible rows ahead of each row instead of a window function
+reject:
+- file: reject_case_insensitive_kind.sql
+  mistake: accepts kind values that differ only in letter case
+  clause: First filter to eligible events.
+  killed_by: test_matches_independent_group_sort_oracle_on_seeded_records
+  visible: hidden
+- file: reject_nulls_first_timestamp.sql
+  mistake: sorts NULL timestamps first instead of last
+  clause: Within each entity order by `occurred_at DESC NULLS LAST, event_id DESC`.
+  killed_by: test_timestamp_ties_use_descending_event_id_and_preserve_null_payload
+  visible: public
+- file: reject_event_id_ascending_tie.sql
+  mistake: breaks timestamp ties by ascending event id
+  clause: Within each entity order by `occurred_at DESC NULLS LAST, event_id DESC`.
+  killed_by: test_timestamp_ties_use_descending_event_id_and_preserve_null_payload
+  visible: public
+- file: reject_dense_rank_on_timestamp.sql
+  mistake: ranks by timestamp alone so tied timestamps return extra rows
+  clause: Return positions 1 and 2, or fewer if that entity has fewer eligible events.
+  killed_by: test_timestamp_ties_use_descending_event_id_and_preserve_null_payload
+  visible: public
+- file: reject_order_by_rank_first.sql
+  mistake: final output sorted by rank before entity
+  clause: Final output order is `entity_id ASC, rank_in_entity ASC`. Positions start at 1.
+  killed_by: test_matches_independent_group_sort_oracle_on_seeded_records
+  visible: hidden
+- file: reject_entity_placeholder_row.sql
+  mistake: emits a NULL-filled row for entities with no eligible event
+  clause: Return no row for an entity with no eligible events. An empty table returns an empty result
+    with the stated column names and types.
+  killed_by: test_matches_independent_group_sort_oracle_on_seeded_records
+  visible: hidden
+- file: reject_rank_before_filter.sql
+  mistake: ranks all events before filtering to success so a failure can take a position
+  clause: First filter to eligible events.
+  killed_by: test_two_latest_successes_after_filtering
+  visible: public
+uncovered:
+- clause: Do not change the input table.
+  reason: a read-only SELECT cannot plausibly change the input table, and K0 requires a read-only query,
+    so no wrong query breaks this bullet alone
+- clause: 'Output columns, in order: `entity_id BIGINT`, `event_id BIGINT`, `occurred_at TIMESTAMP`, `payload
+    VARCHAR`, `rank_in_entity BIGINT`.'
+  reason: every test checks the column types first, so a wrong solution fails all of them
+sweeps:
+- reject
