@@ -182,3 +182,11 @@ def test_invalid_arguments_raise_value_error():
         lambda: warmup_cosine_lr(0, 1.0, 2, 10, 1.5), "min_lr above base_lr must raise ValueError"
     )
     _rejects(lambda: warmup_cosine_lr(0, 1.0, 2, 10, -0.1), "negative min_lr must raise ValueError")
+
+
+def test_infinite_base_lr_raises_value_error():
+    # Contract: base_lr must be finite and positive, so an infinite peak rate is invalid.
+    _rejects(
+        lambda: warmup_cosine_lr(1, math.inf, 2, 10, 0.0),
+        "infinite base_lr must raise ValueError",
+    )

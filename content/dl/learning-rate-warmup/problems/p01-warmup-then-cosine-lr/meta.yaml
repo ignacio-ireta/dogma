@@ -1,5 +1,5 @@
 id: dl/learning-rate-warmup/p01-warmup-then-cosine-lr
-version: 1
+version: 2
 title: Linear warmup then cosine decay
 language: python
 runtime: py-torch

@@ -1,7 +1,56 @@
-problem_version: 1
+problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_ramp_multiply_last.py
+  origin: freedom
+  freedom: ramp multiplies the step ratio by base_lr last, so the last digits can differ
+- file: accept_phase_half_first.py
+  origin: freedom
+  freedom: cosine phase written as half times one plus cosine, same value up to rounding
+reject:
+- file: reject_base_lr_infinite_accepted.py
+  mistake: base_lr infinite is accepted
+  clause: 'Raises: `ValueError` when `step` is negative or not an `int`; when `warmup_steps` is negative
+    or not an `int`; when `total_steps` is not an `int` or is not greater than `warmup_steps`; when `base_lr`
+    is not finite and positive; or when `min_lr` is not finite and within `[0, base_lr]`.'
+  killed_by: test_infinite_base_lr_raises_value_error
+  visible: hidden
+- file: reject_step_accepts_float_and_bool.py
+  mistake: step type check dropped so bool and float steps are accepted
+  clause: '`step`: `int`, `step >= 0`. Updates already taken. `bool` is not an `int` here.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_base_lr_zero_accepted.py
+  mistake: base_lr zero is accepted instead of raising
+  clause: '`base_lr`: `float`, finite, `base_lr > 0`. The peak rate, reached at `warmup_steps`.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_no_warmup_step_zero_zero.py
+  mistake: with no warmup step 0 returns zero instead of base_lr
+  clause: '`warmup_steps`: `int`, `warmup_steps >= 0`. Length of the linear ramp. `0` means no ramp.'
+  killed_by: test_full_run_matches_warmup_then_cosine_scheduler_on_seeded_settings
+  visible: hidden
+- file: reject_total_equals_warmup_accepted.py
+  mistake: total_steps equal to warmup_steps is accepted
+  clause: '`total_steps`: `int`, `total_steps > warmup_steps`. The step at which the rate reaches `min_lr`.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_min_lr_above_base_accepted.py
+  mistake: min_lr above base_lr is accepted
+  clause: '`min_lr`: `float`, finite, `0 <= min_lr <= base_lr`. The floor.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_no_floor_after_total.py
+  mistake: floor branch dropped so the cosine rises again after total_steps
+  clause: 'Returns: a Python `float`. - `step < warmup_steps`: `base_lr * step / warmup_steps`. Step 0
+    returns `0.0`. - `warmup_steps <= step < total_steps`: with `p = (step - warmup_steps) / (total_steps
+    - warmup_steps)`, `min_lr + (base_lr - min_lr) * (1 + cos(pi * p)) / 2`. At `step == warmup_steps`
+    this is exactly `base_lr`, so there is no dip and no second peak. - `step >= total_steps`: `min_lr`.'
+  killed_by: test_full_run_matches_warmup_then_cosine_scheduler_on_seeded_settings
+  visible: hidden
+uncovered:
+- clause: Must not mutate inputs.
+  reason: all inputs are immutable Python scalars, so no wrong solution can mutate them
+sweeps:
+- reject

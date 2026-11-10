@@ -2,6 +2,43 @@ problem_version: 1
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_ramp_divide.py
+  origin: freedom
+  freedom: ramp written as step over warmup to the 1.5 power, same value up to rounding
+- file: accept_scale_as_division.py
+  origin: freedom
+  freedom: model width factor applied as a division by the square root of d_model
+reject:
+- file: reject_step_accepts_bool_and_float.py
+  mistake: step type check dropped so bool steps are accepted
+  clause: '`step`: `int`, `step >= 1`. Updates are numbered from 1, as in the paper. Step 0 has no value
+    because the decay term `step ** -0.5` is undefined there. `bool` is not an `int`.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_d_model_one_refused.py
+  mistake: d_model of one is refused instead of accepted
+  clause: '`d_model`: `int`, `d_model >= 1`. The model width used for scaling.'
+  killed_by: test_peak_is_at_warmup_steps_with_value_d_to_minus_half_times_w_to_minus_half
+  visible: hidden
+- file: reject_one_step_warmup_refused.py
+  mistake: warmup of one step is refused instead of accepted
+  clause: '`warmup_steps`: `int`, `warmup_steps >= 1`. The step of the peak.'
+  killed_by: test_peak_is_at_warmup_steps_with_value_d_to_minus_half_times_w_to_minus_half
+  visible: hidden
+- file: reject_max_instead_of_min.py
+  mistake: max replaces min so the ramp and decay swap roles
+  clause: 'Returns: a Python `float`, `d_model ** -0.5 * min(step ** -0.5, step * warmup_steps ** -1.5)`.
+    The two terms are equal at `step == warmup_steps`, which is the peak.'
+  killed_by: test_first_update_is_on_the_ramp
+  visible: public
+- file: reject_zero_warmup_not_refused.py
+  mistake: warmup of zero is accepted instead of raising
+  clause: 'Raises: `ValueError` when `step < 1` or is not an `int`; when `d_model < 1` or is not an `int`;
+    when `warmup_steps < 1` or is not an `int`.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+uncovered:
+- clause: Must not mutate inputs.
+  reason: all inputs are immutable Python scalars, so no wrong solution can mutate them
+sweeps:
+- reject
