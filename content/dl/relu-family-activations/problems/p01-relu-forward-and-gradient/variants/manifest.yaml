@@ -2,6 +2,53 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_loop.py
+  origin: freedom
+  freedom: a Python loop over elements instead of vectorised NumPy
+reject:
+- file: reject_float32_roundtrip.py
+  mistake: input converted through float32 before computing
+  clause: '`x`: real numeric array-like of any shape, including a scalar or empty array. Convert to `float64`.'
+  killed_by: test_seeded_scalar_piecewise_oracle
+  visible: hidden
+- file: reject_slope_one_rejected.py
+  mistake: slope of exactly 1 wrongly rejected
+  clause: '`negative_slope`: real scalar, finite and in `[0, 1]`; default `0` is ReLU.'
+  killed_by: test_seeded_scalar_piecewise_oracle
+  visible: hidden
+- file: reject_fixed_negative_slope.py
+  mistake: negative branch uses fixed slope 0.01 not negative_slope
+  clause: For each value `v`, return `v` if `v > 0`, otherwise `negative_slope * v`.
+  killed_by: test_relu_example
+  visible: public
+- file: reject_zero_derivative_uses_slope.py
+  mistake: derivative at zero takes the negative slope
+  clause: 'Return `(values, derivatives)`: two NumPy `float64` arrays, each exactly the shape of `x`.
+    Derivative is `1` for positive values, `negative_slope` for negative values, and **0 at zero**. The
+    zero convention is fixed even when the slope is 1.'
+  killed_by: test_leaky_example
+  visible: public
+- file: reject_slope_one_zero_derivative.py
+  mistake: with slope 1 the derivative at zero is 1 not 0
+  clause: 'Return `(values, derivatives)`: two NumPy `float64` arrays, each exactly the shape of `x`.
+    Derivative is `1` for positive values, `negative_slope` for negative values, and **0 at zero**. The
+    zero convention is fixed even when the slope is 1.'
+  killed_by: test_zero_convention_including_identity_slope
+  visible: hidden
+- file: reject_inplace_input_scaled.py
+  mistake: negative entries of the caller array scaled in place
+  clause: Raise `ValueError` for nonfinite or complex `x`, or a nonfinite/out-of-range slope. Other nonnumeric
+    inputs are outside the contract. Must not mutate inputs. Returned arrays must not share storage with
+    inputs.
+  killed_by: test_seeded_scalar_piecewise_oracle
+  visible: hidden
+- file: reject_nan_slope_accepted.py
+  mistake: slope range check misses NaN
+  clause: Raise `ValueError` for nonfinite or complex `x`, or a nonfinite/out-of-range slope. Other nonnumeric
+    inputs are outside the contract. Must not mutate inputs. Returned arrays must not share storage with
+    inputs.
+  killed_by: test_invalid_nonfinite_and_slope_rules
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
