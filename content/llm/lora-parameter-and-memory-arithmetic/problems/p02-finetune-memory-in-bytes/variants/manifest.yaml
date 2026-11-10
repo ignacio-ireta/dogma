@@ -2,6 +2,47 @@ problem_version: 1
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_zero_base_refused.py
+  mistake: refuses zero base parameters
+  clause: '`base_params`: `int` (not `bool`), `>= 0`.'
+  killed_by: test_adam_term_is_fp32_whatever_the_adapter_dtype_is
+  visible: hidden
+- file: reject_base_32_bits_refused.py
+  mistake: refuses a 32-bit base
+  clause: '`base_bits`: `int` (not `bool`), one of `4`, `8`, `16`, `32`.'
+  killed_by: test_random_configurations_match_the_reference_term_by_term
+  visible: hidden
+- file: reject_zero_lora_params_refused.py
+  mistake: refuses zero adapter numbers
+  clause: '`lora_params`: `int` (not `bool`), `>= 0`.'
+  killed_by: test_four_bit_base_rounds_a_fractional_byte_up
+  visible: public
+- file: reject_adapter_16_bits_refused.py
+  mistake: refuses 16-bit adapters
+  clause: '`adapter_bits`: `int` (not `bool`), one of `16`, `32`.'
+  killed_by: test_bf16_base_with_a_thousand_adapter_numbers_totals_2012000_bytes
+  visible: public
+- file: reject_adam_one_moment_only.py
+  mistake: counts one Adam moment instead of two
+  clause: 'Returns a `dict[str, int]` with these keys, in this order: - `"base_weights"`: `ceil(base_params
+    * base_bits / 8)`. - `"adapter_weights"`: `ceil(lora_params * adapter_bits / 8)`. - `"adapter_gradients"`:
+    the same value as `"adapter_weights"`. - `"adam_states"`: `8 * lora_params`, two fp32 tensors of four
+    bytes each. - `"total"`: the exact sum of the four entries above.'
+  killed_by: test_bf16_base_with_a_thousand_adapter_numbers_totals_2012000_bytes
+  visible: public
+- file: reject_float_adapter_bits_accepted.py
+  mistake: accepts a float adapter_bits such as 16.0
+  clause: 'Raises `ValueError` when: an argument is not an `int`, is a `bool`, or is out of its allowed
+    range or set.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: hidden
+- file: reject_float_division_ceil.py
+  mistake: rounds up with float division and loses exactness for huge counts
+  clause: Integers are exact. Do not use floats, and do not round by division. Use integer arithmetic
+    for `ceil`.
+  killed_by: test_large_counts_do_not_lose_precision
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

@@ -1,7 +1,59 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_bool_d_model_accepted.py
+  mistake: accepts bool True as d_model
+  clause: '`d_model`: `int` (not `bool`), `>= 1`.'
+  killed_by: test_true_as_d_model_is_refused_not_counted_as_one
+  visible: hidden
+- file: reject_zero_layers_accepted.py
+  mistake: accepts zero layers and returns zero
+  clause: '`n_layers`: `int` (not `bool`), `>= 1`. Number of transformer blocks, each with the same targets.'
+  killed_by: test_invalid_configuration_raises_value_error
+  visible: hidden
+- file: reject_d_ff_checked_without_mlp.py
+  mistake: checks d_ff even when no MLP target is present
+  clause: '`d_ff`: `int` (not `bool`), `>= 1`, or `None`. Required when `targets` contains `gate`, `up`
+    or `down`. When no MLP target is present, `d_ff` is not read or checked: it may be `None` or any value,
+    including an invalid one.'
+  killed_by: test_unused_d_ff_is_not_checked_when_no_mlp_target_is_counted
+  visible: hidden
+- file: reject_rank_one_refused.py
+  mistake: refuses rank of one
+  clause: '`rank`: `int` (not `bool`), `>= 1`.'
+  killed_by: test_all_seven_targets_match_the_hand_computed_budget
+  visible: public
+- file: reject_targets_tuple_refused.py
+  mistake: refuses a tuple for targets
+  clause: '`targets`: a `list` or `tuple` of one or more distinct names from `q`, `k`, `v`, `o`, `gate`,
+    `up`, `down`. Order does not matter.'
+  killed_by: test_two_attention_targets_across_two_layers_give_128_trainable_parameters
+  visible: public
+- file: reject_base_params_unchecked.py
+  mistake: does not validate base_params
+  clause: '`base_params`: `int` (not `bool`), `>= 1`. The total parameter count of the frozen base model,
+    which the caller supplies.'
+  killed_by: test_invalid_configuration_raises_value_error
+  visible: hidden
+- file: reject_fraction_ignores_layers.py
+  mistake: fraction divides by the count without the layer factor
+  clause: 'Returns a tuple `(trainable, fraction)`: - `trainable`: `int`, exact. `n_layers` times the
+    sum of `rank * (d_in + d_out)` over the targets. - `fraction`: `float`, `trainable / base_params`.'
+  killed_by: test_two_attention_targets_across_two_layers_give_128_trainable_parameters
+  visible: public
+- file: reject_duplicate_targets_allowed.py
+  mistake: allows a repeated target name
+  clause: 'Raises `ValueError` when: any integer argument is not an `int`, is a `bool`, or is out of range;
+    `targets` is empty, is not a list or tuple, has a name outside the list above, or repeats a name;
+    an MLP target is given and `d_ff` is `None`.'
+  killed_by: test_invalid_configuration_raises_value_error
+  visible: hidden
+uncovered:
+- clause: Integers are exact Python integers. Only `fraction` is a float.
+  reason: cap of eight wrong solutions per problem
+- clause: Must not mutate `targets`.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

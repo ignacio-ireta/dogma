@@ -1,5 +1,5 @@
 id: llm/lora-parameter-and-memory-arithmetic/p01-lora-trainable-parameter-budget
-version: 2                       # bump when tests, tolerances or the contract change
+version: 3                       # bump when tests, tolerances or the contract change
 title: LoRA trainable parameter budget
 language: python                 # python | sql
 runtime: py-stdlib               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch

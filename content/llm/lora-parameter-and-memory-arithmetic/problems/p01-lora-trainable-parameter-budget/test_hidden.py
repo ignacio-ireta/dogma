@@ -196,3 +196,19 @@ def test_d_ff_may_be_none_when_no_mlp_target_is_counted():
 def test_unused_d_ff_is_not_checked_when_no_mlp_target_is_counted():
     trainable, _ = _call(n_layers=1, d_model=4, d_ff=0, rank=1, targets=("q",), base_params=1)
     assert trainable == 8, "d_ff must be ignored, not validated, when no MLP target is counted"
+
+
+def test_true_as_d_model_is_refused_not_counted_as_one():
+    # The Contract says d_model is an int and not a bool. True equals 1, so accepting it
+    # would return a budget for a one-wide model. The call must raise instead.
+    _expect_value_error(
+        {
+            "n_layers": 1,
+            "d_model": True,
+            "d_ff": None,
+            "rank": 1,
+            "targets": ("q",),
+            "base_params": 1,
+        },
+        "a bool d_model was accepted instead of raising ValueError",
+    )
