@@ -2,6 +2,50 @@ problem_version: 1
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_empty_list_crashes.py
+  mistake: indexes the first entry so an empty list raises IndexError
+  clause: '`nums`: a `list` of Python `int`, possibly empty. Negative, zero and positive values are all
+    allowed. Values are exact: nothing is rounded.'
+  killed_by: test_empty_list_has_no_subarrays
+  visible: public
+- file: reject_negative_k_returns_zero.py
+  mistake: returns zero for every negative target
+  clause: '`k`: a Python `int`, possibly negative or zero.'
+  killed_by: test_examples_from_problem_md
+  visible: public
+- file: reject_missing_empty_prefix_seed.py
+  mistake: drops the empty prefix seed so subarrays starting at position zero are missed
+  clause: 'Returns: a Python `int`, not a float and not a NumPy integer. It is the number of index pairs
+    `(i, j)` with `0 <= i < j <= len(nums)` such that `sum(nums[i:j]) == k`. Two subarrays are different
+    when they cover different positions, even if their values match.'
+  killed_by: test_examples_from_problem_md
+  visible: public
+- file: reject_any_match_not_count.py
+  mistake: counts each end position once when any match exists instead of counting every match
+  clause: 'Returns: a Python `int`, not a float and not a NumPy integer. It is the number of index pairs
+    `(i, j)` with `0 <= i < j <= len(nums)` such that `sum(nums[i:j]) == k`. Two subarrays are different
+    when they cover different positions, even if their values match.'
+  killed_by: test_examples_from_problem_md
+  visible: public
+- file: reject_bool_entries_accepted.py
+  mistake: accepts bool entries through isinstance
+  clause: Raises `TypeError` when `k` or any entry of `nums` is not a Python `int`. A `bool`, a `float`,
+    a string, `None` and a NumPy integer are all rejected.
+  killed_by: test_non_int_input_raises_type_error
+  visible: hidden
+- file: reject_quadratic_scan.py
+  mistake: quadratic scan over every start and end position
+  clause: 'Complexity: O(n) time and O(n) extra space, for `n = len(nums)`. The hidden tests include a
+    list of 200,000 entries. Checking every pair of positions does about 2 x 10^10 steps there, and it
+    will not finish in time.'
+  killed_by: test_large_list_finishes_within_the_time_limit
+  visible: hidden
+- file: reject_prefix_overwrites_input.py
+  mistake: overwrites the input list with its prefix sums in place
+  clause: Must not mutate `nums`.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

@@ -2,6 +2,52 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_rejects_negative_cells.py
+  mistake: rejects negative grid entries
+  clause: '`grid`: a list of equal-length lists containing Python `int` values. Booleans, floats and NumPy
+    integers are excluded. Negative and arbitrarily large integers are allowed.'
+  killed_by: test_negative_values_and_repeated_queries
+  visible: public
+- file: reject_rejects_list_queries.py
+  mistake: rejects list query records and accepts only tuples
+  clause: '`queries`: a list of tuples or lists, each holding four Python integers `(top, left, bottom,
+    right)`. Booleans are excluded.'
+  killed_by: test_query_order_and_duplicate_queries_are_preserved
+  visible: hidden
+- file: reject_single_row_query_rejected.py
+  mistake: rejects queries whose top and bottom are equal
+  clause: 'Coordinates are zero-based and **inclusive**: `0 <= top <= bottom < rows` and `0 <= left <=
+    right < columns`.'
+  killed_by: test_inclusive_rectangles_match_the_worked_table
+  visible: public
+- file: reject_drops_repeated_answers.py
+  mistake: drops answers whose value repeats an earlier answer
+  clause: Returns a list of Python integers in query order. Duplicate queries stay duplicated.
+  killed_by: test_negative_values_and_repeated_queries
+  visible: public
+- file: reject_empty_grid_raises.py
+  mistake: raises on every empty grid even when no queries are given
+  clause: Empty grids, including zero-width rows, accept only an empty query collection and return `[]`.
+  killed_by: test_empty_query_collection_and_reversed_bounds
+  visible: public
+- file: reject_entry_error_is_value_error.py
+  mistake: raises ValueError instead of TypeError for bad grid entries
+  clause: Raise `TypeError` for invalid container or element types. Raise `ValueError` for ragged rows,
+    a query whose length is not four, or invalid bounds.
+  killed_by: test_invalid_shapes_types_and_bounds_are_rejected
+  visible: hidden
+- file: reject_appends_to_queries.py
+  mistake: appends a query to the caller's list
+  clause: Must not mutate either input.
+  killed_by: test_grid_and_query_records_are_not_mutated
+  visible: hidden
+- file: reject_recomputes_each_rectangle.py
+  mistake: recomputes each rectangle cell by cell instead of using the prefix table
+  clause: Use `O(rows * columns + len(queries))` arithmetic operations and `O(rows * columns)` auxiliary
+    storage, excluding the output.
+  killed_by: test_large_batch_reuses_one_prefix_table
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
