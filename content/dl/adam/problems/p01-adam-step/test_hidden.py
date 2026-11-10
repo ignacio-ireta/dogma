@@ -314,3 +314,29 @@ def test_zero_beta1_is_valid_and_gives_the_gradient_as_first_moment():
         rtol=0,
         msg="beta1 = 0 must be accepted: the stored first moment must equal the gradient",
     )
+
+
+def test_state_with_no_updates_taken_yet_is_accepted():
+    # A state with zero moments and no updates taken yet is valid, and gives the first step.
+    # g = 2, t_new = 1: m = 0.1 * 2 = 0.2, m_hat = 0.2 / 0.1 = 2, v = 0.001 * 4,
+    # v_hat = 4, step = lr * 2 / 2 = lr = 0.1, so the parameter moves from 1.0 to 0.9.
+    zero = torch.zeros(1, dtype=torch.float64)
+    try:
+        params, _ = adam_step(
+            [torch.tensor([1.0], dtype=torch.float64)],
+            [torch.tensor([2.0], dtype=torch.float64)],
+            ([zero.clone()], [zero.clone()], 0),
+            lr=0.1,
+        )
+    except ValueError:
+        pytest.fail(
+            "a state with no updates taken yet is valid and must be accepted",
+            pytrace=False,
+        )
+    torch.testing.assert_close(
+        params[0],
+        torch.tensor([0.9], dtype=torch.float64),
+        atol=1e-7,
+        rtol=0,
+        msg="a state with no updates taken yet must give the same first step as no state",
+    )

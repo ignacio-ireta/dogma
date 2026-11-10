@@ -1,4 +1,4 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
@@ -46,6 +46,11 @@ reject:
   clause: Must not mutate inputs.
   killed_by: test_inputs_are_not_mutated
   visible: hidden
+- file: reject_negative_beta1_accepted.py
+  mistake: a negative beta1 is accepted instead of rejected
+  clause: '`lr` is finite and `>= 0`. `beta1`, `beta2` are in `[0, 1)`. `eps` is finite and `> 0`.'
+  killed_by: test_negative_beta1_is_rejected
+  visible: hidden
 uncovered:
 - clause: '`params`, `grads`: lists of floating-point tensors of equal length. `grads[i]` has the same
     shape and dtype as `params[i]`.'
@@ -53,3 +58,4 @@ uncovered:
     in problem.md forbids them
 sweeps:
 - reject
+- mutants

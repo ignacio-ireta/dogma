@@ -290,3 +290,12 @@ def test_beta2_of_one_is_rejected():
         lambda: amsgrad_step(p, g, None, lr=LR, beta2=1.0),
         "beta2 must lie in [0, 1): a value of one must raise ValueError",
     )
+
+
+def test_negative_beta1_is_rejected():
+    p = [torch.zeros(3, dtype=torch.float64)]
+    g = [torch.zeros(3, dtype=torch.float64)]
+    _rejects_value_error(
+        lambda: amsgrad_step(p, g, None, lr=LR, beta1=-0.5),
+        "beta1 must lie in [0, 1): a value below the range must raise ValueError",
+    )

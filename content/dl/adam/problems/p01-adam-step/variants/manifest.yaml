@@ -44,6 +44,13 @@ reject:
   clause: '`lr`: finite and `>= 0`. `beta1`, `beta2`: in `[0, 1)`. `eps`: finite and `> 0`.'
   killed_by: test_zero_beta1_is_valid_and_gives_the_gradient_as_first_moment
   visible: hidden
+- file: reject_zero_count_state.py
+  mistake: a state with no updates taken yet is rejected
+  clause: '`state`: `None`, or the tuple `(m, v, t)`. `m` and `v` are lists with one tensor per parameter,
+    each the shape of its parameter. `t` is a non-negative `int` (not `bool`): the number of updates already
+    taken.'
+  killed_by: test_state_with_no_updates_taken_yet_is_accepted
+  visible: hidden
 uncovered:
 - clause: '`params`, `grads`: lists of floating-point tensors of equal length. `grads[i]` has the same
     shape and dtype as `params[i]`.'
@@ -51,3 +58,4 @@ uncovered:
     survived with no sentence that forbids them
 sweeps:
 - reject
+- mutants

@@ -1,5 +1,5 @@
 id: dl/adam/p02-amsgrad-step
-version: 3
+version: 4
 title: "AMSGrad: Adam with a running maximum of the second moment"
 language: python
 runtime: py-torch
