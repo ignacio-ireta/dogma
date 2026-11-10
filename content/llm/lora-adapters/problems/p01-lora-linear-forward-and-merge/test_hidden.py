@@ -368,3 +368,13 @@ def test_integer_tensors_without_a_floating_dtype_raise_value_error(merge):
         lambda: _learner(x, W, None, A, B, 1.0, merge=merge),
         "tensors with no floating dtype must raise ValueError: x, W, A and B must be floating",
     )
+
+
+def test_bias_with_a_different_floating_dtype_raises_value_error():
+    # The Contract says x, W, A, B and b must share one floating dtype. Only the bias is float32.
+    x, W, b, A, B = _case(151, 4, 3, 2)
+    b32 = b.float()
+    _expect_value_error(
+        lambda: _learner(x, W, b32, A, B, 1.0),
+        "a bias of another floating dtype must raise ValueError: one dtype for all tensors",
+    )

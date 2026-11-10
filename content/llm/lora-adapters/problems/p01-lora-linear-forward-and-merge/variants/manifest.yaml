@@ -1,7 +1,66 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_scale_folded_into_a.py
+  origin: freedom
+  freedom: folds the alpha over r scale into A before the product, a rounding-level reordering
+reject:
+- file: reject_bias_dtype_not_checked.py
+  mistake: bias dtype is not checked against x, so a float32 bias is silently promoted
+  clause: '`x`, `W`, `A`, `B` and `b` (when given) must share one floating dtype.'
+  killed_by: test_bias_with_a_different_floating_dtype_raises_value_error
+  visible: hidden
+- file: reject_three_d_input_reshape.py
+  mistake: reshapes inputs with more than two dimensions to two dimensions, so 3-D batches fail
+  clause: '`x`: floating tensor, shape `(..., d_in)` with at least one dimension. Leading dimensions are
+    free.'
+  killed_by: test_unmerged_output_matches_the_library_reference_on_3d_inputs
+  visible: hidden
+- file: reject_unmerged_skips_transpose_of_w.py
+  mistake: unmerged path multiplies by W instead of W transposed
+  clause: '`W`: floating tensor, shape `(d_out, d_in)`, PyTorch `nn.Linear` layout (a projection is `x
+    @ W.T`).'
+  killed_by: test_unmerged_output_matches_the_library_reference_on_3d_inputs
+  visible: hidden
+- file: reject_bias_scaled_by_alpha.py
+  mistake: bias is multiplied by alpha over r
+  clause: '`b`: floating tensor of shape `(d_out,)`, or `None` for no bias.'
+  killed_by: test_unmerged_output_matches_the_library_reference_on_3d_inputs
+  visible: hidden
+- file: reject_squeezed_rank_one_adapter.py
+  mistake: squeezes A, which breaks the rank one adapter
+  clause: '`A`: floating tensor, shape `(r, d_in)`, with `r >= 1`.'
+  killed_by: test_unmerged_output_matches_the_library_reference_on_3d_inputs
+  visible: hidden
+- file: reject_b_not_transposed.py
+  mistake: uses B without transposing it in the unmerged path
+  clause: '`B`: floating tensor, shape `(d_out, r)`.'
+  killed_by: test_worked_example_adds_scaled_low_rank_update_to_base_output
+  visible: public
+- file: reject_floor_division_scale.py
+  mistake: scale uses floor division instead of true division
+  clause: '`alpha`: a finite real number (`int` or `float`, not `bool`). The scale is `alpha / r`, with
+    `r` taken from `A.shape[0]`.'
+  killed_by: test_unmerged_output_matches_the_library_reference_on_3d_inputs
+  visible: hidden
+- file: reject_merge_without_scale.py
+  mistake: merged weight leaves out the alpha over r scale
+  clause: '`merge`: `bool`. `False` uses the two thin products. `True` builds `W''` first.'
+  killed_by: test_merged_path_gives_the_same_output_as_the_unmerged_path
+  visible: public
+uncovered:
+- clause: 'Returns: a tensor of shape `(..., d_out)` with the dtype of `x`.'
+  reason: cap of eight wrong solutions per problem
+- clause: 'Raises `ValueError` when: `x` has no dimension; `W` is not 2-D; `W.shape[1] != x.shape[-1]`;
+    `A` is not 2-D or `A.shape[1] != d_in`; `A` has zero rows; `B` is not 2-D or `B.shape != (d_out, r)`;
+    `b` is not `None` and its shape is not `(d_out,)`; `alpha` is not a finite real number; the tensors
+    do not share one floating dtype.'
+  reason: cap of eight wrong solutions per problem
+- clause: Must not mutate any input. In particular, `merge=True` builds a new `W'`; it never writes into
+    `W`.
+  reason: cap of eight wrong solutions per problem
+- clause: Must keep the autograd graph of `A` and `B`. Do not call `.detach()` or `.data` on them.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject
