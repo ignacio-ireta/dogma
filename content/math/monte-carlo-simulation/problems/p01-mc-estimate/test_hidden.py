@@ -298,3 +298,17 @@ def test_default_confidence_gives_a_95_percent_interval():
         rtol=1e-9,
         err_msg="when confidence is not given, the interval must be the 95% one: check the default",
     )
+
+
+def test_seed_is_used_only_to_build_the_generator_and_leaves_numpy_global_state_alone():
+    # Contract: "seed ... is used only to build rng". The global NumPy generator must not be
+    # reseeded or advanced by the call, so its next draw is the same as with no call at all.
+    np.random.seed(12345)
+    expected_next_draw = np.random.random()
+    np.random.seed(12345)
+    _mc(_identity, _uniform_draws, 50, seed=7)
+    actual_next_draw = np.random.random()
+    assert actual_next_draw == expected_next_draw, (
+        "seed is used only to build rng: the global NumPy generator was reseeded or advanced "
+        "by the call"
+    )

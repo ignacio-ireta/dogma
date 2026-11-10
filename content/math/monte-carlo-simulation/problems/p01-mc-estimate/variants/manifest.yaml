@@ -1,7 +1,57 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_numpy_std_ddof.py
+  origin: freedom
+  freedom: variance computed by numpy var with ddof 1 instead of the explicit sum of squares
+reject:
+- file: reject_global_seed_side_effect.py
+  mistake: seed reseeds the global NumPy generator, not only the rng
+  clause: '`seed`: an int, keyword-only. It is used only to build `rng`.'
+  killed_by: test_seed_is_used_only_to_build_the_generator_and_leaves_numpy_global_state_alone
+  visible: hidden
+- file: reject_f_per_element.py
+  mistake: f is called once per element in a loop instead of once on the whole array
+  clause: '`f`: a vectorised function. It is applied **once** to the whole sample array `x`, of shape
+    `(n,)`, and returns values of shape `(n,)`.'
+  killed_by: test_f_is_applied_once_to_the_whole_sample_array
+  visible: hidden
+- file: reject_sample_called_twice.py
+  mistake: sample is called twice with a pilot draw first, so the draws shift
+  clause: '`sample`: `sample(rng, n)` returns an array of `n` draws of X. It is called **once**, with
+    the same `n`, and with `rng = np.random.default_rng(seed)`, created once before the call.'
+  killed_by: test_matches_independent_recomputation_on_random_problems
+  visible: hidden
+- file: reject_rejects_n_equal_two.py
+  mistake: rejects the valid size n equal to 2 with a narrower check
+  clause: '`n`: an int, `n >= 2`.'
+  killed_by: test_matches_independent_recomputation_on_random_problems
+  visible: hidden
+- file: reject_default_confidence_changed.py
+  mistake: default confidence changed from 0.95 to 0.90
+  clause: '`confidence`: a float strictly between 0 and 1, keyword-only, default `0.95`.'
+  killed_by: test_default_confidence_gives_a_95_percent_interval
+  visible: hidden
+- file: reject_hardcoded_z_for_95.py
+  mistake: z hardcoded to 1.96, right only at confidence 0.95
+  clause: 'Returns: a tuple `(estimate, standard_error, (lo, hi))` of Python floats, where - `estimate`
+    is the mean of `y = f(x)`; - `standard_error` is `s / sqrt(n)`, where `s` is the sample standard deviation
+    of `y` with divisor `n - 1`; - `(lo, hi)` is `(estimate - z * standard_error, estimate + z * standard_error)`,
+    with `z = Phi^-1((1 + confidence) / 2)` the standard normal quantile. For `confidence=0.95`, `z` is
+    about 1.959964.'
+  killed_by: test_constant_sample_gives_the_hand_computed_estimate_and_interval
+  visible: public
+- file: reject_accepts_confidence_endpoints.py
+  mistake: accepts confidence 0 and 1 instead of raising ValueError
+  clause: Raises `ValueError` when `n < 2`, or when `confidence` is not strictly between 0 and 1.
+  killed_by: test_confidence_outside_the_open_unit_interval_raises_value_error
+  visible: hidden
+- file: reject_clip_sample_in_place.py
+  mistake: clips the sample array in place, changing the caller values outside zero to one
+  clause: Must not modify the arrays that `sample` returns.
+  killed_by: test_constant_sample_gives_the_hand_computed_estimate_and_interval
+  visible: public
 uncovered: []
-sweeps: []
+sweeps:
+- reject

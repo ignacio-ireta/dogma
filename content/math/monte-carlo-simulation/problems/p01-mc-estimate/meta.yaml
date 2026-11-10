@@ -1,5 +1,5 @@
 id: math/monte-carlo-simulation/p01-mc-estimate
-version: 4                     # bump when tests, tolerances or the contract change
+version: 5                     # bump when tests, tolerances or the contract change
 title: Monte Carlo estimate with a confidence interval
 language: python
 runtime: py-numpy
