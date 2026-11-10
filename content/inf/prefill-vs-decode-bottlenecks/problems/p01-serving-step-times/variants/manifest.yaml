@@ -1,4 +1,4 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
@@ -40,6 +40,12 @@ reject:
     all `float`. Times are in seconds. No rounding.
   killed_by: test_batch_one_decode_step_reads_the_weights_once
   visible: public
+- file: reject_config_gets_a_scratch_key.py
+  mistake: writes a scratch key into the caller config dict
+  clause: '`config`: `dict` with the Python `int` keys `num_layers`, `num_kv_heads` and `head_dim`, each
+    at least 1. Other keys, including `sliding_window`, are ignored. Must not be mutated.'
+  killed_by: test_fresh_config_gains_no_key_after_a_call
+  visible: hidden
 uncovered:
 - clause: '`config`: `dict` with the Python `int` keys `num_layers`, `num_kv_heads` and `head_dim`, each
     at least 1. Other keys, including `sliding_window`, are ignored. Must not be mutated.'

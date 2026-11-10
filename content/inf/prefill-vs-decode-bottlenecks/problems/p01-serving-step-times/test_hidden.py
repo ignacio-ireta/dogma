@@ -347,3 +347,12 @@ def test_zero_head_dim_raises_value_error() -> None:
         lambda: serving_step_times(7 * 10**9, cfg, 4, 4, 1, 2, peak_flops=PEAK, bandwidth=BW),
         "a head_dim of zero is out of range and must raise ValueError",
     )
+
+
+def test_fresh_config_gains_no_key_after_a_call() -> None:
+    # The config must not be mutated: a call may only read its keys.
+    cfg = {"num_layers": 4, "num_kv_heads": 2, "head_dim": 8}
+    serving_step_times(10**9, cfg, 16, 16, 2, 2, peak_flops=PEAK, bandwidth=BW)
+    keys_after = sorted(cfg)
+    if keys_after != ["head_dim", "num_kv_heads", "num_layers"]:
+        pytest.fail("the config must not be mutated: read its keys without writing to the input")

@@ -1,5 +1,5 @@
 id: inf/prefill-vs-decode-bottlenecks/p01-serving-step-times
-version: 3                      # bump when tests, tolerances or the contract change
+version: 4                      # bump when tests, tolerances or the contract change
 title: Prefill and decode step times from first-order traffic and FLOPs
 language: python
 runtime: py-stdlib
