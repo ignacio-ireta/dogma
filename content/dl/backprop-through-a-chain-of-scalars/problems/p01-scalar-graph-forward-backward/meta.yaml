@@ -1,5 +1,5 @@
 id: dl/backprop-through-a-chain-of-scalars/p01-scalar-graph-forward-backward
-version: 3
+version: 4
 title: Forward and backward through a scalar graph
 language: python
 runtime: py-stdlib

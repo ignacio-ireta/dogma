@@ -218,3 +218,17 @@ def test_random_inputs_match_closed_form(x, w, b, t):
     _, want = _closed_form(x, w, b, t)
     for key in KEYS:
         assert _close(grads[key], want[key]), KEY_MESSAGE[key]
+
+
+def test_nonzero_integer_bias_gives_the_same_result_as_float_bias():
+    # An int bias of 1 must act as 1.0 in z = p + b. Dropping a non-zero int bias changes z.
+    as_int = _checked(_run(1.0, 0.5, 1, 0.0))
+    as_float = _checked(_run(1.0, 0.5, 1.0, 0.0))
+    assert _close(as_int[0], as_float[0]), (
+        "the loss with an integer bias must equal the loss with the same bias as a float"
+    )
+    for key in KEYS:
+        assert _close(as_int[1][key], as_float[1][key]), (
+            "gradients with an integer bias must equal those with the float bias: "
+            "convert every input before arithmetic"
+        )

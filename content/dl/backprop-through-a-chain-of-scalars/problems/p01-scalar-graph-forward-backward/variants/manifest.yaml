@@ -1,7 +1,52 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_drop_int_bias.py
+  mistake: int bias is dropped to zero
+  clause: '`x`, `w`, `b`, `t`: real numbers, `int` or `float`. Each must be finite.'
+  killed_by: test_nonzero_integer_bias_gives_the_same_result_as_float_bias
+  visible: hidden
+- file: reject_sech_not_sech_squared.py
+  mistake: tanh derivative uses sech instead of sech squared
+  clause: 'Returns: a tuple `(loss, grads)`. `loss` is a `float` equal to `L`. `grads` is a `dict` with
+    exactly the keys `"x"`, `"w"`, `"b"` and `"t"`, each a `float` equal to the partial derivative of
+    `L` with respect to that input.'
+  killed_by: test_worked_example_matches_stated_loss_and_gradients
+  visible: public
+- file: reject_nan_check_only.py
+  mistake: infinite inputs are accepted, only NaN is rejected
+  clause: Raises `ValueError` when any input is NaN or infinite.
+  killed_by: test_infinite_input_raises_value_error
+  visible: hidden
+- file: reject_state_carries_over.py
+  mistake: previous call target is used as t
+  clause: 'Must not mutate inputs. Each call is independent: no state may carry over from one call to
+    the next.'
+  killed_by: test_loss_matches_the_stated_graph_on_seeded_random_inputs
+  visible: hidden
+- file: reject_numerical_dx.py
+  mistake: dL/dx is a central difference, not analytic
+  clause: Plain Python floats only. Return analytic graph derivatives evaluated in floating point, rather
+    than numerical derivative estimates. Finite inputs whose graph intermediates or returned values overflow
+    are outside the supported representable-arithmetic scope.
+  killed_by: test_worked_example_matches_stated_loss_and_gradients
+  visible: public
+- file: reject_drop_exp_path.py
+  mistake: h keeps only its path through q, the path through e is dropped
+  clause: 'Returns: a tuple `(loss, grads)`. `loss` is a `float` equal to `L`. `grads` is a `dict` with
+    exactly the keys `"x"`, `"w"`, `"b"` and `"t"`, each a `float` equal to the partial derivative of
+    `L` with respect to that input.'
+  killed_by: test_worked_example_matches_stated_loss_and_gradients
+  visible: public
+- file: reject_extra_grad_key.py
+  mistake: grads has an extra key holding the loss
+  clause: 'Returns: a tuple `(loss, grads)`. `loss` is a `float` equal to `L`. `grads` is a `dict` with
+    exactly the keys `"x"`, `"w"`, `"b"` and `"t"`, each a `float` equal to the partial derivative of
+    `L` with respect to that input.'
+  killed_by: test_zero_inputs_give_gradients_only_through_bias_and_target
+  visible: public
 uncovered: []
-sweeps: []
+sweeps:
+- reject
