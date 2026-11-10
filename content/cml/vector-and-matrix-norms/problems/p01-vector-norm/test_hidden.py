@@ -78,7 +78,7 @@ def test_single_entry_norm_is_its_absolute_value():
         )
 
 
-@settings(max_examples=80, deadline=None)
+@settings(max_examples=80, deadline=None, report_multiple_bugs=False)
 @given(VECTORS, EXPONENTS, st.floats(min_value=-100.0, max_value=100.0, allow_nan=False))
 def test_norm_is_homogeneous_in_its_scalar(x, p, alpha):
     lhs = vector_norm(alpha * x, p)
@@ -88,7 +88,7 @@ def test_norm_is_homogeneous_in_its_scalar(x, p, alpha):
     )
 
 
-@settings(max_examples=80, deadline=None)
+@settings(max_examples=80, deadline=None, report_multiple_bugs=False)
 @given(same_length_pairs(), EXPONENTS)
 def test_triangle_inequality_holds(pair, p):
     x, y = pair
@@ -99,7 +99,7 @@ def test_triangle_inequality_holds(pair, p):
     )
 
 
-@settings(max_examples=80, deadline=None)
+@settings(max_examples=80, deadline=None, report_multiple_bugs=False)
 @given(
     VECTORS,
     st.sampled_from([1.0, 1.5, 2.0, 3.0, math.inf]),
@@ -143,7 +143,9 @@ def test_tiny_entries_do_not_underflow_to_zero():
     ), "tiny equal entries underflow when raised to a power; scale by the max before powering"
 
 
-@pytest.mark.parametrize("bad_p", [0.5, 0.0, -1.0, float("nan")])
+@pytest.mark.parametrize(
+    "bad_p", [0.5, 0.0, -1.0, float("nan")], ids=["fraction-below-one", "zero", "negative", "nan"]
+)
 def test_exponent_below_one_or_nan_raises_value_error(bad_p):
     _raised_value_error(
         lambda: vector_norm([1.0, 2.0], bad_p),
