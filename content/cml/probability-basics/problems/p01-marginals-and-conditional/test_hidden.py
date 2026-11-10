@@ -79,7 +79,9 @@ def _pandas_reference(joint):
 
 
 @pytest.mark.parametrize(
-    ("m", "k", "seed"), [(2, 3, 1), (3, 2, 2), (1, 4, 3), (4, 1, 4), (3, 3, 5), (4, 4, 6)]
+    ("m", "k", "seed"),
+    [(2, 3, 1), (3, 2, 2), (1, 4, 3), (4, 1, 4), (3, 3, 5), (4, 4, 6)],
+    ids=list("abcdef"),
 )
 def test_matches_pandas_marginals_and_crosstab_on_random_tables(m, k, seed):
     joint = _random_table(seed, m, k)
@@ -101,7 +103,7 @@ def test_matches_pandas_marginals_and_crosstab_on_random_tables(m, k, seed):
     )
 
 
-@settings(max_examples=80, deadline=None)
+@settings(max_examples=80, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, SHAPES)
 def test_each_defined_conditional_row_sums_to_one(seed, shape):
     joint = _random_table(seed, *shape)
@@ -119,7 +121,7 @@ def test_each_defined_conditional_row_sums_to_one(seed, shape):
     assert problem is None, problem
 
 
-@settings(max_examples=80, deadline=None)
+@settings(max_examples=80, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, SHAPES)
 def test_each_marginal_sums_to_one(seed, shape):
     joint = _random_table(seed, *shape)
@@ -133,7 +135,7 @@ def test_each_marginal_sums_to_one(seed, shape):
     assert problem is None, problem
 
 
-@settings(max_examples=80, deadline=None)
+@settings(max_examples=80, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, SHAPES)
 def test_marginal_times_conditional_rebuilds_the_joint(seed, shape):
     joint = _random_table(seed, *shape)
@@ -151,7 +153,7 @@ def test_marginal_times_conditional_rebuilds_the_joint(seed, shape):
     assert problem is None, problem
 
 
-@pytest.mark.parametrize(("m", "k", "seed"), [(2, 3, 11), (3, 2, 12), (4, 4, 13)])
+@pytest.mark.parametrize(("m", "k", "seed"), [(2, 3, 11), (3, 2, 12), (4, 4, 13)], ids=list("abc"))
 def test_independent_table_has_conditional_equal_to_marginal(m, k, seed):
     rng = np.random.default_rng(seed)
     px = rng.random(m)
