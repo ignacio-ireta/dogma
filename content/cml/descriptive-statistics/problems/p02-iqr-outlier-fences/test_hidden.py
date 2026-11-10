@@ -23,8 +23,8 @@ def _expect_value_error(call, mistake):
     pytest.fail(mistake)
 
 
-@pytest.mark.parametrize("n", [1, 2, 3, 4, 5, 10, 50, 201])
-@pytest.mark.parametrize("k", [0.0, 1.5, 3.0])
+@pytest.mark.parametrize("n", [1, 2, 3, 4, 5, 10, 50, 201], ids=list("abcdefgh"))
+@pytest.mark.parametrize("k", [0.0, 1.5, 3.0], ids=["zero-k", "fractional-k", "large-k"])
 def test_matches_numpy_linear_quantiles(n, k):
     values = np.random.default_rng(n).normal(loc=2.0, scale=3.0, size=n)
     lower, upper = iqr_fences(values, k=k)
@@ -38,7 +38,7 @@ def test_matches_numpy_linear_quantiles(n, k):
     )
 
 
-@settings(max_examples=100, deadline=None)
+@settings(max_examples=100, deadline=None, report_multiple_bugs=False)
 @given(
     st.lists(st.floats(-1e6, 1e6, allow_nan=False, allow_infinity=False), min_size=1, max_size=30),
     st.floats(0.0, 4.0),
@@ -71,11 +71,15 @@ def test_extreme_maximum_leaves_the_fences_unchanged():
 
 
 def test_single_value_has_zero_width_fences():
-    assert iqr_fences([4.5]) == pytest.approx((4.5, 4.5), abs=1e-12)
+    assert iqr_fences([4.5]) == pytest.approx((4.5, 4.5), abs=1e-12), (
+        "a single value must give zero-width fences at that value"
+    )
 
 
 def test_constant_data_has_zero_width_fences():
-    assert iqr_fences([7.0] * 6) == pytest.approx((7.0, 7.0), abs=1e-12)
+    assert iqr_fences([7.0] * 6) == pytest.approx((7.0, 7.0), abs=1e-12), (
+        "constant data must give zero-width fences at the constant"
+    )
 
 
 def test_duplicates_are_handled_by_the_interpolation():
@@ -83,7 +87,7 @@ def test_duplicates_are_handled_by_the_interpolation():
     assert upper == pytest.approx(5.0, abs=1e-12), (
         "Q1 = Q3 = 5 here, so the upper fence is 5 and the outlier 100 is above it"
     )
-    assert lower == pytest.approx(5.0, abs=1e-12)
+    assert lower == pytest.approx(5.0, abs=1e-12), "the lower fence is also 5 here, since Q1 = Q3"
 
 
 def test_wider_k_gives_wider_fences():
@@ -97,11 +101,19 @@ def test_shifting_and_scaling_the_data_moves_and_scales_the_fences():
     values = np.random.default_rng(4).normal(size=25)
     lo, up = iqr_fences(values)
     lo_shift, up_shift = iqr_fences(values + 10.0)
-    assert lo_shift == pytest.approx(lo + 10.0, rel=1e-12)
-    assert up_shift == pytest.approx(up + 10.0, rel=1e-12)
+    assert lo_shift == pytest.approx(lo + 10.0, rel=1e-12), (
+        "shifting the data must shift the lower fence"
+    )
+    assert up_shift == pytest.approx(up + 10.0, rel=1e-12), (
+        "shifting the data must shift the upper fence"
+    )
     lo_scale, up_scale = iqr_fences(values * 3.0)
-    assert lo_scale == pytest.approx(lo * 3.0, rel=1e-12)
-    assert up_scale == pytest.approx(up * 3.0, rel=1e-12)
+    assert lo_scale == pytest.approx(lo * 3.0, rel=1e-12), (
+        "scaling the data must scale the lower fence"
+    )
+    assert up_scale == pytest.approx(up * 3.0, rel=1e-12), (
+        "scaling the data must scale the upper fence"
+    )
 
 
 def test_input_is_not_mutated_or_sorted_in_place():
@@ -125,7 +137,7 @@ def test_integer_input_gives_float_fences():
 @pytest.mark.parametrize(
     "values",
     [[[1.0, 2.0], [3.0, 4.0]], [], [1.0, float("nan"), 3.0], [1.0, float("inf")]],
-    ids=["2-D", "empty", "NaN", "infinite"],
+    ids=["two-dimensional", "empty", "NaN", "infinite"],
 )
 def test_invalid_data_raises_value_error(values):
     _expect_value_error(
