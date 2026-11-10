@@ -44,6 +44,13 @@ Dimension changes what "near" means. For each dimension, reset `default_rng(0)`,
 
 ## Where it breaks
 
+- **Rounded ties in iris.** Querying Iris row 106 with $k=2$ gives row 106 (class 2) at distance $0$ and
+  row 84 (class 1) at distance about $0.735$. The vote ties, so the required nearest-tied-label rule
+  predicts class 2; choosing the smallest label predicts class 1. Iris also contains an exact duplicate
+  at rows 101 and 142.
+- **Raw wine scales.** For the mean feature vector of unscaled Wine, the three nearest rows by raw
+  Euclidean distance are 174, 168, and 173; after standardising, they are 37, 81, and 43. Scaling
+  changes the metric and therefore the model's neighbours.
 - **Unscaled features.** One feature with a large range dominates every distance.
 - **High dimension.** Distance concentration: the nearest and farthest points become similar, so "nearest" carries little information. The ratio above drops from $81$ to $1.1$.
 - **Large $n$ at query time.** Brute force costs $O(nd)$ per query. Each query scans every row.

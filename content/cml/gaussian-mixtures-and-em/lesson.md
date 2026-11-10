@@ -69,6 +69,10 @@ guarantees.
 
 ## Where it breaks
 
+- **Correlated features on raw wine.** On the first Wine sample, a pooled full-covariance Gaussian gives
+  log density about $-18.61$; dropping the off-diagonal terms gives about $-24.05$. Flavanoids and total
+  phenols have correlation about $0.865$, so treating the dimensions as independent can sharply
+  understate a sample's density.
 - **Collapse.** If one component's responsibilities concentrate on one point or on duplicate points,
   its scatter is zero and its density spikes without bound. Floor every eigenvalue at $\varepsilon$.
 - **Underflow.** For samples far from every component, $\mathcal{N}$ is $e^{-10^8}=0$ in float64, which

@@ -67,6 +67,10 @@ Three quantities follow from the singular values:
 
 ## Where it breaks
 
+- **Normal equations on Longley.** Add an intercept to the raw Longley regressors and the design matrix
+  has condition number about $4.86\times10^9$. Solving through $A^\top A$ changes pseudo-inverse entries
+  by up to $5.46\times10^{-7}$ relative to a direct SVD; forming the Gram matrix squares the condition
+  number and loses precision. Use the SVD cutoff directly.
 - **Noise, bias and roundoff.** A pseudo-inverse does not suppress noise: it inverts every singular value
   above the cutoff. Take $A = \operatorname{diag}(1, 10^{-6})$ and $\mathbf{b} = A(1,1)^\top + (0, 10^{-8})^\top$.
   With the default cutoff ($10^{-15}\sigma_1$), $A^+\mathbf{b} = (1, 1.01)$, an error of $0.01$. Truncating at

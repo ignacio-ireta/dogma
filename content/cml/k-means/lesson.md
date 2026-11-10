@@ -47,6 +47,11 @@ The inertia falls at every step of a run. On the 1-D points $0, 1, 2, 10, 11, 12
 
 ## Where it breaks
 
+- **Unscaled wine features.** Three-means on raw Wine has adjusted Rand score about $0.371$ against the
+  cultivar labels, compared with a median of $0.897$ over 20 seeded runs after standardising the
+  features. Proline's standard deviation is about $314$, while nonflavanoid phenols' is about $0.124$,
+  so raw Euclidean distance is dominated by a few large-scale variables. The labels are a diagnostic
+  here, not a guarantee about the best clustering objective.
 - **Non-spherical clusters.** Each cluster is a Voronoi cell, so boundaries are straight bisectors. Concentric rings get split across the middle.
 - **Unscaled features.** Distances are dominated by the feature with the largest range. Standardise first, as in `cml/feature-scaling`.
 - **Outliers.** A mean moves toward a distant point, so one outlier can drag a whole centroid.

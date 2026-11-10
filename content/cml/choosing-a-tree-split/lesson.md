@@ -52,6 +52,7 @@ so a regression split maximises the gap between the child means, weighted by chi
 
 - **Greedy blindness (XOR).** Take $x_1=(0,0,1,1)$, $x_2=(0,1,0,1)$, $y=(0,1,1,0)$. Every single split on either feature has $\Delta=0$ at the root, so a greedy search sees no gain anywhere. The label depends on the pair jointly, and a depth-two tree is needed to capture it. Greedy splitting is a local choice, and it can miss interactions.
 - **Ties and duplicates.** Equal values have no midpoint, so a split between them is invalid. Floating-point noise can make a true tie look like a small gain, so an explicit tie rule is needed.
+- **Rounded real measurements.** In `breast_cancer`, `worst perimeter` has 569 rows but only 514 distinct values. A valid Gini stump splits at 105.95 with decrease 0.3220. A scan that cuts between every adjacent sorted row can split two observations both equal to 106.0 and claim an impossible 0.3247 decrease. Evaluate a candidate only after the feature value changes.
 - **Many-valued features.** A continuous feature offers $n-1$ thresholds. Some look good by chance, so deep trees fit noise. The same bias appears in information gain for many-category features.
 - **Unweighted decrease.** Forgetting the child weights rewards splits that isolate one sample. This is a common bug.
 

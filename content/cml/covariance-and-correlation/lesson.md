@@ -61,6 +61,10 @@ $\cos\theta = 14/\sqrt{8\cdot 26} \approx 0.971$, matching $R_{12}$. That is why
 
 ## Where it breaks
 
+- **Covariance keeps units on wine data.** On the unscaled Wine set, the Proline variance is about
+  $99{,}166.72$ and the Alcohol variance is about $0.659$. Their covariance is $164.57$, while their
+  correlation is $0.644$. Reading covariance as a unitless association can produce values outside
+  $[-1,1]$; divide by both standard deviations for correlation.
 - **Anscombe's quartet.** Four small datasets share the same means ($\bar x = 9$, $\bar y = 7.50$), the same
   variance of $y$ (4.12 to 4.13), and the same correlation to two decimals ($r \approx 0.82$). Dataset I is a noisy
   line. In dataset IV, ten points sit at $x = 8$ and one high-leverage point sits at $x = 19$, and that one

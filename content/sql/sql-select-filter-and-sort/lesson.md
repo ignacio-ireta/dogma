@@ -103,6 +103,10 @@ the column is a timestamp, because the bound is read as midnight.
 - **Timestamp upper bounds.** `< '2024-12-31'` on a timestamp drops that whole last day. Use
   `< '2025-01-01'`.
 
+The event_log source has lognormal order amounts and dirty statuses. In the reproducible 5,000-row
+draw, the largest amount is 1,850.19 but its status is Completed, so it is excluded by exact
+matching. A normalized filter would put it first; the exact top result starts at 1,203.06.
+
 ## Interview angle
 
 "Write the query for the five largest orders last year." Answer shape: name the three filters

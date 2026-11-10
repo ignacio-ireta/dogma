@@ -55,6 +55,8 @@ Adding trees shrinks only the second term. Bagging makes the trees different, an
 
 - **MDI favours continuous and many-valued features.** A continuous column offers many cut points, so some look useful by chance. In the simulation above, pure noise gets 0.9969 of the importance.
 - **Correlated features share credit.** Setup: $x\sim U(-1,1)$, $y=\mathbf 1[x+\varepsilon>0]$ with $\varepsilon\sim N(0,0.3^2)$, $n=2000$, the same split and forest as above. Reset `default_rng(0)`, draw `x` first and the Gaussian noise second. With one copy of $x$, held-out permutation importance is 0.31. With two identical copies it is 0.18 and 0.26 (each copy's drop falls because the other still carries the signal). MDI splits the total 1.0 into 0.47 and 0.53.
+- **A real correlated pair can hide its joint signal.** In `breast_cancer`, `mean radius` and `mean perimeter` correlate at 0.9979. A standardized logistic model gets held-out AUC 0.9251. Permuting the columns individually drops AUC by 0.0969 and 0.1461; permuting them together drops it by 0.4260. The other correlated column partly carries the signal when only one is shuffled, so individual permutation drops measure reliance conditional on the other columns, not the pair's total value.
+
 - **Permutation importance on correlated inputs** can ask the model about unlikely combinations of features. The drop then mixes importance with extrapolation.
 - **OOB is optimistic** when rows are dependent, as in time series.
 
