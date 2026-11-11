@@ -1,7 +1,61 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_python_loop_mask.py
+  origin: freedom
+  freedom: mask built with a Python loop instead of vectorised NumPy
+reject:
+- file: reject_single_calibration_row_refused.py
+  mistake: refuses a calibration set with only one row
+  clause: '`cal_probs`: real numeric array-like, shape `(n, K)` with `n >= 1` and `K >= 2`. Entries are
+    finite and nonnegative, and each row sums to 1 within `1e-9`.'
+  killed_by: test_random_inputs_match_sorted_score_oracle
+  visible: hidden
+- file: reject_float_labels_accepted.py
+  mistake: accepts float labels
+  clause: '`cal_labels`: integer array of shape `(n,)` (dtype kind `i` or `u`). Each label is in `[0,
+    K)`. Bool and float labels are invalid.'
+  killed_by: test_invalid_probabilities_labels_or_alpha_raise_value_error
+  visible: hidden
+- file: reject_test_row_sums_not_checked.py
+  mistake: test rows are not checked to sum to one
+  clause: '`test_probs`: same rules as `cal_probs`, with shape `(m, K)`, `m >= 0`, and the same `K`.'
+  killed_by: test_invalid_row_sum_raises_value_error
+  visible: public
+- file: reject_score_uses_top_class.py
+  mistake: score uses the most likely class instead of the true class
+  clause: 'Score: `s_i = 1.0 - cal_probs[i, cal_labels[i]]`, in float64.'
+  killed_by: test_random_inputs_match_sorted_score_oracle
+  visible: hidden
+- file: reject_alpha_binary_value_read.py
+  mistake: rank reads alpha as its exact binary value
+  clause: 'Rank: `k = ceil((n + 1)(1 - alpha))`. Compute it exactly: a float product can be off by a tiny
+    amount, and `(9 + 1) * (1 - 0.7)` rounds to `3.0000000000000004`. Two ways that pass: `Fraction(repr(alpha))`
+    (reads `0.7` as `7/10`, the decimal you wrote), or subtracting a tiny tolerance such as `1e-9` before
+    `ceil`. `Fraction(alpha)` on the exact binary value is not accepted.'
+  killed_by: test_rank_is_read_from_the_decimal_alpha_not_a_float_product
+  visible: hidden
+- file: reject_threshold_from_top_end.py
+  mistake: threshold taken from the top of the sorted scores
+  clause: 'Threshold: `q` is the `k`-th smallest score (1-indexed), or `+inf` when `k > n`.'
+  killed_by: test_threshold_equality_is_inside_and_all_false_row_is_empty
+  visible: public
+- file: reject_strict_inside_test.py
+  mistake: a score equal to the threshold is outside the set
+  clause: 'Returns: a `bool` array of shape `(m, K)`. `out[i, j]` is True when `(1.0 - test_probs[i, j])
+    <= q`. Equality counts as inside. A row of all False is an empty set and is allowed.'
+  killed_by: test_threshold_equality_is_inside_and_all_false_row_is_empty
+  visible: public
+- file: reject_alpha_zero_accepted.py
+  mistake: alpha equal to zero accepted instead of rejected
+  clause: '`alpha`: Python float, finite, `0 < alpha < 1`. A bool is invalid.'
+  killed_by: test_alpha_at_the_open_lower_end_is_rejected
+  visible: hidden
+uncovered:
+- clause: Raises `ValueError` for any invalid argument above, including a class-count mismatch.
+  reason: cap of eight wrong solutions per problem
+- clause: Must not mutate inputs.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

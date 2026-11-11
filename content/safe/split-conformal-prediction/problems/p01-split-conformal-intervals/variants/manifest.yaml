@@ -2,6 +2,59 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_python_loop_sorted.py
+  origin: freedom
+  freedom: scores built with a Python loop and the builtin sorted, not vectorised NumPy
+reject:
+- file: reject_integer_inputs_refused.py
+  mistake: refuses integer arrays, only floats accepted
+  clause: '`cal_pred`, `cal_true`: real numeric array-likes, 1-D, the same nonzero length `n`, finite
+    values. They are the calibration predictions and the true values.'
+  killed_by: test_threshold_is_the_eighth_smallest_residual_at_alpha_point_two
+  visible: public
+- file: reject_empty_test_set_refused.py
+  mistake: refuses an empty test set
+  clause: '`test_pred`: real numeric array-like, 1-D, finite, length `m >= 0`.'
+  killed_by: test_empty_test_set_returns_empty_float64_arrays
+  visible: hidden
+- file: reject_alpha_one_accepted.py
+  mistake: accepts alpha equal to one
+  clause: '`alpha`: Python float, finite, `0 < alpha < 1`. A bool is invalid.'
+  killed_by: test_invalid_calibration_or_alpha_raises_value_error
+  visible: hidden
+- file: reject_signed_residuals.py
+  mistake: scores are signed residuals with no absolute value
+  clause: 'Scores: `s_i = |cal_true[i] - cal_pred[i]|`.'
+  killed_by: test_threshold_is_the_eighth_smallest_residual_at_alpha_point_two
+  visible: public
+- file: reject_float_rank_product.py
+  mistake: rank computed as a float product, so 0.7 is not read as written
+  clause: 'Rank: `k = ceil((n + 1) * (1 - alpha))`. Compute it exactly: the float product can be off by
+    a tiny amount, and `(9 + 1) * (1 - 0.7)` rounds to `3.0000000000000004`, which would give rank 4 instead
+    of 3. Two ways that pass: `Fraction(repr(alpha))` (reads `0.7` as `7/10`, the decimal you wrote),
+    or subtracting a tiny tolerance such as `1e-9` before `ceil`. `Fraction(alpha)` on the exact binary
+    value is not accepted, because the float `0.3` is slightly below `3/10`.'
+  killed_by: test_rank_is_read_from_the_decimal_alpha_not_a_float_product
+  visible: hidden
+- file: reject_rank_equal_n_gives_infinite.py
+  mistake: infinite threshold when rank equals n instead of only when rank exceeds n
+  clause: 'Threshold: `q` is the `k`-th smallest score (1-indexed). If `k > n`, then `q = +inf`.'
+  killed_by: test_single_calibration_point_gives_its_residual_as_threshold
+  visible: public
+- file: reject_float32_bounds.py
+  mistake: bounds returned as float32 instead of float64
+  clause: 'Returns: `(lower, upper)`, two float64 arrays of length `m`. `lower = test_pred - q` and `upper
+    = test_pred + q`. When `q = +inf`, `lower` is `-inf` and `upper` is `+inf`.'
+  killed_by: test_random_calibration_matches_sorted_index_oracle
+  visible: hidden
+- file: reject_empty_calibration_allowed.py
+  mistake: empty calibration set accepted, giving an infinite interval instead of an error
+  clause: 'Raises `ValueError` for: an empty calibration set; mismatched lengths; non-1-D inputs; non-numeric
+    or complex dtype; NaN or infinite values; `alpha` not a float in `(0, 1)`; a bool `alpha`.'
+  killed_by: test_invalid_calibration_or_alpha_raises_value_error
+  visible: hidden
+uncovered:
+- clause: Must not mutate inputs.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

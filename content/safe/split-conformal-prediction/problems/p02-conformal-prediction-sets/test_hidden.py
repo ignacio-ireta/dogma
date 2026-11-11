@@ -364,3 +364,12 @@ def test_scores_are_compared_in_float64_so_nearby_probabilities_stay_apart():
         [[False, False], [True, False]],
         err_msg="scores must be compared in float64: a score 1e-9 above the threshold is outside",
     )
+
+
+def test_alpha_at_the_open_lower_end_is_rejected():
+    cal_probs = [[0.7, 0.2, 0.1], [0.1, 0.6, 0.3], [0.2, 0.3, 0.5], [0.5, 0.4, 0.1]]
+    _must_reject(
+        lambda: prediction_sets(cal_probs, [0, 1, 2, 0], [[0.7, 0.2, 0.1]], 0.0),
+        "alpha must lie strictly between 0 and 1: the lower end is excluded, "
+        "so it must raise ValueError",
+    )
