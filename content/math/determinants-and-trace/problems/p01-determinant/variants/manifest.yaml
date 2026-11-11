@@ -59,3 +59,4 @@ uncovered:
   reason: states that overflow and underflow need not be guarded, so there is no requirement to break
 sweeps:
 - reject
+- mutants
