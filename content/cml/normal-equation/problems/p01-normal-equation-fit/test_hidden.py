@@ -62,7 +62,11 @@ def _expect_value_error(call, mistake):
     pytest.fail(mistake)
 
 
-@pytest.mark.parametrize(("n", "d", "seed"), [(30, 1, 0), (50, 3, 1), (80, 5, 2), (40, 2, 3)])
+@pytest.mark.parametrize(
+    ("n", "d", "seed"),
+    [(30, 1, 0), (50, 3, 1), (80, 5, 2), (40, 2, 3)],
+    ids=list("abcd"),
+)
 def test_matches_scikit_learn_with_intercept(n, d, seed):
     X, y = _data(seed, n, d)
     intercept, coef = _fit(X, y)
@@ -83,7 +87,7 @@ def test_matches_scikit_learn_with_intercept(n, d, seed):
     )
 
 
-@pytest.mark.parametrize(("n", "d", "seed"), [(30, 2, 4), (60, 4, 5)])
+@pytest.mark.parametrize(("n", "d", "seed"), [(30, 2, 4), (60, 4, 5)], ids=list("ab"))
 def test_matches_scikit_learn_without_intercept(n, d, seed):
     X, y = _data(seed, n, d)
     intercept, coef = _fit(X, y, fit_intercept=False)
@@ -98,7 +102,7 @@ def test_matches_scikit_learn_without_intercept(n, d, seed):
     )
 
 
-@pytest.mark.parametrize("seed", [6, 7, 8])
+@pytest.mark.parametrize("seed", [6, 7, 8], ids=list("abc"))
 def test_matches_numpy_least_squares_on_the_augmented_design(seed):
     X, y = _data(seed, 25, 3)
     design = np.hstack([np.ones((25, 1)), X])
@@ -113,7 +117,7 @@ def test_matches_numpy_least_squares_on_the_augmented_design(seed):
     )
 
 
-@pytest.mark.parametrize("seed", [9, 10])
+@pytest.mark.parametrize("seed", [9, 10], ids=list("ab"))
 def test_residuals_are_orthogonal_to_every_design_column(seed):
     X, y = _data(seed, 40, 3)
     intercept, coef = _fit(X, y)
@@ -201,8 +205,12 @@ def test_noise_free_line_is_recovered_exactly():
     X = np.column_stack([np.linspace(-2, 2, 9), np.linspace(0, 1, 9) ** 2])
     y = 2.0 + X @ np.array([1.5, -3.0])
     intercept, coef = _fit(X, y)
-    np.testing.assert_allclose(intercept, 2.0, atol=1e-9)
-    np.testing.assert_allclose(coef, [1.5, -3.0], atol=1e-9)
+    np.testing.assert_allclose(
+        intercept, 2.0, atol=1e-9, err_msg="noise-free line: the intercept must be recovered"
+    )
+    np.testing.assert_allclose(
+        coef, [1.5, -3.0], atol=1e-9, err_msg="noise-free line: the slopes must be recovered"
+    )
 
 
 @pytest.mark.parametrize(
@@ -244,7 +252,7 @@ def test_constant_column_is_fine_without_an_intercept():
     y = 0.5 + 2.0 * x + 0.1 * rng.normal(size=20)
     intercept, coef = _fit(X, y, fit_intercept=False)
     expected = np.linalg.lstsq(X, y, rcond=None)[0]
-    assert intercept == 0.0
+    assert intercept == 0.0, "a constant feature without fit_intercept must return intercept 0.0"
     np.testing.assert_allclose(
         coef,
         expected,
@@ -261,7 +269,7 @@ def test_constant_column_is_fine_without_an_intercept():
         (np.random.default_rng(22).normal(size=(5, 2)), np.ones(4)),
         (np.random.default_rng(23).normal(size=(5, 2)), np.ones((5, 1))),
     ],
-    ids=["1-D-X", "3-D-X", "length-mismatch", "2-D-y"],
+    ids=["one-dimensional-x", "three-dimensional-x", "length-mismatch", "two-dimensional-y"],
 )
 def test_invalid_shapes_raise_value_error(X, y):
     _expect_value_error(
@@ -324,7 +332,9 @@ def test_integer_inputs_give_float_results():
     )
 
 
-@pytest.mark.parametrize("c", [-2.0, 0.5, 4.0])
+@pytest.mark.parametrize(
+    "c", [-2.0, 0.5, 4.0], ids=["negative-factor", "fractional-factor", "large-factor"]
+)
 def test_scaling_y_scales_intercept_and_coefficients(c):
     X, y = _data(17, 25, 2)
     b0, b = _fit(X, y)
@@ -344,9 +354,21 @@ def test_rescaling_a_feature_rescales_only_its_coefficient():
     X2 = X.copy()
     X2[:, 1] *= 4.0
     c0, cb = _fit(X2, y)
-    np.testing.assert_allclose(c0, b0, rtol=1e-9)
-    np.testing.assert_allclose(cb[1], b[1] / 4.0, rtol=1e-9)
-    np.testing.assert_allclose(cb[[0, 2]], b[[0, 2]], rtol=1e-9)
+    np.testing.assert_allclose(
+        c0, b0, rtol=1e-9, err_msg="rescaling a feature must not change the intercept"
+    )
+    np.testing.assert_allclose(
+        cb[1],
+        b[1] / 4.0,
+        rtol=1e-9,
+        err_msg="rescaling a feature must divide its own coefficient by the factor",
+    )
+    np.testing.assert_allclose(
+        cb[[0, 2]],
+        b[[0, 2]],
+        rtol=1e-9,
+        err_msg="rescaling a feature must not change the other coefficients",
+    )
 
 
 def test_shifting_a_feature_moves_only_the_intercept():
@@ -365,12 +387,14 @@ def test_shifting_a_feature_moves_only_the_intercept():
     )
 
 
-@pytest.mark.parametrize("scale", [1e8, 1e-8])
+@pytest.mark.parametrize("scale", [1e8, 1e-8], ids=["huge-scale", "tiny-scale"])
 def test_very_large_and_small_feature_scales_are_handled(scale):
     X, y = _data(20, 30, 2)
     b0, b = _fit(X, y)
     c0, cb = _fit(X * scale, y)
-    np.testing.assert_allclose(c0, b0, rtol=1e-6, atol=1e-9)
+    np.testing.assert_allclose(
+        c0, b0, rtol=1e-6, atol=1e-9, err_msg="scaling every feature must not change the intercept"
+    )
     np.testing.assert_allclose(
         cb,
         b / scale,
@@ -379,7 +403,7 @@ def test_very_large_and_small_feature_scales_are_handled(scale):
     )
 
 
-@settings(max_examples=30, deadline=None)
+@settings(max_examples=30, deadline=None, report_multiple_bugs=False)
 @given(seed=st.integers(0, 10**6), n=st.integers(5, 25), d=st.integers(1, 3))
 def test_random_fits_agree_with_numpy_least_squares(seed, n, d):
     X, y = _data(seed, n, d)
