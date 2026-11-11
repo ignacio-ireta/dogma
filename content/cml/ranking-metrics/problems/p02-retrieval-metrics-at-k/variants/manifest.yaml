@@ -2,6 +2,61 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_empty_ranking_rejected.py
+  mistake: an empty ranked list is refused instead of giving zeros
+  clause: '`ranked_ids`: a sequence of hashable ids, best first. It may be empty. No id may appear twice.'
+  killed_by: test_empty_ranking_gives_zeros_and_is_valid
+  visible: hidden
+- file: reject_duplicate_relevant_counted_twice.py
+  mistake: duplicate relevant ids are counted twice in the number of relevant items
+  clause: '`relevant_ids`: an iterable of hashable ids. Duplicates are ignored. It must contain at least
+    one id.'
+  killed_by: test_duplicate_relevant_ids_are_counted_once
+  visible: hidden
+- file: reject_k_longer_than_list_refused.py
+  mistake: a k larger than the list length is refused
+  clause: '`k`: an integer `k >= 1`. `k` may be larger than the length of `ranked_ids`.'
+  killed_by: test_precision_divides_by_k_even_when_the_list_is_shorter
+  visible: public
+- file: reject_top_k_off_by_one.py
+  mistake: the top k is one entry short
+  clause: Let `top` be the first `k` entries of `ranked_ids` (fewer if the list is shorter), and let `R`
+    be the set of relevant ids.
+  killed_by: test_matches_the_numpy_reference_on_random_rankings
+  visible: hidden
+- file: reject_precision_divides_by_list_length.py
+  mistake: precision divides by the list length when the list is shorter than k
+  clause: '`precision_at_k` = (number of relevant ids in `top`) / `k`. The denominator is `k` even when
+    the list has fewer than `k` entries.'
+  killed_by: test_precision_divides_by_k_even_when_the_list_is_shorter
+  visible: public
+- file: reject_recall_capped_at_k.py
+  mistake: recall divides by the smaller of k and the number of relevant ids
+  clause: '`recall_at_k` = (number of relevant ids in `top`) / |R|.'
+  killed_by: test_matches_the_numpy_reference_on_random_rankings
+  visible: hidden
+- file: reject_reciprocal_rank_cut_at_k.py
+  mistake: reciprocal rank looks only inside the top k
+  clause: '`reciprocal_rank` = 1 / (1-based position of the first relevant id in the **whole** ranked
+    list), or `0.0` if no relevant id is ranked. It does not depend on `k`.'
+  killed_by: test_matches_the_numpy_reference_on_random_rankings
+  visible: hidden
+- file: reject_ap_divisor_ignores_k.py
+  mistake: average precision divides by the number of relevant ids even when k is smaller
+  clause: '`average_precision_at_k`: for each 1-based position `i <= min(k, n)` whose item is relevant,
+    add precision at `i`, which is (relevant items among the first `i`) / `i`. Divide the sum by `min(k,
+    |R|)`. Relevant ids that are never ranked add nothing to the sum, and the divisor still counts them.'
+  killed_by: test_matches_the_numpy_reference_on_random_rankings
+  visible: hidden
+uncovered:
+- clause: 'Returns: a dict with exactly the keys `precision_at_k`, `recall_at_k`, `reciprocal_rank` and
+    `average_precision_at_k`, each a Python float.'
+  reason: cap of eight wrong solutions per problem
+- clause: 'Raises `ValueError` for: a repeated id in `ranked_ids`, an empty `relevant_ids`, and a `k`
+    that is not an integer of at least 1.'
+  reason: cap of eight wrong solutions per problem
+- clause: Must not mutate its inputs.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

@@ -2,6 +2,65 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_reversed_sum_order.py
+  origin: freedom
+  freedom: sums the per-run terms in reverse order, a different rounding path
+reject:
+- file: reject_list_input_cast_to_int.py
+  mistake: list input of fractional relevance is truncated to whole numbers
+  clause: '`true_relevance`: 1-D, length n >= 1, finite non-negative real numbers (0 means irrelevant).
+    `scores`: 1-D, length n, finite real numbers. A higher score means the item is ranked earlier.'
+  killed_by: test_scaling_the_relevance_changes_nothing
+  visible: hidden
+- file: reject_k_at_n_drops_last_item.py
+  mistake: k equal to n drops the last item because the cutoff is one short
+  clause: '`k`: `None` for the whole list, or an integer `k >= 1`. A `k` larger than n means the same
+    as `k = n`.'
+  killed_by: test_matches_the_enumerated_tie_expectation
+  visible: hidden
+- file: reject_discount_rank_shifted.py
+  mistake: discount uses rank plus one inside the log, so every position is shifted by one
+  clause: 'Ranking: sort the items by score, descending. The item at 1-based position `r` has gain equal
+    to its relevance and discount `1 / log2(r + 1)`.'
+  killed_by: test_tied_scores_share_their_mean_gain_over_their_positions
+  visible: public
+- file: reject_tie_group_takes_max_gain.py
+  mistake: a tied group is credited with its largest gain instead of the mean gain
+  clause: '**Ties.** Items with equal scores have no defined order. The value is the expectation over
+    a uniformly random order inside each tie group, which is what `sklearn.metrics.ndcg_score` returns
+    by default. A tie group that occupies positions a..b contributes the mean relevance of its members
+    times the sum of the discounts of those positions that are within k. Do not break ties by input position.'
+  killed_by: test_tied_scores_share_their_mean_gain_over_their_positions
+  visible: public
+- file: reject_ideal_dcg_ignores_k.py
+  mistake: the ideal DCG sums every position, so the cutoff k is ignored for IDCG
+  clause: DCG@k is the sum of gain times discount over the first `min(k, n)` positions. IDCG@k is the
+    same sum for the items sorted by relevance, descending. NDCG@k = DCG@k / IDCG@k.
+  killed_by: test_k_keeps_only_the_top_positions_in_dcg_and_ideal
+  visible: public
+- file: reject_all_zero_returns_one.py
+  mistake: an all irrelevant list returns 1.0 instead of 0.0
+  clause: If IDCG@k is 0 (every relevance is 0), return `0.0`.
+  killed_by: test_all_zero_relevance_gives_zero
+  visible: public
+- file: reject_float32_result.py
+  mistake: the result is returned as a float32 value, not a Python float
+  clause: 'Returns: a Python float.'
+  killed_by: test_tied_scores_share_their_mean_gain_over_their_positions
+  visible: public
+- file: reject_negative_relevance_accepted.py
+  mistake: negative relevance is accepted instead of raising ValueError
+  clause: 'Raises `ValueError` for: an input that is not one-dimensional, unequal lengths, empty input,
+    a negative or non-finite relevance, a NaN or infinite score, and a `k` that is neither `None` nor
+    an integer of at least 1.'
+  killed_by: test_invalid_input_raises_value_error
+  visible: hidden
+uncovered:
+- clause: Two scores are tied only when they are exactly equal as floats. No absolute tolerance is applied,
+    so scores that differ by more than one unit in the last place stay distinct when every score is multiplied
+    by a tiny positive constant such as 1e-9.
+  reason: cap of eight wrong solutions per problem
+- clause: Must run in O(n log n) time. Must not mutate its inputs.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject
