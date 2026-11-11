@@ -355,7 +355,7 @@ def wine_tiny():
 def _relative_close(actual, expected, mistake):
     """Relative agreement only: an absolute tolerance would hide every value at this scale."""
     try:
-        np.testing.assert_allclose(actual, expected, rtol=1e-9, atol=0.0)
+        np.testing.assert_allclose(actual, expected, rtol=1e-9, atol=0.0, err_msg=mistake)
     except AssertionError:
         pytest.fail(mistake, pytrace=False)
 
