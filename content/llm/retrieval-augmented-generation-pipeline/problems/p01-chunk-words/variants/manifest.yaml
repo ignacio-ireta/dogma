@@ -2,6 +2,55 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_regex_word_tokens.py
+  mistake: words are runs of word characters, so dashes and punctuation split words
+  clause: '`text`: `str`. A **word** is a maximal run of non-whitespace characters, so `text.split()`
+    defines the words. Punctuation stays attached: `“Yes,”` and `pride—and` are one word each. Each returned
+    chunk joins its words with a single space.'
+  killed_by: test_windows_over_real_prose_keep_punctuated_words_whole
+  visible: hidden
+- file: reject_size_one_returns_whole_text.py
+  mistake: with size 1 the whole text is returned as one chunk
+  clause: '`size`: `int`, at least 1.'
+  killed_by: test_window_boundaries_match_the_enumeration_oracle
+  visible: hidden
+- file: reject_zero_overlap_terminating.py
+  mistake: with overlap 0 the step is one short, so windows overlap by one word
+  clause: '`overlap`: `int`, with `0 <= overlap < size`.'
+  killed_by: test_window_boundaries_match_the_enumeration_oracle
+  visible: hidden
+- file: reject_returns_tuple.py
+  mistake: returns a tuple instead of a list
+  clause: 'Returns: `list[str]`, one string per chunk, in document order.'
+  killed_by: test_ten_words_size_four_overlap_two_gives_four_windows
+  visible: public
+- file: reject_no_stop_after_last_window.py
+  mistake: does not stop at the window that reaches the last word, so a contained tail is emitted
+  clause: 'Window rule: the first window starts at word 0. Window `j` starts at word `j * (size - overlap)`
+    and covers up to `size` words, cut at the end of the text. Emit windows while their start is inside
+    the text. **Stop after the first window that reaches the last word.** This rule prevents a trailing
+    chunk that is wholly contained in the previous one.'
+  killed_by: test_ten_words_size_four_overlap_two_gives_four_windows
+  visible: public
+- file: reject_empty_text_gives_empty_string.py
+  mistake: text with no words gives one empty string instead of an empty list
+  clause: Text with no words (empty or whitespace only) returns `[]`.
+  killed_by: test_empty_text_gives_no_chunks_not_an_empty_string
+  visible: public
+- file: reject_bool_accepted_as_int.py
+  mistake: a bool is accepted as size or overlap
+  clause: Raises `TypeError` when `text` is not a `str`, or when `size` or `overlap` is not an `int` (`bool`
+    is not accepted as an `int` here).
+  killed_by: test_invalid_types_raise_type_error
+  visible: hidden
+- file: reject_negative_overlap_allowed.py
+  mistake: a negative overlap is accepted and skips words
+  clause: Raises `ValueError` when `size < 1`, or when `overlap` is outside `[0, size)`.
+  killed_by: test_invalid_window_sizes_raise_value_error
+  visible: hidden
+uncovered:
+- clause: Must not mutate inputs.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

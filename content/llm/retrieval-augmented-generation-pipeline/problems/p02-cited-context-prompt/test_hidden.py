@@ -377,3 +377,11 @@ def test_real_passages_print_exactly_and_cost_their_words_across_line_breaks(pas
                 "including its line breaks, and cost a chunk by the words str.split() finds",
                 pytrace=False,
             )
+
+
+def test_more_texts_than_ids_is_rejected():
+    rejects(
+        lambda: build_cited_prompt("q", np.ones(2), ["a"], ["w", "v"], np.ones((1, 2)), 1, 5),
+        ValueError,
+        "chunk texts outnumber chunk ids, and the length mismatch was accepted",
+    )

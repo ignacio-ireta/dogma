@@ -1,7 +1,85 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_row_loop_scores.py
+  origin: freedom
+  freedom: scores computed in a per-row Python loop instead of one matrix product
+reject:
+- file: reject_length_mismatch_one_way.py
+  mistake: chunk texts outnumber chunk ids and the mismatch is accepted
+  clause: '`chunk_texts`: `list[str]` of length `m`.'
+  killed_by: test_more_texts_than_ids_is_rejected
+  visible: hidden
+- file: reject_blank_query_accepted.py
+  mistake: a query that is only whitespace is accepted
+  clause: '`query`: `str`, not blank after `strip()`.'
+  killed_by: test_blank_query_is_rejected
+  visible: hidden
+- file: reject_zero_query_not_checked.py
+  mistake: a zero query vector is not rejected
+  clause: '`query_vector`: real NumPy array, shape `(d,)`, `d >= 1`. Must not be the zero vector.'
+  killed_by: test_zero_query_vector_is_rejected
+  visible: public
+- file: reject_duplicate_ids_allowed.py
+  mistake: duplicate chunk ids are accepted
+  clause: '`chunk_ids`: `list[str]` of length `m >= 0`. Ids are unique and non-empty.'
+  killed_by: test_duplicate_or_empty_ids_and_length_mismatch_are_rejected
+  visible: hidden
+- file: reject_zero_chunk_vector_not_checked.py
+  mistake: a zero chunk vector is not rejected
+  clause: '`chunk_vectors`: real NumPy array, shape `(m, d)`. No row may be the zero vector.'
+  killed_by: test_zero_norm_chunk_vector_is_rejected
+  visible: hidden
+- file: reject_k_zero_allowed.py
+  mistake: k equal to zero is accepted
+  clause: '`k`: `int >= 1`. `word_budget`: `int >= 0`.'
+  killed_by: test_out_of_range_k_and_budget_raise_value_error
+  visible: hidden
+- file: reject_packing_stops_at_first_misfit.py
+  mistake: packing stops at the first chunk that does not fit instead of skipping it
+  clause: 'All vector entries must be finite. Integer and float arrays are accepted; complex, boolean
+    and object arrays are not. **Score.** `s_i = (q . v_i) / (|q| * |v_i|)`, the cosine similarity. Round
+    each score to 9 decimal places before comparing, so that numerically equal scores are ties. **Ranking.**
+    Sort chunks by the key `(-s_i, chunk_id)`. Equal scores are broken by the chunk id in ascending string
+    order. Insertion order never decides a tie. **Candidates.** The first `min(k, m)` chunks in the ranking
+    are the candidates. `k` counts candidates, not selected chunks. **Packing.** Walk the candidates in
+    rank order. A chunk costs `len(text.split())` words. Add it if the running total plus its cost is
+    at most `word_budget`. Otherwise skip it and keep going, so a shorter lower-ranked candidate can still
+    fit. The budget counts chunk-text words only; ids, labels and the question are not counted. A chunk
+    text may hold line breaks or runs of spaces: it is printed unchanged, and its cost is the number of
+    words `str.split()` finds (`"a\nb"` costs 2). **Output.** A string built with `"\n".join` from these
+    lines, in order: 1. `Context:` 2. one line per selected chunk, in rank order: `[<chunk id>] <chunk
+    text exactly as given>` 3. an empty line 4. `Question: <query exactly as given>` With no selected
+    chunks, the context block is empty and the output is `Context:`, an empty line, then the question
+    line. **Errors.** Raise `TypeError` when `query` or any id or text is not a `str`, or when `k` or
+    `word_budget` is not an `int` (bool is not accepted). Raise `ValueError` for a blank query, a non-numeric
+    or non-finite array, a wrong shape or length mismatch, a zero-norm query or chunk vector, a duplicate
+    or empty chunk id, `k < 1`, or `word_budget < 0`. Must not mutate inputs.'
+  killed_by: test_chunk_that_does_not_fit_is_skipped_and_later_chunks_still_fit
+  visible: public
+- file: reject_cost_split_on_spaces.py
+  mistake: a chunk is costed by splitting on single spaces, so a line break does not count as a word
+  clause: 'All vector entries must be finite. Integer and float arrays are accepted; complex, boolean
+    and object arrays are not. **Score.** `s_i = (q . v_i) / (|q| * |v_i|)`, the cosine similarity. Round
+    each score to 9 decimal places before comparing, so that numerically equal scores are ties. **Ranking.**
+    Sort chunks by the key `(-s_i, chunk_id)`. Equal scores are broken by the chunk id in ascending string
+    order. Insertion order never decides a tie. **Candidates.** The first `min(k, m)` chunks in the ranking
+    are the candidates. `k` counts candidates, not selected chunks. **Packing.** Walk the candidates in
+    rank order. A chunk costs `len(text.split())` words. Add it if the running total plus its cost is
+    at most `word_budget`. Otherwise skip it and keep going, so a shorter lower-ranked candidate can still
+    fit. The budget counts chunk-text words only; ids, labels and the question are not counted. A chunk
+    text may hold line breaks or runs of spaces: it is printed unchanged, and its cost is the number of
+    words `str.split()` finds (`"a\nb"` costs 2). **Output.** A string built with `"\n".join` from these
+    lines, in order: 1. `Context:` 2. one line per selected chunk, in rank order: `[<chunk id>] <chunk
+    text exactly as given>` 3. an empty line 4. `Question: <query exactly as given>` With no selected
+    chunks, the context block is empty and the output is `Context:`, an empty line, then the question
+    line. **Errors.** Raise `TypeError` when `query` or any id or text is not a `str`, or when `k` or
+    `word_budget` is not an `int` (bool is not accepted). Raise `ValueError` for a blank query, a non-numeric
+    or non-finite array, a wrong shape or length mismatch, a zero-norm query or chunk vector, a duplicate
+    or empty chunk id, `k < 1`, or `word_budget < 0`. Must not mutate inputs.'
+  killed_by: test_real_passages_print_exactly_and_cost_their_words_across_line_breaks
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
