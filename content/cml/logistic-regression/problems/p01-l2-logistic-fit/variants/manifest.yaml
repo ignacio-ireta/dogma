@@ -64,6 +64,12 @@ reject:
     may overflow.'
   killed_by: test_separable_real_features_with_a_weak_penalty_fit_without_overflow
   visible: hidden
+- file: reject_single_class_index_error.py
+  mistake: a one-class training set crashes inside the class check instead of being refused with the rejection
+    error
+  clause: '`y`: 1-D array-like, shape `(n,)`. Every entry is exactly `0` or `1`. Both classes must appear.'
+  killed_by: test_single_class_is_refused_with_value_error_even_for_a_single_sample
+  visible: hidden
 uncovered:
 - clause: 'Returns: `(intercept, coef)`. `intercept` is a Python `float`. `coef` is a `float64` array
     of shape `(d,)`. At return, the largest absolute entry of $\nabla J$ is at most `tol`.'
@@ -73,3 +79,4 @@ uncovered:
   reason: permissive note, raising RuntimeError is allowed, so no wrong solution breaks it
 sweeps:
 - reject
+- mutants

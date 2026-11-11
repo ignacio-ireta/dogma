@@ -439,3 +439,18 @@ def test_weak_penalty_on_separated_data_never_overflows_an_intermediate_value():
     assert np.isfinite(intercept) and np.all(np.isfinite(coef)), (
         "the fit must stay finite when the penalty is weak and the classes are separated"
     )
+
+
+def test_single_class_is_refused_with_value_error_even_for_a_single_sample():
+    X = np.array([[0.0]])
+    y = np.array([0.0])
+    try:
+        fit_logistic_regression(X, y)
+    except ValueError:
+        return
+    except Exception as exc:
+        pytest.fail(
+            "a training set with only one class must be refused with ValueError, "
+            f"not fail inside the class check; the call raised {type(exc).__name__}"
+        )
+    pytest.fail("a training set with only one class must be refused with ValueError, not fitted")
