@@ -125,7 +125,7 @@ def test_matches_brute_force_search_under_both_criteria():
             )
 
 
-@pytest.mark.parametrize("criterion", ["gini", "entropy"])
+@pytest.mark.parametrize("criterion", ["gini", "entropy"], ids=["gini", "entropy"])
 def test_threshold_agrees_with_a_depth_one_scikit_learn_tree(criterion):
     rng = np.random.default_rng(21)
     x = rng.normal(size=60)  # continuous values: no ties, so the optimum is unique
