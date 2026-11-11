@@ -2,6 +2,64 @@ problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_list_input_only.py
+  mistake: refuses list input and accepts only NumPy arrays
+  clause: '`X`: 2-D array-like, shape (n, d), d ≥ 1, finite real numbers. Integers allowed.'
+  killed_by: test_exact_line_recovers_intercept_and_slope
+  visible: public
+- file: reject_y_truncated_to_int.py
+  mistake: truncates the target y to whole numbers before fitting
+  clause: '`y`: 1-D array-like, shape (n,), finite real numbers.'
+  killed_by: test_matches_scikit_learn_with_intercept
+  visible: hidden
+- file: reject_default_fit_intercept_false.py
+  mistake: fit_intercept defaults to False instead of True
+  clause: '`fit_intercept`: bool, default `True`.'
+  killed_by: test_exact_line_recovers_intercept_and_slope
+  visible: public
+- file: reject_coef_scalar_for_one_column.py
+  mistake: returns coef as a bare scalar when there is one feature
+  clause: 'Returns: `(intercept, coef)`. `intercept` is a Python float, and it is `0.0` when `fit_intercept`
+    is false. `coef` is a float64 array of shape (d,).'
+  killed_by: test_exact_line_recovers_intercept_and_slope
+  visible: public
+- file: reject_rank_on_normal_matrix.py
+  mistake: checks the rank of the normal matrix instead of the design so a full-rank ill-conditioned design
+    is refused
+  clause: 'Raises `ValueError` when `X` is not 2-D; when `y` is not 1-D or has a different length from
+    `X`; when `X` or `y` contains NaN or infinity; when the design matrix is rank deficient. The rank
+    is the one NumPy computes with `np.linalg.matrix_rank` and its default tolerance. This covers a column
+    that is a multiple or a sum of others, a zero column, a constant column when `fit_intercept` is true,
+    and fewer rows than columns. A full-rank design is fitted however large its condition number is: a
+    real economic design with an intercept can have a condition number near 10^10 and must still be fitted.'
+  killed_by: test_full_rank_real_design_with_large_condition_is_fitted
+  visible: hidden
+- file: reject_finite_check_skips_y.py
+  mistake: checks only X for non-finite values and lets an infinite y through
+  clause: 'Raises `ValueError` when `X` is not 2-D; when `y` is not 1-D or has a different length from
+    `X`; when `X` or `y` contains NaN or infinity; when the design matrix is rank deficient. The rank
+    is the one NumPy computes with `np.linalg.matrix_rank` and its default tolerance. This covers a column
+    that is a multiple or a sum of others, a zero column, a constant column when `fit_intercept` is true,
+    and fewer rows than columns. A full-rank design is fitted however large its condition number is: a
+    real economic design with an intercept can have a condition number near 10^10 and must still be fitted.'
+  killed_by: test_non_finite_values_raise_value_error
+  visible: hidden
+- file: reject_condition_number_guard.py
+  mistake: refuses a full-rank design whose condition number is large
+  clause: 'Raises `ValueError` when `X` is not 2-D; when `y` is not 1-D or has a different length from
+    `X`; when `X` or `y` contains NaN or infinity; when the design matrix is rank deficient. The rank
+    is the one NumPy computes with `np.linalg.matrix_rank` and its default tolerance. This covers a column
+    that is a multiple or a sum of others, a zero column, a constant column when `fit_intercept` is true,
+    and fewer rows than columns. A full-rank design is fitted however large its condition number is: a
+    real economic design with an intercept can have a condition number near 10^10 and must still be fitted.'
+  killed_by: test_full_rank_real_design_with_large_condition_is_fitted
+  visible: hidden
+- file: reject_centers_x_in_place.py
+  mistake: centres the caller's float64 X in place after the fit
+  clause: Must not mutate `X` or `y`.
+  killed_by: test_matches_scikit_learn_with_intercept
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
