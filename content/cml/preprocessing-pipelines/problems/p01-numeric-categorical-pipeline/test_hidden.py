@@ -332,3 +332,20 @@ def test_matches_column_transformer_on_real_adult_with_rare_and_unseen_countries
             "test output differs on real census columns: unseen levels are all zero, and missing"
             " test answers take the training mode"
         )
+
+
+def test_empty_string_is_an_ordinary_category_not_a_missing_value():
+    # Missing means NaN only. An empty string is a text value, so it is its own category,
+    # and sorted distinct categories put "" before "north" and "south".
+    train = pd.DataFrame({"city": ["north", "", "north", "south"]})
+    test = pd.DataFrame({"city": ["", "north"]})
+    out_train, out_test = _call(train, test, [], ["city"])
+    if out_train.tolist() != [
+        [0.0, 1.0, 0.0],
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+        [0.0, 0.0, 1.0],
+    ]:
+        pytest.fail("an empty string is a category of its own, not a missing value to be filled")
+    if out_test.tolist() != [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]:
+        pytest.fail("a test empty string must match its own training category, not the mode")

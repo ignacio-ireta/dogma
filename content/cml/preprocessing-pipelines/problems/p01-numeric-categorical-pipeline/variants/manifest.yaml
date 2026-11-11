@@ -1,7 +1,91 @@
-problem_version: 5
+problem_version: 6
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_cap_levels_at_ten.py
+  mistake: caps the categories at the ten most frequent levels and drops the rest
+  clause: 'Must not mutate `train` or `test`. **Protocol (exact).** *Numeric column.* 1. Median of the
+    observed training values. The median is the usual one, the mean of the two middle values for an even
+    count. 2. Fill every missing value in `train` and `test` with that training median. 3. Let `mean`
+    and `scale` be the mean and the population standard deviation (denominator `n`) of the filled training
+    column. If the filled training column is constant (its maximum equals its minimum), `scale` is `1.0`.
+    Compute both without overflow or underflow: columns of values near `1e200` or `1e-200` still have
+    a finite, nonzero `scale`. 4. Transform both columns with `(x - mean) / scale`. *Categorical column.*
+    1. Mode of the observed training values. Ties go to the smallest value. 2. Fill every missing value
+    in `train` with that mode. 3. `categories` are the sorted distinct values of the filled training column,
+    however rare: a level seen once in train gets its own column. 4. A row gets a `1.0` in the column
+    of its category and `0.0` in the others. In `test`, a missing value is treated as the training mode.
+    A value that is not in `categories` gives an all-zero block.'
+  killed_by: test_matches_column_transformer_on_real_adult_with_rare_and_unseen_countries
+  visible: hidden
+- file: reject_categorical_blocks_sorted.py
+  mistake: emits one-hot blocks in sorted column-name order instead of the order given
+  clause: 'Returns `(train_out, test_out)`: two float64 NumPy arrays with shapes `(len(train), d)` and
+    `(len(test), d)`. Both have the same `d` columns, in this order: first the numeric columns, in the
+    order given, then the one-hot block of each categorical column, in the order given.'
+  killed_by: test_matches_column_transformer_on_real_adult_with_rare_and_unseen_countries
+  visible: hidden
+- file: reject_duplicate_across_lists.py
+  mistake: accepts a column named once in numeric and once in categorical
+  clause: A column may appear at most once across both lists. At least one column must be named.
+  killed_by: test_invalid_column_requests_raise_value_error
+  visible: hidden
+- file: reject_naive_std_overflows.py
+  mistake: computes the training scale by squaring directly so extreme magnitudes overflow or underflow
+  clause: 'Must not mutate `train` or `test`. **Protocol (exact).** *Numeric column.* 1. Median of the
+    observed training values. The median is the usual one, the mean of the two middle values for an even
+    count. 2. Fill every missing value in `train` and `test` with that training median. 3. Let `mean`
+    and `scale` be the mean and the population standard deviation (denominator `n`) of the filled training
+    column. If the filled training column is constant (its maximum equals its minimum), `scale` is `1.0`.
+    Compute both without overflow or underflow: columns of values near `1e200` or `1e-200` still have
+    a finite, nonzero `scale`. 4. Transform both columns with `(x - mean) / scale`. *Categorical column.*
+    1. Mode of the observed training values. Ties go to the smallest value. 2. Fill every missing value
+    in `train` with that mode. 3. `categories` are the sorted distinct values of the filled training column,
+    however rare: a level seen once in train gets its own column. 4. A row gets a `1.0` in the column
+    of its category and `0.0` in the others. In `test`, a missing value is treated as the training mode.
+    A value that is not in `categories` gives an all-zero block.'
+  killed_by: test_numeric_scaling_keeps_representable_results_at_extreme_magnitudes
+  visible: hidden
+- file: reject_no_empty_numeric_check.py
+  mistake: accepts a numeric column with no observed training value instead of raising
+  clause: Raises `ValueError` when no column is named, when a column is named twice, when a named column
+    is missing from a frame, when a numeric column has no observed value in `train`, or when a categorical
+    column has no observed value in `train`.
+  killed_by: test_a_column_with_no_training_value_raises_value_error
+  visible: hidden
+- file: reject_silent_test_fill.py
+  mistake: treats a column missing from the test frame as all missing instead of raising
+  clause: '`train`, `test`: pandas DataFrames. Every column named in `numeric` or `categorical` must be
+    present in both frames.'
+  killed_by: test_a_name_missing_from_the_test_frame_raises_value_error
+  visible: public
+- file: reject_test_median_fill.py
+  mistake: fills missing test values with the test column median instead of the training median
+  clause: 'Must not mutate `train` or `test`. **Protocol (exact).** *Numeric column.* 1. Median of the
+    observed training values. The median is the usual one, the mean of the two middle values for an even
+    count. 2. Fill every missing value in `train` and `test` with that training median. 3. Let `mean`
+    and `scale` be the mean and the population standard deviation (denominator `n`) of the filled training
+    column. If the filled training column is constant (its maximum equals its minimum), `scale` is `1.0`.
+    Compute both without overflow or underflow: columns of values near `1e200` or `1e-200` still have
+    a finite, nonzero `scale`. 4. Transform both columns with `(x - mean) / scale`. *Categorical column.*
+    1. Mode of the observed training values. Ties go to the smallest value. 2. Fill every missing value
+    in `train` with that mode. 3. `categories` are the sorted distinct values of the filled training column,
+    however rare: a level seen once in train gets its own column. 4. A row gets a `1.0` in the column
+    of its category and `0.0` in the others. In `test`, a missing value is treated as the training mode.
+    A value that is not in `categories` gives an all-zero block.'
+  killed_by: test_worked_example_fits_train_and_only_transforms_test
+  visible: public
+- file: reject_zero_counts_as_missing.py
+  mistake: treats a numeric zero as a missing value
+  clause: '`numeric`: list of column names with numeric values. Missing values are NaN.'
+  killed_by: test_matches_column_transformer_on_random_mixed_tables
+  visible: hidden
+- file: reject_empty_string_is_missing.py
+  mistake: treats an empty string as a missing value instead of a category
+  clause: '`categorical`: list of column names with string values. Missing values are NaN.'
+  killed_by: test_empty_string_is_an_ordinary_category_not_a_missing_value
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
