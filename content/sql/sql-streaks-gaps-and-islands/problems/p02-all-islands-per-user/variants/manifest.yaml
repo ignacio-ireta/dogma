@@ -43,3 +43,4 @@ uncovered:
   reason: a read-only query cannot change the visits table, so no wrong solution exists
 sweeps:
 - reject
+- mutants
