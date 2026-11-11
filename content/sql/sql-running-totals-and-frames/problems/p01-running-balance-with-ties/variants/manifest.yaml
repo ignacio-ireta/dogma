@@ -40,6 +40,10 @@ uncovered:
   reason: every test checks this first, so a wrong solution fails all of them
 - clause: Do not change the input table.
   reason: a read-only query cannot change the input table, so no wrong solution can break this
+- clause: The frame is your choice. Any query that returns the balances above is accepted, whatever frame
+    keyword it uses. The grader checks results, not syntax.
+  reason: 'states a permission: any frame that returns the stated balances is accepted, so there is no
+    requirement to break'
 sweeps:
 - reject
 - mutants
