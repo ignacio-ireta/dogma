@@ -1,4 +1,4 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
@@ -37,8 +37,29 @@ reject:
   clause: '`text` must be a `str`. Otherwise `TypeError`.'
   killed_by: test_non_string_text_raises_type_error
   visible: hidden
+- file: reject_block_ends_unchecked.py
+  mistake: text after the closing tag is accepted when the call's JSON quotes the closing tag
+  clause: 'Errors, all subclasses of `ValueError`. The starter defines them, and you must keep them: -
+    `ToolCallParseError`: the text is not one call block; the JSON is malformed; a number is non-finite;
+    a key repeats; the top level is not an object with exactly `name` and `arguments`; `name` is not a
+    string; or `arguments` is not an object. - `ToolSchemaError`: the call''s `name` differs from the
+    schema; a required parameter is missing; an argument is not in `properties`; or an argument value
+    has the wrong type.'
+  killed_by: test_text_after_the_closing_tag_raises_tool_call_parse_error
+  visible: hidden
+- file: reject_block_start_or_end_check.py
+  mistake: text before the opening tag is accepted when the call's JSON quotes the opening tag
+  clause: 'Errors, all subclasses of `ValueError`. The starter defines them, and you must keep them: -
+    `ToolCallParseError`: the text is not one call block; the JSON is malformed; a number is non-finite;
+    a key repeats; the top level is not an object with exactly `name` and `arguments`; `name` is not a
+    string; or `arguments` is not an object. - `ToolSchemaError`: the call''s `name` differs from the
+    schema; a required parameter is missing; an argument is not in `properties`; or an argument value
+    has the wrong type.'
+  killed_by: test_text_before_the_opening_tag_raises_tool_call_parse_error
+  visible: hidden
 uncovered:
 - clause: Must not mutate `text` or `tool`.
   reason: wrong solution survives, see notes
 sweeps:
 - reject
+- mutants

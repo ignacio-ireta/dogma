@@ -221,3 +221,13 @@ def test_non_finite_number_inside_a_list_raises_tool_call_parse_error():
         "every JSON number must be finite, including one nested in a list: "
         "raise ToolCallParseError",
     )
+
+
+def test_text_after_the_closing_tag_raises_tool_call_parse_error():
+    text = "<call>" + '{"name": "lookup", "arguments": {"query": "</call>"}}' + "garbage"
+    _expect(ToolCallParseError, text)
+
+
+def test_text_before_the_opening_tag_raises_tool_call_parse_error():
+    text = "Hello!" + '{"name": "lookup", "arguments": {"query": "<call>"}}' + "</call>"
+    _expect(ToolCallParseError, text)

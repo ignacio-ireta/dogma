@@ -1,5 +1,5 @@
 id: llm/chat-templates-and-tool-call-formats/p02-parse-tool-call
-version: 3                      # bump when tests, tolerances or the contract change
+version: 4                      # bump when tests, tolerances or the contract change
 title: Parse and validate a tool call from assistant text
 language: python                # python | sql
 runtime: py-stdlib              # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch
