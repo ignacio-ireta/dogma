@@ -2,6 +2,81 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_accepts_bool_counts.py
+  mistake: accepts a bool as a count so True counts as one
+  clause: '`word_counts`: a `dict` from `str` to `int`. Each key is a non-empty `str` with no whitespace,
+    and it must not contain the text `</w>`. Each value is a Python `int` of at least 1. Must not be mutated.
+    - `TypeError` for a non-dict, a non-str key, or a count that is not a Python `int` (`bool` is rejected).
+    - `ValueError` for an empty word, a word with whitespace or the text `</w>`, or a count below 1.'
+  killed_by: test_bool_count_raises_type_error
+  visible: hidden
+- file: reject_accepts_bool_num_merges.py
+  mistake: accepts a bool as num_merges
+  clause: '`num_merges`: a Python `int` of at least 0. `TypeError` for other types (`bool` included),
+    `ValueError` when negative.'
+  killed_by: test_bool_num_merges_raises_type_error
+  visible: hidden
+- file: reject_lowercases_words.py
+  mistake: lowercases every word before splitting it into symbols
+  clause: 'Symbols: a word `w` starts as `[*w, "</w>"]`. The marker is one symbol, so `"low"` starts as
+    `["l", "o", "w", "</w>"]`. Case and punctuation are ordinary characters: `"Low."` starts as `["L",
+    "o", "w", ".", "</w>"]`, and `"Low"` and `"low"` share no symbols.'
+  killed_by: test_real_gutenberg_counts_match_the_naive_trainer
+  visible: hidden
+- file: reject_pair_counts_skip_overlaps.py
+  mistake: skips the second position of a repeated pair so overlapping occurrences count once
+  clause: 'Pair counts: for a pair `(x, y)`, the count is the sum over words of `count(word) × k`, where
+    `k` is the number of positions `i` with `symbols[i] == x` and `symbols[i + 1] == y`. Overlapping positions
+    all count, so `"aaa"` has two `("a", "a")` pairs.'
+  killed_by: test_overlapping_pairs_are_counted_at_every_position
+  visible: public
+- file: reject_tie_takes_largest_pair.py
+  mistake: on a tie takes the largest pair instead of the smallest
+  clause: 'Choosing a merge: take the pair with the largest count. On a tie, take the smallest pair under
+    Python tuple order: compare the left symbols as strings, then the right symbols. So `("a", "</w>")`
+    beats `("a", "b")`, and `("a", "b")` beats `("b", "a")`.'
+  killed_by: test_worked_example_learns_three_merges_with_a_tie_break
+  visible: public
+- file: reject_merge_overlaps_twice.py
+  mistake: advances one symbol after a merge so an overlap is merged twice
+  clause: 'Applying a merge `(x, y)`: in each word, scan from left to right. Where `x` is followed by
+    `y`, replace both with the one symbol `x + y` and continue after them. Overlaps are never merged twice.'
+  killed_by: test_worked_example_learns_three_merges_with_a_tie_break
+  visible: public
+- file: reject_stops_when_one_pair_left.py
+  mistake: stops as soon as fewer than two distinct pairs remain so fewer merges are returned
+  clause: Stop when `num_merges` merges are learned, or when no adjacent pair is left. Then return fewer
+    merges.
+  killed_by: test_random_tables_match_the_naive_trainer
+  visible: hidden
+- file: reject_merges_returned_in_reverse.py
+  mistake: returns the merges in reverse of the order they were learned
+  clause: 'Returns: a `list` of `tuple[str, str]` of length at most `num_merges`. An empty table returns
+    `[]`.'
+  killed_by: test_worked_example_learns_three_merges_with_a_tie_break
+  visible: public
+- file: reject_harvest_drop_non_ascii_words.py
+  mistake: drops every word that is not plain ASCII from the counts
+  clause: 'Pair counts: for a pair `(x, y)`, the count is the sum over words of `count(word) × k`, where
+    `k` is the number of positions `i` with `symbols[i] == x` and `symbols[i + 1] == y`. Overlapping positions
+    all count, so `"aaa"` has two `("a", "a")` pairs.'
+  killed_by: test_real_gutenberg_counts_match_the_naive_trainer
+  visible: hidden
+- file: reject_harvest_strip_edge_punctuation.py
+  mistake: strips edge punctuation from each word before splitting it into symbols
+  clause: 'Symbols: a word `w` starts as `[*w, "</w>"]`. The marker is one symbol, so `"low"` starts as
+    `["l", "o", "w", "</w>"]`. Case and punctuation are ordinary characters: `"Low."` starts as `["L",
+    "o", "w", ".", "</w>"]`, and `"Low"` and `"low"` share no symbols.'
+  killed_by: test_real_gutenberg_counts_match_the_naive_trainer
+  visible: hidden
+- file: reject_harvest_lowercase_words.py
+  mistake: lowercases every word so capital and small letters merge
+  clause: 'Symbols: a word `w` starts as `[*w, "</w>"]`. The marker is one symbol, so `"low"` starts as
+    `["l", "o", "w", "</w>"]`. Case and punctuation are ordinary characters: `"Low."` starts as `["L",
+    "o", "w", ".", "</w>"]`, and `"Low"` and `"low"` share no symbols.'
+  killed_by: test_real_gutenberg_counts_match_the_naive_trainer
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
