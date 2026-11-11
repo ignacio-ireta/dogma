@@ -63,3 +63,4 @@ uncovered:
   reason: inputs are a float and ints, which cannot be changed in place
 sweeps:
 - reject
+- mutants
