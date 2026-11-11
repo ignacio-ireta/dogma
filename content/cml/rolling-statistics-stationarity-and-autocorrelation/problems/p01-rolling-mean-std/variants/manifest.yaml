@@ -1,0 +1,7 @@
+problem_version: 5
+accept:
+- file: accept_blind.py
+  origin: blind
+reject: []
+uncovered: []
+sweeps: []

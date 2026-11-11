@@ -1,0 +1,7 @@
+problem_version: 3
+accept:
+- file: accept_blind.sql
+  origin: blind
+reject: []
+uncovered: []
+sweeps: []
