@@ -2,6 +2,46 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_einsum_sum_order.py
+  origin: freedom
+  freedom: sums the centred products with einsum instead of a matrix product
+reject:
+- file: reject_allows_n_equal_ddof.py
+  mistake: guard accepts n equal to ddof, so the divisor can be zero
+  clause: Raises `ValueError` when `X` is not 2-D, when it has no rows or no columns, when it contains
+    NaN or infinity, when `ddof` is negative or not an integer, or when `n <= ddof` (there is no positive
+    divisor).
+  killed_by: test_one_row_with_ddof_one_raises_value_error
+  visible: public
+- file: reject_centres_in_place.py
+  mistake: centres the caller array in place
+  clause: Must not mutate its input.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
+- file: reject_centres_rows_not_columns.py
+  mistake: subtracts row means instead of column means
+  clause: 'Returns: NumPy array of shape `(d, d)` and dtype `float64`, equal to $C = \dfrac{(X - \bar{x})^\top
+    (X - \bar{x})}{n - \text{ddof}}$, where $\bar{x}$ is the vector of column means.'
+  killed_by: test_two_variables_with_default_ddof_use_n_minus_one
+  visible: public
+- file: reject_ignores_ddof_argument.py
+  mistake: divides by n minus 1 whatever ddof is passed
+  clause: '`ddof`: a non-negative integer. The default `1` gives the unbiased sample covariance.'
+  killed_by: test_ddof_zero_divides_by_n
+  visible: public
+- file: reject_no_negative_ddof_check.py
+  mistake: no check for negative ddof
+  clause: Raises `ValueError` when `X` is not 2-D, when it has no rows or no columns, when it contains
+    NaN or infinity, when `ddof` is negative or not an integer, or when `n <= ddof` (there is no positive
+    divisor).
+  killed_by: test_negative_ddof_raises_value_error
+  visible: hidden
+- file: reject_refuses_single_observation.py
+  mistake: refuses one observation even when ddof is 0
+  clause: '`X`: 2-D array-like of real numbers, shape `(n, d)` with $n \ge 1$ rows and $d \ge 1$ columns.
+    Integers allowed. Every entry is finite.'
+  killed_by: test_single_observation_with_ddof_zero_is_a_zero_matrix
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

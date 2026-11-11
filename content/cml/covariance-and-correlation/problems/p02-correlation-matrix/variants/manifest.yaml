@@ -2,6 +2,53 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_normalise_then_multiply.py
+  origin: freedom
+  freedom: scales each column to unit length first and multiplies the scaled columns
+reject:
+- file: reject_checks_only_first_row_finite.py
+  mistake: checks only the first row for NaN and infinity
+  clause: Raises `ValueError` when `X` is not 2-D, when it has no rows or no columns, when it has fewer
+    than two rows, or when it contains NaN or infinity.
+  killed_by: test_infinite_entry_raises_value_error
+  visible: hidden
+- file: reject_computed_variance_decides_constant.py
+  mistake: decides constancy from a computed variance not the raw values
+  clause: '**Constant columns.** A column is constant when all its entries are equal. Its correlations
+    are undefined, so every entry in its row and its column is `NaN`, including its diagonal entry. No
+    exception is raised for a constant column. Other entries are still computed normally.'
+  killed_by: test_rescaling_a_column_does_not_change_correlations
+  visible: hidden
+- file: reject_nan_only_on_diagonal.py
+  mistake: sets only the diagonal of a constant column to NaN
+  clause: '**Constant columns.** A column is constant when all its entries are equal. Its correlations
+    are undefined, so every entry in its row and its column is `NaN`, including its diagonal entry. No
+    exception is raised for a constant column. Other entries are still computed normally.'
+  killed_by: test_constant_column_gives_nan_row_and_column_including_diagonal
+  visible: public
+- file: reject_no_clip_after_rounding.py
+  mistake: no clip of rounding overshoot above 1
+  clause: 'Returns: NumPy array of shape `(d, d)` and dtype `float64`. Every entry is in $[-1, 1]$ (clip
+    any rounding overshoot). Non-constant columns have a diagonal entry of 1.'
+  killed_by: test_unit_diagonal_symmetry_and_bounds
+  visible: hidden
+- file: reject_population_std_mixed_with_sample_cov.py
+  mistake: uses population std with the sample covariance
+  clause: 'Returns: NumPy array of shape `(d, d)` and dtype `float64`. Every entry is in $[-1, 1]$ (clip
+    any rounding overshoot). Non-constant columns have a diagonal entry of 1.'
+  killed_by: test_negative_correlation_from_a_small_example
+  visible: public
+- file: reject_refuses_single_variable.py
+  mistake: refuses a single column
+  clause: '`X`: 2-D array-like of real numbers, shape `(n, d)` with $n \ge 2$ rows and $d \ge 1$ columns.
+    Integers allowed. Every entry is finite.'
+  killed_by: test_matches_numpy_corrcoef_on_random_matrices
+  visible: hidden
+- file: reject_rescales_input_in_place.py
+  mistake: rescales the caller array in place
+  clause: Must not mutate its input.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
