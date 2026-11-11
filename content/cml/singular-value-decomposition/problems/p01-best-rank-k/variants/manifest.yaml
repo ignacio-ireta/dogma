@@ -42,3 +42,4 @@ uncovered:
     breaks the error or rank bullet
 sweeps:
 - reject
+- mutants
