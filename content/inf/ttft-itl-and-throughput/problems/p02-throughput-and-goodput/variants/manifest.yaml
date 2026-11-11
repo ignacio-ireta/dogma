@@ -2,6 +2,50 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_slo_checked_before_requests.py
+  origin: freedom
+  freedom: checks the SLO bounds before the requests list, the contract does not fix which error comes
+    first
+reject:
+- file: reject_first_token_at_arrival_rejected.py
+  mistake: a first token arriving exactly at the request arrival is rejected
+  clause: '`requests`: a non-empty `list` of request `dict` values, with the validation rules of the latency-percentile
+    problem: `TypeError` for wrong types, `ValueError` for a missing key, an empty token list, non-increasing
+    times, a first token before arrival, or a non-finite time.'
+  killed_by: test_inclusive_bound_on_itl_is_met_exactly
+  visible: hidden
+- file: reject_slo_string_accepted.py
+  mistake: a string TTFT bound is converted to a number instead of raising TypeError
+  clause: '`ttft_slo`, `itl_slo`: `int` or `float`, finite, `>= 0`, and not `bool`. Wrong types raise
+    `TypeError`; a negative or non-finite value raises `ValueError`.'
+  killed_by: test_wrong_types_raise_type_error
+  visible: hidden
+- file: reject_negative_itl_slo_accepted.py
+  mistake: a negative inter-token bound is accepted instead of raising ValueError
+  clause: '`ttft_slo`, `itl_slo`: `int` or `float`, finite, `>= 0`, and not `bool`. Wrong types raise
+    `TypeError`; a negative or non-finite value raises `ValueError`.'
+  killed_by: test_invalid_values_raise_value_error
+  visible: hidden
+- file: reject_zero_window_divides.py
+  mistake: a zero-length window is not rejected and the division fails
+  clause: 'If `window <= 0`, raise `ValueError`: the measurement has no duration.'
+  killed_by: test_zero_length_window_is_rejected
+  visible: public
+- file: reject_returns_list_not_tuple.py
+  mistake: the rate pair is returned as a list instead of a tuple
+  clause: 'Returns: a `tuple` of two Python `float` values, `(throughput_tokens_per_s, goodput_requests_per_s)`.'
+  killed_by: test_worked_example_counts_tokens_and_only_the_passing_request
+  visible: public
+- file: reject_throughput_floor_division.py
+  mistake: throughput uses floor division so fractional rates are cut down
+  clause: 'Returns: a `tuple` of two Python `float` values, `(throughput_tokens_per_s, goodput_requests_per_s)`.'
+  killed_by: test_seeded_random_requests_match_exact_fraction_oracle
+  visible: hidden
+- file: reject_sorts_requests_in_place.py
+  mistake: the caller requests list is sorted in place
+  clause: Must not mutate `requests`.
+  killed_by: test_input_requests_are_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

@@ -2,6 +2,61 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_reversed_key_order.py
+  origin: freedom
+  freedom: returns the six keys in reverse order, the contract does not fix key order
+reject:
+- file: reject_empty_list_wrong_error.py
+  mistake: empty list raises TypeError instead of ValueError
+  clause: '`requests`: a non-empty `list` of request `dict` values. An empty list raises `ValueError`.'
+  killed_by: test_empty_request_list_is_rejected
+  visible: public
+- file: reject_missing_arrival_not_checked.py
+  mistake: a request without an arrival time is not rejected by name
+  clause: Each request must have `arrival` and `token_times`. A missing key raises `ValueError`.
+  killed_by: test_invalid_request_values_raise_value_error
+  visible: hidden
+- file: reject_tuple_token_times_accepted.py
+  mistake: token times given as a tuple are accepted
+  clause: A request that is not a `dict`, or whose `token_times` is not a `list`, raises `TypeError`.
+  killed_by: test_wrong_types_raise_type_error
+  visible: hidden
+- file: reject_bool_time_accepted.py
+  mistake: boolean time values are accepted as numbers
+  clause: '`arrival` and each time value: `int` or `float`, finite, and not `bool`. Other types raise
+    `TypeError`; non-finite values raise `ValueError`.'
+  killed_by: test_wrong_types_raise_type_error
+  visible: hidden
+- file: reject_duplicate_times_accepted.py
+  mistake: repeated token times are accepted instead of rejected
+  clause: '`token_times` must be non-empty and strictly increasing. `arrival <= token_times[0]`. Violations
+    raise `ValueError`.'
+  killed_by: test_invalid_request_values_raise_value_error
+  visible: hidden
+- file: reject_arrival_equal_first_token.py
+  mistake: a first token arriving exactly at the request arrival is rejected
+  clause: '`token_times` must be non-empty and strictly increasing. `arrival <= token_times[0]`. Violations
+    raise `ValueError`.'
+  killed_by: test_all_one_token_requests_leave_itl_undefined
+  visible: hidden
+- file: reject_itl_p95_zero_when_no_gaps.py
+  mistake: itl p95 is zero instead of none when no request has two tokens
+  clause: 'Returns: a `dict` with exactly these keys, each a Python `float`, or `None` where stated: `ttft_p50`,
+    `ttft_p95`, `itl_p50`, `itl_p95`, `e2e_p50`, `e2e_p95`. `itl_p50` and `itl_p95` are `None` when no
+    request has two or more tokens.'
+  killed_by: test_one_token_request_has_no_itl
+  visible: public
+- file: reject_sorts_requests_in_place.py
+  mistake: the caller requests list is sorted in place
+  clause: Must not mutate `requests`.
+  killed_by: test_input_requests_are_not_mutated
+  visible: hidden
+- file: reject_quadratic_ttft_sort.py
+  mistake: TTFT is sorted by counting smaller values for each entry which is quadratic
+  clause: 'Not allowed: any approach whose cost grows quadratically with the number of requests, such
+    as scanning the whole list once per rank. The hidden tests include a list of 50,000 requests.'
+  killed_by: test_large_request_list_finishes_within_the_time_limit
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
