@@ -399,3 +399,26 @@ def test_plain_list_predictions_are_accepted():
         "a predict that returns a plain list is valid, and a feature the model never reads "
         "cannot change the predictions, so its drop is exactly 0"
     )
+
+
+def test_huge_finite_entries_are_accepted_and_ignored_column_has_no_drop():
+    # Only NaN and infinity are invalid in X, so a very large finite entry must be kept as it is.
+    # The model ignores column 2 (weight 0), so permuting it cannot change any prediction: its
+    # drop is exactly 0 for every correct solution, whatever the draws.
+    X = np.array([[1e300, 0.5, 0.2], [-1e300, 0.1, -0.4], [1.0, -2.0, 3.0], [0.3, 0.7, -1.1]])
+    y = np.array([1, 0, 1, 0])
+    try:
+        mean_drop, std_drop = permutation_importance(_predict, X, y, _accuracy, n_repeats=3, seed=0)
+    except ValueError:
+        pytest.fail(
+            "a very large but finite entry of X was rejected: the input rule only excludes "
+            "NaN and infinity, so values beyond the range of a smaller float type must be kept"
+        )
+    mean_drop = np.asarray(mean_drop, dtype=np.float64)
+    std_drop = np.asarray(std_drop, dtype=np.float64)
+    assert np.all(np.isfinite(mean_drop)) and np.all(np.isfinite(std_drop)), (
+        "every drop must be a finite number when X is finite"
+    )
+    assert mean_drop[2] == 0.0 and std_drop[2] == 0.0, (
+        "a feature the model ignores must have exactly zero mean drop and zero spread"
+    )

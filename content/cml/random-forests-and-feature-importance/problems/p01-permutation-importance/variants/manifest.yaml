@@ -47,6 +47,12 @@ reject:
     as a 1-D array-like.'
   killed_by: test_plain_list_predictions_are_accepted
   visible: hidden
+- file: reject_float32_cast.py
+  mistake: X is cast to a smaller float type, so very large finite entries become infinite and the call
+    rejects valid input
+  clause: '`X`: 2-D array-like of finite numbers, shape `(n, d)`, with $n \ge 1$ and $d \ge 1$.'
+  killed_by: test_huge_finite_entries_are_accepted_and_ignored_column_has_no_drop
+  visible: hidden
 uncovered:
 - clause: 'Raises: `ValueError` when `X` is not a non-empty 2-D finite array; when `y` is not 1-D or has
     a different length from `X`; when `n_repeats` is not an integer of at least 1; when `seed` is not
@@ -56,3 +62,4 @@ uncovered:
   reason: cap of eight wrong solutions per problem
 sweeps:
 - reject
+- mutants
