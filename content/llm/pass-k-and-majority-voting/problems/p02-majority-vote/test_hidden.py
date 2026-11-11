@@ -7,6 +7,17 @@ from submission import majority_vote
 
 from dogma_data import load_frame
 
+
+def _raises(expected, call, mistake):
+    try:
+        call()
+    except expected:
+        return
+    except Exception as exc:
+        pytest.fail(f"{mistake}; raised {type(exc).__name__} instead")
+    pytest.fail(mistake)
+
+
 POOL = ["Yes", "no", " 7 ", "7", "Paris", "paris ", "a  b", "a b", "", "  "]
 
 
@@ -51,8 +62,11 @@ def reference(answers: list[str]) -> str:
 @given(st.lists(st.sampled_from(POOL), min_size=1, max_size=25))
 def test_random_answer_lists_match_the_first_occurrence_oracle(answers):
     if all(not " ".join(a.split()) for a in answers):
-        with pytest.raises(ValueError):
-            majority_vote(answers)
+        _raises(
+            ValueError,
+            lambda: majority_vote(answers),
+            "answers with no non-blank text must raise ValueError",
+        )
         return
     got = checked(lambda: majority_vote(answers))
     want = reference(answers)
