@@ -2,6 +2,61 @@ problem_version: 2
 accept:
 - file: accept_blind.sql
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_explicit_on_join.sql
+  origin: freedom
+  freedom: join condition written with ON instead of USING
+reject:
+- file: reject_cohort_is_last_month.sql
+  mistake: cohort month taken from the latest activity month instead of the first
+  clause: '**Cohort month** `c_u`: the first day of the calendar month of `u`''s earliest `event_at`,
+    as a `DATE`.'
+  killed_by: test_worked_example_from_problem_md
+  visible: public
+- file: reject_cohort_size_counts_events.sql
+  mistake: cohort size counts first month events so repeated events add to it
+  clause: '**Cohort size** `N_c`: the number of users whose cohort month is `c`.'
+  killed_by: test_worked_example_from_problem_md
+  visible: public
+- file: reject_period_thirty_day_months.sql
+  mistake: period found by dividing the day difference by thirty instead of counting calendar months
+  clause: '**Period** `p`: the whole number of calendar months from the cohort month to an activity month.
+    The cohort''s own month is period 0. Measure it in calendar months, not days.'
+  killed_by: test_worked_example_from_problem_md
+  visible: public
+- file: reject_active_counts_events.sql
+  mistake: active count counts events instead of distinct users
+  clause: '**Active users** `A(c, p)`: the number of **distinct** users in cohort `c` with at least one
+    event in the calendar month `c + p`. A user with three events in one month counts once.'
+  killed_by: test_worked_example_from_problem_md
+  visible: public
+- file: reject_rate_two_decimals.sql
+  mistake: rate rounded to two decimal places instead of four
+  clause: '**Retention rate** `R(c, p) = A(c, p) / N_c`, rounded to 4 decimal places. Rows of the result:'
+  killed_by: test_matches_calendar_month_oracle_on_seeded_random_activity
+  visible: hidden
+- file: reject_grid_drops_empty_periods.sql
+  mistake: inner join to active counts drops periods with no active user
+  clause: One row for every cohort month that has at least one user, and for every period from 0 up to
+    the number of months between that cohort month and the latest activity month in the whole table, inclusive.
+    A period with no active user is still a row, with `active_users = 0` and `retention_rate = 0.0`.
+  killed_by: test_worked_example_from_problem_md
+  visible: public
+- file: reject_rate_floors.sql
+  mistake: rate floored at four decimal places instead of rounded
+  clause: '`retention_rate` is `ROUND(active_users / cohort_size, 4)`. Ties at the fifth decimal may round
+    either way; the grader accepts both.'
+  killed_by: test_matches_calendar_month_oracle_on_seeded_random_activity
+  visible: hidden
+uncovered:
+- clause: 'A cohort month with no new users has no rows. Output columns, in this order, with these types:
+    | Column | DuckDB type | |---|---| | cohort_month | DATE | | period | BIGINT | | active_users | BIGINT
+    | | cohort_size | BIGINT | | retention_rate | DOUBLE |'
+  reason: every test checks the column types first so a wrong solution fails all of them
+- clause: Final output order is `cohort_month ASC, period ASC`.
+  reason: cap of eight wrong solutions per problem
+- clause: An empty table returns no rows, with the stated column names and types.
+  reason: cap of eight wrong solutions per problem
+- clause: Do not change the input table.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject
