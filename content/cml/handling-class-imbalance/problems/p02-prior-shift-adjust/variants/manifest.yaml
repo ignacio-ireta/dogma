@@ -2,6 +2,45 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_logaddexp_sigmoid.py
+  origin: freedom
+  freedom: sigmoid computed through logaddexp instead of the two-branch form
+reject:
+- file: reject_empty_probs_refused.py
+  mistake: empty probs is refused
+  clause: '`probs`: 1-D sequence or NumPy array of probabilities P(y = 1 | x) under the training prior.
+    Each value is finite and in [0, 1]. The length may be 0.'
+  killed_by: test_equal_priors_are_the_identity
+  visible: hidden
+- file: reject_direct_odds_ratio.py
+  mistake: odds ratio formed directly, overflows or underflows for tiny priors
+  clause: '`train_prior`, `deploy_prior`: numbers strictly between 0 and 1. They may be as small as the
+    smallest positive float64, and the result must stay finite and accurate there, so a direct odds ratio
+    is not enough.'
+  killed_by: test_endpoints_stay_exactly_zero_and_one
+  visible: hidden
+- file: reject_float32_result.py
+  mistake: result returned as float32
+  clause: Returns a NumPy float array of the same length, with the deployment probabilities.
+  killed_by: test_low_base_rate_pulls_a_confident_probability_down
+  visible: public
+- file: reject_clips_probabilities_away_from_0_and_1.py
+  mistake: probabilities clipped away from 0 and 1 before adjusting
+  clause: A probability of exactly 0 maps to 0, and exactly 1 maps to 1. Equal priors return the input
+    unchanged.
+  killed_by: test_endpoints_stay_exactly_zero_and_one
+  visible: hidden
+- file: reject_nan_probability_accepted.py
+  mistake: NaN probabilities pass the range check
+  clause: Raises `ValueError` when `probs` is not 1-D, when a value is NaN or outside [0, 1], or when
+    a prior is not strictly between 0 and 1.
+  killed_by: test_invalid_input_raises_value_error
+  visible: hidden
+- file: reject_writes_corrections_into_caller_array.py
+  mistake: corrections are written into the caller's array
+  clause: Must not mutate `probs`.
+  killed_by: test_simulation_at_fixed_seed_is_calibrated_to_the_deployment_base_rate
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

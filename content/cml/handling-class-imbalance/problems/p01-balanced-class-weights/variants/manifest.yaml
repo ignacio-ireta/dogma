@@ -2,6 +2,37 @@ problem_version: 1
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_counter_first_appearance.py
+  origin: freedom
+  freedom: dict keys in first-appearance order, built with a Counter loop
+reject:
+- file: reject_string_labels_cast_to_float.py
+  mistake: string labels are cast to float before counting
+  clause: '`y`: a 1-D sequence or NumPy array of labels (integers or strings), length n >= 1, with k distinct
+    labels.'
+  killed_by: test_weights_follow_each_label_not_the_order_of_first_appearance
+  visible: hidden
+- file: reject_divisor_uses_sample_count.py
+  mistake: divides by the sample count instead of classes times count
+  clause: Returns a dict with one entry per label that occurs in `y`. The value is the Python float n
+    / (k * count), where count is the number of samples with that label.
+  killed_by: test_two_classes_get_n_over_k_times_count
+  visible: public
+- file: reject_keys_turned_into_strings.py
+  mistake: dict keys are converted to strings
+  clause: The order of the dict is not specified. The keys are the labels exactly as they appear in `y`.
+  killed_by: test_two_classes_get_n_over_k_times_count
+  visible: public
+- file: reject_empty_returns_empty_dict.py
+  mistake: empty input returns an empty dict instead of raising
+  clause: Raises `ValueError` for empty input and for input that is not 1-D.
+  killed_by: test_empty_input_raises_value_error
+  visible: public
+- file: reject_sorts_callers_array_in_place.py
+  mistake: sorts the caller's array in place
+  clause: Must not mutate `y`.
+  killed_by: test_input_is_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
