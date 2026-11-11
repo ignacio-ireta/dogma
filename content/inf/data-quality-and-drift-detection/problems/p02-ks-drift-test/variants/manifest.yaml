@@ -2,6 +2,52 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_sorts_reference_in_place.py
+  mistake: the reference array is sorted in place so the caller sees it change
+  clause: '`reference`, `current`: 1-D sequences of finite real numbers, both non-empty. Integers are
+    allowed. Must not be mutated.'
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
+- file: reject_alpha_zero_accepted.py
+  mistake: alpha of exactly zero is accepted
+  clause: '`alpha`: float strictly between 0 and 1.'
+  killed_by: test_alpha_outside_the_open_interval_raises_value_error
+  visible: hidden
+- file: reject_ties_counted_on_one_side.py
+  mistake: tied values are counted on only one of the two samples
+  clause: 'Statistic: D = max over x of |F_ref(x) - F_cur(x)|, where F is the empirical CDF of each sample.
+    Evaluate it at every pooled value, counting all tied values together. D is two-sided, so a shift in
+    either direction counts.'
+  killed_by: test_identical_samples_have_zero_statistic_unit_p_value_and_no_drift
+  visible: public
+- file: reject_effective_size_rounded.py
+  mistake: the effective sample size is rounded before the p-value
+  clause: 'P-value: with n = len(reference), m = len(current), and effective size n_e = n * m / (n + m),
+    lambda = sqrt(n_e) * D p = 2 * sum over k >= 1 of (-1)^(k-1) * exp(-2 k^2 lambda^2), with p = 1 when
+    lambda = 0 This is the limiting Kolmogorov distribution. It is an approximation: it is accurate for
+    samples of about a hundred values or more, and it is not exact for very small samples. `scipy.stats.ks_2samp`
+    does not return this p-value: its default computes an exact finite-sample p-value when both samples
+    have fewer than 10000 values, and its `method=''asymp''` uses the Kolmogorov distribution at `round(n_e)`
+    rather than at `sqrt(n_e) * D`.'
+  killed_by: test_p_value_matches_the_limiting_distribution_at_the_effective_size
+  visible: hidden
+- file: reject_drift_at_alpha_boundary.py
+  mistake: a p-value equal to alpha is flagged as drift
+  clause: '`drifted`: True when p < alpha, otherwise False.'
+  killed_by: test_drift_flag_is_strict_when_alpha_equals_the_p_value
+  visible: hidden
+- file: reject_drifted_is_int.py
+  mistake: the drift flag is returned as an integer
+  clause: 'Returns: `(statistic, p_value, drifted)`, two floats and a bool.'
+  killed_by: test_identical_samples_have_zero_statistic_unit_p_value_and_no_drift
+  visible: public
+- file: reject_nonfinite_not_checked.py
+  mistake: NaN and infinite values are not refused
+  clause: Raises `ValueError` when an input is not 1-D, is empty, or has NaN or infinity, and when `alpha`
+    is not strictly between 0 and 1.
+  killed_by: test_non_finite_values_raise_value_error
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

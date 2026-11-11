@@ -2,6 +2,59 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_expected_list_rejected.py
+  mistake: expected given as a list is refused
+  clause: '`expected`: 1-D sequence of finite real numbers, non-empty. The reference sample. Integers
+    are allowed.'
+  killed_by: test_identical_samples_have_zero_psi
+  visible: public
+- file: reject_actual_truncated_to_int.py
+  mistake: actual values are truncated to whole numbers
+  clause: '`actual`: 1-D sequence of finite real numbers, non-empty. The current sample.'
+  killed_by: test_matches_loop_reference_on_seeded_samples
+  visible: hidden
+- file: reject_bins_float_truncated.py
+  mistake: float bins are accepted and truncated
+  clause: '`bins`: integer >= 2. A bool or a float is rejected.'
+  killed_by: test_invalid_bins_raise_value_error
+  visible: hidden
+- file: reject_eps_zero_allowed.py
+  mistake: eps of zero is accepted
+  clause: '`eps`: finite positive float.'
+  killed_by: test_non_positive_eps_raises_value_error
+  visible: hidden
+- file: reject_edge_goes_upper_bin.py
+  mistake: a value exactly on an edge goes to the upper bin
+  clause: Bin edges come from `expected` only. The interior edges are its quantiles at k / bins for k
+    = 1 .. bins - 1, with linear interpolation (NumPy's default method). The outer edges are -inf and
+    +inf, so every value falls in some bin. A value goes to the bin whose index equals the number of interior
+    edges strictly below it. A value exactly on an edge therefore belongs to the lower bin.
+  killed_by: test_value_exactly_on_an_edge_belongs_to_the_lower_bin
+  visible: hidden
+- file: reject_renormalises_after_floor.py
+  mistake: shares are renormalised after the eps floor
+  clause: 'Shares: p_k = (number of expected values in bin k) / (number of expected values), and q_k likewise
+    for `actual`. Every zero share is replaced by `eps`. Nonzero shares are not changed, and nothing is
+    renormalised.'
+  killed_by: test_empty_actual_bin_is_floored_at_eps
+  visible: public
+- file: reject_one_sided_kl.py
+  mistake: the sum uses only the actual share as weight
+  clause: PSI = sum over k of (q_k - p_k) * ln(q_k / p_k), with the natural logarithm. It is never negative,
+    and it is exactly 0 when the shares are identical.
+  killed_by: test_two_bins_with_one_extra_actual_mass_match_the_closed_form
+  visible: public
+uncovered:
+- clause: Repeated interior edges (ties in `expected`) are allowed. They make empty bins, which take `eps`
+    as usual.
+  reason: wrong solution survives, see notes
+- clause: 'Returns: a Python float.'
+  reason: cap of eight wrong solutions per problem
+- clause: Raises `ValueError` when an input is not 1-D, is empty, or has NaN or infinity; when `bins`
+    is not an integer of at least 2; or when `eps` is not finite and positive.
+  reason: cap of eight wrong solutions per problem
+- clause: Must not mutate its inputs.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject
