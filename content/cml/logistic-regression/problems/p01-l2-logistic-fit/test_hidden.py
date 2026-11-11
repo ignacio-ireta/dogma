@@ -430,3 +430,12 @@ def test_exhausted_budget_raises_when_all_gradient_entries_are_negative():
         "a fit that uses up max_iter before the gradient tolerance is met must raise RuntimeError,"
         " not return a point whose gradient is large in absolute value"
     )
+
+
+def test_weak_penalty_on_separated_data_never_overflows_an_intermediate_value():
+    X = np.linspace(-200.0, 200.0, 100)[:, None]
+    y = (X[:, 0] > 0).astype(float)
+    intercept, coef = _call(X, y, l2=1e-6)
+    assert np.isfinite(intercept) and np.all(np.isfinite(coef)), (
+        "the fit must stay finite when the penalty is weak and the classes are separated"
+    )

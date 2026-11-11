@@ -1,7 +1,75 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_logaddexp.py
+  origin: freedom
+  freedom: uses the logaddexp library call for the loss in place of the hand-written stable softplus
+reject:
+- file: reject_naive_softplus_overflows.py
+  mistake: naive log of one plus exp overflows on large scores under a weak penalty
+  clause: 'Large scores: on separable data with `l2 > 0` the minimiser is finite, and the fit must return
+    it. Linear scores may reach the hundreds or thousands during the iteration; no intermediate value
+    may overflow.'
+  killed_by: test_weak_penalty_on_separated_data_never_overflows_an_intermediate_value
+  visible: hidden
+- file: reject_rejects_single_feature.py
+  mistake: rejects a single-feature X
+  clause: '`X`: 2-D array-like, shape `(n, d)`, with $n \ge 1$ and $d \ge 1$. Every entry is finite.'
+  killed_by: test_worked_example_matches_the_penalised_optimum
+  visible: public
+- file: reject_accepts_single_class.py
+  mistake: accepts labels that contain a single class
+  clause: '`y`: 1-D array-like, shape `(n,)`. Every entry is exactly `0` or `1`. Both classes must appear.'
+  killed_by: test_single_class_labels_raise_value_error
+  visible: public
+- file: reject_zero_l2_refused.py
+  mistake: rejects a zero penalty
+  clause: '`l2`: finite real number, $\ell_2 \ge 0$. Zero is allowed; see the note below.'
+  killed_by: test_zero_penalty_on_non_separable_data_matches_the_maximum_likelihood_fit
+  visible: hidden
+- file: reject_zero_tol_accepted.py
+  mistake: accepts a zero tolerance
+  clause: '`max_iter`: integer, at least 1. `tol`: finite number greater than 0.'
+  killed_by: test_invalid_inputs_raise_value_error
+  visible: hidden
+- file: reject_silent_budget_exhaustion.py
+  mistake: returns the last iterate when the iteration budget runs out
+  clause: 'Raises: `ValueError` for any violation of the input rules above. `RuntimeError` when the gradient
+    condition is not reached within `max_iter` iterations.'
+  killed_by: test_too_small_iteration_budget_raises_runtime_error
+  visible: hidden
+- file: reject_penalises_standardised_coef.py
+  mistake: penalises standardised coefficients instead of the supplied features
+  clause: 'Scale: the objective is in the units of `X` as given. The penalty applies to the coefficients
+    of the features as supplied, whatever their scale, and the features may be strongly correlated.'
+  killed_by: test_worked_example_matches_the_penalised_optimum
+  visible: public
+- file: reject_sorts_inputs_in_place.py
+  mistake: sorts the caller arrays in place
+  clause: Must not mutate its inputs.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
+- file: reject_harvest_naive_exp_overflow.py
+  mistake: exp of a large positive score overflows
+  clause: 'Large scores: on separable data with `l2 > 0` the minimiser is finite, and the fit must return
+    it. Linear scores may reach the hundreds or thousands during the iteration; no intermediate value
+    may overflow.'
+  killed_by: test_separable_real_features_with_a_weak_penalty_fit_without_overflow
+  visible: hidden
+- file: reject_harvest_no_line_search.py
+  mistake: drops the line search so Newton steps overshoot on separable data
+  clause: 'Large scores: on separable data with `l2 > 0` the minimiser is finite, and the fit must return
+    it. Linear scores may reach the hundreds or thousands during the iteration; no intermediate value
+    may overflow.'
+  killed_by: test_separable_real_features_with_a_weak_penalty_fit_without_overflow
+  visible: hidden
+uncovered:
+- clause: 'Returns: `(intercept, coef)`. `intercept` is a Python `float`. `coef` is a `float64` array
+    of shape `(d,)`. At return, the largest absolute entry of $\nabla J$ is at most `tol`.'
+  reason: wrong solution survives, see notes
+- clause: 'Note: with `l2 = 0` and perfectly separated data, no finite minimiser exists, so raising `RuntimeError`
+    is acceptable there.'
+  reason: permissive note, raising RuntimeError is allowed, so no wrong solution breaks it
+sweeps:
+- reject

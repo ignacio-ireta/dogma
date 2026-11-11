@@ -1,5 +1,5 @@
 id: cml/logistic-regression/p01-l2-logistic-fit
-version: 4
+version: 5
 title: L2-regularised logistic regression
 language: python
 runtime: py-numpy
