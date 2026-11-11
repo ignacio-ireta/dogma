@@ -234,3 +234,33 @@ def test_default_label_order_is_sorted_not_set_order():
         expected,
         err_msg="with labels=None the labels must be in sorted order, not in the order of a set",
     )
+
+
+def test_unsorted_array_inputs_are_not_reordered():
+    y_true = np.array([2, 0, 1, 2])
+    y_pred = np.array([1, 2, 0, 2])
+    before_true, before_pred = y_true.copy(), y_pred.copy()
+    _solve(y_true, y_pred)
+    np.testing.assert_array_equal(
+        y_true,
+        before_true,
+        err_msg="y_true was reordered: count without changing the caller's arrays",
+    )
+    np.testing.assert_array_equal(
+        y_pred,
+        before_pred,
+        err_msg="y_pred was reordered: count without changing the caller's arrays",
+    )
+
+
+def test_integer_labels_sort_numerically_for_the_default_label_set():
+    # Labels sort numerically to 2, 10 (not as text, where "10" comes before "2").
+    # Row 2: one sample predicted 2 (column 0), one predicted 10 (column 1).
+    # Row 10: one sample predicted 10 (column 1).
+    got = _solve([2, 2, 10], [2, 10, 10])
+    expected = np.array([[1, 1], [0, 1]])
+    np.testing.assert_array_equal(
+        got,
+        expected,
+        err_msg="integer labels must sort as numbers, not as text",
+    )

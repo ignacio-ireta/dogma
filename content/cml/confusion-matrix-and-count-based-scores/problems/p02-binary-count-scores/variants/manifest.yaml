@@ -2,6 +2,63 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_float_product_denominator.py
+  origin: freedom
+  freedom: MCC denominator product computed in floats rather than exact integers, differing only in the
+    last digits
+- file: accept_numpy_float_ratios.py
+  origin: freedom
+  freedom: ratios returned as NumPy float64 scalars, which are still floats
+reject:
+- file: reject_numpy_integer_rejected.py
+  mistake: NumPy integer counts are rejected because only Python int is accepted
+  clause: '`tp`, `fp`, `fn`, `tn`: non-negative integers, Python or NumPy integer types. A float is not
+    a count even when it is whole: `2.0` raises `ValueError`, like `2.5`. Not all four may be zero.'
+  killed_by: test_matches_scikit_learn_on_tied_scores_and_million_scale_rare_counts
+  visible: hidden
+- file: reject_whole_float_accepted.py
+  mistake: whole-valued floats such as 2.0 are accepted as counts
+  clause: '`tp`, `fp`, `fn`, `tn`: non-negative integers, Python or NumPy integer types. A float is not
+    a count even when it is whole: `2.0` raises `ValueError`, like `2.5`. Not all four may be zero.'
+  killed_by: test_whole_valued_float_is_not_a_count_and_raises_value_error
+  visible: hidden
+- file: reject_extra_key_returned.py
+  mistake: the result has an extra key beyond the six named scores
+  clause: 'Returns: a `dict` with exactly the keys `"accuracy"`, `"precision"`, `"recall"`, `"specificity"`,
+    `"f1"` and `"mcc"`, each a float.'
+  killed_by: test_example_scores_match_the_hand_calculation
+  visible: public
+- file: reject_specificity_is_npv.py
+  mistake: specificity divides by predicted negatives, giving the negative predictive value
+  clause: 'With N = tp + fp + fn + tn, the definitions are: - accuracy = (tp + tn) / N - precision = tp
+    / (tp + fp) - recall = tp / (tp + fn) - specificity = tn / (tn + fp) - f1 = 2 tp / (2 tp + fp + fn)
+    - mcc = (tp tn - fp fn) / sqrt((tp + fp)(tp + fn)(tn + fp)(tn + fn))'
+  killed_by: test_example_scores_match_the_hand_calculation
+  visible: public
+- file: reject_f1_missing_factor_two.py
+  mistake: F1 drops the factor 2 in the numerator
+  clause: 'With N = tp + fp + fn + tn, the definitions are: - accuracy = (tp + tn) / N - precision = tp
+    / (tp + fp) - recall = tp / (tp + fn) - specificity = tn / (tn + fp) - f1 = 2 tp / (2 tp + fp + fn)
+    - mcc = (tp tn - fp fn) / sqrt((tp + fp)(tp + fn)(tn + fp)(tn + fn))'
+  killed_by: test_example_scores_match_the_hand_calculation
+  visible: public
+- file: reject_specificity_one_when_no_negatives.py
+  mistake: specificity returns 1.0 instead of 0.0 when there are no actual negatives
+  clause: 'Zero-division convention: a ratio whose denominator is 0 returns `0.0`. This covers precision
+    with no predicted positives, recall with no actual positives, specificity with no actual negatives,
+    F1 when 2 tp + fp + fn = 0, and MCC when any of its four marginal sums is 0. Never return NaN.'
+  killed_by: test_undefined_ratios_are_zero_not_nan
+  visible: hidden
+- file: reject_mcc_int64_overflow.py
+  mistake: MCC products are held in 64-bit integers, so large counts overflow
+  clause: Counts can reach millions, so intermediate products must not overflow a 64-bit integer.
+  killed_by: test_large_counts_match_exact_integer_arithmetic
+  visible: hidden
+- file: reject_all_zero_wrong_error_type.py
+  mistake: all-zero counts raise TypeError instead of ValueError
+  clause: Raises `ValueError` for a negative count, a non-integer count, or when all four counts are 0.
+  killed_by: test_invalid_counts_raise_value_error
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

@@ -1,7 +1,60 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_inputs_reordered_in_place.py
+  mistake: reorders the caller's arrays in place when they are not already sorted
+  clause: Must not mutate inputs.
+  killed_by: test_unsorted_array_inputs_are_not_reordered
+  visible: hidden
+- file: reject_string_sort_of_integer_labels.py
+  mistake: integer labels sorted as text, so 10 comes before 2, instead of numerically
+  clause: With `labels=None`, the labels are the sorted union of the labels in `y_true` and `y_pred`.
+    Strings sort in Python's default order.
+  killed_by: test_integer_labels_sort_numerically_for_the_default_label_set
+  visible: hidden
+- file: reject_array_input_truth_test.py
+  mistake: array labels are treated as a list so a valid array input raises
+  clause: '`y_true`, `y_pred`: 1-D sequences (lists, tuples or NumPy arrays) of labels. Labels are integers
+    or strings, one type per call. Both have the same length n, with n >= 1.'
+  killed_by: test_matches_scikit_learn_on_random_integer_labels
+  visible: hidden
+- file: reject_labels_sorted_not_as_given.py
+  mistake: explicit labels are sorted so the given order is ignored
+  clause: '`labels`: `None`, or a sequence of distinct labels that sets the row and column order.'
+  killed_by: test_explicit_labels_match_scikit_learn_with_unseen_and_dropped_labels
+  visible: hidden
+- file: reject_uint8_counts_wrap.py
+  mistake: counts stored as 8-bit unsigned integers so large counts wrap at 256
+  clause: 'Returns: a NumPy integer array of shape (k, k), where k is the number of labels. Each entry
+    is the exact count for any n, however large: a dtype that wraps at 256 is wrong.'
+  killed_by: test_matches_scikit_learn_on_breast_cancer_feature_scores
+  visible: hidden
+- file: reject_predicted_only_label_dropped.py
+  mistake: labels seen only in predictions get no row or column
+  clause: With `labels=None`, the labels are the sorted union of the labels in `y_true` and `y_pred`.
+    Strings sort in Python's default order.
+  killed_by: test_row_and_column_sums_are_the_true_and_predicted_label_counts
+  visible: hidden
+- file: reject_unseen_listed_label_dropped.py
+  mistake: a listed label that never occurs is dropped instead of zero-filled
+  clause: With `labels` given, rows and columns follow that order. A sample whose true or predicted label
+    is not in `labels` is ignored. A listed label that never occurs gets a zero row and a zero column.
+  killed_by: test_listed_label_that_never_occurs_gets_a_zero_row_and_column
+  visible: public
+- file: reject_empty_input_not_raised.py
+  mistake: empty input is not rejected
+  clause: Raises `ValueError` when `y_true` and `y_pred` differ in length, when `y_true` is empty, or
+    when `labels` contains a duplicate.
+  killed_by: test_empty_input_raises_value_error
+  visible: hidden
+- file: reject_duplicate_labels_only_when_many.py
+  mistake: duplicate labels are rejected only when two or more extra copies exist
+  clause: Raises `ValueError` when `y_true` and `y_pred` differ in length, when `y_true` is empty, or
+    when `labels` contains a duplicate.
+  killed_by: test_duplicate_labels_raise_value_error
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

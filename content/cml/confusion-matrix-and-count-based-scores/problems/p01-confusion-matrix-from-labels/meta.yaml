@@ -1,5 +1,5 @@
 id: cml/confusion-matrix-and-count-based-scores/p01-confusion-matrix-from-labels
-version: 4
+version: 5
 title: Confusion matrix from labels
 language: python
 runtime: py-numpy
