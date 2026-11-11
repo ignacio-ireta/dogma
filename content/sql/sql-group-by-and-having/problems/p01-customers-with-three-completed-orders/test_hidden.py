@@ -184,7 +184,7 @@ def _random_rows(rng: np.random.Generator, n: int) -> list[tuple[object, ...]]:
     return [rows[int(i)] for i in shuffled]
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(seed=st.integers(min_value=0, max_value=10_000))
 def test_random_tables_match_the_pandas_oracle(seed: int) -> None:
     rows = _random_rows(np.random.default_rng(seed), 90)
