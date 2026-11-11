@@ -42,7 +42,7 @@ def _must_raise_value_error(call, mistake):
     pytest.fail(mistake)
 
 
-@pytest.mark.parametrize("case", ORACLE_CASES, ids=[f"seed{c[0]}" for c in ORACLE_CASES])
+@pytest.mark.parametrize("case", ORACLE_CASES, ids=list("abcdefgh"))
 def test_matches_scipy_welch_on_seeded_samples(case):
     seed, n_a, n_b, spread_a, spread_b, shift_b = case
     a, b = _seeded_pair(seed, n_a, n_b, spread_a=spread_a, spread_b=spread_b, shift_b=shift_b)
@@ -155,7 +155,7 @@ def test_shifting_and_rescaling_both_samples_leaves_p_and_df_unchanged():
     )
 
 
-@pytest.mark.parametrize("magnitude", [1e-150, 1e150])
+@pytest.mark.parametrize("magnitude", [1e-150, 1e150], ids=["tiny-magnitude", "huge-magnitude"])
 def test_extreme_magnitudes_do_not_underflow_or_overflow(magnitude):
     a, b = _seeded_pair(32, 5, 7, spread_a=1.0, spread_b=2.0, shift_b=0.5)
     expected = _reference(a, b)
@@ -185,7 +185,12 @@ def test_integer_input_returns_three_float_values():
     assert all(isinstance(value, float) for value in result), (
         "all three values should be floats, even for integer input"
     )
-    np.testing.assert_allclose(result, _reference([1, 2, 3, 4], [2, 3, 4, 5, 6]), rtol=1e-9)
+    np.testing.assert_allclose(
+        result,
+        _reference([1, 2, 3, 4], [2, 3, 4, 5, 6]),
+        rtol=1e-9,
+        err_msg="integer input must give the same three values as float input",
+    )
 
 
 INVALID_CASES = [
