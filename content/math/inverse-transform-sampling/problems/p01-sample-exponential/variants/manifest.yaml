@@ -48,3 +48,4 @@ uncovered:
   reason: rate and n are immutable scalars, and rng is covered by C3
 sweeps:
 - reject
+- mutants
