@@ -1,5 +1,5 @@
 id: cml/ranking-metrics/p01-ndcg-at-k
-version: 2                      # bump when tests, tolerances or the contract change
+version: 3                      # bump when tests, tolerances or the contract change
 title: NDCG at k for one query
 language: python
 runtime: py-numpy

@@ -1,4 +1,4 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
@@ -55,6 +55,14 @@ reject:
     an integer of at least 1.'
   killed_by: test_invalid_input_raises_value_error
   visible: hidden
+- file: reject_one_dim_check_too_weak.py
+  mistake: a matrix of scores passed with a plain list of relevance is not rejected as the wrong kind
+    of input
+  clause: 'Raises `ValueError` for: an input that is not one-dimensional, unequal lengths, empty input,
+    a negative or non-finite relevance, a NaN or infinite score, and a `k` that is neither `None` nor
+    an integer of at least 1.'
+  killed_by: test_a_matrix_of_scores_alone_raises_value_error
+  visible: hidden
 uncovered:
 - clause: Two scores are tied only when they are exactly equal as floats. No absolute tolerance is applied,
     so scores that differ by more than one unit in the last place stay distinct when every score is multiplied
@@ -64,3 +72,4 @@ uncovered:
   reason: cap of eight wrong solutions per problem
 sweeps:
 - reject
+- mutants
