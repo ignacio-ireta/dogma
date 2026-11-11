@@ -2,6 +2,61 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_mean_sum_then_divide.py
+  origin: freedom
+  freedom: computes the mean by summing then dividing by n instead of np.mean
+reject:
+- file: reject_single_training_row_refused.py
+  mistake: refuses a training set with a single row
+  clause: '`train`: real numeric array-like of shape `(n, d)`, with `n >= 1`, `d >= 1`.'
+  killed_by: test_empty_transform_preserves_feature_axis
+  visible: public
+- file: reject_empty_values_refused.py
+  mistake: refuses held-out data with no rows
+  clause: '`values`: real numeric array-like of shape `(m, d)`, with `m >= 0`.'
+  killed_by: test_empty_transform_preserves_feature_axis
+  visible: public
+- file: reject_bound_exclusive.py
+  mistake: rejects entries whose magnitude equals the bound
+  clause: Entries must be finite and have absolute value at most `1e100`, inclusive, in both `train` and
+    `values`.
+  killed_by: test_magnitude_bound_is_inclusive_at_1e100
+  visible: hidden
+- file: reject_mean_float32.py
+  mistake: stores the training means in single precision
+  clause: Returns a **tuple** `(transformed, mean, scale)` of float64 NumPy arrays with shapes `(m, d)`,
+    `(d,)`, `(d,)`.
+  killed_by: test_matches_sklearn_on_seeded_random_matrices
+  visible: hidden
+- file: reject_population_ddof_one.py
+  mistake: divides squared deviations by n minus one
+  clause: Compute population scales with denominator `n` (`ddof=0`). An exactly constant training column
+    (all its entries equal, compared exactly) uses scale `1.0`, and its mean is that value. Do not replace
+    small *nonzero* scales by one.
+  killed_by: test_training_statistics_transform_unseen_values
+  visible: public
+- file: reject_scale_squared_underflow.py
+  mistake: squares deviations directly so tiny scales underflow
+  clause: Compute the scale without underflow. Training values `-t` and `t`, where `t` is the smallest
+    normal float64, have the scale `t`, not `0`.
+  killed_by: test_smallest_normal_fitted_scale_is_supported
+  visible: hidden
+- file: reject_mean_pooled_with_values.py
+  mistake: centres on the mean of training and held-out rows together
+  clause: Transform with `(values - mean) / scale`. Never fit statistics on `values`.
+  killed_by: test_training_statistics_transform_unseen_values
+  visible: public
+- file: reject_values_bound_unchecked.py
+  mistake: checks finiteness and magnitude only for training entries
+  clause: Raise `ValueError` for wrong ranks, empty training dimensions, mismatched feature counts, nonfinite
+    entries or entries outside the magnitude bound.
+  killed_by: test_nan_in_values_is_rejected
+  visible: hidden
+uncovered:
+- clause: Must not mutate either input; read-only inputs are supported.
+  reason: cap of eight wrong solutions per problem
+- clause: For extreme scale ratios, mathematically unrepresentable float64 outputs may be infinite. Tests
+    of numerical accuracy use representable results.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

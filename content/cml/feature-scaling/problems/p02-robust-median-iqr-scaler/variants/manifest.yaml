@@ -2,6 +2,65 @@ problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_two_term_quantile_always.py
+  origin: freedom
+  freedom: always uses the two-term interpolation form instead of switching for opposite signs
+reject:
+- file: reject_single_training_row_refused.py
+  mistake: refuses a training set with a single row
+  clause: '`train`: real numeric array-like of shape `(n, d)`, with `n >= 1` and `d >= 1`.'
+  killed_by: test_matches_sklearn_robust_scaler_on_seeded_matrices
+  visible: hidden
+- file: reject_empty_values_refused.py
+  mistake: refuses held-out data with no rows
+  clause: '`values`: real numeric array-like of shape `(m, d)`, with `m >= 0`.'
+  killed_by: test_empty_values_keep_the_feature_axis
+  visible: public
+- file: reject_integer_input_refused.py
+  mistake: refuses integer training data
+  clause: Entries must be finite. Integers are allowed.
+  killed_by: test_median_and_iqr_come_from_the_training_rows
+  visible: public
+- file: reject_center_shape_row_vector.py
+  mistake: returns the centers as a row instead of a vector
+  clause: Returns a tuple `(transformed, center, scale)` of float64 NumPy arrays with shapes `(m, d)`,
+    `(d,)` and `(d,)`.
+  killed_by: test_median_and_iqr_come_from_the_training_rows
+  visible: public
+- file: reject_lower_median_even_count.py
+  mistake: takes the lower middle value as the median of an even count
+  clause: '`center` is the training median of each column, with the usual median of an even count (the
+    mean of the two middle values).'
+  killed_by: test_median_and_iqr_come_from_the_training_rows
+  visible: public
+- file: reject_quantile_textbook_overflow.py
+  mistake: uses the textbook interpolation that overflows for opposite extremes
+  clause: 'Quartiles use linear interpolation. For a column sorted ascending as `s` with `n` values, and
+    a quantile `q`, let `h = q * (n - 1)`, `lo = floor(h)`, `hi = min(lo + 1, n - 1)`. Then the quantile
+    is `s[lo] + (h - lo) * (s[hi] - s[lo])` in exact arithmetic. Evaluate it so that it stays finite whenever
+    that value is finite: the textbook form overflows for opposite extremes such as `-1e308` and `1e308`,
+    whose median is 0. The form `(1 - (h - lo)) * s[lo] + (h - lo) * s[hi]` does not. The quartiles are
+    `q = 0.25` and `q = 0.75`.'
+  killed_by: test_opposite_extreme_values_have_representable_quartiles_and_center
+  visible: hidden
+- file: reject_scale_only_exact_zero_unit.py
+  mistake: replaces only an exactly zero IQR by one
+  clause: '`scale` is `Q3 - Q1` for each column. A column whose scale is below ten times the float64 machine
+    epsilon gets scale `1.0`. This is the rule scikit-learn''s `RobustScaler` uses. It applies to a column
+    that still varies but whose middle half is constant (at least about half of its values equal), so
+    its IQR is zero: it gets scale `1.0` too, not its standard deviation.'
+  killed_by: test_iqr_below_ten_machine_epsilons_gets_unit_scale
+  visible: hidden
+- file: reject_transform_clipped.py
+  mistake: clips standardized values to a fixed band
+  clause: Transform with `(values - center) / scale`. Never fit anything on `values`.
+  killed_by: test_matches_sklearn_robust_scaler_on_seeded_matrices
+  visible: hidden
+uncovered:
+- clause: Raise `ValueError` for wrong ranks, empty training dimensions, mismatched feature counts, and
+    nonfinite entries.
+  reason: cap of eight wrong solutions per problem
+- clause: Must not mutate either input.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject
