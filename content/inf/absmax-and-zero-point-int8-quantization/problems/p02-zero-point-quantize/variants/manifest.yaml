@@ -50,3 +50,4 @@ uncovered:
     return value, so a wrong formula shows up as a wrong code C5 or a wrong zero point C4
 sweeps:
 - reject
+- mutants
