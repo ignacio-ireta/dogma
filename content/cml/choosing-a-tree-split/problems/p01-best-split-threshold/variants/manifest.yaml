@@ -2,6 +2,61 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_row_loop_decrease.py
+  origin: freedom
+  freedom: a loop over candidates computes each impurity decrease row by row instead of as one array
+reject:
+- file: reject_midpoint_overflows.py
+  mistake: midpoint computed as a plus b over two, overflows near the float limit
+  clause: '`x`: 1-D array-like of finite real numbers, length $n \ge 1$. Values may be as large as `1e308`,
+    so compute each midpoint without overflow.'
+  killed_by: test_large_finite_features_have_a_finite_midpoint
+  visible: hidden
+- file: reject_labels_coerced_to_strings.py
+  mistake: labels pass through a plain array conversion so 1 and the string 1 merge into one class
+  clause: '`y`: 1-D array-like of class labels, length $n$. Equal values are the same class; any scalar
+    labels are allowed. Labels of different types stay distinct: `1` and `"1"` are two classes, so do
+    not let an array conversion merge them.'
+  killed_by: test_distinct_scalar_label_types_are_not_coerced_to_one_class
+  visible: hidden
+- file: reject_default_entropy.py
+  mistake: default criterion changed to entropy
+  clause: '`criterion`: keyword-only, `"gini"` (default) or `"entropy"`.'
+  killed_by: test_separable_example_splits_between_the_two_groups
+  visible: public
+- file: reject_tie_no_tolerance.py
+  mistake: later candidate replaces the incumbent on any larger decrease with no tolerance, so float noise
+    breaks exact ties
+  clause: 'Returns: `(threshold, impurity_decrease)` as a pair of Python floats. Scan the candidates in
+    increasing threshold order and keep the incumbent unless a later candidate''s decrease is larger by
+    more than $10^{-12}$. So a tie goes to the smallest threshold. If `x` has fewer than two distinct
+    values, return `(None, 0.0)`.'
+  killed_by: test_exact_tie_hidden_by_float_noise_still_goes_to_the_smallest_threshold
+  visible: hidden
+- file: reject_pure_labels_no_split.py
+  mistake: pure labels reported as no split instead of the smallest candidate with zero decrease
+  clause: A split is valid whenever `x` has two distinct values, even if it does not reduce impurity.
+    Pure labels therefore return the smallest candidate with decrease `0.0`.
+  killed_by: test_pure_labels_return_the_smallest_candidate_with_zero_decrease
+  visible: hidden
+- file: reject_nan_not_rejected.py
+  mistake: NaN passes the finiteness check because only infinite values are rejected
+  clause: 'Raises: `ValueError` when `x` is empty, not 1-D or not finite; when `y` is not 1-D or has a
+    different length from `x`; or when `criterion` is neither `"gini"` nor `"entropy"`.'
+  killed_by: test_nan_in_x_raises_value_error
+  visible: hidden
+- file: reject_sorts_caller_array.py
+  mistake: feature array sorted in place so the caller array is reordered
+  clause: Must not mutate its inputs.
+  killed_by: test_row_order_does_not_change_the_answer
+  visible: hidden
+- file: reject_python_pairwise_loop.py
+  mistake: each candidate recounts all rows on its left in a Python loop, quadratic time
+  clause: 'Not allowed: `sklearn` (including `DecisionTreeClassifier`) and `scipy`. Sort the values once
+    and scan the candidates with running class counts. Testing every pair of rows is correct but too slow
+    for the hidden inputs.'
+  killed_by: test_large_input_finishes_within_the_time_budget_and_matches_a_stump
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
