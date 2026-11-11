@@ -2,6 +2,57 @@ problem_version: 2
 accept:
 - file: accept_blind.sql
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_cte_filter.sql
+  origin: freedom
+  freedom: filters placed in a CTE before the ORDER BY and LIMIT
+reject:
+- file: reject_amount_before_date_column.sql
+  mistake: output columns in the wrong order with amount before order_date
+  clause: 'Returns: one row per kept order, with exactly these columns in this order: `order_id`, `customer_id`,
+    `order_date`, `amount`.'
+  killed_by: test_top_five_match_the_independent_pandas_answer_on_fixture
+  visible: public
+- file: reject_december_31_excluded.sql
+  mistake: end of the 2024 range exclusive so orders placed on December 31 are dropped
+  clause: 'Qualifies: `status` equals `''completed''` exactly (spelling and capitalisation matter); `order_date`
+    is in 2024, so both 2024-01-01 and 2024-12-31 count; `amount` is not NULL. A zero amount is a known
+    amount and qualifies.'
+  killed_by: test_top_five_match_the_independent_pandas_answer_on_fixture
+  visible: public
+- file: reject_zero_amount_dropped.sql
+  mistake: amount greater than zero keeps out orders with a zero amount
+  clause: 'Qualifies: `status` equals `''completed''` exactly (spelling and capitalisation matter); `order_date`
+    is in 2024, so both 2024-01-01 and 2024-12-31 count; `amount` is not NULL. A zero amount is a known
+    amount and qualifies.'
+  killed_by: test_zero_amount_is_a_real_amount_and_qualifies
+  visible: hidden
+- file: reject_status_case_insensitive.sql
+  mistake: status matched without regard to capitalisation
+  clause: 'Qualifies: `status` equals `''completed''` exactly (spelling and capitalisation matter); `order_date`
+    is in 2024, so both 2024-01-01 and 2024-12-31 count; `amount` is not NULL. A zero amount is a known
+    amount and qualifies.'
+  killed_by: test_status_match_is_exact_not_case_insensitive
+  visible: hidden
+- file: reject_tie_order_id_descending.sql
+  mistake: amount ties broken by order_id descending instead of ascending
+  clause: 'Order of rows: `amount` descending, then `order_id` ascending. Row order is part of the answer.'
+  killed_by: test_top_five_match_the_independent_pandas_answer_on_fixture
+  visible: public
+- file: reject_limit_before_filter.sql
+  mistake: top five taken before the filters so fewer than five can come back
+  clause: Keeps at most five rows. If fewer than five orders qualify, return all of them. If none qualify,
+    return zero rows with the same four columns.
+  killed_by: test_top_five_match_the_independent_pandas_answer_on_fixture
+  visible: public
+- file: reject_ids_hardcoded.sql
+  mistake: answer looked up from a fixed list of order ids
+  clause: Must read from `orders`. Do not write the answer as literal rows.
+  killed_by: test_random_tables_match_the_independent_pandas_oracle
+  visible: hidden
+uncovered:
+- clause: 'Input: a table `orders` with columns `order_id` (BIGINT), `customer_id` (BIGINT), `order_date`
+    (DATE), `status` (VARCHAR) and `amount` (DOUBLE, may be NULL).'
+  reason: the input column types cannot be mishandled in SQL without also changing the returned values,
+    which C2 and C3 already cover
+sweeps:
+- reject
