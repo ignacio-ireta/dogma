@@ -1,7 +1,43 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_fsum_inertia.py
+  origin: freedom
+  freedom: sums the inertia per sample with math.fsum instead of one NumPy sum, so only the last digits
+    can differ
+reject:
+- file: reject_single_sample_rejected.py
+  mistake: rejects a single sample as too few rows
+  clause: '`X`: 2-D array-like of finite numbers, shape `(n, d)`, with $n \ge 1$ and $d \ge 1$.'
+  killed_by: test_one_sample_with_one_centroid_is_accepted
+  visible: hidden
+- file: reject_bool_max_iter_accepted.py
+  mistake: accepts a boolean as max_iter
+  clause: '`max_iter`: integer, at least 1. Booleans are not integers here.'
+  killed_by: test_boolean_max_iter_is_rejected
+  visible: hidden
+- file: reject_k_equals_n_rejected.py
+  mistake: rejects init with as many centroids as samples
+  clause: '`init_centroids`: 2-D array-like of finite numbers, shape `(k, d)`, with the same `d` as `X`
+    and $1 \le k \le n$.'
+  killed_by: test_exact_ties_go_to_the_lower_centroid_index
+  visible: hidden
+- file: reject_zero_tol_rejected.py
+  mistake: rejects tol of zero
+  clause: '`tol`: finite real number, zero or positive.'
+  killed_by: test_max_iter_caps_the_number_of_iterations
+  visible: hidden
+- file: reject_column_mismatch_type_error.py
+  mistake: raises TypeError instead of ValueError for a column mismatch
+  clause: 'Raises: `ValueError` for any violation of the rules above.'
+  killed_by: test_init_with_wrong_number_of_columns_raises_value_error
+  visible: public
+- file: reject_init_overwritten.py
+  mistake: writes the final centroids back into the caller's init array
+  clause: Must not mutate inputs.
+  killed_by: test_large_common_offset_does_not_change_the_clustering
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

@@ -218,3 +218,9 @@ def test_large_negative_values_do_not_overflow_the_squared_distances():
         err_msg="large negative values made the squared distances overflow: scale by the largest "
         "magnitude, not the largest value",
     )
+
+
+def test_integer_samples_give_float64_centres():
+    # The samples are integers, but the Contract promises a float64 array of centres.
+    out = _call([[0, 1], [3, 7], [2, 2]], 2, 0)
+    assert out.dtype == np.float64, "the centres must be a float64 array whatever the dtype of X"

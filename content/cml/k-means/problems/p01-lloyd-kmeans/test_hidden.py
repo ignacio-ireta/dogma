@@ -325,3 +325,28 @@ def test_default_max_iter_and_tol_follow_the_signature():
     parameters = inspect.signature(kmeans).parameters
     assert parameters["max_iter"].default == 300, "the default max_iter must be 300"
     assert parameters["tol"].default == 1e-6, "the default tol must be 1e-6"
+
+
+def test_one_sample_with_one_centroid_is_accepted():
+    # One sample and one centroid at the same point: the centroid stays put, and the first
+    # iteration already meets the stopping rule, so exactly one iteration runs.
+    centroids, labels, inertia, n_iter = _call([[1.0, 2.0]], [[1.0, 2.0]])
+    np.testing.assert_allclose(
+        centroids,
+        [[1.0, 2.0]],
+        atol=1e-12,
+        err_msg="a single sample is valid input: its centroid must stay on that sample",
+    )
+    np.testing.assert_array_equal(labels, [0], err_msg="a single sample must get label 0")
+    assert inertia == 0.0, "inertia is wrong: a centroid sitting on its only sample costs nothing"
+    assert n_iter == 1, "iteration count is wrong: the first update already meets the stopping rule"
+
+
+def test_boolean_max_iter_is_rejected():
+    # Python treats True as the integer 1, but a boolean is not an integer in this contract.
+    _expect_value_error(
+        "a boolean passed as max_iter was accepted; booleans are not integers here",
+        [[0.0], [1.0]],
+        [[0.0]],
+        max_iter=True,
+    )

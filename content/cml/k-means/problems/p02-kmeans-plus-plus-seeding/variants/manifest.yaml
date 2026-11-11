@@ -1,7 +1,55 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_norm_squared.py
+  origin: freedom
+  freedom: squared distances from a norm squared instead of a sum of squares, a different rounding path
+reject:
+- file: reject_one_row_input_rejected.py
+  mistake: rejects a single row of samples
+  clause: '`X`: 2-D array-like of finite numbers, shape `(n, d)`, with $n \ge 1$ and $d \ge 1$.'
+  killed_by: test_single_row_is_a_valid_input_for_one_centre
+  visible: hidden
+- file: reject_bool_k_accepted.py
+  mistake: accepts a boolean as k
+  clause: '`k`: integer, with $1 \le k \le n$. Booleans are not integers here.'
+  killed_by: test_invalid_inputs_raise_value_error
+  visible: hidden
+- file: reject_global_seed_unseeded_draw.py
+  mistake: seeds the global state but draws from an unseeded generator
+  clause: '`seed`: a non-negative integer. It is the only argument of the random generator.'
+  killed_by: test_seed_zero_on_four_points_gives_the_protocol_centres
+  visible: public
+- file: reject_too_few_check_off_by_one.py
+  mistake: rejects input with exactly k distinct rows
+  clause: '`X` must have at least `k` distinct rows, so that $\sum_i D_i^2 > 0$ at every step.'
+  killed_by: test_k_equal_to_n_selects_every_row_exactly_once
+  visible: hidden
+- file: reject_bad_shape_type_error.py
+  mistake: raises TypeError instead of ValueError for a bad shape
+  clause: 'Raises: `ValueError` for an invalid `k` or `seed`, bad shapes, non-finite values, or too few
+    distinct rows.'
+  killed_by: test_invalid_inputs_raise_value_error
+  visible: hidden
+- file: reject_no_power_of_two_scaling.py
+  mistake: no power-of-two scaling so squared distances overflow or underflow
+  clause: Scaling `X` by an exact power of two such as `2.0**600` or `2.0**-600` must pick the same rows,
+    so $D_i^2$ must not overflow or underflow.
+  killed_by: test_extreme_power_of_two_rescaling_preserves_seed_choices
+  visible: hidden
+- file: reject_scales_caller_array.py
+  mistake: scales the caller's array in place
+  clause: Must not mutate inputs.
+  killed_by: test_k_equal_to_one_returns_the_first_protocol_row
+  visible: public
+- file: reject_dtype_follows_input.py
+  mistake: returns integer centres when the samples are integers
+  clause: 'Returns: a `float64` array of shape `(k, d)`. Each row is a row of `X`, copied.'
+  killed_by: test_integer_samples_give_float64_centres
+  visible: hidden
+uncovered:
+- clause: 'Returns: a `float64` array of shape `(k, d)`. Each row is a row of `X`, copied.'
+  reason: wrong solution survives, see notes
+sweeps:
+- reject
