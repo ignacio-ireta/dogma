@@ -1,4 +1,4 @@
-problem_version: 1
+problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
@@ -57,6 +57,15 @@ reject:
   clause: '`T = 0` is valid and returns empty `(0, k)` tensors with all-zero counts.'
   killed_by: test_zero_tokens_returns_empty_outputs_with_zero_counts
   visible: public
+- file: reject_unstable_sort_wide_ties.py
+  mistake: a sort that does not keep equal logits in order, so a tie in a wide router goes to a higher
+    expert
+  clause: '**Selection.** Rank the experts of each token by logit, largest first. Take the first `k`.
+    Ties in logit go to the **lower expert index**. Selection uses the logits, not the probabilities,
+    so the order stays exact even where a probability underflows to zero.'
+  killed_by: test_tie_for_first_place_in_a_wide_router_keeps_lowest_index
+  visible: hidden
 uncovered: []
 sweeps:
 - reject
+- mutants

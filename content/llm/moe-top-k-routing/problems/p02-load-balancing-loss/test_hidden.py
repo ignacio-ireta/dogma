@@ -220,3 +220,24 @@ def test_inputs_are_not_mutated():
 
 def test_zero_experts_raises_value_error():
     _invalid(ValueError, torch.zeros(3, 0, dtype=torch.float64))
+
+
+def test_top_one_tie_in_a_wide_router_dispatches_to_lowest_index():
+    # Token 0 has equal logits on all 200 experts, so every expert ties for top-1 and the tie
+    # goes to expert 0. Token 1 clearly prefers expert 100. So f = 1/2 at expert 0 and 1/2 at
+    # expert 100, and 0 elsewhere. The loss is alpha * E * sum_i f_i * P_i with alpha = 1.
+    logits = torch.zeros(2, 200, dtype=torch.float64)
+    logits[1, 100] = 1.0
+    p = torch.softmax(logits, dim=-1).mean(dim=0)  # P_i, the mean router probability
+    expected = 200 * (0.5 * p[0] + 0.5 * p[100])
+    loss = _call(logits)
+    torch.testing.assert_close(
+        loss,
+        expected,
+        atol=1e-9,
+        rtol=1e-9,
+        msg=(
+            "a top-1 tie in a wide router must count toward the lowest expert index: "
+            "check the tie order when there are many experts"
+        ),
+    )

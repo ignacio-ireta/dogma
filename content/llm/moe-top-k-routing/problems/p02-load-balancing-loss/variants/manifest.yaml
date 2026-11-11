@@ -1,4 +1,4 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
@@ -48,6 +48,17 @@ reject:
   clause: Must not mutate `logits`.
   killed_by: test_gradient_matches_finite_differences_through_probabilities
   visible: hidden
+- file: reject_unstable_top1_wide_ties.py
+  mistake: a sort that does not keep equal logits in order, so a top-1 tie in a wide router goes to a
+    higher expert
+  clause: 'Definitions. Let `p[t, i]` be the softmax over the experts `i` of the logits of token `t`,
+    and let `a_t` be the top-1 expert of token `t`: the expert with the largest logit. Ties go to the
+    **lower expert index**. - Router probability per expert: `P_i = (1 / T) * sum over t of p[t, i]`.
+    - Dispatch fraction per expert: `f_i = (1 / T) * sum over t of 1[a_t = i]`, the fraction of tokens
+    whose top-1 expert is `i`. - Loss: `loss = alpha * E * sum over i of f_i * P_i`.'
+  killed_by: test_top_one_tie_in_a_wide_router_dispatches_to_lowest_index
+  visible: hidden
 uncovered: []
 sweeps:
 - reject
+- mutants

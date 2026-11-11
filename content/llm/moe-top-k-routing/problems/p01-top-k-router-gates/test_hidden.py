@@ -194,3 +194,14 @@ def test_inputs_are_not_mutated():
     before = logits.clone()
     _call(logits, 2)
     assert torch.equal(logits, before), "the logits tensor must not be modified in place"
+
+
+def test_tie_for_first_place_in_a_wide_router_keeps_lowest_index():
+    # Every one of the 200 experts has the same logit, so all of them tie for first place.
+    # The tie rule (ties go to the lowest index) must still hold when there are many experts.
+    logits = torch.ones(1, 200, dtype=torch.float64)
+    idx, _, _ = _call(logits, 1)
+    assert idx.tolist() == [[0]], (
+        "a tie for first place in a wide router must go to the lowest expert index: "
+        "keep equal logits in their original order"
+    )
