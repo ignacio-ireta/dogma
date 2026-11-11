@@ -56,8 +56,25 @@ reject:
     `num_iters` or `tol` is out of range.
   killed_by: test_nan_entry_raises_value_error
   visible: hidden
+- file: reject_stop_tolerance_min.py
+  mistake: the stopping tolerance does not grow with a large eigenvalue, so the iteration keeps going
+    after the residual test has passed
+  clause: 'Stopping: after each update, compute the Rayleigh quotient `λ = vᵀAv` for the unit vector `v`,
+    and the residual `r = Av - λv`. Stop when `‖r‖ <= tol * max(1, |λ|)`, or after `num_iters` updates.
+    Using up the budget is not an error: return the current estimate.'
+  killed_by: test_stop_tolerance_grows_with_a_large_positive_eigenvalue
+  visible: hidden
+- file: reject_stop_tolerance_negative.py
+  mistake: the stopping tolerance uses the sign of a negative eigenvalue instead of its size, so the iteration
+    keeps going after the residual test has passed
+  clause: 'Stopping: after each update, compute the Rayleigh quotient `λ = vᵀAv` for the unit vector `v`,
+    and the residual `r = Av - λv`. Stop when `‖r‖ <= tol * max(1, |λ|)`, or after `num_iters` updates.
+    Using up the budget is not an error: return the current estimate.'
+  killed_by: test_stop_tolerance_uses_the_size_of_a_negative_eigenvalue
+  visible: hidden
 uncovered:
 - clause: The zero matrix returns `(0.0, unit vector)`.
   reason: wrong solution survives, see notes
 sweeps:
 - reject
+- mutants

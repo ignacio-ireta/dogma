@@ -297,3 +297,28 @@ def test_float64_input_with_tiny_entries_is_not_mutated():
         A_copy,
         err_msg="the input matrix was modified in place: tiny entries must be left as given",
     )
+
+
+def test_stop_tolerance_grows_with_a_large_positive_eigenvalue():
+    # The residual test is relative to the eigenvalue when it is bigger than one. Once that
+    # test is met the iteration must stop, so spare budget cannot change the answer.
+    A = np.diag([3.0, 2.7])
+    early_value, early_vector = power_iteration(A, num_iters=10, tol=0.05)
+    late_value, late_vector = power_iteration(A, num_iters=60, tol=0.05)
+    assert early_value == late_value and np.array_equal(early_vector, late_vector), (
+        "the iteration kept going after the residual was already within the tolerance: for a "
+        "large eigenvalue the tolerance should grow with the size of the eigenvalue"
+    )
+
+
+def test_stop_tolerance_uses_the_size_of_a_negative_eigenvalue():
+    # For any unit vector the residual norm is at most 0.05, and |lambda| is at least 2.9, so the
+    # stopping threshold is at least 0.058. The stop therefore holds after the first update, for
+    # every start vector. A tolerance that uses the sign gets 0.02 and keeps iterating.
+    A = np.diag([-3.0, -2.9])
+    early_value, early_vector = power_iteration(A, num_iters=1, tol=0.02)
+    late_value, late_vector = power_iteration(A, num_iters=200, tol=0.02)
+    assert early_value == late_value and np.array_equal(early_vector, late_vector), (
+        "the iteration kept going after the residual was already within the tolerance for a "
+        "negative eigenvalue: the tolerance should follow the size of the eigenvalue, not its sign"
+    )
