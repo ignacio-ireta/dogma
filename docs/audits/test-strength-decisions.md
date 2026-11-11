@@ -517,3 +517,176 @@ None.
 ### message-defect
 
 None in this sweep (the mutant triage adds no wrong solutions except with a new test).
+
+## 2026-11-11 · The 81 problems of the I-31 topics: blind accepts, hygiene, reject sweep, mutant triage
+
+Scope: the 48 topics that I-31 hardened, after `main` (with the I-31c review) was merged into the
+branch as `8d744a0` and the tag `i32-start` was moved to that merge. With this entry every one of
+the 251 problems has a blind accept, clean hidden-test lint, a reject sweep and a mutant triage.
+
+- **Blind accepts (I-32c).** 62 came from the solutions written blind during I-31, each submitted
+  again against the current tests. 19 were solved by fresh blind solvers. All 81 passed on the
+  first submission.
+- **Hygiene (I-32b).** 15 problems had lint findings. All were fixed with text-only edits, one
+  with a `pytest.raises` replaced by a helper (gated in mode refactor).
+- **Reject sweep (I-32d).** The 81 manifests record 618 wrong solutions that the tests reject,
+  140 accepted ones and 89 bullets marked uncovered (42 under the eight-bullet cap, 8 where the
+  wrong solution survives and no sentence forbids it, 39 where no separate mistake exists). 43
+  hidden tests were added.
+- **Mutant triage (I-32d2).** 220 surviving one-token mutants in the 81 problems were looked at
+  once: 135 cannot change a result or an error type, 69 change something no Contract sentence
+  covers, 1 has no usable witness, and 11 hidden tests were added in 7 problems. 13 topics had
+  no surviving mutant.
+
+### Waiting for the owner
+
+- `cml/handling-class-imbalance/p01`: bullet C4 says `ValueError` "for input that is not 1-D".
+  A wrong solution that takes a bare scalar survives, and the test written for it failed the
+  blind accept, which takes a scalar too. The test was not added. Either the blind accept is
+  replaced and the test added, or C4 stops covering scalars.
+- `sql/pandas-groupby-aggregate-and-transform/p01`: the Raises bullet says the function raises
+  nothing, that bad input is the caller's problem and that it does not catch errors. A wrong
+  solution that catches an unreadable date and returns an empty frame survives. A test that
+  required an exception there was withdrawn before commit, because a solution that parses with
+  `errors="coerce"` raises nothing either. The statement should say what happens to an
+  unreadable date, or the case stays open.
+- Two I-31 tests refuse a plain formulation that the statement does not rule out in words (two
+  `overreach` rows below, nothing was changed): `cml/leakage-and-walk-forward-validation/p02` (a
+  sum-then-divide mean on repeated huge targets) and
+  `cml/rolling-statistics-stationarity-and-autocorrelation/p01` (a plain Welford update at
+  extreme scale). Both are I-31 hardening choices that I-31c reviewed.
+
+### Decided by the coordinator on review
+
+- **A mistake of mine, corrected.** In `cml/ridge-regression-and-weight-decay/p01` I swapped
+  the data of a new rank test for integers to widen its margin. With exact integers the wrong
+  solution meets an exactly singular system and raises `LinAlgError`, which is a `ValueError`,
+  so nothing rejected it and the problem's gate failed. A chained command committed the topic
+  anyway (`0c75771`). The next commit (`f8f9c0d`) restores the executor's data and the gate
+  passes. Since then no commit follows a gate without a test of its result.
+- `cml/ridge-regression-and-weight-decay/p01` is the problem I-31c returned to its earlier
+  tests. Its two new tests were measured before commit: eight correct formulations deviate from
+  the first test's reference by at most 0.004 of its tolerance while the wrong solution is 160
+  times over, on a design with condition number 171. The rank test decides the same way under
+  six ways of centring.
+- `cml/logistic-regression/p01`: the new test for C9 (weak penalty, separated classes) was
+  checked for solver dependence. The reference, both accepts and a plain Newton iteration
+  without line search converge there in 21 to 25 of the 100 allowed iterations.
+- `sql/sql-date-handling` (both problems): two wrong queries without `ORDER BY` were rejected
+  only through a row order the engine does not guarantee, and one verdict flipped between runs.
+  Each was replaced by a descending-order query, which a public test rejects on every run.
+- `cml/k-means/p02`: an `unpromised` call was overruled. An integer `X` that gives an integer
+  array breaks bullet C5 (`float64`), so one dtype test was added. The manifest keeps a stale
+  `uncovered` entry for C5 that the tool cannot drop.
+- `cml/confusion-matrix-and-count-based-scores/p01`: one failure message quoted the labels of
+  its own test and was reworded.
+- **A flaky wrong solution, found and replaced.** `cml/k-means/p02` had
+  `reject_global_seed_unseeded_draw.py` from the reject sweep. It draws from an unseeded
+  generator. Some test rejects it on every run (20 of 20), but the test recorded as its
+  `killed_by` passes by chance on some runs, and the gate checks that test by name: the
+  problem's gate failed once during the mutant triage. It was replaced through the tool by a
+  wrong solution that seeds the generator with `seed + 1` (same public test, 5 gate runs of
+  5). Four other wrong solutions use unseeded or global draws (both bootstrap problems,
+  speculative decoding p02, epsilon-greedy p01). Each was probed 20 times and its problem
+  gated 12 times, with no failure.
+- Two mutant-triage tests were withdrawn before commit. `cml/feature-scaling/p01`: a test on
+  a spread of one subnormal step, where the true scale (half the smallest subnormal) is not
+  representable and bullet C10 says accuracy tests use representable results.
+  `sql/pandas-groupby-aggregate-and-transform/p01` is described above.
+- Checked before commit and kept: `cml/rolling-statistics` p01 and p02 (three tests with
+  readings near the float limit and of opposite sign). A textbook autocorrelation already
+  fails two public tests of p02 that demand overflow-safe scaling, so the new tests extend a
+  visible requirement. `inf/data-quality-and-drift-detection/p02` (the p-value at a tiny
+  statistic): a series summed to convergence stays within the tolerance, and the statement
+  allows a library call for the p-value. `cml/t-tests-and-anova/p01` (three hand-checked cases
+  of one constant sample, which bullet C4 declares valid).
+- `cml/choosing-a-tree-split/p01`: the executor recorded an entropy-guard mutant as
+  unpromised (NaN on a pure side). It matches the reference on 6,000 random calls, so it is
+  same behaviour and no gap.
+- Executors got four more rules with their brief (`var/audit-i32/coord/d-brief.md`): no test
+  whose result depends on a free choice the Contract leaves open; no SQL wrong solution made by
+  dropping `ORDER BY`; every wrong solution must fail the same test on every run; and the
+  mutant-triage rules of the previous entry.
+
+### For a person to look at
+
+- `cml/t-tests-and-anova/p01` (`question` row below): for `a = [1, 1 + 2**-52]` and
+  `b = [1e16, 1e16]` the reference raises "both samples are constant", although only `b` is
+  constant and bullet C4 says that case is valid. `a` varies by one unit in the last place,
+  far below the scale of `b`. Nothing was changed.
+
+- The eight-bullet cap left 42 bullets of the 81 problems unprobed, again mostly "must not
+  mutate" and the Raises bullet of long Contracts.
+- `cml/choosing-a-tree-split/p01`: a vectorised quadratic recount passes the time budget, so
+  the complexity bullet K2 has a `no-witness` row. A Python-loop quadratic solution is rejected
+  by the 30,000-row time test.
+- `cml/bootstrap-and-permutation-resampling/p02`: swapping the two group sizes survives. The
+  absolute mean difference has the same distribution either way, so no test can separate it
+  without fixing the draw method, which the Contract leaves free.
+- `cml/roc-pr-curves-and-auc/p01`: labels shaped `(n, 1)` are accepted by a surviving wrong
+  solution. The Raises bullet does not name a wrong dimension.
+- `cml/t-tests-and-anova` (both problems): the new tests require the result to be a `tuple`,
+  as the Returns bullet says. A solution that returns a list of the same values now fails.
+- In several problems an in-place change of the input is rejected by another test and not by
+  the not-mutated test (`cml/rolling-statistics` p01, `cml/bootstrap` p01). The not-mutated tests
+  there use inputs that the mistake happens not to change.
+- One blind solver printed the statement of a bundle that was not its own. A bundle holds the
+  statement, the starter and the public tests only, so no solution was discarded.
+- 20 `message-defect` rows below. 80 `unpromised` rows (11 from the reject sweep, 69 from the
+  mutant triage) and 4 `inspect` rows are not listed.
+
+### Checked
+
+`make check` exit 0 on `de302dd` in a clean worktree: Ruff and format, strict mypy (180 files),
+6 import contracts, content types (251 problems), 2,192 Python tests, 175 topics verified,
+187 browser tests and the build, privacy audit clean. It failed once before that, on
+`dfc123c`, at the content type check: a new test passes a matrix on purpose without the
+ignore comment (`de302dd` adds it). `make test-all` passed on the merge `8d744a0` earlier
+(1,539 variants, 0 mismatches) and runs again after the close-out.
+
+### question
+
+- `cml/t-tests-and-anova/p01-welch-t-test`: mutant 8f7023199a84ff1e (no guard on se_squared equal to zero): on a equal to 1 and 1 plus tiny, b equal to 1e16 twice, the reference raises ValueError saying both samples are constant, although C4 says one constant sample with a varying other is valid
+
+### overreach
+
+- `cml/handling-class-imbalance/p01-balanced-class-weights`: bare scalar input must raise ValueError, fails accept_blind
+- `cml/leakage-and-walk-forward-validation/p02-expanding-target-mean`: accept_sum_then_divide.py: test_finite_repeated_large_targets_do_not_overflow_the_historical_mean, no clause fixes this choice
+- `cml/rolling-statistics-stationarity-and-autocorrelation/p01-rolling-mean-std`: accept_plain_welford.py: test_large_and_small_readings_keep_a_representable_sample_spread and test_large_common_offset_over_long_series_keeps_the_spread, no Contract clause fixes the centring or scaling choice (the Contract only says finite reals)
+
+### no-witness
+
+- `cml/confusion-matrix-and-count-based-scores/p01-confusion-matrix-from-labels`: mutant 19fdb3144a4059ec (int64 to int32 counts) breaks C3 only for n above 2 to the 31st; a witness needs over two billion samples, and asserting a dtype would reject valid int32 solutions, so no test added
+- `cml/bootstrap-and-permutation-resampling/p02-permutation-test-mean-diff`: reject_group_sizes_swapped.py survives and breaks C4, no test found, the first group takes len b values instead of len a. Both group sizes give the same distribution of the statistic, since the absolute mean difference is symmetric under swapping complementary groups, so no test on the p-value can separate them. An exact-seed test would pin the draw method, which the Contract leaves free
+- `cml/choosing-a-tree-split/p01-best-split-threshold`: reject_pairwise_rescan.py survives and breaks K2 (per-candidate recount with vectorised sums, O(n squared)): it passes the 30k-row time budget, and no deterministic assertion can see its cost, so no test added. The K2 bullet is covered by reject_python_pairwise_loop.py
+
+### reference-doubt
+
+None.
+
+### blocked
+
+- `llm/retrieval-augmented-generation-pipeline/p01-chunk-words`: reject_zero_overlap_steps_by_size_minus_one: probe status oom twice in a row. With size 1 and overlap 0 its step is 0, so the loop never ends. Replaced by reject_zero_overlap_terminating (same bullet, step 1 when size is 1).
+
+### message-defect
+
+- `cml/covariance-and-correlation/p01-covariance-matrix`: reject_refuses_single_observation.py: test_single_observation_with_ddof_zero_is_a_zero_matrix shows kind=bare_exception
+- `cml/feature-scaling/p01-standard-scaler`: reject_empty_values_refused.py: test_empty_transform_preserves_feature_axis shows kind=bare_exception
+- `cml/feature-scaling/p01-standard-scaler`: reject_single_training_row_refused.py: test_empty_transform_preserves_feature_axis shows kind=bare_exception
+- `cml/feature-scaling/p02-robust-median-iqr-scaler`: reject_empty_values_refused.py: test_empty_values_keep_the_feature_axis shows kind=bare_exception
+- `cml/feature-scaling/p02-robust-median-iqr-scaler`: reject_integer_input_refused.py: test_median_and_iqr_come_from_the_training_rows shows kind=bare_exception
+- `cml/gaussian-mixtures-and-em/p01-gmm-em-full-covariance`: reject_k_equal_n_rejected.py: test_initial_state_of_the_two_point_fixture_has_equal_weights_and_closed_form_loglik shows kind=bare_exception
+- `cml/k-means/p01-lloyd-kmeans`: reject_column_mismatch_type_error.py: test_init_with_wrong_number_of_columns_raises_value_error shows kind=bare_exception
+- `cml/lasso-and-elastic-net/p02-elastic-net-coordinate-descent`: reject_l1_ratio_one_refused.py: test_l1_ratio_one_reduces_to_the_lasso_solution shows kind=bare_exception
+- `cml/nearest-neighbour-search-and-knn/p01-knn-classify`: reject_xtrain_rejects_lists.py: test_majority_vote_among_the_three_nearest_rows shows kind=bare_exception
+- `cml/nearest-neighbour-search-and-knn/p02-knn-regress`: reject_xtrain_rejects_lists.py: test_uniform_weights_average_the_k_nearest_targets shows kind=bare_exception
+- `cml/normal-equation/p01-normal-equation-fit`: reject_coef_scalar_for_one_column.py: test_exact_line_recovers_intercept_and_slope shows kind=bare_exception
+- `cml/normal-equation/p01-normal-equation-fit`: reject_list_input_only.py: test_exact_line_recovers_intercept_and_slope shows kind=bare_exception
+- `cml/t-tests-and-anova/p01-welch-t-test`: reject_one_constant_invalid.py: test_one_constant_sample_is_valid_and_matches_scipy shows kind=bare_exception
+- `inf/absmax-and-zero-point-int8-quantization/p01-absmax-quantize`: reject_per_tensor_scale_as_vector.py: test_ties_round_to_even_codes_with_unit_scale shows kind=bare_exception
+- `inf/data-quality-and-drift-detection/p01-population-stability-index`: reject_expected_list_rejected.py: test_identical_samples_have_zero_psi shows kind=bare_exception
+- `inf/ttft-itl-and-throughput/p02-throughput-and-goodput`: reject_first_token_at_arrival_rejected.py: test_inclusive_bound_on_itl_is_met_exactly shows kind=bare_exception
+- `llm/word-and-character-tokenizers/p01-word-level-vocabulary`: reject_decode_pad_id_rejected.py: test_reserved_special_strings_in_the_corpus_do_not_take_ids shows kind=bare_exception
+- `safe/split-conformal-prediction/p01-split-conformal-intervals`: reject_integer_inputs_refused.py: test_threshold_is_the_eighth_smallest_residual_at_alpha_point_two shows kind=bare_exception
+- `sql/pandas-merge-and-reshape/p01-monthly-revenue-by-region`: reject_datetime_only_dates.py: test_worked_example_matches_the_table_in_problem_md shows kind=bare_exception
+- `sql/sql-conditional-aggregation/p01-channel-conversion-and-device-revenue`: probe output pairs a FAILED test name with a message from a different check, for example reject_null_revenue_rows_dropped reports test_rate_is_a_fraction_not_a_percentage with a sessions message; the verdict and killed_by lines were unaffected
