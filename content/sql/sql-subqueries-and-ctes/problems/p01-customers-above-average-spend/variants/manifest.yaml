@@ -2,6 +2,71 @@ problem_version: 3
 accept:
 - file: accept_blind.sql
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_window_average.sql
+  origin: freedom
+  freedom: average computed as a window aggregate over the buyer rows instead of a separate CTE
+reject:
+- file: reject_average_counts_null_totals_as_zero.sql
+  mistake: a buyer with a NULL total is counted as zero in the average
+  clause: '`average_spend`: the average of `total_spend` over the buyers, with the usual SQL `AVG` rule:
+    NULL totals are skipped. A customer with no completed order is not a buyer, so it is not in the average
+    and it does not count as 0. The value is the same on every returned row. If no buyer has a known total,
+    it is NULL.'
+  killed_by: test_fixture_returns_the_three_customers_above_the_average_in_order
+  visible: public
+- file: reject_ge_not_gt.sql
+  mistake: a buyer whose total equals the average is returned
+  clause: A buyer whose total equals the average is not returned.
+  killed_by: test_fixture_returns_the_three_customers_above_the_average_in_order
+  visible: public
+- file: reject_lowercase_status_match.sql
+  mistake: status matched without regard to capitals so Completed counts
+  clause: A **buyer** is a customer with at least one order whose `status` is exactly `'completed'`. Capitalisation
+    matters.
+  killed_by: test_random_tables_match_the_pandas_oracle
+  visible: hidden
+- file: reject_non_buyers_count_as_zero.sql
+  mistake: customers with no completed order are averaged in as zero
+  clause: '`average_spend`: the average of `total_spend` over the buyers, with the usual SQL `AVG` rule:
+    NULL totals are skipped. A customer with no completed order is not a buyer, so it is not in the average
+    and it does not count as 0. The value is the same on every returned row. If no buyer has a known total,
+    it is NULL.'
+  killed_by: test_fixture_returns_the_three_customers_above_the_average_in_order
+  visible: public
+- file: reject_null_amount_as_zero.sql
+  mistake: a NULL amount counted as zero so an all-NULL buyer gets total zero instead of NULL
+  clause: '`total_spend` of a buyer: the sum of `amount` over the buyer''s completed orders. NULL amounts
+    are skipped. If every completed amount of the buyer is NULL, `total_spend` is NULL.'
+  killed_by: test_fixture_returns_the_three_customers_above_the_average_in_order
+  visible: public
+- file: reject_orphan_orders_kept.sql
+  mistake: orders with no customer row are kept by a LEFT JOIN and reach the average
+  clause: An order with a NULL `customer_id`, or whose `customer_id` has no row in `customers`, belongs
+    to no customer. It is not returned and it is not counted anywhere, including in `average_spend`.
+  killed_by: test_random_tables_match_the_pandas_oracle
+  visible: hidden
+- file: reject_tie_order_customer_desc.sql
+  mistake: ties in total ordered by customer id descending
+  clause: 'Order of rows: `total_spend` descending, then `customer_id` ascending.'
+  killed_by: test_fixture_returns_the_three_customers_above_the_average_in_order
+  visible: public
+uncovered:
+- clause: 'Returns: one row for each buyer whose `total_spend` is strictly greater than `average_spend`.
+    Columns, in this order: `customer_id`, `region`, `total_spend`, `average_spend`.'
+  reason: every test checks the column list first, so a wrong column order fails all of them
+- clause: 'Input: a table `customers` with `customer_id` (BIGINT) and `region` (VARCHAR), one row per
+    customer. A table `orders` with `order_id` (BIGINT), `customer_id` (BIGINT, may be NULL), `order_date`
+    (DATE), `status` (VARCHAR) and `amount` (DOUBLE, may be NULL).'
+  reason: the input schema is fixed by the fixtures and the column names are already checked, so no separate
+    wrong solution is written
+- clause: Amounts are multiples of 0.25, which DOUBLE stores exactly, so sums and averages of equal amounts
+    are exact and "strictly greater" has no rounding ambiguity. With arbitrary cents it does; the lesson
+    shows why.
+  reason: explanatory sentence about why amounts are multiples of 0.25, not a requirement a wrong solution
+    can break
+- clause: If no row qualifies, return zero rows with the same four columns.
+  reason: an empty result has no natural wrong query; a fallback row would need contrived code
+- clause: Must read from `customers` and `orders`. Do not write the answer as literal rows.
+  reason: a hard-coded answer is forbidden by K2, and it is not a mistake a learner makes
+sweeps:
+- reject

@@ -2,6 +2,57 @@ problem_version: 2
 accept:
 - file: accept_blind.sql
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_window_customer_average.sql
+  origin: freedom
+  freedom: customer average as a window aggregate partitioned by customer instead of a correlated subquery
+reject:
+- file: reject_average_includes_other_statuses.sql
+  mistake: the customer average also includes orders of other statuses
+  clause: '`customer_average` of a candidate: the average `amount` over all completed orders of the same
+    customer, with NULL amounts skipped (the usual SQL `AVG`). The candidate itself is part of that average.
+    Orders with any other status are not.'
+  killed_by: test_fixture_returns_the_four_qualifying_orders_in_order_id_order
+  visible: public
+- file: reject_ge_not_gt.sql
+  mistake: an order exactly at its customer average is returned
+  clause: 'Returns: one row for each candidate whose `amount` is strictly greater than its `customer_average`.
+    Columns, in this order: `order_id`, `customer_id`, `amount`, `customer_average`.'
+  killed_by: test_fixture_returns_the_four_qualifying_orders_in_order_id_order
+  visible: public
+- file: reject_lowercase_status_match.sql
+  mistake: status matched without regard to capitals so Completed counts
+  clause: A **candidate** is an order whose `status` is exactly `'completed'`, whose `amount` is not NULL,
+    and whose `customer_id` is not NULL. Capitalisation matters.
+  killed_by: test_random_tables_match_the_pandas_oracle
+  visible: hidden
+- file: reject_null_amount_average_as_zero.sql
+  mistake: a NULL amount counted as zero in the customer average
+  clause: '`customer_average` of a candidate: the average `amount` over all completed orders of the same
+    customer, with NULL amounts skipped (the usual SQL `AVG`). The candidate itself is part of that average.
+    Orders with any other status are not.'
+  killed_by: test_fixture_returns_the_four_qualifying_orders_in_order_id_order
+  visible: public
+- file: reject_order_id_desc.sql
+  mistake: rows ordered by order id descending
+  clause: 'Order of rows: `order_id` ascending.'
+  killed_by: test_fixture_returns_the_four_qualifying_orders_in_order_id_order
+  visible: public
+uncovered:
+- clause: An order with a NULL `customer_id` belongs to no customer. It is never returned, and it does
+    not take part in any average.
+  reason: wrong solution survives, see notes
+- clause: 'Input: a table `orders` with `order_id` (BIGINT), `customer_id` (BIGINT, may be NULL), `order_date`
+    (DATE), `status` (VARCHAR) and `amount` (DOUBLE, may be NULL).'
+  reason: the input schema is fixed by the fixtures and the column names are already checked, so no separate
+    wrong solution is written
+- clause: Amounts are multiples of 0.25, which DOUBLE stores exactly, so sums and averages of equal amounts
+    are exact and "strictly greater" has no rounding ambiguity. With arbitrary cents it does; the lesson
+    shows why.
+  reason: explanatory sentence about why amounts are multiples of 0.25, not a requirement a wrong solution
+    can break
+- clause: If no row qualifies, return zero rows with the same four columns.
+  reason: an empty result has no natural wrong query; a fallback row would need contrived code
+- clause: Must read from `orders`. Do not write the answer as literal rows.
+  reason: a hard-coded answer is forbidden by K2, and it is not a mistake a learner makes
+sweeps:
+- reject
