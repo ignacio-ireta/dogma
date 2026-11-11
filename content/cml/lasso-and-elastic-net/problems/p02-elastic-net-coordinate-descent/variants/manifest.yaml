@@ -1,7 +1,70 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_recompute_residual.py
+  origin: freedom
+  freedom: recomputes the fit from scratch for each coordinate instead of updating a running residual,
+    which changes only rounding
+reject:
+- file: reject_single_row_refused.py
+  mistake: refuses a single row of data, which is valid
+  clause: '`X`: 2-D array-like of shape (n, d), n ≥ 1, d ≥ 1, finite real numbers. Integers allowed.'
+  killed_by: test_a_single_row_of_data_is_valid_and_gives_the_closed_form_fit
+  visible: hidden
+- file: reject_elastic_net_raw_scale.py
+  mistake: rescales large columns before fitting and returns coefficients in the rescaled units
+  clause: Algorithm. Start from the all-zero coefficient vector. With ρⱼ = (1/n) Xⱼᵀ (y − Σ_{k≠j} Xₖ wₖ)
+    and zⱼ = (1/n) ‖Xⱼ‖², update wⱼ ← S(ρⱼ, α ρ) / (zⱼ + α (1 − ρ)), where S(x, λ) = sign(x) · max(|x|
+    − λ, 0). If the denominator is zero, keep wⱼ = 0. One sweep updates j = 0, 1, …, d − 1 in order, using
+    the newest values. Stop after a sweep whose largest change |Δwⱼ| is below `tol`, or after `max_iter`
+    sweeps.
+  killed_by: test_large_entries_are_fitted_in_the_callers_own_units
+  visible: hidden
+- file: reject_int_y_no_float_cast.py
+  mistake: keeps integer y as integers, so integer targets fail
+  clause: '`y`: 1-D array-like of shape (n,), finite real numbers.'
+  killed_by: test_integer_inputs_give_the_same_solution_as_floats
+  visible: hidden
+- file: reject_alpha_zero_refused.py
+  mistake: refuses alpha equal to zero, which is a valid penalty
+  clause: '`alpha`: a finite real number ≥ 0.'
+  killed_by: test_zero_penalty_is_accepted_and_gives_least_squares
+  visible: hidden
+- file: reject_l1_ratio_one_refused.py
+  mistake: refuses l1_ratio equal to one, which is the lasso and valid
+  clause: '`l1_ratio`: a finite real number in [0, 1].'
+  killed_by: test_l1_ratio_one_reduces_to_the_lasso_solution
+  visible: public
+- file: reject_max_iter_one_refused.py
+  mistake: refuses max_iter equal to one, which is valid
+  clause: '`max_iter`: integer ≥ 1. `tol`: a finite real number > 0.'
+  killed_by: test_one_sweep_respects_the_budget_and_uses_the_latest_coefficient
+  visible: hidden
+- file: reject_column_shape.py
+  mistake: returns the coefficients as a column of shape d by 1
+  clause: 'Returns: float64 array of shape (d,).'
+  killed_by: test_worked_example_mixes_the_l1_threshold_and_the_l2_curvature
+  visible: public
+- file: reject_forgets_l2_in_denominator.py
+  mistake: leaves the L2 term out of the update denominator
+  clause: Algorithm. Start from the all-zero coefficient vector. With ρⱼ = (1/n) Xⱼᵀ (y − Σ_{k≠j} Xₖ wₖ)
+    and zⱼ = (1/n) ‖Xⱼ‖², update wⱼ ← S(ρⱼ, α ρ) / (zⱼ + α (1 − ρ)), where S(x, λ) = sign(x) · max(|x|
+    − λ, 0). If the denominator is zero, keep wⱼ = 0. One sweep updates j = 0, 1, …, d − 1 in order, using
+    the newest values. Stop after a sweep whose largest change |Δwⱼ| is below `tol`, or after `max_iter`
+    sweeps.
+  killed_by: test_worked_example_mixes_the_l1_threshold_and_the_l2_curvature
+  visible: public
+- file: reject_l1_ratio_above_one_accepted.py
+  mistake: accepts l1_ratio above one instead of raising
+  clause: Raises `ValueError` when X is not 2-D; when y is not 1-D or its length differs from the rows
+    of X; when n or d is 0; when X or y is non-finite; when alpha is negative or non-finite; when `l1_ratio`
+    is outside [0, 1] or non-finite; when max_iter < 1; or when tol is not a finite number greater than
+    0.
+  killed_by: test_l1_ratio_above_one_raises_value_error
+  visible: public
+uncovered:
+- clause: Must not mutate inputs.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

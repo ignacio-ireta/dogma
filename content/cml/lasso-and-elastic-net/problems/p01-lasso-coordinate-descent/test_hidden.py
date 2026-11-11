@@ -399,3 +399,40 @@ def test_zero_column_does_not_stop_the_sweep_before_later_columns():
         atol=1e-10,
         err_msg="a zero column must be skipped, not end the sweep: later columns still update",
     )
+
+
+def test_a_single_row_of_data_is_valid_and_gives_the_closed_form_fit():
+    # One row and one column: the objective is (1/2)(4 - 2w)^2 + 0.5|w|. For w > 0 its slope is
+    # -2(4 - 2w) + 0.5, which is zero at w = 1.875. The fit must not be refused.
+    w = _checked([[2.0]], [4.0], 0.5, tol=1e-12, max_iter=100)
+    np.testing.assert_allclose(
+        w,
+        [1.875],
+        atol=1e-9,
+        err_msg="a single row is valid input and must give the one-row soft-threshold fit",
+    )
+
+
+def test_an_integer_tolerance_is_a_valid_real_number():
+    # One column, so the fit is the worked example's 25/14. An integer tol of 1 is a finite real
+    # number greater than zero, so the call must run and return that coefficient.
+    w = _checked([[1.0], [2.0], [3.0]], [2.0, 4.0, 6.0], 1.0, tol=1, max_iter=100)
+    np.testing.assert_allclose(
+        w,
+        [25.0 / 14.0],
+        atol=1e-9,
+        err_msg="an integer tol is a finite real number greater than zero and must be accepted",
+    )
+
+
+def test_large_entries_are_fitted_in_the_callers_own_units():
+    # One column with entries 100, 200, 300 and y = 2, 4, 6. Here n = 3, x'y = 2800, x'x = 140000,
+    # so the lasso fit is (x'y / n - alpha) / (x'x / n) = (2800/3 - 1) / (140000/3) = 2797/140000.
+    w = _checked([[100.0], [200.0], [300.0]], [2.0, 4.0, 6.0], 1.0, tol=1e-12, max_iter=100)
+    np.testing.assert_allclose(
+        w,
+        [2797.0 / 140000.0],
+        atol=1e-10,
+        err_msg="a column with large entries must be fitted as given and its coefficient returned "
+        "in the caller's units",
+    )

@@ -363,3 +363,29 @@ def test_zero_column_with_pure_lasso_does_not_end_the_sweep_before_later_columns
         atol=1e-12,
         err_msg="a skipped zero column must not end the sweep: later columns still update",
     )
+
+
+def test_a_single_row_of_data_is_valid_and_gives_the_closed_form_fit():
+    # One row and one column, alpha = 0.5, l1_ratio = 0.5. The objective is
+    # (1/2)(4 - 2w)^2 + 0.25|w| + 0.125w^2. For w > 0 its slope is -8 + 4w + 0.25 + 0.25w,
+    # which is zero at w = 31/17. The fit must not be refused.
+    w = _checked([[2.0]], [4.0], 0.5, 0.5, tol=1e-12, max_iter=100)
+    np.testing.assert_allclose(
+        w,
+        [31.0 / 17.0],
+        atol=1e-9,
+        err_msg="a single row is valid input and must give the one-row elastic net fit",
+    )
+
+
+def test_large_entries_are_fitted_in_the_callers_own_units():
+    # One column with entries 100, 200, 300 and y = 2, 4, 6. Here n = 3, x'y = 2800, x'x = 140000,
+    # alpha = 1 and l1_ratio = 0.5, so the fit is (x'y/n - 0.5) / (x'x/n + 0.5) = 5597/280003.
+    w = _checked([[100.0], [200.0], [300.0]], [2.0, 4.0, 6.0], 1.0, 0.5, tol=1e-12, max_iter=100)
+    np.testing.assert_allclose(
+        w,
+        [5597.0 / 280003.0],
+        atol=1e-10,
+        err_msg="a column with large entries must be fitted as given and its coefficient returned "
+        "in the caller's units",
+    )

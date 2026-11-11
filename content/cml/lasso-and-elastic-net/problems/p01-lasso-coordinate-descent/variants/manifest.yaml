@@ -1,7 +1,69 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_recompute_residual.py
+  origin: freedom
+  freedom: recomputes the fit from scratch for each coordinate instead of updating a running residual,
+    which changes only rounding
+reject:
+- file: reject_single_row_refused.py
+  mistake: refuses a single row of data, which is valid
+  clause: '`X`: 2-D array-like of shape (n, d), n ≥ 1, d ≥ 1, finite real numbers. Integers allowed.'
+  killed_by: test_a_single_row_of_data_is_valid_and_gives_the_closed_form_fit
+  visible: hidden
+- file: reject_int_tol_refused.py
+  mistake: refuses an integer tolerance, which is valid
+  clause: '`tol`: a finite real number > 0.'
+  killed_by: test_an_integer_tolerance_is_a_valid_real_number
+  visible: hidden
+- file: reject_int_y_no_float_cast.py
+  mistake: keeps integer y as integers, so integer targets fail
+  clause: '`y`: 1-D array-like of shape (n,), finite real numbers.'
+  killed_by: test_integer_inputs_give_the_same_solution_as_floats
+  visible: hidden
+- file: reject_alpha_zero_refused.py
+  mistake: refuses alpha equal to zero, which is a valid penalty
+  clause: '`alpha`: a finite real number ≥ 0.'
+  killed_by: test_zero_penalty_is_accepted_and_gives_least_squares
+  visible: hidden
+- file: reject_one_fewer_sweep.py
+  mistake: runs one sweep fewer than the max_iter budget
+  clause: '`max_iter`: integer ≥ 1, the most full sweeps over the coordinates.'
+  killed_by: test_one_sweep_respects_the_budget_and_uses_the_latest_coefficient
+  visible: hidden
+- file: reject_column_shape.py
+  mistake: returns the coefficients as a column of shape d by 1
+  clause: 'Returns: float64 array of shape (d,).'
+  killed_by: test_worked_example_soft_threshold_divided_by_column_curvature
+  visible: public
+- file: reject_jacobi_sweep.py
+  mistake: updates every coordinate from the residual at the start of the sweep, not the newest values
+  clause: Algorithm. Start from the all-zero coefficient vector. For each coordinate j, let ρⱼ = (1/n)
+    Xⱼᵀ (y − Σ_{k≠j} Xₖ wₖ) and zⱼ = (1/n) ‖Xⱼ‖². Then wⱼ ← S(ρⱼ, α) / zⱼ, where S(x, λ) = sign(x) · max(|x|
+    − λ, 0) is the soft threshold. A column with zⱼ = 0 keeps wⱼ = 0. One sweep updates j = 0, 1, …, d
+    − 1 in that order, using the newest values. Stop after a sweep whose largest change |Δwⱼ| is below
+    `tol`, or after `max_iter` sweeps.
+  killed_by: test_matches_scikit_learn_lasso_without_intercept
+  visible: hidden
+- file: reject_max_iter_zero_allowed.py
+  mistake: accepts max_iter equal to zero instead of raising
+  clause: Raises `ValueError` when X is not 2-D; when y is not 1-D or its length differs from the rows
+    of X; when n or d is 0; when X or y is non-finite; when alpha is negative or non-finite; when max_iter
+    < 1; or when tol is not a finite number greater than 0.
+  killed_by: test_invalid_input_raises_value_error
+  visible: hidden
+- file: reject_lasso_raw_scale.py
+  mistake: rescales large columns before fitting and returns coefficients in the rescaled units
+  clause: Algorithm. Start from the all-zero coefficient vector. For each coordinate j, let ρⱼ = (1/n)
+    Xⱼᵀ (y − Σ_{k≠j} Xₖ wₖ) and zⱼ = (1/n) ‖Xⱼ‖². Then wⱼ ← S(ρⱼ, α) / zⱼ, where S(x, λ) = sign(x) · max(|x|
+    − λ, 0) is the soft threshold. A column with zⱼ = 0 keeps wⱼ = 0. One sweep updates j = 0, 1, …, d
+    − 1 in that order, using the newest values. Stop after a sweep whose largest change |Δwⱼ| is below
+    `tol`, or after `max_iter` sweeps.
+  killed_by: test_large_entries_are_fitted_in_the_callers_own_units
+  visible: hidden
+uncovered:
+- clause: Must not mutate inputs.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

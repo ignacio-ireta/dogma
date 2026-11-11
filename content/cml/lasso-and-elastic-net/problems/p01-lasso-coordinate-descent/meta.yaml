@@ -1,5 +1,5 @@
 id: cml/lasso-and-elastic-net/p01-lasso-coordinate-descent
-version: 4
+version: 5
 title: Lasso by coordinate descent
 language: python
 runtime: py-numpy
