@@ -290,3 +290,15 @@ def test_nearly_constant_target_is_defined_and_a_perfect_fit_scores_one():
         err_msg="a non-constant y_true must give a defined R^2, even when its values differ only "
         "in the last float bit: a perfect fit scores 1",
     )
+
+
+def test_repeated_target_values_all_count_toward_the_mean():
+    # y_true = [1, 1, 2], y_pred = [1, 2, 2]: residuals are 0, -1, 0.
+    # MAE = (0 + 1 + 0) / 3 = 1/3. Each row is one observation, so the repeated 1 counts too.
+    report = _report([1.0, 1.0, 2.0], [1.0, 2.0, 2.0])
+    np.testing.assert_allclose(
+        report["mae"],
+        1 / 3,
+        rtol=1e-12,
+        err_msg="rows whose target value repeats were dropped before scoring: every row counts",
+    )

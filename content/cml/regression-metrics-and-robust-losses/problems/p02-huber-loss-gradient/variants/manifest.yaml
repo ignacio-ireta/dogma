@@ -2,6 +2,50 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_sum_order.py
+  origin: freedom
+  freedom: sums the scaled per-residual losses in reverse order, a different rounding path
+reject:
+- file: reject_int_residuals.py
+  mistake: refuses integer residuals
+  clause: '`residuals`: 1-D array-like of finite real numbers, length n ≥ 1.'
+  killed_by: test_integer_residuals_give_the_same_result_as_floats
+  visible: hidden
+- file: reject_int_delta.py
+  mistake: refuses an integer delta
+  clause: '`delta`: a finite real number strictly greater than 0.'
+  killed_by: test_integer_residuals_give_the_same_result_as_floats
+  visible: hidden
+- file: reject_linear_branch_missing_half.py
+  mistake: linear branch drops the offset of delta over 2
+  clause: 'Per residual r, with threshold δ = `delta`: - ℓ(r) = ½ r² when |r| ≤ δ, and δ (|r| − δ/2) otherwise.
+    - ψ(r) = r when |r| ≤ δ, and δ · sign(r) otherwise. ψ is the derivative of ℓ.'
+  killed_by: test_mixed_residuals_give_hand_computed_loss_and_gradient
+  visible: public
+- file: reject_float32_gradient.py
+  mistake: gradient returned as float32
+  clause: 'Returns: `(loss, grad)`. - `loss` = (1/n) Σ ℓ(rᵢ), a Python float. - `grad` = float64 array
+    of shape (n,) with gradᵢ = ψ(rᵢ) / n. It is the derivative of `loss` with respect to each rᵢ, so it
+    carries the factor 1/n.'
+  killed_by: test_mixed_residuals_give_hand_computed_loss_and_gradient
+  visible: public
+- file: reject_delta_inf_allowed.py
+  mistake: infinite delta is accepted
+  clause: Raises `ValueError` when `residuals` is not 1-D, is empty, or contains NaN or infinity, or when
+    `delta` is not a finite number greater than 0.
+  killed_by: test_invalid_delta_raises_value_error
+  visible: hidden
+- file: reject_unscaled_loss_sum.py
+  mistake: loss summed without scaling so large residuals overflow
+  clause: 'Residuals may be as large as `1e308`. Square a residual only on the quadratic branch, and do
+    not let the sum overflow: three residuals of `1e308` with `delta = 1` have a `loss` near `1e308`.'
+  killed_by: test_large_linear_branch_avoids_unused_square_and_mean_overflow
+  visible: hidden
+- file: reject_mutates_residuals.py
+  mistake: rescales the caller residual array in place
+  clause: Must not mutate inputs. The returned gradient must be a new array.
+  killed_by: test_inputs_are_not_mutated_and_gradient_is_a_new_array
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
