@@ -173,3 +173,11 @@ def test_large_sample_count_is_counted_correctly():
     assert checked(lambda: majority_vote(answers)) == "a", (
         "a 4000 to 3999 margin must be counted exactly over a long list"
     )
+
+
+def test_tuple_of_answers_is_accepted():
+    # Two of the three samples say "42", so "42" wins; only the container type differs from a list.
+    result = checked(lambda: majority_vote(("42", "42", "41")))
+    assert result == "42", (
+        "a tuple of answers is a valid input: it must be voted on the same way as a list"
+    )

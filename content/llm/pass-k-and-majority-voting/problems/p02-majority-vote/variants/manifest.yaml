@@ -1,7 +1,55 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_tuple_rejected.py
+  mistake: rejects a tuple of answers, which the Contract allows
+  clause: '`answers`: a list or tuple of `str`, one final answer per sample, in sampling order. It must
+    not be a bare `str`, which is a sequence of characters, not a list of answers.'
+  killed_by: test_tuple_of_answers_is_accepted
+  visible: hidden
+- file: reject_strip_thousands_separator.py
+  mistake: strips thousands-separator commas before normalising
+  clause: '**Normalise** each answer: `" ".join(a.split()).lower()`. This collapses runs of whitespace,
+    trims both ends and lowercases. Punctuation is kept, so `"3."` and `"3"` are different answers. A
+    thousands separator is punctuation too: `"2,125"` and `"2125"` are different answers.'
+  killed_by: test_real_gsm8k_thousands_separator_remains_punctuation
+  visible: hidden
+- file: reject_keeps_blank_answers.py
+  mistake: lets blank answers cast votes
+  clause: '**Drop** every answer whose normalised form is the empty string. Dropped samples cast no vote.'
+  killed_by: test_blank_answers_are_dropped_and_do_not_vote
+  visible: public
+- file: reject_counts_each_answer_once.py
+  mistake: counts each distinct answer once, not once per sample
+  clause: '**Vote.** Count the surviving normalised answers. The winner has the largest count.'
+  killed_by: test_random_answer_lists_match_the_first_occurrence_oracle
+  visible: hidden
+- file: reject_last_occurrence_tie.py
+  mistake: breaks ties by last occurrence instead of first
+  clause: '**Tie rule.** If several answers share the largest count, the winner is the one that appeared
+    **first** in the original `answers` list, counting dropped positions as absent. Ties never depend
+    on alphabetical order or on the last occurrence.'
+  killed_by: test_random_answer_lists_match_the_first_occurrence_oracle
+  visible: hidden
+- file: reject_rstrip_trailing_dot.py
+  mistake: strips a trailing full stop from the returned answer
+  clause: 'Returns: the normalised winning answer, a `str`.'
+  killed_by: test_punctuation_is_kept_so_trailing_dot_is_a_different_answer
+  visible: hidden
+- file: reject_no_bare_str_check.py
+  mistake: reads a bare string character by character instead of rejecting it
+  clause: Raises `TypeError` when `answers` is a bare `str` or any element is not a `str`.
+  killed_by: test_bare_string_is_rejected_not_read_as_characters
+  visible: hidden
+- file: reject_empty_all_blank_returns_empty.py
+  mistake: returns an empty string when every answer is blank
+  clause: Raises `ValueError` when `answers` is empty, or when every answer normalises to the empty string.
+  killed_by: test_random_answer_lists_match_the_first_occurrence_oracle
+  visible: hidden
+uncovered:
+- clause: Must not mutate the input list.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

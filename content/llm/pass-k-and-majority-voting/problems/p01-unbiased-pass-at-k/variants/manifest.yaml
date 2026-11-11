@@ -2,6 +2,55 @@ problem_version: 1
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_rejects_n_equal_one.py
+  mistake: rejects n equal to one
+  clause: '`n`: `int`, `n >= 1`. The number of generated samples.'
+  killed_by: test_small_inputs_match_the_exact_binomial_ratio
+  visible: hidden
+- file: reject_c_equal_n_rejected.py
+  mistake: rejects c equal to n
+  clause: '`c`: `int`, `0 <= c <= n`. The number that pass.'
+  killed_by: test_small_inputs_match_the_exact_binomial_ratio
+  visible: hidden
+- file: reject_k_equal_n_rejected.py
+  mistake: rejects k equal to n
+  clause: '`k`: `int`, `1 <= k <= n`. The budget of samples a user would inspect.'
+  killed_by: test_small_inputs_match_the_exact_binomial_ratio
+  visible: hidden
+- file: reject_wrong_divisor_off_by_one.py
+  mistake: wrong denominator in each factor of the product
+  clause: 'Returns `float` in `[0, 1]`: `pass_at_k = 1 - C(n - c, k) / C(n, k)`, where `C` is the binomial
+    coefficient.'
+  killed_by: test_k_equal_one_gives_the_fraction_correct
+  visible: public
+- file: reject_degenerate_boundary_le.py
+  mistake: treats exactly k failing samples as certain success
+  clause: '**Degenerate cases.** `c = 0` returns `0.0`. When `n - c < k`, every `k`-subset contains a
+    correct sample, so the result is `1.0` exactly.'
+  killed_by: test_small_inputs_match_the_exact_binomial_ratio
+  visible: hidden
+- file: reject_naive_one_minus_product.py
+  mistake: forms one minus the product directly and loses digits for tiny answers
+  clause: '**Accuracy.** The result must have relative error at most `1e-9` wherever the true value is
+    positive, even when it is tiny. For example, `pass_at_k(10**12, 1, 1)` is `1e-12` to nine digits.
+    Absolute error near `1e-16` is not enough for a value of `1e-12`.'
+  killed_by: test_tiny_answers_keep_relative_accuracy
+  visible: hidden
+- file: reject_float_binomial_overflow.py
+  mistake: builds binomial coefficients as floats that overflow for large n
+  clause: '**Range.** Large `n` must work. Intermediate binomial coefficients can be far beyond the range
+    of a float, so do not build them as floats.'
+  killed_by: test_large_n_with_huge_binomials_stays_finite_and_exact
+  visible: hidden
+- file: reject_bool_accepted.py
+  mistake: accepts a bool as an int
+  clause: Raises `TypeError` when `n`, `c` or `k` is not an `int` (`bool` is not accepted). Raises `ValueError`
+    when `n < 1`, `c` is outside `[0, n]`, or `k` is outside `[1, n]`.
+  killed_by: test_non_int_arguments_raise_type_error
+  visible: hidden
+uncovered:
+- clause: Must not mutate inputs.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject
