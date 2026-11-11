@@ -65,3 +65,4 @@ uncovered:
   reason: inputs are plain floats and ints, which cannot be changed in place, so no mutation can be written
 sweeps:
 - reject
+- mutants
