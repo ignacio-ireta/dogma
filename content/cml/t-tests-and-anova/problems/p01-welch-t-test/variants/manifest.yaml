@@ -62,6 +62,31 @@ reject:
   clause: Must not mutate its inputs.
   killed_by: test_matches_scipy_welch_on_seeded_samples
   visible: hidden
+- file: reject_scale_min_second.py
+  mistake: a constant first sample whose value is the overall average, paired with a varying second sample,
+    is rejected with an error instead of giving a result
+  clause: Raises `ValueError` when an input is not 1-D, when a group has fewer than two values, when a
+    value is NaN or infinite, or when both samples are constant (the standard error is zero, so `t` is
+    undefined). One constant sample with a varying other sample is valid.
+  killed_by: test_constant_first_sample_at_overall_mean_still_gives_a_result
+  visible: hidden
+- file: reject_scale_min_first.py
+  mistake: a varying first sample paired with a constant second sample whose value is the overall average
+    is rejected with an error instead of giving a result
+  clause: Raises `ValueError` when an input is not 1-D, when a group has fewer than two values, when a
+    value is NaN or infinite, or when both samples are constant (the standard error is zero, so `t` is
+    undefined). One constant sample with a varying other sample is valid.
+  killed_by: test_constant_second_sample_at_overall_mean_still_gives_a_result
+  visible: hidden
+- file: reject_scale_min_both.py
+  mistake: a constant first sample whose value is the overall average, paired with a two-point second
+    sample, is rejected with an error instead of giving a result
+  clause: Raises `ValueError` when an input is not 1-D, when a group has fewer than two values, when a
+    value is NaN or infinite, or when both samples are constant (the standard error is zero, so `t` is
+    undefined). One constant sample with a varying other sample is valid.
+  killed_by: test_constant_sample_at_overall_mean_with_two_point_partner_still_gives_a_result
+  visible: hidden
 uncovered: []
 sweeps:
 - reject
+- mutants

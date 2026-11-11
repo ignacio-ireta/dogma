@@ -298,3 +298,69 @@ def test_result_is_a_tuple_of_three_values():
         "the result must be a tuple (t, df, p), not an array or a list"
     )
     assert len(result) == 3, "the result must hold exactly three values: t, df and p"
+
+
+def test_constant_first_sample_at_overall_mean_still_gives_a_result():
+    # Both group means are 1, so the mean difference is zero. Only sample b varies.
+    # Hand check: vb = var([0, 1, 2], ddof=1) / 3 = 1/3, va = 0, so df = (1/3)^2 / ((1/3)^2 / 2).
+    try:
+        t, df, p = welch_t_test([1.0, 1.0], [0.0, 1.0, 2.0])
+    except ValueError:
+        pytest.fail(
+            "a constant sample whose value equals the overall mean is valid when the other "
+            "sample varies: it must give a result, not an error"
+        )
+    assert t == pytest.approx(0.0, abs=1e-12), (
+        "a constant first sample at the overall mean gave the wrong t statistic"
+    )
+    assert df == pytest.approx(2.0, rel=1e-9), (
+        "a constant first sample gave the wrong degrees of freedom: only the varying "
+        "sample's variance term should count"
+    )
+    assert p == pytest.approx(1.0, rel=1e-9), (
+        "a constant first sample at the overall mean gave the wrong two-sided p-value"
+    )
+
+
+def test_constant_second_sample_at_overall_mean_still_gives_a_result():
+    # Both group means are 1, so the mean difference is zero. Only sample a varies.
+    # Hand check: va = var([0, 2, 1], ddof=1) / 3 = 1/3, vb = 0, so df = (1/3)^2 / ((1/3)^2 / 2).
+    try:
+        t, df, p = welch_t_test([0.0, 2.0, 1.0], [1.0, 1.0, 1.0])
+    except ValueError:
+        pytest.fail(
+            "a constant sample whose value equals the overall mean is valid when the other "
+            "sample varies: it must give a result, not an error"
+        )
+    assert t == pytest.approx(0.0, abs=1e-12), (
+        "a constant second sample at the overall mean gave the wrong t statistic"
+    )
+    assert df == pytest.approx(2.0, rel=1e-9), (
+        "a constant second sample gave the wrong degrees of freedom: only the varying "
+        "sample's variance term should count"
+    )
+    assert p == pytest.approx(1.0, rel=1e-9), (
+        "a constant second sample at the overall mean gave the wrong two-sided p-value"
+    )
+
+
+def test_constant_sample_at_overall_mean_with_two_point_partner_still_gives_a_result():
+    # Both group means are 1, so the mean difference is zero. Sample b is two points, 0 and 2.
+    # Hand check: vb = var([0, 2], ddof=1) / 2 = 1, va = 0, so df = 1 / (1 / 1).
+    try:
+        t, df, p = welch_t_test([1.0, 1.0], [0.0, 2.0])
+    except ValueError:
+        pytest.fail(
+            "a constant sample whose value equals the overall mean is valid when the other "
+            "sample varies: it must give a result, not an error"
+        )
+    assert t == pytest.approx(0.0, abs=1e-12), (
+        "a constant sample at the overall mean with a varying partner gave the wrong t statistic"
+    )
+    assert df == pytest.approx(1.0, rel=1e-9), (
+        "a constant sample at the overall mean gave the wrong degrees of freedom: only the "
+        "varying sample's variance term should count"
+    )
+    assert p == pytest.approx(1.0, rel=1e-9), (
+        "a constant sample at the overall mean gave the wrong two-sided p-value"
+    )
