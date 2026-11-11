@@ -2,6 +2,62 @@ problem_version: 3
 accept:
 - file: accept_blind.sql
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_cte_ranked.sql
+  origin: freedom
+  freedom: the query is a common table expression, then a plain select of it
+reject:
+- file: reject_partition_case_folded.sql
+  mistake: partition by lower-cased category merges case variants
+  clause: Partition by the exact category string. Case and whitespace differences make separate groups.
+  killed_by: test_event_log_amounts_and_dirty_categories_match_the_pandas_oracle
+  visible: hidden
+- file: reject_rank_across_categories.sql
+  mistake: RANK has no PARTITION BY so ranks run across categories
+  clause: 'Partition: `category`. Rankings never cross categories.'
+  killed_by: test_fixture_returns_every_product_with_three_ranks_in_order
+  visible: public
+- file: reject_null_revenue_as_zero.sql
+  mistake: NULL revenue treated as zero so it ties with zero instead of ranking last
+  clause: 'Order inside a category: `revenue` descending. **NULL revenue ranks last**, after every number,
+    including 0. Two NULL revenues are peers of each other.'
+  killed_by: test_random_tables_match_the_pandas_oracle
+  visible: hidden
+- file: reject_tie_break_by_id_text.sql
+  mistake: ROW_NUMBER tie-break compares product_id as text not as number
+  clause: '`row_number`: `ROW_NUMBER()` over the partition. Ties in revenue are broken by `product_id`
+    ascending, so every row gets a different number.'
+  killed_by: test_random_tables_match_the_pandas_oracle
+  visible: hidden
+- file: reject_rank_tie_broken_by_id.sql
+  mistake: RANK ordered by product_id too so equal revenues never share a rank
+  clause: '`rank`: `RANK()` over the partition, ordered by revenue only. Equal revenues share a rank,
+    and the next rank skips (1, 1, 3).'
+  killed_by: test_fixture_returns_every_product_with_three_ranks_in_order
+  visible: public
+- file: reject_dense_rank_as_rank.sql
+  mistake: DENSE_RANK written as RANK so the rank after a tie skips a number
+  clause: '`dense_rank`: `DENSE_RANK()` over the partition, ordered by revenue only. Equal revenues share
+    a rank, and the next rank does not skip (1, 1, 2).'
+  killed_by: test_fixture_returns_every_product_with_three_ranks_in_order
+  visible: public
+- file: reject_rows_ordered_by_id.sql
+  mistake: final ORDER BY uses product_id instead of row_number within category
+  clause: 'Order of rows: `category` ascending, then `row_number` ascending.'
+  killed_by: test_fixture_returns_every_product_with_three_ranks_in_order
+  visible: public
+- file: reject_empty_table_placeholder_row.sql
+  mistake: adds a placeholder row when the table is empty so an empty input returns one row
+  clause: If `products` is empty, return zero rows with the same six columns.
+  killed_by: test_random_tables_match_the_pandas_oracle
+  visible: hidden
+uncovered:
+- clause: 'Returns one row per product, with the columns in this order: `category`, `product_id`, `revenue`,
+    `row_number`, `rank`, `dense_rank`.'
+  reason: every test checks this first, so a wrong solution fails all of them
+- clause: 'Input: a table `products` with `product_id` (BIGINT, unique), `category` (VARCHAR) and `revenue`
+    (DOUBLE, may be NULL). One row per product.'
+  reason: input types and uniqueness come from the table, and no single edit breaks only this bullet
+- clause: Must read from `products`. Do not write the answer as literal rows.
+  reason: a literal-rows answer is a hard-coded answer, forbidden by K2 and not a subtle wrong query
+sweeps:
+- reject

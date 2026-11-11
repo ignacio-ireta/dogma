@@ -2,6 +2,59 @@ problem_version: 3
 accept:
 - file: accept_blind.sql
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_cte_ranked.sql
+  origin: freedom
+  freedom: the rank is computed in a common table expression instead of a derived table
+reject:
+- file: reject_partition_case_folded.sql
+  mistake: partition by lower-cased category merges case variants
+  clause: Categories are compared exactly as stored. Case and whitespace differences create separate groups.
+  killed_by: test_event_log_amounts_and_dirty_categories_match_the_pandas_oracle
+  visible: hidden
+- file: reject_null_revenue_ranks_first.sql
+  mistake: NULL revenue sorted first so NULL products take the top dense ranks
+  clause: 'Dense rank inside a category: `DENSE_RANK()` ordered by `revenue` descending, with **NULL revenue
+    ranked last** and NULLs treated as peers of each other. Equal revenues share a rank and the next rank
+    does not skip. A category whose revenues are all NULL has every product at dense rank 1.'
+  killed_by: test_fixture_returns_the_top_two_dense_ranks_including_ties
+  visible: public
+- file: reject_rank_skips_after_tie.sql
+  mistake: RANK used instead of DENSE_RANK so the rank after a tie skips a number
+  clause: 'Dense rank inside a category: `DENSE_RANK()` ordered by `revenue` descending, with **NULL revenue
+    ranked last** and NULLs treated as peers of each other. Equal revenues share a rank and the next rank
+    does not skip. A category whose revenues are all NULL has every product at dense rank 1.'
+  killed_by: test_fixture_returns_the_top_two_dense_ranks_including_ties
+  visible: public
+- file: reject_row_number_cuts_ties.sql
+  mistake: ROW_NUMBER used so ties at the cut are split
+  clause: Keep every product whose dense rank is at most 2. Do not keep a product only because of its
+    `product_id`.
+  killed_by: test_fixture_returns_the_top_two_dense_ranks_including_ties
+  visible: public
+- file: reject_drops_null_revenue_at_top_two.sql
+  mistake: products with NULL revenue dropped even when their dense rank is 1 or 2
+  clause: Keep every product whose dense rank is at most 2. Do not keep a product only because of its
+    `product_id`.
+  killed_by: test_fixture_returns_the_top_two_dense_ranks_including_ties
+  visible: public
+- file: reject_order_by_product_id.sql
+  mistake: final ORDER BY sorts by product_id instead of dense_rank within category
+  clause: 'Order of rows: `category` ascending, then `dense_rank` ascending, then `product_id` ascending.'
+  killed_by: test_random_tables_match_the_pandas_oracle
+  visible: hidden
+- file: reject_no_qualifier_placeholder_row.sql
+  mistake: returns a placeholder row when no product qualifies so an empty result has one row
+  clause: If no product qualifies, return zero rows with the same four columns.
+  killed_by: test_random_tables_match_the_pandas_oracle
+  visible: hidden
+uncovered:
+- clause: 'Returns one row per kept product, with the columns in this order: `category`, `product_id`,
+    `revenue`, `dense_rank`.'
+  reason: every test checks this first, so a wrong solution fails all of them
+- clause: 'Input: a table `products` with `product_id` (BIGINT, unique), `category` (VARCHAR) and `revenue`
+    (DOUBLE, may be NULL). One row per product.'
+  reason: input types and uniqueness come from the table, and no single edit breaks only this bullet
+- clause: Must read from `products`. Do not write the answer as literal rows.
+  reason: a literal-rows answer is a hard-coded answer, forbidden by K2 and not a subtle wrong query
+sweeps:
+- reject
