@@ -2,6 +2,57 @@ problem_version: 3
 accept:
 - file: accept_blind.sql
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_filter_clause.sql
+  origin: freedom
+  freedom: uses FILTER clauses in the aggregates and the HAVING, instead of a WHERE before grouping
+reject:
+- file: reject_status_case_and_space_normalized.sql
+  mistake: status is trimmed and lowercased before the exact match
+  clause: Status values use exact string equality; casing and surrounding whitespace are not normalized.
+  killed_by: test_event_log_orders_match_the_pandas_aggregation_oracle
+  visible: hidden
+- file: reject_columns_swapped.sql
+  mistake: total_amount returned before completed_orders
+  clause: 'Returns: one row per qualifying customer, with exactly these columns in this order: `customer_id`,
+    `completed_orders`, `total_amount`.'
+  killed_by: test_customers_with_three_or_more_completed_orders_match_the_pandas_answer
+  visible: public
+- file: reject_counts_non_null_amounts.sql
+  mistake: completed_orders counts only orders with an amount
+  clause: '`completed_orders`: the number of orders with `status` equal to `''completed''`, an exact match
+    (capitalisation matters). An order whose `amount` is NULL still counts.'
+  killed_by: test_customers_with_three_or_more_completed_orders_match_the_pandas_answer
+  visible: public
+- file: reject_zero_for_all_null_total.sql
+  mistake: all-NULL completed amounts give a total of 0 instead of NULL
+  clause: '`total_amount`: the sum of `amount` over those same orders. NULL amounts are skipped. If every
+    one of a customer''s completed orders has a NULL amount, `total_amount` is NULL, not 0.'
+  killed_by: test_group_whose_amounts_are_all_null_has_null_total_and_sorts_last
+  visible: hidden
+- file: reject_threshold_counts_all_orders.sql
+  mistake: threshold counts every order of the customer not only completed ones
+  clause: A customer qualifies when `completed_orders` is at least 3. Only completed orders count toward
+    this threshold. A customer with four orders, two of them completed, does not qualify.
+  killed_by: test_customers_with_three_or_more_completed_orders_match_the_pandas_answer
+  visible: public
+- file: reject_tie_break_descending.sql
+  mistake: equal totals ordered by customer_id descending
+  clause: 'Order of rows: `total_amount` descending with NULLs last, then `customer_id` ascending. Row
+    order is part of the answer.'
+  killed_by: test_customers_with_three_or_more_completed_orders_match_the_pandas_answer
+  visible: public
+- file: reject_literal_public_answer.sql
+  mistake: answer typed in as literal VALUES rows instead of read from orders
+  clause: Must read from `orders`. Do not write the answer as literal rows.
+  killed_by: test_random_tables_match_the_pandas_oracle
+  visible: hidden
+uncovered:
+- clause: 'Input: a table `orders` with columns `order_id` (BIGINT), `customer_id` (BIGINT), `order_date`
+    (DATE), `status` (VARCHAR) and `amount` (DOUBLE, may be NULL).'
+  reason: the input table layout is fixed by the loader, so a query can only break it by breaking C4 or
+    C5
+- clause: If no customer qualifies, return zero rows with the same three columns.
+  reason: an empty answer falls out of GROUP BY and HAVING, and the only way to break it is a literal
+    row, which C9 forbids
+sweeps:
+- reject
