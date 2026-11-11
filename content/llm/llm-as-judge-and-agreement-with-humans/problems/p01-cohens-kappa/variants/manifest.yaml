@@ -53,6 +53,14 @@ reject:
   clause: Must not mutate inputs.
   killed_by: test_label_list_is_not_reordered
   visible: hidden
+- file: reject_single_label_set.py
+  mistake: a one-label label set is rejected as bad labels when both raters agree on that label
+  clause: '**Degenerate case.** When `p_e == 1`, both raters gave the same single label to every item,
+    so the denominator is zero. Raise `ValueError` with a message that says kappa is undefined. Do not
+    return `nan`.'
+  killed_by: test_one_label_set_reports_undefined_kappa_not_bad_labels
+  visible: hidden
 uncovered: []
 sweeps:
 - reject
+- mutants

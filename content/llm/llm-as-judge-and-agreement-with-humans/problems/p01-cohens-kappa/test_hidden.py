@@ -164,3 +164,16 @@ def test_label_list_is_not_reordered():
     labels = ["y", "x"]
     checked(lambda: cohens_kappa(["x", "y"], ["x", "x"], labels))
     assert labels == ["y", "x"], "the label list must not be reordered by the call"
+
+
+def test_one_label_set_reports_undefined_kappa_not_bad_labels():
+    # A label set with a single label is valid. When both raters use that label for every item,
+    # the chance agreement is 1, so the error must describe kappa itself, not the label set.
+    try:
+        cohens_kappa(["x", "x"], ["x", "x"], ["x"])
+    except ValueError as exc:
+        assert "kappa" in str(exc), (
+            "a one-label set is valid input; the error for a degenerate kappa must describe kappa"
+        )
+        return
+    pytest.fail("a degenerate kappa must raise ValueError", pytrace=False)
