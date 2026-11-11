@@ -37,3 +37,4 @@ uncovered:
     the raise bullet C4 so it is not forced
 sweeps:
 - reject
+- mutants

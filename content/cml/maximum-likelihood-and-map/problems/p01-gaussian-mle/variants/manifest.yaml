@@ -35,3 +35,4 @@ reject:
 uncovered: []
 sweeps:
 - reject
+- mutants
