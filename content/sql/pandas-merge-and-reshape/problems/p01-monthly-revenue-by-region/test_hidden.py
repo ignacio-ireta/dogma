@@ -166,7 +166,7 @@ def _random_rows(
     return order_rows, customer_rows
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(seed=st.integers(min_value=0, max_value=10_000))
 def test_random_tables_match_an_independent_sql_computation(seed: int) -> None:
     rng = np.random.default_rng(seed)
