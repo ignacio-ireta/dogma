@@ -58,3 +58,4 @@ uncovered:
   reason: a literal-rows answer is a hard-coded answer, forbidden by K2 and not a subtle wrong query
 sweeps:
 - reject
+- mutants
