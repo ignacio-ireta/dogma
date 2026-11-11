@@ -69,8 +69,8 @@ Work stops and resumes across sessions through the status table and the handoff 
 | I-32a | Test-strength platform: hidden-test lint, `variants/` manifest, `scripts/exercise_gate.py`, docs and variants for the example problem (plan `2026-11-09-test-strength.md`; a1–a4) | — | I-31a | done |
 | I-32b | Hygiene sweep: messages, ids, Hypothesis flags and `pytest.raises` in hidden tests, outcomes unchanged | — | I-32a, I-31c | done |
 | I-32c | One blind solution per problem, committed as `variants/accept_blind` | — | I-32a, I-31c | done |
-| I-32d | Reject sweep and mutant triage: one wrong solution per Contract bullet, gaps closed by gated tests | — | I-32b, I-32c | in-progress |
-| I-32e | Test-strength close-out: enforce the rules in the gate, re-audit, report | — | I-32d | todo |
+| I-32d | Reject sweep and mutant triage: one wrong solution per Contract bullet, gaps closed by gated tests | — | I-32b, I-32c | done |
+| I-32e | Test-strength close-out: enforce the rules in the gate, re-audit, report | — | I-32d | done |
 
 ### Content runway (one wave per path week; ARCHITECTURE §7)
 
@@ -276,7 +276,8 @@ data salt; versions are bumped. `make test-all` passes.
 Plan: `docs/superpowers/plans/2026-11-09-test-strength.md`. Design:
 `docs/superpowers/specs/2026-11-09-test-strategy-design.md`. One runbook per step in
 `docs/superpowers/plans/2026-11-09-test-strength/`; the coordinator starts at `01-coordinator.md`.
-Not started: the plan is written, nothing is implemented.
+Done on 2026-11-11: the report is `docs/audits/2026-11-11-test-strength.md`, the decisions and
+the open points for the owner are in `docs/audits/test-strength-decisions.md`.
 **Owns:** per runbook, listed in the plan's increment table. The sweeps (I-32b–d) own topic
 directories only: `test_hidden.py`, `variants/` and the version in `meta.yaml`.
 **Do:** give every problem committed proof for its tests (`variants/`: solutions that must pass
@@ -304,6 +305,57 @@ proves equal.
 
 *Newest first. One entry per session or agent: what changed · what was verified (exact commands
 and results) · what's left or blocked.*
+
+### 2026-11-11 · Test strength finished: last 81 problems swept, rules enforced, report written · I-32d and I-32e done
+
+- **Reject sweep and mutant triage for the 81 problems in the 48 I-31 topics (I-32d):** 618 wrong
+  solutions that the tests reject, 140 accepted ones and 89 Contract bullets marked uncovered
+  with a reason; 43 hidden tests added. The mutant triage looked at 220 surviving mutants: 135
+  cannot change a result, 69 change something no Contract sentence covers, 1 has no usable
+  witness, and 11 hidden tests were added. All four worklists (`blind`, `hygiene`, `reject`,
+  `mutants`) print `total: 0` for all 251 problems.
+- **Corrections during the sweep:** one commit (`0c75771`, ridge p01) went in with a failing gate
+  after a data swap and was fixed by `f8f9c0d`. A wrong solution in `cml/k-means/p02` that the
+  tests rejected only on some runs was replaced (`df854cd`). Two executor tests did not reach a
+  commit (an unreadable-date test for pandas-groupby p01, a subnormal-input test for
+  feature-scaling); the reasons and the saved patches are in
+  `docs/audits/test-strength-decisions.md`.
+- **Close-out, Part A (`05559f0`):** the hidden-test lint now runs in `dogma content validate`
+  (A1 on) and `VARIANTS_REQUIRED` is `True` (A3 on). **A2 is off:** the id-leak check in
+  `content verify` refuses any digit in a parametrized id, and 35 problems in 25 topics have
+  neutral but numbered ids such as `case-0` and `grid0`. With the check, `content verify --all`
+  ended with `25 of 175 topic(s) failed`, so it was undone as the runbook says. The 35 problems
+  are listed in the report.
+- **Close-out, Part B:** `docs/audits/2026-11-11-test-strength.md`, all numbers pasted from the
+  tools. `baseline: 251/251 references pass`; `variants: 2308 ok, 0 mismatches in 251 problems`;
+  `lint: 0 findings in 0 problems`; 10,551 mutants, `killed 93.7%`; scorecard: 251 problems, 251
+  with a blind accept, 461 accepts, 1,847 rejects, every bullet covered 251, both sweeps 251.
+- **Seeds finding, not changed:** `seeds: 3 failing runs on 1 problems`.
+  `cml/lagrange-multipliers/p01-constrained-quadratic-min` fails
+  `test_solution_is_feasible_and_satisfies_stationarity` under Hypothesis seeds 1, 13 and 15.
+  The grader pins seed 0, which passes, so a Submit does not see it. I-32 did not write or
+  tighten that test.
+- **Verified:** `make test-all` exit 0 on `8b49d37` (the report commit) in a clean worktree: Ruff and
+  format (4,401 files), strict mypy (180 files), 6 import contracts, 2,198 Python tests, 175
+  topics verified, 187 browser tests and the build, audit clean (6,240 files),
+  `exercise_gate.py variants` 2,308 ok and 0 mismatches in 251 problems, 11 e2e/slow tests, 22
+  Playwright tests. `make check` exit 0 on `de302dd` (the end of the sweeps). The Part A accept
+  commands passed on `05559f0`. This entry is a docs-only commit after the gate; the privacy
+  audit was run again on it.
+- **Open decisions, by kind (ledger rows):** blocked 4, question 13, unpromised 217, no-witness
+  10, overreach 9, message-defect 102, inspect 13 (327 rows are done). The tolerance table in
+  the report lists 7 problems whose tests are stricter than the declared `rtol` and 1 whose
+  tests are looser; nothing was changed.
+- **For the owner:** the "Waiting for the owner" sections of
+  `docs/audits/test-strength-decisions.md`. The main ones: the A2 rule against the numbered ids;
+  the lagrange seeds; Contract sentences that are missing (KV-cache minimums, non-tensor
+  arguments, defaults that live only in a signature); the kl-divergence blind accept that
+  disagrees with the reference on an underflowed probability; the sampling problem whose
+  statement does not fix how the value is drawn; `uncovered` entries that later tests made
+  stale (adamw C1 and C3, prefill C2, k-means p02 C5).
+- **State of the branches:** `main` was fast-forwarded to the end of `i32-test-strength`.
+  `origin` has the branch only up to `dfc48f2`; later commits and `main` were not pushed.
+- **Left:** nothing in the status table. Every increment is `done`.
 
 ### 2026-11-10 · First 170 problems fully swept; hygiene and blind accepts done for all 251 · I-32b and I-32c done, I-32d in progress
 
