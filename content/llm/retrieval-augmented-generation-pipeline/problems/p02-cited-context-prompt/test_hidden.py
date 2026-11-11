@@ -153,7 +153,7 @@ def test_integer_arrays_match_float_arrays():
     assert as_int == as_float, "integer vectors must give the same prompt as their float versions"
 
 
-@pytest.mark.parametrize("scale", [1e-8, 1e8])
+@pytest.mark.parametrize("scale", [1e-8, 1e8], ids=["tiny-scale", "huge-scale"])
 def test_scale_of_vectors_does_not_change_the_ranking(scale):
     vectors = np.array([[0.2, 0.9], [0.8, 0.1], [0.5, 0.5]])
     base = checked(
