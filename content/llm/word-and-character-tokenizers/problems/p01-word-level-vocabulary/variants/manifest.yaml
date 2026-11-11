@@ -2,6 +2,79 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_split_on_single_space.py
+  mistake: splits words on single spaces only so tabs and newlines do not separate words
+  clause: 'Word rule (corpus and text alike): a word is a maximal run of non-whitespace characters, as
+    `str.split()` with no argument gives. Tabs, newlines and repeated spaces all separate words, and leading
+    or trailing whitespace makes no empty word. Case is kept: `Cat` and `cat` are different words. Punctuation
+    is kept: `cat.` and `cat` are different words.'
+  killed_by: test_unknown_word_and_case_change_both_become_unk
+  visible: public
+- file: reject_min_count_bool_accepted.py
+  mistake: accepts a bool as min_count because bool is a subclass of int
+  clause: '`WordTokenizer(corpus, min_count=1)`: - `corpus`: a `list` of `str`. A single `str` is rejected.
+    Must not be mutated. - `min_count`: a Python `int` that is at least 1. Raises `TypeError` for other
+    types (`bool` is rejected), and `ValueError` when it is below 1. - Raises `TypeError` when an entry
+    of `corpus` is not a `str`.'
+  killed_by: test_bool_min_count_raises_type_error
+  visible: hidden
+- file: reject_single_string_corpus_accepted.py
+  mistake: accepts a single string as the corpus and reads it character by character
+  clause: '`WordTokenizer(corpus, min_count=1)`: - `corpus`: a `list` of `str`. A single `str` is rejected.
+    Must not be mutated. - `min_count`: a Python `int` that is at least 1. Raises `TypeError` for other
+    types (`bool` is rejected), and `ValueError` when it is below 1. - Raises `TypeError` when an entry
+    of `corpus` is not a `str`.'
+  killed_by: test_bare_string_corpus_raises_type_error
+  visible: hidden
+- file: reject_count_documents_not_occurrences.py
+  mistake: counts each word once per document instead of every appearance
+  clause: 'Counting: a word''s count is the number of times it appears in the whole corpus. Every appearance
+    counts, so a word that appears three times in one document has count 3.'
+  killed_by: test_vocabulary_matches_the_naive_count_and_sort
+  visible: hidden
+- file: reject_special_string_encodes_to_its_id.py
+  mistake: a text word equal to a special token string gets that special id instead of unk
+  clause: 'Special tokens are reserved: `<pad>`, `<unk>`, `<bos>`, `<eos>`. A corpus word equal to one
+    of them is not counted. In `encode`, such a string is out of vocabulary and gives the `<unk>` id.'
+  killed_by: test_encoding_matches_the_naive_ids
+  visible: hidden
+- file: reject_ties_by_first_appearance.py
+  mistake: orders equal counts by first appearance in the corpus instead of by the word
+  clause: '`tokens`: a `list` of `str`. `tokens[i]` is the string with id `i`. - ids 0 to 3 are `<pad>`,
+    `<unk>`, `<bos>`, `<eos>`, in that order, always, even for an empty corpus. - Then come the words
+    with count at least `min_count`, ordered by **descending count**. Ties are broken by the **word itself,
+    ascending in Python string order** (code-point order, so `B` sorts before `a`). Two words with the
+    same count never follow first-appearance order.'
+  killed_by: test_vocabulary_order_is_specials_then_count_then_word
+  visible: public
+- file: reject_encode_empty_text_gives_unk.py
+  mistake: encodes empty or whitespace-only text to the unk id instead of an empty list
+  clause: '`encode(text)`: `text` must be a `str`, otherwise `TypeError`. Returns a `list` of Python `int`:
+    one id per word of `text`, in order, with the `<unk>` id (1) for out-of-vocabulary words. No `<bos>`
+    or `<eos>` is added. Empty or whitespace-only text returns `[]`.'
+  killed_by: test_empty_corpus_has_only_the_special_tokens
+  visible: public
+- file: reject_decode_pad_id_rejected.py
+  mistake: refuses id 0 for the pad token when decoding
+  clause: '`decode(ids)`: `ids` must be a `list` of Python `int` (`TypeError` otherwise, `bool` included).
+    An id outside `0 .. len(tokens) - 1` raises `ValueError`. Returns the token strings joined by single
+    spaces. `decode([])` returns `""`.'
+  killed_by: test_reserved_special_strings_in_the_corpus_do_not_take_ids
+  visible: hidden
+- file: reject_ties_case_folded.py
+  mistake: orders equal counts by the lowercase word so capital letters do not sort first
+  clause: '`tokens`: a `list` of `str`. `tokens[i]` is the string with id `i`. - ids 0 to 3 are `<pad>`,
+    `<unk>`, `<bos>`, `<eos>`, in that order, always, even for an empty corpus. - Then come the words
+    with count at least `min_count`, ordered by **descending count**. Ties are broken by the **word itself,
+    ascending in Python string order** (code-point order, so `B` sorts before `a`). Two words with the
+    same count never follow first-appearance order.'
+  killed_by: test_vocabulary_matches_the_naive_count_and_sort
+  visible: hidden
+uncovered:
+- clause: 'Round trip: when every word of a text is in the vocabulary, `decode(encode(text))` equals `"
+    ".join(text.split())`.'
+  reason: round trip follows from C6 and C7; every wrong solution for those breaks it too, so no separate
+    file
+sweeps:
+- reject
