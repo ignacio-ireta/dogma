@@ -2,6 +2,49 @@ problem_version: 3
 accept:
 - file: accept_blind.sql
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_using_join.sql
+  origin: freedom
+  freedom: join on user_id written with USING instead of ON
+reject:
+- file: reject_distinct_timestamps.sql
+  mistake: duplicate timestamps merged so two events at the same time count as one
+  clause: 'Input: one table `events`. - `user_id` (BIGINT): the user. Never NULL. - `event_ts` (TIMESTAMP):
+    when the event happened. Naive, with no time zone. Never NULL. - One row per event. Two events of
+    one user can share a timestamp; they are still two events.'
+  killed_by: test_tied_first_timestamp_gives_zero_days
+  visible: public
+- file: reject_rank_ties.sql
+  mistake: RANK instead of ROW_NUMBER so a tie at the first timestamp gives two first events
+  clause: A user's first event is the earliest `event_ts` of that user. Their second event is the next
+    one in time order. If the first two timestamps are equal, the second event has that same timestamp.
+  killed_by: test_only_users_with_two_events_are_returned
+  visible: public
+- file: reject_date_part_of_interval.sql
+  mistake: day count read as the day field of an interval so two minutes across midnight give zero
+  clause: '`days_to_second`: BIGINT, the number of calendar days from the first event''s date to the second
+    event''s date. Events at `2024-03-31 23:59:00` and `2024-04-01 00:01:00` are 1 day apart, although
+    only 2 minutes separate them. The value is never negative.'
+  killed_by: test_span_of_two_minutes_across_midnight_is_one_calendar_day
+  visible: public
+- file: reject_left_join_keeps_single_event_users.sql
+  mistake: left join keeps users with one event instead of leaving them out
+  clause: 'Returns: one row per user with at least two events, with exactly these columns in this order:
+    `user_id`, `days_to_second`.'
+  killed_by: test_only_users_with_two_events_are_returned
+  visible: public
+- file: reject_literal_answer.sql
+  mistake: answer typed in as literal rows and the events table never read
+  clause: Must read from `events`. Do not write the answer as literal rows.
+  killed_by: test_random_tables_match_the_pandas_oracle
+  visible: hidden
+- file: reject_order_descending.sql
+  mistake: rows sorted by user id descending instead of ascending
+  clause: 'Row order: `user_id` ascending.'
+  killed_by: test_only_users_with_two_events_are_returned
+  visible: public
+uncovered:
+- clause: If no user has two events, return zero rows with the same two columns.
+  reason: the empty-result rule has no single edit that breaks it while keeping every other clause intact,
+    since a changed column list or a literal row breaks C4 or C7 too
+sweeps:
+- reject

@@ -1,5 +1,5 @@
 id: sql/sql-date-handling/p01-monthly-active-users
-version: 4                      # bump when tests, tolerances or the contract change
+version: 5                      # bump when tests, tolerances or the contract change
 title: Monthly active users, including months with no activity
 language: sql
 runtime: sql-duckdb

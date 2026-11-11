@@ -1,7 +1,70 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.sql
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_calendar_subquery.sql
+  origin: freedom
+  freedom: calendar built as a subquery in FROM instead of a WITH clause
+reject:
+- file: reject_user_id_int32.sql
+  mistake: large user ids are cast to a 32-bit integer and two different users count as one
+  clause: 'Input: one table `events`. - `user_id` (BIGINT): the user who did something. Never NULL. -
+    `event_ts` (TIMESTAMP): when it happened. Naive, with no time zone. Never NULL. - One row per event.
+    A user can have many events in a month.'
+  killed_by: test_user_ids_above_the_32_bit_range_stay_distinct
+  visible: hidden
+- file: reject_range_from_data.sql
+  mistake: month range taken from the first and last event instead of the stated four months
+  clause: 'Range: the four calendar months 2023-11, 2023-12, 2024-01 and 2024-02. The statement fixes
+    the range; the data does not.'
+  killed_by: test_fixture_matches_the_hand_checked_answer
+  visible: public
+- file: reject_inclusive_month_end.sql
+  mistake: event at the first instant of the next month also counted in the earlier month
+  clause: An event counts toward a month when `event_ts` is at or after the first instant of that month
+    and before the first instant of the next month. An event at `2024-02-01 00:00:00` belongs to February.
+    An event at `2024-01-31 23:59:59` belongs to January.
+  killed_by: test_fixture_matches_the_hand_checked_answer
+  visible: public
+- file: reject_month_number_only.sql
+  mistake: month matched by calendar number only so the same month of another year is counted
+  clause: An event counts toward a month when `event_ts` is at or after the first instant of that month
+    and before the first instant of the next month. An event at `2024-02-01 00:00:00` belongs to February.
+    An event at `2024-01-31 23:59:59` belongs to January.
+  killed_by: test_event_log_matches_the_pandas_month_oracle
+  visible: hidden
+- file: reject_month_as_timestamp.sql
+  mistake: month column returned as a timestamp instead of a date
+  clause: 'Returns: one row per month of the range, with exactly these columns in this order: - `month`:
+    DATE, the first day of the month. A TIMESTAMP is not accepted. - `active_users`: BIGINT, the number
+    of distinct `user_id` values with at least one event in that month. `0` when there are none.'
+  killed_by: test_month_column_is_a_date_not_a_timestamp
+  visible: public
+- file: reject_count_all_events.sql
+  mistake: every event counted so a user with several events in a month counts more than once
+  clause: 'Returns: one row per month of the range, with exactly these columns in this order: - `month`:
+    DATE, the first day of the month. A TIMESTAMP is not accepted. - `active_users`: BIGINT, the number
+    of distinct `user_id` values with at least one event in that month. `0` when there are none.'
+  killed_by: test_fixture_matches_the_hand_checked_answer
+  visible: public
+- file: reject_inner_join.sql
+  mistake: inner join drops months with no events instead of keeping them at zero
+  clause: If `events` is empty, return the four rows with `0`.
+  killed_by: test_every_month_of_the_range_has_a_row_in_month_order
+  visible: public
+- file: reject_calendar_only.sql
+  mistake: answer taken from the calendar alone and the events table never read
+  clause: Must read from `events`. Do not write the answer as literal rows.
+  killed_by: test_fixture_matches_the_hand_checked_answer
+  visible: public
+- file: reject_order_descending.sql
+  mistake: rows sorted by month descending instead of ascending
+  clause: 'Row order: `month` ascending. Row order is part of the answer.'
+  killed_by: test_every_month_of_the_range_has_a_row_in_month_order
+  visible: public
+uncovered:
+- clause: Events outside the four months are ignored.
+  reason: events outside the range never match a month row in any grid, so no single edit lets them count
+    without breaking C2 or C3
+sweeps:
+- reject

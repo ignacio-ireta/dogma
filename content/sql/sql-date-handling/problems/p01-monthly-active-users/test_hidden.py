@@ -285,3 +285,20 @@ def test_month_column_is_a_date_and_rows_are_in_month_order() -> None:
         [(RANGE_MONTHS[0], 1), (RANGE_MONTHS[1], 0), (RANGE_MONTHS[2], 0), (RANGE_MONTHS[3], 1)],
         "the counts are wrong for a small table of two users",
     )
+
+
+def test_user_ids_above_the_32_bit_range_stay_distinct() -> None:
+    big = 3_000_000_000  # a valid BIGINT user id, larger than a 32-bit integer can hold
+    events = [
+        (big, datetime(2023, 12, 5, 9, 0)),
+        (big + 1, datetime(2023, 12, 6, 9, 0)),
+        (big, datetime(2023, 12, 7, 9, 0)),
+    ]
+    columns, rows = _run_learner_query(_connect(events))
+    # Two different users are active in December 2023; the same user twice counts once.
+    _must_equal(
+        _rows_of(columns, rows),
+        [(RANGE_MONTHS[0], 0), (RANGE_MONTHS[1], 2), (RANGE_MONTHS[2], 0), (RANGE_MONTHS[3], 0)],
+        "two different users with large user ids are counted as one, or the query fails on them: "
+        "keep user_id as BIGINT and count its DISTINCT values",
+    )
