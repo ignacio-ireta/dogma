@@ -342,3 +342,22 @@ def test_property_is_symmetric_bounded_and_matches_scipy(reference, current):
         "swapping the samples changed the p-value: the test must be symmetric",
     )
     _check_statistic(statistic, expected_statistic, reference, current)
+
+
+def test_p_value_stays_accurate_for_a_tiny_statistic():
+    reference = np.array([0.0] + [1.0] * 1999)
+    current = np.array([0.0] + [1.0] * 2000)  # one extra copy of 1.0: D = 1 / (2000 * 2001)
+    scipy_statistic = float(stats.ks_2samp(reference, current).statistic)
+    expected_p = _limit_p(scipy_statistic, 2000, 2001)
+    statistic, p_value, _ = _run(
+        lambda: ks_drift(reference, current), "ks_drift raised on valid samples"
+    )
+    _require(
+        math.isclose(statistic, scipy_statistic, rel_tol=1e-9, abs_tol=1e-15),
+        "statistic must be the two-sample KS distance on this pair",
+    )
+    _require(
+        math.isclose(p_value, expected_p, rel_tol=1e-9, abs_tol=1e-9),
+        "for a tiny statistic from nearly identical samples the p-value must still follow "
+        "the limiting distribution: the formula is wrong for very small lambda",
+    )

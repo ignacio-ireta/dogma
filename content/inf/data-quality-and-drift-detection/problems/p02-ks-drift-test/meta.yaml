@@ -1,5 +1,5 @@
 id: inf/data-quality-and-drift-detection/p02-ks-drift-test
-version: 3
+version: 4
 title: Two-sample Kolmogorov-Smirnov drift check
 language: python
 runtime: py-data
