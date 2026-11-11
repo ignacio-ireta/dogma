@@ -1,7 +1,89 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_bool_n_components_accepted.py
+  mistake: accepts a boolean as the component count
+  clause: '`n_components`: an `int` with `1 <= n_components <= min(n, d)`. Booleans are rejected.'
+  killed_by: test_invalid_input_or_component_count_raises_value_error
+  visible: hidden
+- file: reject_centre_in_place.py
+  mistake: centres the caller's float array in place
+  clause: Must not mutate its input.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
+- file: reject_centred_by_median.py
+  mistake: centres columns by the median instead of the mean
+  clause: Centre each column by its mean first. The means are not returned.
+  killed_by: test_worked_example_gives_hand_computed_axis_variance_and_ratio
+  visible: public
+- file: reject_ratio_over_kept_variance.py
+  mistake: divides ratios by the variance of the kept axes only
+  clause: 'Returns: a `dict` with exactly these four keys. Each value is a float64 array, and `k` is `n_components`.
+    - `"components"`: shape `(k, d)`. Row `i` is the unit-length `i`-th principal axis. Rows are ordered
+    by decreasing explained variance. - `"explained_variance"`: shape `(k,)`. The sample variance (divisor
+    `n - 1`) of the data projected onto each axis. - `"explained_variance_ratio"`: shape `(k,)`. Each
+    explained variance divided by the total variance, which is the sum over all `d` columns of their sample
+    variances (divisor `n - 1`). Dividing by the variance of the kept axes only is wrong. If the total
+    is zero, because every column is constant, every ratio is `0.0`. Zero means exactly zero: a tiny but
+    positive total is not constant, and its ratios are computed as usual. - `"transformed"`: shape `(n,
+    k)`, equal to the centred `X` times `components.T`.'
+  killed_by: test_worked_example_gives_hand_computed_axis_variance_and_ratio
+  visible: public
+- file: reject_transformed_unsigned_axes.py
+  mistake: scores use unsigned axes so they disagree with components
+  clause: 'Returns: a `dict` with exactly these four keys. Each value is a float64 array, and `k` is `n_components`.
+    - `"components"`: shape `(k, d)`. Row `i` is the unit-length `i`-th principal axis. Rows are ordered
+    by decreasing explained variance. - `"explained_variance"`: shape `(k,)`. The sample variance (divisor
+    `n - 1`) of the data projected onto each axis. - `"explained_variance_ratio"`: shape `(k,)`. Each
+    explained variance divided by the total variance, which is the sum over all `d` columns of their sample
+    variances (divisor `n - 1`). Dividing by the variance of the kept axes only is wrong. If the total
+    is zero, because every column is constant, every ratio is `0.0`. Zero means exactly zero: a tiny but
+    positive total is not constant, and its ratios are computed as usual. - `"transformed"`: shape `(n,
+    k)`, equal to the centred `X` times `components.T`.'
+  killed_by: test_matches_scikit_learn_full_svd_pca_including_signs
+  visible: hidden
+- file: reject_tiny_total_treated_as_constant.py
+  mistake: treats a tiny positive total variance as constant
+  clause: 'Returns: a `dict` with exactly these four keys. Each value is a float64 array, and `k` is `n_components`.
+    - `"components"`: shape `(k, d)`. Row `i` is the unit-length `i`-th principal axis. Rows are ordered
+    by decreasing explained variance. - `"explained_variance"`: shape `(k,)`. The sample variance (divisor
+    `n - 1`) of the data projected onto each axis. - `"explained_variance_ratio"`: shape `(k,)`. Each
+    explained variance divided by the total variance, which is the sum over all `d` columns of their sample
+    variances (divisor `n - 1`). Dividing by the variance of the kept axes only is wrong. If the total
+    is zero, because every column is constant, every ratio is `0.0`. Zero means exactly zero: a tiny but
+    positive total is not constant, and its ratios are computed as usual. - `"transformed"`: shape `(n,
+    k)`, equal to the centred `X` times `components.T`.'
+  killed_by: test_tiny_scale_wine_keeps_its_real_ratios_and_is_not_treated_as_constant
+  visible: hidden
+- file: reject_sign_by_first_entry.py
+  mistake: sets the sign from the first entry instead of the largest
+  clause: 'Sign convention: in each row of `components`, the entry of largest absolute value is positive.
+    This is the rule scikit-learn applies in `PCA(svd_solver="full")`, its `svd_flip` with `u_based_decision=False`.
+    If two or more entries lie within a relative `1e-9` of the largest absolute value, the lowest index
+    decides. scikit-learn settles such exact ties by floating-point rounding, so it can differ from this
+    rule on them.'
+  killed_by: test_matches_scikit_learn_full_svd_pca_including_signs
+  visible: hidden
+- file: reject_integer_mean_floored.py
+  mistake: centres integer input by a rounded mean
+  clause: '`X`: 2-D array-like of real numbers, shape `(n, d)` with `n >= 2` and `d >= 1`. Integers allowed.
+    Every entry is finite.'
+  killed_by: test_integer_input_is_centred_by_its_exact_mean
+  visible: hidden
+- file: reject_tie_band_exact.py
+  mistake: ignores near ties inside the relative tie band
+  clause: 'Sign convention: in each row of `components`, the entry of largest absolute value is positive.
+    This is the rule scikit-learn applies in `PCA(svd_solver="full")`, its `svd_flip` with `u_based_decision=False`.
+    If two or more entries lie within a relative `1e-9` of the largest absolute value, the lowest index
+    decides. scikit-learn settles such exact ties by floating-point rounding, so it can differ from this
+    rule on them.'
+  killed_by: test_near_tie_inside_the_band_makes_the_lower_index_positive
+  visible: hidden
+uncovered:
+- clause: Raises `ValueError` when `X` is not 2-D, has fewer than two rows or no columns, contains NaN
+    or infinity, or when `n_components` is not an integer in range.
+  reason: wrong solution survives, see notes
+sweeps:
+- reject

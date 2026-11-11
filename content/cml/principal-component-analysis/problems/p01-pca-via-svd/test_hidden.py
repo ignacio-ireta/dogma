@@ -381,3 +381,30 @@ def test_tiny_scale_wine_keeps_its_real_ratios_and_is_not_treated_as_constant(wi
         ref.components_,
         "tiny-scale data gave the wrong axes: the axes are scale-free, so they must match",
     )
+
+
+def test_integer_input_is_centred_by_its_exact_mean():
+    # Column 0 is 1, 2, 4 with mean 7/3. Its centred values -4/3, -1/3, 5/3 have squares summing
+    # to 14/3, so the sample variance of that column (divisor 2) is 7/3. Column 1 is constant.
+    X = np.array([[1, 0], [2, 0], [4, 0]])
+    result = _call(X, 1, "pca failed on integer input with a fractional column mean")
+    _check_close(
+        _field(result, "explained_variance"),
+        np.array([7 / 3]),
+        "explained variance is wrong for integer input: centre each column by its exact mean, "
+        "which can be a fraction, not by a rounded whole number",
+    )
+
+
+def test_near_tie_inside_the_band_makes_the_lower_index_positive():
+    # The two entries of the axis differ by a relative 1e-10, which is inside the 1e-9 tie band.
+    # They tie, so the lowest index decides and the first entry must be positive.
+    s = 1.0 - 1e-10
+    components = _field(
+        _call([[s, -1.0], [-s, 1.0]], 1, "pca failed on rank-one data"), "components"
+    )
+    _check(
+        components[0, 0] > 0,
+        "entries within the relative tie band must count as tied, so the lowest index decides "
+        "the sign and must be positive",
+    )

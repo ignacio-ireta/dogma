@@ -1,7 +1,59 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_bool_threshold_accepted.py
+  mistake: accepts a boolean as the threshold
+  clause: '`threshold`: a real number in `(0, 1]`. Booleans are rejected.'
+  killed_by: test_boolean_threshold_raises_value_error
+  visible: hidden
+- file: reject_centre_in_place.py
+  mistake: centres the caller's float array in place
+  clause: Must not mutate its input.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
+- file: reject_constant_check_tiny_total.py
+  mistake: treats a tiny positive total variance as constant
+  clause: 'Raises `ValueError` when `X` is not 2-D, has fewer than two rows or no columns, contains NaN
+    or infinity, when `threshold` is not a real number in `(0, 1]`, or when every column is constant.
+    A constant matrix has zero total variance, so no ratio exists. "Constant" means exactly constant:
+    the test is for zero total variance, so a tiny but positive total gives an ordinary count.'
+  killed_by: test_tiny_scale_wine_is_not_constant_and_needs_the_real_count
+  visible: hidden
+- file: reject_last_reaching_component.py
+  mistake: returns the last component that reaches the threshold
+  clause: Let `r_i` be the explained-variance ratio of the `i`-th principal component, with components
+    in decreasing order of variance. Returns the smallest `k >= 1` such that `r_1 + ... + r_k >= threshold`,
+    as an `int`.
+  killed_by: test_threshold_below_first_ratio_keeps_one_component
+  visible: public
+- file: reject_rounding_margin_zero.py
+  mistake: drops the rounding margin so an exact tie can be lost
+  clause: 'Ties and rounding: the comparison allows a margin of `1e-12`. A cumulative ratio that equals
+    `threshold` in exact arithmetic therefore counts as reaching it, even when rounding leaves it a few
+    units below. scikit-learn''s `PCA(n_components=threshold)` uses a strict `>`, so on such a tie it
+    returns one more component. This function does not follow that rule.'
+  killed_by: test_threshold_equal_to_cumulative_ratio_counts_as_reached
+  visible: public
+- file: reject_threshold_zero_accepted.py
+  mistake: accepts a threshold of zero
+  clause: '`threshold`: a real number in `(0, 1]`. Booleans are rejected.'
+  killed_by: test_threshold_outside_zero_to_one_raises_value_error
+  visible: public
+- file: reject_variance_divisor_n.py
+  mistake: uses divisor n for the variances instead of n minus one
+  clause: Let `r_i` be the explained-variance ratio of the `i`-th principal component, with components
+    in decreasing order of variance. Returns the smallest `k >= 1` such that `r_1 + ... + r_k >= threshold`,
+    as an `int`.
+  killed_by: test_threshold_below_first_ratio_keeps_one_component
+  visible: public
+- file: reject_integer_mean_floored.py
+  mistake: centres integer input by a rounded mean
+  clause: '`X`: 2-D array-like of real numbers, shape `(n, d)` with `n >= 2` and `d >= 1`. Integers allowed.
+    Every entry is finite.'
+  killed_by: test_integer_input_with_fractional_column_means_matches_float_count
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

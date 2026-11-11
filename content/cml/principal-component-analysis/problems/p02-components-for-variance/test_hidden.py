@@ -268,3 +268,16 @@ def test_tiny_scale_wine_is_not_constant_and_needs_the_real_count(wine_tiny):
         "tiny-scale data gave the wrong count: a tiny positive total variance is not constant, so "
         "the constant-column check must be an exact zero test, not an absolute tolerance",
     )
+
+
+def test_integer_input_with_fractional_column_means_matches_float_count():
+    # Column means are 2.5 and 2.25. Centring by a rounded whole number moves the data and
+    # changes the first ratio, so the count at this threshold differs from the float64 version.
+    X_int = np.array([[1, 1], [2, 3], [4, 2], [3, 3]])
+    expected = _expected_count(X_int.astype(np.float64), 0.8)
+    _check(
+        int(_call(X_int, 0.8, "integer input with fractional column means was rejected or failed"))
+        == expected,
+        "integer input must be centred by its exact means, so its count must match the float64 "
+        "version of the same matrix",
+    )

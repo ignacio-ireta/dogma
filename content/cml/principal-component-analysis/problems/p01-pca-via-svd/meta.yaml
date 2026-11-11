@@ -1,5 +1,5 @@
 id: cml/principal-component-analysis/p01-pca-via-svd
-version: 3
+version: 4
 title: "PCA via the SVD"
 language: python
 runtime: py-numpy

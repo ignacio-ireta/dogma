@@ -1,5 +1,5 @@
 id: cml/principal-component-analysis/p02-components-for-variance
-version: 4
+version: 5
 title: "Components for a variance threshold"
 language: python
 runtime: py-numpy
