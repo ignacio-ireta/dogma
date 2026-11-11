@@ -134,7 +134,11 @@ def test_small_and_large_magnitudes_are_stable(seed, magnitude):
 
 def test_integer_input_is_accepted_and_divided_in_float():
     q, scale, zero_point = checked(lambda: zero_point_quantize(np.array([-100, 0, 155])))
-    np.testing.assert_array_equal(q, np.array([-128, -28, 127], dtype=np.int8))
+    np.testing.assert_array_equal(
+        q,
+        np.array([-128, -28, 127], dtype=np.int8),
+        err_msg="integer input must be quantized like float input",
+    )
     assert scale == 1.0 and zero_point == -28, "integer input mistake: scale and zero point differ"
 
 

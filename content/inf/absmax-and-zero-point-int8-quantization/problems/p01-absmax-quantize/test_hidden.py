@@ -181,7 +181,11 @@ def test_dequantize_shapes_and_scale_rules():
     out = absmax_dequantize(q, np.array([2.0, 0.5]), axis=0)
     if out.dtype != np.float64 or out.shape != q.shape:
         pytest.fail("dequantize must return float64 with the shape of q", pytrace=False)
-    np.testing.assert_allclose(out, [[254.0, -2.0], [1.0, 0.0]])
+    np.testing.assert_allclose(
+        out,
+        [[254.0, -2.0], [1.0, 0.0]],
+        err_msg="each code must be multiplied by its own group's scale",
+    )
     rejects(lambda: absmax_dequantize(q, np.array([2.0, 0.5, 1.0]), axis=0))
     rejects(lambda: absmax_dequantize(q.astype(np.int32), np.array([2.0, 0.5]), axis=0))
     rejects(lambda: absmax_dequantize(q, np.array(0.0)))
@@ -224,7 +228,9 @@ def test_per_tensor_dequantize_returns_float64():
     out = absmax_dequantize(np.array([[1, -2]], dtype=np.int8), np.array(0.5))
     if out.dtype != np.float64:
         pytest.fail("per-tensor dequantize must return a float64 array, not a narrower float")
-    np.testing.assert_allclose(out, [[0.5, -1.0]])
+    np.testing.assert_allclose(
+        out, [[0.5, -1.0]], err_msg="each code must be multiplied by the one scale"
+    )
 
 
 def test_tiny_but_normal_scale_is_accepted():
@@ -232,4 +238,6 @@ def test_tiny_but_normal_scale_is_accepted():
     q, scale = checked(lambda: absmax_quantize(x))
     if int(q[0]) != 127 or int(q[1]) != 0:
         pytest.fail("a normal but tiny scale must still map the absmax to code 127")
-    np.testing.assert_allclose(float(scale), 1e-40 / 127, rtol=1e-12)
+    np.testing.assert_allclose(
+        float(scale), 1e-40 / 127, rtol=1e-12, err_msg="scale must be absmax divided by 127"
+    )
