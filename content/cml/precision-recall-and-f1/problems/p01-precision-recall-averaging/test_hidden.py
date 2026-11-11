@@ -206,3 +206,18 @@ def test_f1_is_computed_when_false_positives_are_twice_the_true_positives():
     assert math.isclose(got[2], 0.5, rel_tol=1e-12, abs_tol=1e-12), (
         "F1 is 2 TP / (2 TP + FP + FN) and must not be zeroed when 2 TP - FP + FN is zero"
     )
+
+
+def test_average_names_must_match_letter_case():
+    _expect_value_error(
+        lambda: precision_recall_f1([1, 0, 1, 1], [1, 0, 0, 1], average="MACRO"),
+        "an average name in capitals was accepted: only the exact lowercase names are valid",
+    )
+
+
+def test_binary_counts_a_label_that_only_the_predictions_contain():
+    _expect_value_error(
+        lambda: precision_recall_f1([0, 1, 0, 1], [0, 1, 2, 1], average="binary"),
+        "a third label that appears only in the predictions was accepted by binary averaging: "
+        "count the labels of both inputs",
+    )

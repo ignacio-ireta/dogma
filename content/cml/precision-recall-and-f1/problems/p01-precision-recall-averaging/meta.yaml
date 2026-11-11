@@ -1,5 +1,5 @@
 id: cml/precision-recall-and-f1/p01-precision-recall-averaging
-version: 3
+version: 4
 title: Precision, recall and F1 with averaging
 language: python
 runtime: py-stdlib

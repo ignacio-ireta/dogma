@@ -1,5 +1,5 @@
 id: cml/precision-recall-and-f1/p02-best-f1-threshold
-version: 4
+version: 5
 title: Best F1 threshold
 language: python
 runtime: py-numpy

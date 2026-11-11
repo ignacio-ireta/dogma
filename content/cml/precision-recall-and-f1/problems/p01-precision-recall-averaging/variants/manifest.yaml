@@ -1,7 +1,67 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_average_case_insensitive.py
+  mistake: average names accepted in any letter case
+  clause: '`average`: `"binary"`, `"micro"`, `"macro"` or `"weighted"`. Any other value raises `ValueError`.'
+  killed_by: test_average_names_must_match_letter_case
+  visible: hidden
+- file: reject_binary_count_true_labels_only.py
+  mistake: binary averaging ignores a third label seen only in predictions
+  clause: '`"binary"`: at most two distinct labels may appear across `y_true` and `y_pred`, otherwise
+    `ValueError`. Only `pos_label` is scored, from its TP, FP and FN. If `pos_label` never appears, all
+    three values are 0.0.'
+  killed_by: test_binary_counts_a_label_that_only_the_predictions_contain
+  visible: hidden
+- file: reject_array_truthiness.py
+  mistake: the emptiness check runs on the raw input, so array inputs raise
+  clause: '`y_true`, `y_pred`: 1-D sequences of labels (integers or strings, one type per call) of the
+    same length n, with n >= 1.'
+  killed_by: test_multiclass_modes_match_scikit_learn
+  visible: hidden
+- file: reject_binary_ignores_pos_label.py
+  mistake: binary averaging scores label 1 whatever pos_label says
+  clause: '`pos_label`: the positive class. It is used only when `average="binary"`.'
+  killed_by: test_binary_matches_scikit_learn_for_either_positive_label
+  visible: hidden
+- file: reject_zero_f1_as_int.py
+  mistake: a zero F1 is returned as an int instead of a float
+  clause: 'Returns: a tuple `(precision, recall, f1)` of Python floats.'
+  killed_by: test_absent_binary_positive_label_returns_three_zeros
+  visible: hidden
+- file: reject_f1_missing_true_positives.py
+  mistake: F1 drops the true positives from its denominator
+  clause: For a class c, TP_c counts the samples with true label c and predicted label c. FP_c counts
+    the samples predicted c whose true label is not c. FN_c counts the samples whose true label is c and
+    whose prediction is not c. Then P_c = TP_c / (TP_c + FP_c), R_c = TP_c / (TP_c + FN_c) and F1_c =
+    2 TP_c / (2 TP_c + FP_c + FN_c). Any ratio with a zero denominator is 0.0.
+  killed_by: test_binary_scores_the_positive_class_from_its_counts
+  visible: public
+- file: reject_predicted_only_class_dropped.py
+  mistake: classes come only from the true labels
+  clause: Classes are the sorted union of the labels in `y_true` and `y_pred`. A label that is only predicted
+    is still a class.
+  killed_by: test_multiclass_modes_match_scikit_learn
+  visible: hidden
+- file: reject_micro_recall_uses_tp.py
+  mistake: micro recall uses the pooled true positives in place of the pooled false negatives
+  clause: '`"micro"`: pool TP, FP and FN over all classes, then compute the three ratios from the pooled
+    counts.'
+  killed_by: test_micro_equals_accuracy_for_single_label_multiclass
+  visible: public
+uncovered:
+- clause: '`"macro"`: the unweighted mean over classes of P_c, of R_c and of F1_c. F1 is the mean of the
+    per-class F1 values. It is not computed from the macro precision and macro recall.'
+  reason: cap of eight wrong solutions per problem
+- clause: '`"weighted"`: the mean over classes of P_c, R_c and F1_c, weighted by the support s_c, the
+    number of samples whose true label is c. A class with zero support gets weight 0.'
+  reason: cap of eight wrong solutions per problem
+- clause: Raises `ValueError` for an unknown `average`, unequal lengths, empty input, or more than two
+    labels with `average="binary"`.
+  reason: cap of eight wrong solutions per problem
+- clause: Must not mutate inputs.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

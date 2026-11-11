@@ -237,3 +237,11 @@ def test_only_the_order_and_equality_of_scores_matter_at_tiny_magnitudes(breast_
     assert math.isclose(tiny_threshold / 1e-9, threshold, rel_tol=1e-9), (
         "the threshold must move with the scores: it is one of the score values"
     )
+
+
+def test_boolean_labels_are_valid_and_match_integer_labels():
+    threshold, f1 = _solve([False, False, True, True], [0.1, 0.4, 0.35, 0.8])
+    assert threshold == 0.35 and math.isclose(f1, 0.8, rel_tol=1e-12), (
+        "boolean labels were rejected or mishandled: False and True are valid and must behave "
+        "like 0 and 1"
+    )

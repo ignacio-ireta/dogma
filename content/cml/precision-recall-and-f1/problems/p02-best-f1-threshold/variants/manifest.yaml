@@ -1,7 +1,59 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_python_loop_f1.py
+  origin: freedom
+  freedom: the F1 of each candidate is computed in a plain Python loop instead of one vector division
+reject:
+- file: reject_integer_labels_only.py
+  mistake: boolean labels rejected although the Contract allows them
+  clause: '`y_true`: 1-D labels, each 0 or 1 (integers or booleans). `scores`: 1-D finite real numbers.
+    Both have the same length n, with n >= 1.'
+  killed_by: test_boolean_labels_are_valid_and_match_integer_labels
+  visible: hidden
+- file: reject_absolute_tolerance_thresholds.py
+  mistake: scores closer than an absolute tolerance are merged into one tie
+  clause: Two scores are tied only when they are exactly equal as floats. No absolute tolerance is applied,
+    so scores that differ by more than one unit in the last place stay distinct when every score is multiplied
+    by a tiny positive constant such as 1e-9.
+  killed_by: test_only_the_order_and_equality_of_scores_matter_at_tiny_magnitudes
+  visible: hidden
+- file: reject_infinite_scores_accepted.py
+  mistake: infinite scores are accepted instead of raising
+  clause: Raises `ValueError` for empty input, unequal lengths, input that is not 1-D, labels other than
+    0 and 1, and NaN or infinite scores.
+  killed_by: test_invalid_input_raises_value_error
+  visible: hidden
+- file: reject_no_positives_returns_lowest_score.py
+  mistake: with no positives the lowest score is returned instead of the highest
+  clause: If there are no positive samples, every F1 is 0.0, so the result is `(highest score, 0.0)`.
+  killed_by: test_no_positives_return_the_highest_score_and_zero_f1
+  visible: public
+- file: reject_smallest_threshold_on_ties.py
+  mistake: an exact F1 tie returns the smallest threshold instead of the largest
+  clause: Returns `(threshold, f1)`, where the threshold is the candidate with the largest F1. If several
+    candidates reach that largest F1, return the largest threshold.
+  killed_by: test_tied_scores_are_flagged_together_and_the_largest_threshold_wins
+  visible: public
+- file: reject_threshold_sample_not_flagged.py
+  mistake: the sample sitting at the threshold is not counted as flagged
+  clause: A sample is predicted positive at threshold t when its score is greater than or equal to t.
+  killed_by: test_example_picks_the_threshold_with_the_best_f1
+  visible: public
+- file: reject_ties_split_across_candidates.py
+  mistake: tied scores are treated as separate candidates
+  clause: The candidate thresholds are the distinct score values. Tied samples always share one candidate,
+    so a threshold never splits a tie.
+  killed_by: test_matches_brute_force_on_tied_and_continuous_scores
+  visible: hidden
+uncovered:
+- clause: F1 at a candidate is 2 TP / (2 TP + FP + FN), computed as one division of the integer counts
+    at that threshold.
+  reason: wrong solution survives, see notes
+- clause: Must not mutate its inputs.
+  reason: cap of eight wrong solutions per problem
+- clause: 'Must run in O(n log n): sort once, then sweep the thresholds.'
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject
