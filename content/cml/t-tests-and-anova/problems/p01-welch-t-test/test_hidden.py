@@ -290,3 +290,11 @@ def test_matches_scipy_on_float32_storage_of_iris_setosa_and_virginica(iris_sepa
         atol=1e-12,
         err_msg="float32 input gives float32-rounded statistics: convert to float64 first",
     )
+
+
+def test_result_is_a_tuple_of_three_values():
+    result = welch_t_test([1.0, 2.5, 4.0, 3.0], [7.0, 9.5, 8.0, 6.5, 10.0])
+    assert isinstance(result, tuple), (
+        "the result must be a tuple (t, df, p), not an array or a list"
+    )
+    assert len(result) == 3, "the result must hold exactly three values: t, df and p"

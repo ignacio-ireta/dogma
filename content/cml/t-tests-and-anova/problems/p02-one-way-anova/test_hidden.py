@@ -285,3 +285,9 @@ def test_matches_scipy_on_float32_storage_of_iris_species(iris_species_sepal_len
         atol=1e-12,
         err_msg="float32 groups give float32-rounded F and p: convert each group to float64 first",
     )
+
+
+def test_result_is_a_tuple_of_two_values():
+    result = one_way_anova([2.0, 3.5, 2.5], [6.0, 7.5, 5.5, 6.5])
+    assert isinstance(result, tuple), "the result must be a tuple (F, p), not an array or a list"
+    assert len(result) == 2, "the result must hold exactly two values: F and p"

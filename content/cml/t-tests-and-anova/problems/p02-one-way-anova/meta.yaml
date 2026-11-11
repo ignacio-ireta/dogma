@@ -1,5 +1,5 @@
 id: cml/t-tests-and-anova/p02-one-way-anova
-version: 3
+version: 4
 title: One-way ANOVA
 language: python
 runtime: py-data

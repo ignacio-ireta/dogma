@@ -1,7 +1,55 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_float32_storage.py
+  mistake: keeps float32 groups in float32 instead of converting to float64
+  clause: '`*groups`: at least two 1-D sequences of finite real numbers (lists or NumPy arrays). Each
+    group is non-empty. A group of one value is allowed. Integers are allowed, and so are float32 arrays:
+    every statistic is computed in float64 on the stored values.'
+  killed_by: test_three_group_example_matches_the_reference
+  visible: public
+- file: reject_unweighted_between_groups.py
+  mistake: weights each group equally, ignoring group sizes in the between-group sum
+  clause: 'Let `N` be the total number of observations and `n_i` the size of group `i`, with group mean
+    `m_i` and grand mean `m` (mean of all `N` values): - `SSB = Σ n_i (m_i − m)²`, and `SSW = Σ_i Σ_j
+    (x_ij − m_i)²` - `df1 = k − 1`, `df2 = N − k` - `F = (SSB / df1) / (SSW / df2)` - `p = P(F_{df1, df2}
+    ≥ F)`, the upper tail of the F distribution'
+  killed_by: test_two_group_example_matches_the_textbook_f
+  visible: public
+- file: reject_grand_mean_of_group_means.py
+  mistake: uses the mean of group means as the grand mean
+  clause: 'Let `N` be the total number of observations and `n_i` the size of group `i`, with group mean
+    `m_i` and grand mean `m` (mean of all `N` values): - `SSB = Σ n_i (m_i − m)²`, and `SSW = Σ_i Σ_j
+    (x_ij − m_i)²` - `df1 = k − 1`, `df2 = N − k` - `F = (SSB / df1) / (SSW / df2)` - `p = P(F_{df1, df2}
+    ≥ F)`, the upper tail of the F distribution'
+  killed_by: test_matches_scipy_one_way_anova_on_seeded_groups
+  visible: hidden
+- file: reject_empty_group_allowed.py
+  mistake: accepts an empty group instead of raising
+  clause: Raises `ValueError` when fewer than two groups are given, when a group is empty or not 1-D,
+    when a value is NaN or infinite, when `N ≤ k` (there are no within-group degrees of freedom), or when
+    `SSW = 0` (the within-group variation is zero and `F` is undefined).
+  killed_by: test_empty_group_raises_even_with_enough_other_observations
+  visible: hidden
+- file: reject_shifts_inputs_in_place.py
+  mistake: shifts the caller's arrays in place before returning
+  clause: Must not mutate its inputs.
+  killed_by: test_input_arrays_are_not_mutated
+  visible: hidden
+- file: reject_no_float64_cast.py
+  mistake: keeps float32 groups in float32 instead of converting to float64
+  clause: '`*groups`: at least two 1-D sequences of finite real numbers (lists or NumPy arrays). Each
+    group is non-empty. A group of one value is allowed. Integers are allowed, and so are float32 arrays:
+    every statistic is computed in float64 on the stored values.'
+  killed_by: test_matches_scipy_on_float32_storage_of_iris_species
+  visible: hidden
+- file: reject_array_return.py
+  mistake: returns a numpy array instead of a tuple
+  clause: 'Returns: a tuple `(F, p)` of two floats.'
+  killed_by: test_result_is_a_tuple_of_two_values
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

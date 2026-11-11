@@ -1,7 +1,67 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_array_return.py
+  mistake: returns a numpy array instead of a tuple
+  clause: 'Returns: a tuple `(t, df, p)` of three floats.'
+  killed_by: test_result_is_a_tuple_of_three_values
+  visible: hidden
+- file: reject_no_float64_cast.py
+  mistake: keeps float32 input in float32 instead of converting to float64
+  clause: '`a`, `b`: 1-D sequences of finite real numbers (lists or NumPy arrays), each of length `n ≥
+    2`. Integers are allowed, and so are float32 arrays: every statistic is computed in float64 on the
+    stored values.'
+  killed_by: test_matches_scipy_on_float32_storage_of_iris_setosa_and_virginica
+  visible: hidden
+- file: reject_population_variance.py
+  mistake: divides by n instead of n minus one when computing each sample variance
+  clause: Let `va = var(a, ddof=1) / n_a` and `vb = var(b, ddof=1) / n_b`. Then - `t = (mean(a) − mean(b))
+    / sqrt(va + vb)` - `df = (va + vb)² / (va² / (n_a − 1) + vb² / (n_b − 1))` - `p_two_sided = 2 · P(T_df
+    ≥ |t|)`, where `T_df` is Student's t with `df` degrees of freedom.
+  killed_by: test_example_matches_the_welch_statistic_df_and_p_value
+  visible: public
+- file: reject_pooled_df.py
+  mistake: uses the pooled degrees of freedom n_a plus n_b minus two
+  clause: Let `va = var(a, ddof=1) / n_a` and `vb = var(b, ddof=1) / n_b`. Then - `t = (mean(a) − mean(b))
+    / sqrt(va + vb)` - `df = (va + vb)² / (va² / (n_a − 1) + vb² / (n_b − 1))` - `p_two_sided = 2 · P(T_df
+    ≥ |t|)`, where `T_df` is Student's t with `df` degrees of freedom.
+  killed_by: test_example_matches_the_welch_statistic_df_and_p_value
+  visible: public
+- file: reject_one_sided_p.py
+  mistake: reports the one-sided tail instead of doubling it
+  clause: Let `va = var(a, ddof=1) / n_a` and `vb = var(b, ddof=1) / n_b`. Then - `t = (mean(a) − mean(b))
+    / sqrt(va + vb)` - `df = (va + vb)² / (va² / (n_a − 1) + vb² / (n_b − 1))` - `p_two_sided = 2 · P(T_df
+    ≥ |t|)`, where `T_df` is Student's t with `df` degrees of freedom.
+  killed_by: test_example_matches_the_welch_statistic_df_and_p_value
+  visible: public
+- file: reject_float32_storage.py
+  mistake: keeps float32 samples in float32 instead of converting to float64
+  clause: '`a`, `b`: 1-D sequences of finite real numbers (lists or NumPy arrays), each of length `n ≥
+    2`. Integers are allowed, and so are float32 arrays: every statistic is computed in float64 on the
+    stored values.'
+  killed_by: test_matches_scipy_welch_on_seeded_samples
+  visible: hidden
+- file: reject_one_constant_invalid.py
+  mistake: rejects a constant sample even when the other sample varies
+  clause: Raises `ValueError` when an input is not 1-D, when a group has fewer than two values, when a
+    value is NaN or infinite, or when both samples are constant (the standard error is zero, so `t` is
+    undefined). One constant sample with a varying other sample is valid.
+  killed_by: test_one_constant_sample_is_valid_and_matches_scipy
+  visible: hidden
+- file: reject_nonfinite_allowed.py
+  mistake: accepts NaN or infinite observations instead of raising
+  clause: Raises `ValueError` when an input is not 1-D, when a group has fewer than two values, when a
+    value is NaN or infinite, or when both samples are constant (the standard error is zero, so `t` is
+    undefined). One constant sample with a varying other sample is valid.
+  killed_by: test_invalid_input_raises_value_error
+  visible: hidden
+- file: reject_centring_mutates_input.py
+  mistake: centres a float array in place, changing the caller's array
+  clause: Must not mutate its inputs.
+  killed_by: test_matches_scipy_welch_on_seeded_samples
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
