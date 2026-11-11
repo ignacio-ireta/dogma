@@ -231,3 +231,10 @@ def test_training_matrix_without_feature_columns_raises_value_error():
         [[]],
         1,
     )
+
+
+def test_infinite_target_raises_value_error():
+    # The Contract wants finite targets; an infinite target must be refused like a NaN one.
+    _expect_value_error(
+        "an infinite target was accepted", [[0.0], [1.0]], [0.0, np.inf], [[0.2]], 1
+    )

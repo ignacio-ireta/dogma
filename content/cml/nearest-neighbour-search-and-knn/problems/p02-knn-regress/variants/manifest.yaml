@@ -1,7 +1,54 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_sum_divided_by_count.py
+  origin: freedom
+  freedom: uniform mean computed as a sum divided by the count, a different rounding path
+reject:
+- file: reject_infinite_targets_accepted.py
+  mistake: accepts an infinite target, checking only for NaN
+  clause: '`y_train`: 1-D array-like of finite numbers, shape `(n,)`.'
+  killed_by: test_infinite_target_raises_value_error
+  visible: hidden
+- file: reject_xtrain_rejects_lists.py
+  mistake: rejects a valid list for the training features and accepts only arrays
+  clause: '`X_train`: 2-D array-like of finite numbers, shape `(n, d)`, with $n \ge 1$ and $d \ge 1$.'
+  killed_by: test_uniform_weights_average_the_k_nearest_targets
+  visible: public
+- file: reject_query_columns_unchecked.py
+  mistake: skips the query column-count check so a one-column query is broadcast
+  clause: '`X_query`: 2-D array-like of finite numbers, shape `(m, d)`, with the same `d` as `X_train`.
+    $m = 0$ is allowed.'
+  killed_by: test_invalid_shapes_and_values_raise_value_error
+  visible: hidden
+- file: reject_bool_k_accepted.py
+  mistake: accepts a boolean as k
+  clause: '`k`: integer, with $1 \le k \le n$. Booleans are not integers here.'
+  killed_by: test_invalid_k_raises_value_error
+  visible: hidden
+- file: reject_unknown_weights_as_distance.py
+  mistake: accepts an unknown weights value and silently uses distance weighting
+  clause: '`weights`: the string `"uniform"` or `"distance"`. Any other value raises `ValueError`.'
+  killed_by: test_unknown_weights_value_raises_value_error
+  visible: public
+- file: reject_prediction_column_shape.py
+  mistake: returns a column of shape (m, 1) instead of a 1-D array
+  clause: 'Returns: a 1-D `float64` array of shape `(m,)`.'
+  killed_by: test_uniform_weights_average_the_k_nearest_targets
+  visible: public
+- file: reject_longer_targets_accepted.py
+  mistake: accepts a y_train longer than X_train and ignores the extra targets
+  clause: 'Raises: `ValueError` for an invalid `k` or `weights`, for bad shapes or column counts, for
+    non-finite values in `X_train`, `y_train` or `X_query`, or for a `y_train` whose length differs from
+    `X_train`.'
+  killed_by: test_invalid_shapes_and_values_raise_value_error
+  visible: hidden
+- file: reject_mutates_training_features.py
+  mistake: centres the caller's float arrays in place
+  clause: Must not mutate inputs.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

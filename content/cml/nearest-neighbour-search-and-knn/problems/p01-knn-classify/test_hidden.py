@@ -256,3 +256,11 @@ def test_training_rows_without_feature_columns_are_rejected():
     pytest.fail(
         "training features with no columns were accepted: X_train needs at least one feature column"
     )
+
+
+def test_returned_array_holds_integer_labels():
+    # The Contract promises a 1-D integer array of training labels, not floats.
+    out = knn_classify([[0.0], [1.0]], [4, 2], [[0.2]], k=1)
+    assert np.issubdtype(np.asarray(out).dtype, np.integer), (
+        "the returned array must hold integer class labels, not floats"
+    )
