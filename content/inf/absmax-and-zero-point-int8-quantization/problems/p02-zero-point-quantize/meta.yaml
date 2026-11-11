@@ -1,5 +1,5 @@
 id: inf/absmax-and-zero-point-int8-quantization/p02-zero-point-quantize
-version: 3                      # bump when tests, tolerances or the contract change
+version: 4                      # bump when tests, tolerances or the contract change
 title: "Asymmetric zero-point int8 quantization"
 language: python                # python | sql
 runtime: py-numpy               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch

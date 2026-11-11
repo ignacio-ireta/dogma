@@ -2,6 +2,66 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_empty_array_accepted.py
+  mistake: empty array accepted without error
+  clause: '`x`: real NumPy array (integer or float dtype), `ndim >= 1`, at least one element, every value
+    finite. Bool, complex and object arrays are invalid. Do not mutate `x`.'
+  killed_by: test_empty_array_is_rejected_even_when_one_axis_is_nonempty
+  visible: hidden
+- file: reject_bool_axis_accepted.py
+  mistake: bool accepted as an axis
+  clause: '`axis`: `None` for per-tensor scaling, or an `int` in `[-ndim, ndim)` naming the **channel
+    axis**. With an axis, each index along it has its own scale, and the absmax is taken over all the
+    other axes. Negative axes count from the end. `bool` is not an axis.'
+  killed_by: test_invalid_dtypes_shapes_axes_and_values_raise
+  visible: hidden
+- file: reject_per_tensor_signed_max.py
+  mistake: per-tensor absmax uses the signed maximum
+  clause: 'Per tensor: `absmax = max(|x|)` over everything, `scale = absmax / 127`.'
+  killed_by: test_random_inputs_match_scalar_model
+  visible: hidden
+- file: reject_per_channel_keepdims_dropped.py
+  mistake: per-channel absmax loses kept dimensions
+  clause: 'Per channel: `absmax_c = max(|x[..., c, ...]|)` over the other axes, `scale_c = absmax_c /
+    127`.'
+  killed_by: test_per_channel_rows_get_their_own_scale
+  visible: public
+- file: reject_zero_group_scale_zero.py
+  mistake: all-zero group gets scale zero
+  clause: 'Zero group: if a group''s absmax is 0 (the whole tensor, or one channel), its scale is `1.0`.
+    Its codes are all 0.'
+  killed_by: test_all_zero_tensor_has_unit_scale_and_zero_codes
+  visible: public
+- file: reject_underflow_not_checked.py
+  mistake: underflowing scale is not rejected
+  clause: 'Underflow: a non-zero group whose `absmax / 127` is not a normal float64 (below `2.2250738585072014e-308`,
+    the smallest normal) raises `ValueError`. Such a scale has too few significant bits to divide by,
+    and it can underflow to 0.'
+  killed_by: test_underflowing_scale_is_rejected
+  visible: hidden
+- file: reject_ties_round_half_up.py
+  mistake: exact halves rounded up instead of to even
+  clause: 'Codes: `q = clip(round_half_to_even(x / scale), -127, 127)`, computed in float64.'
+  killed_by: test_ties_round_to_even_codes_with_unit_scale
+  visible: public
+- file: reject_per_tensor_scale_as_vector.py
+  mistake: per-tensor scale returned with a one-element shape
+  clause: 'Returns `(q, scale)`: - `q`: `numpy.int8` array with the same shape as `x`. - `scale`: float64
+    array. Shape `()` when `axis` is `None`, shape `(x.shape[axis],)` otherwise.'
+  killed_by: test_ties_round_to_even_codes_with_unit_scale
+  visible: public
+uncovered:
+- clause: Raises `ValueError` for an invalid dtype, `ndim == 0`, an empty array, a nonfinite value, an
+    invalid axis, or an underflowing scale. `absmax_dequantize(q, scale, axis=None)`
+  reason: cap of eight wrong solutions per problem
+- clause: '`q`: `numpy.int8` array. Any other dtype raises `ValueError`.'
+  reason: cap of eight wrong solutions per problem
+- clause: '`scale`: float64 array, finite and strictly positive. Its shape must match `axis` exactly (`()`
+    for `None`, `(q.shape[axis],)` otherwise). A mismatch raises `ValueError`.'
+  reason: cap of eight wrong solutions per problem
+- clause: Returns `q * scale` as a float64 array, with the per-channel scale broadcast along `axis`. Shape
+    equals `q.shape`.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

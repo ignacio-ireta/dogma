@@ -1,7 +1,52 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_zero_point_added_before_rounding.py
+  mistake: exact halves rounded after the offset is added
+  clause: 'Codes: `q = clip(round_half_to_even(x / scale) + zero_point, -128, 127)`.'
+  killed_by: test_odd_zero_point_tie_rounds_before_the_offset_is_added
+  visible: hidden
+- file: reject_bool_dtype_accepted.py
+  mistake: bool array accepted as numbers
+  clause: '`x`: real NumPy array (integer or float dtype), `ndim >= 1`, at least one element, every value
+    finite. Bool, complex and object arrays are invalid. Do not mutate `x`.'
+  killed_by: test_invalid_dtypes_shapes_and_values_raise
+  visible: hidden
+- file: reject_range_without_zero.py
+  mistake: range lower bound no longer includes zero
+  clause: 'Range: `lo = min(min(x), 0.0)` and `hi = max(max(x), 0.0)`. Both bounds include zero.'
+  killed_by: test_all_positive_input_still_includes_zero_in_the_range
+  visible: public
+- file: reject_scale_divides_by_256.py
+  mistake: scale divides the span by 256
+  clause: 'Scale: `scale = (hi - lo) / 255`. If `lo == hi`, which happens only when every value is 0,
+    `scale = 1.0`. If `(hi - lo) / 255` is below the smallest normal float64 (`2.2250738585072014e-308`),
+    raise `ValueError`, as for absmax.'
+  killed_by: test_negative_and_positive_range_uses_the_shifted_grid
+  visible: public
+- file: reject_zero_point_truncates_lo.py
+  mistake: zero point truncates lo over the scale instead of rounding
+  clause: 'Zero point: `zero_point = -128 - round_half_to_even(lo / scale)`. This integer is the code
+    of the real value 0.0.'
+  killed_by: test_random_inputs_match_the_affine_model
+  visible: hidden
+- file: reject_zero_point_numpy_int.py
+  mistake: zero point returned as a NumPy integer
+  clause: 'Returns `(q, scale, zero_point)`: - `q`: `numpy.int8` array with the shape of `x`. - `scale`:
+    Python `float`, strictly positive. - `zero_point`: Python `int`, never a `bool`, in `[-128, 127]`.'
+  killed_by: test_random_inputs_match_the_affine_model
+  visible: hidden
+- file: reject_underflow_not_checked.py
+  mistake: underflowing scale is not rejected
+  clause: Raises `ValueError` for an invalid dtype, `ndim == 0`, an empty array, a nonfinite value, or
+    an underflowing scale.
+  killed_by: test_underflowing_scale_is_rejected
+  visible: hidden
+uncovered:
+- clause: Dequantization is `x_hat = scale * (q - zero_point)`.
+  reason: dequantization is a formula the tests apply to the returned codes and zero point, not a separate
+    return value, so a wrong formula shows up as a wrong code C5 or a wrong zero point C4
+sweeps:
+- reject

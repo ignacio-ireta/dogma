@@ -210,3 +210,17 @@ def test_tiny_but_normal_scale_is_accepted():
             "a normal but tiny scale is valid: lo is 0 here, so the top value maps to code 127",
             pytrace=False,
         )
+
+
+def test_odd_zero_point_tie_rounds_before_the_offset_is_added():
+    # lo = -99 and hi = 156 give scale 1.0 and zero point -128 - round(-99) = -29, an odd number.
+    # 0.5 is an exact tie: round half to even gives 0, so its code is 0 + (-29) = -29.
+    # Adding -29 before rounding gives round(-28.5) = -28, which is the mistake this checks.
+    q, scale, zero_point = checked(lambda: zero_point_quantize(np.array([-99.0, 0.5, 156.0])))
+    if zero_point != -29 or scale != 1.0:
+        pytest.fail("range mistake: check the scale and the zero point", pytrace=False)
+    np.testing.assert_array_equal(
+        q,
+        np.array([-128, -29, 127], dtype=np.int8),
+        err_msg="tie mistake: round exact halves to even before adding the zero point",
+    )
