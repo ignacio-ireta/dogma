@@ -269,3 +269,21 @@ def test_matches_float64_formula_on_float32_storage_of_sunspots(sunspot_counts):
         "float32 input gives float32-rounded autocorrelations: convert to float64 before the sums",
         atol=1e-9,
     )
+
+
+def test_huge_readings_of_opposite_sign_give_finite_autocorrelations():
+    # Two readings near the float limit with opposite signs, plus a zero and a one. The
+    # autocorrelations are real numbers in [-1, 1], and lag 0 is exactly one. The test does not
+    # depend on how the arithmetic is ordered.
+    values = np.array([1e308, -1e308, 0.0, 1.0])
+    result = _run(lambda: acf(values, 3), "acf raised on huge readings of opposite sign")
+    _require(
+        bool(np.all(np.isfinite(result))),
+        "huge readings of opposite sign made the autocorrelation infinite or NaN: the scaling "
+        "step before the products is wrong",
+    )
+    _require(result[0] == 1.0, "lag 0 must be exactly one, even for huge readings")
+    _require(
+        bool(np.all(np.abs(result) <= 1.0 + 1e-9)),
+        "an autocorrelation is never larger than one in size, even for huge readings",
+    )

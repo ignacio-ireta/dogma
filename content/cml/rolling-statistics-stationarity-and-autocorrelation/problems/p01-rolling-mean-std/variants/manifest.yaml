@@ -32,6 +32,22 @@ reject:
     are allowed, and an integer window mean is fractional: it is never rounded. Must not be mutated.'
   killed_by: test_large_and_small_readings_keep_a_representable_sample_spread
   visible: public
+- file: reject_overflowing_mean.py
+  mistake: the mean overflows to infinity when two huge readings of opposite sign are averaged
+  clause: 'Returns: `(means, stds)`, two float64 arrays of length n. An entry is NaN wherever the window
+    holds fewer than `min_periods` values. The standard deviation is also NaN wherever the window holds
+    one value.'
+  killed_by: test_huge_readings_of_opposite_sign_keep_a_finite_mean
+  visible: hidden
+- file: reject_first_mean_overflows.py
+  mistake: a reading near the float limit gets an infinite running mean when the next reading has the
+    opposite sign
+  clause: 'Returns: `(means, stds)`, two float64 arrays of length n. An entry is NaN wherever the window
+    holds fewer than `min_periods` values. The standard deviation is also NaN wherever the window holds
+    one value.'
+  killed_by: test_first_reading_near_the_float_limit_keeps_its_own_mean
+  visible: hidden
 uncovered: []
 sweeps:
 - reject
+- mutants

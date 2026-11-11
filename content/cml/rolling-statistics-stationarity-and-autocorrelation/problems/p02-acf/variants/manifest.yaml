@@ -1,4 +1,4 @@
-problem_version: 5
+problem_version: 6
 accept:
 - file: accept_blind.py
   origin: blind
@@ -46,6 +46,13 @@ reject:
     entry 0 is exactly 1.'
   killed_by: test_three_lags_match_hand_computed_values
   visible: public
+- file: reject_scale_by_smallest_reading.py
+  mistake: huge readings of opposite sign make the autocorrelation infinite or NaN
+  clause: 'Returns: a float64 array of length `nlags + 1`. Entry k is the autocorrelation at lag k, and
+    entry 0 is exactly 1.'
+  killed_by: test_huge_readings_of_opposite_sign_give_finite_autocorrelations
+  visible: hidden
 uncovered: []
 sweeps:
 - reject
+- mutants

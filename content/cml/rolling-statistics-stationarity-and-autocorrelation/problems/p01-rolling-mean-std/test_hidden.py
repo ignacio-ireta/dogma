@@ -357,3 +357,43 @@ def test_min_periods_above_a_window_of_one_raises_value_error():
         lambda: rolling_mean_std([1.0, 2.0, 3.0], 1, min_periods=2),
         "a min_periods larger than the window was accepted: min_periods must not exceed window",
     )
+
+
+def test_huge_readings_of_opposite_sign_keep_a_finite_mean():
+    # Readings 1e308 and -1e308 average to zero. Their difference is larger than the largest
+    # float, so the arithmetic must not turn the mean into infinity or NaN. The tolerance is far
+    # above rounding error at this scale.
+    values = np.array([1e308, -1e308])
+    means, _ = _unpack(
+        _run(
+            lambda: rolling_mean_std(values, 2, min_periods=1),
+            "rolling_mean_std raised on huge readings",
+        ),
+        2,
+        "rolling_mean_std",
+    )
+    _require(
+        bool(np.isfinite(means[1]) and abs(means[1]) <= 1e300),
+        "a window of two huge readings with opposite signs gave a mean that overflowed to "
+        "infinity or NaN: the arithmetic must stay inside the float range",
+    )
+
+
+def test_first_reading_near_the_float_limit_keeps_its_own_mean():
+    # The window at position 0 holds only the reading 1e308, so its running mean is that reading.
+    # The next reading has the opposite sign, and the difference between them is larger than the
+    # largest float. The first mean must not overflow.
+    values = np.array([1e308, -1e308])
+    means, _ = _unpack(
+        _run(
+            lambda: rolling_mean_std(values, 2, min_periods=1),
+            "rolling_mean_std raised on huge readings",
+        ),
+        2,
+        "rolling_mean_std",
+    )
+    _require(
+        bool(np.isclose(means[0], 1e308, rtol=1e-9, atol=0.0)),
+        "a window holding one reading must report that reading as its mean, even when a later "
+        "reading of opposite sign is far away: the arithmetic overflowed",
+    )

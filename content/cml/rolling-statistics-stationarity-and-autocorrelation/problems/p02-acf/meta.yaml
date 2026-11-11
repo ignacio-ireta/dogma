@@ -1,5 +1,5 @@
 id: cml/rolling-statistics-stationarity-and-autocorrelation/p02-acf
-version: 5
+version: 6
 title: Sample autocorrelation (biased estimator)
 language: python
 runtime: py-data
