@@ -438,3 +438,32 @@ def test_non_finite_init_means_raise_value_error():
             lambda init=init: gmm_em([[0.0], [2.0]], 2, init, 0, 1e-3),
             "init_means must be finite: a non-finite entry must raise ValueError",
         )
+
+
+def test_one_sample_dataset_is_fitted_not_rejected():
+    # n = 1 satisfies n >= 1, so a single sample is valid input. The only component takes all
+    # of the weight, and with no iterations its mean is the given initial mean.
+    w, mu, _, _ = _call([[3.0]], 1, [[3.0]], 0, 1e-3)
+    _close(
+        w,
+        [1.0],
+        rtol=1e-12,
+        err_msg="a dataset with one sample must be fitted: one component takes all the weight",
+    )
+    _close(
+        mu.ravel(),
+        [3.0],
+        rtol=1e-12,
+        err_msg="a dataset with one sample must be fitted: the mean must stay at its start",
+    )
+
+
+def test_init_means_with_wrong_column_count_raise_value_error():
+    # Two features, two components: init_means has the right number of rows but one column.
+    # A single column broadcasts silently against the data, so only the shape check catches it.
+    # Checked with n_iter = 0, so the rejection comes from validation alone, not from an update.
+    X = [[0.0, 0.0], [1.0, 2.0], [2.0, 1.0]]
+    _raised_value_error(
+        lambda: gmm_em(X, 2, [[0.0], [2.0]], 0, 1e-3),
+        "init_means must have one column per feature: a wrong column count must raise ValueError",
+    )

@@ -1,5 +1,5 @@
 id: cml/gaussian-mixtures-and-em/p01-gmm-em-full-covariance
-version: 3
+version: 4
 title: Gaussian mixture EM with full covariances
 language: python
 runtime: py-numpy

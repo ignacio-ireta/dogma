@@ -1,7 +1,56 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_explicit_sum_mean.py
+  origin: freedom
+  freedom: forms the weighted mean as an explicit sum instead of a dot product
+- file: accept_slogdet_solve_density.py
+  origin: freedom
+  freedom: gets the log density from slogdet and solve instead of a Cholesky factor
+reject:
+- file: reject_k_equal_n_rejected.py
+  mistake: rejects k equal to the number of samples
+  clause: '`k`: integer with $1 \le k \le n$. Booleans are not integers here.'
+  killed_by: test_initial_state_of_the_two_point_fixture_has_equal_weights_and_closed_form_loglik
+  visible: public
+- file: reject_bool_n_iter_accepted.py
+  mistake: accepts a boolean for n_iter as if it were an integer
+  clause: '`n_iter`: integer $\ge 0$. Booleans are not integers here.'
+  killed_by: test_invalid_inputs_raise_value_error
+  visible: hidden
+- file: reject_zero_floor_accepted.py
+  mistake: accepts reg equal to zero
+  clause: '`reg`: finite real number $> 0$.'
+  killed_by: test_invalid_inputs_raise_value_error
+  visible: hidden
+- file: reject_mixing_weights_never_updated.py
+  mistake: never updates the mixing weights
+  clause: 'Returns: a tuple `(weights, means, covs, lls)` of float64 arrays with shapes `(k,)`, `(k, d)`,
+    `(k, d, d)` and `(n_iter + 1,)`. `lls[t]` is the log-likelihood after $t$ iterations, so `lls[0]`
+    belongs to the initial state.'
+  killed_by: test_matches_independent_reference_on_seeded_two_dimensional_data
+  visible: hidden
+- file: reject_negative_iter_type_error.py
+  mistake: raises TypeError instead of ValueError for negative n_iter
+  clause: Raises `ValueError` for any violation of the rules above.
+  killed_by: test_invalid_inputs_raise_value_error
+  visible: hidden
+- file: reject_init_means_mutated.py
+  mistake: writes the updated means into the init_means array the caller passed in
+  clause: Must not mutate inputs.
+  killed_by: test_matches_independent_reference_on_seeded_two_dimensional_data
+  visible: hidden
+- file: reject_one_sample_rejected.py
+  mistake: rejects a dataset with a single sample
+  clause: '`X`: 2-D array-like of finite numbers, shape `(n, d)`, with $n \ge 1$ and $d \ge 1$.'
+  killed_by: test_one_sample_dataset_is_fitted_not_rejected
+  visible: hidden
+- file: reject_init_means_width_unchecked.py
+  mistake: checks only the row count of init_means and not its width
+  clause: '`init_means`: finite array-like of shape `(k, d)`.'
+  killed_by: test_init_means_with_wrong_column_count_raise_value_error
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
