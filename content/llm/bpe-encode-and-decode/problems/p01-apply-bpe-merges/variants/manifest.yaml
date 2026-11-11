@@ -2,6 +2,77 @@ problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_nested_rank_table.py
+  origin: freedom
+  freedom: stores the ranks in a nested dict keyed by left then right symbol instead of a dict keyed by
+    pair
+reject:
+- file: reject_duplicate_merge_accepted.py
+  mistake: a pair listed twice is accepted and the later rank wins
+  clause: '`BPETokenizer(merges)`: `merges` is a `list` of `tuple` pairs `(left, right)`, each element
+    a non-empty `str`. Raises `TypeError` for other shapes or types, and `ValueError` for an empty symbol
+    or a pair that appears twice (each pair has one rank).'
+  killed_by: test_duplicate_merge_raises_value_error
+  visible: hidden
+- file: reject_leftmost_pair_first.py
+  mistake: merges the leftmost mergeable pair instead of the lowest rank
+  clause: '`encode(word)`: `word` is a `str`. Returns a `list` of `str`. The word starts as `[*word, "</w>"]`,
+    then the rule above runs until no adjacent pair is a merge. The symbols of the result, concatenated
+    in order, always equal `word + "</w>"`. An empty word encodes to `["</w>"]`. - Raises `TypeError`
+    when `word` is not a `str`. - Raises `ValueError` when `word` contains whitespace or the text `</w>`.
+    - A character that no merge touches stays a single symbol. Nothing is `<unk>`.'
+  killed_by: test_lowest_rank_is_applied_before_leftmost_pair
+  visible: public
+- file: reject_whitespace_word_accepted.py
+  mistake: a word containing whitespace is accepted instead of rejected
+  clause: '`encode(word)`: `word` is a `str`. Returns a `list` of `str`. The word starts as `[*word, "</w>"]`,
+    then the rule above runs until no adjacent pair is a merge. The symbols of the result, concatenated
+    in order, always equal `word + "</w>"`. An empty word encodes to `["</w>"]`. - Raises `TypeError`
+    when `word` is not a `str`. - Raises `ValueError` when `word` contains whitespace or the text `</w>`.
+    - A character that no merge touches stays a single symbol. Nothing is `<unk>`.'
+  killed_by: test_whitespace_in_word_raises_value_error
+  visible: hidden
+- file: reject_decode_missing_marker_unchecked.py
+  mistake: decode does not check that the tokens end with the marker
+  clause: '`decode(tokens)`: `tokens` is a `list` of `str`. Concatenate them into one string, which must
+    end with `</w>`. Remove that trailing marker and return the rest. `decode(["</w>"])` is `""`. - Raises
+    `TypeError` when `tokens` is not a list of `str`. - Raises `ValueError` when the joined text does
+    not end with `</w>`, or when `</w>` appears anywhere else. The check is on the joined string, so a
+    marker split across tokens counts. `decode([])` joins to `""`, which has no marker, so it raises `ValueError`.'
+  killed_by: test_decode_inverts_encode_and_checks_the_marker
+  visible: public
+- file: reject_constructor_pops_last_merge.py
+  mistake: the constructor removes the last merge from the caller's list
+  clause: Must not mutate `merges`.
+  killed_by: test_random_merge_lists_match_the_naive_encoder
+  visible: hidden
+- file: reject_empty_word_returns_nothing.py
+  mistake: the empty word encodes to an empty list instead of the marker alone
+  clause: '`encode(word)`: `word` is a `str`. Returns a `list` of `str`. The word starts as `[*word, "</w>"]`,
+    then the rule above runs until no adjacent pair is a merge. The symbols of the result, concatenated
+    in order, always equal `word + "</w>"`. An empty word encodes to `["</w>"]`. - Raises `TypeError`
+    when `word` is not a `str`. - Raises `ValueError` when `word` contains whitespace or the text `</w>`.
+    - A character that no merge touches stays a single symbol. Nothing is `<unk>`.'
+  killed_by: test_random_merge_lists_match_the_naive_encoder
+  visible: hidden
+- file: reject_merge_first_occurrence_only.py
+  mistake: only the first occurrence of the chosen pair is merged
+  clause: '`encode(word)`: `word` is a `str`. Returns a `list` of `str`. The word starts as `[*word, "</w>"]`,
+    then the rule above runs until no adjacent pair is a merge. The symbols of the result, concatenated
+    in order, always equal `word + "</w>"`. An empty word encodes to `["</w>"]`. - Raises `TypeError`
+    when `word` is not a `str`. - Raises `ValueError` when `word` contains whitespace or the text `</w>`.
+    - A character that no merge touches stays a single symbol. Nothing is `<unk>`.'
+  killed_by: test_seeded_sweep_matches_the_naive_encoder
+  visible: hidden
+- file: reject_lowercase_before_merging.py
+  mistake: the word is lowercased before merging so symbols no longer spell the word
+  clause: '`encode(word)`: `word` is a `str`. Returns a `list` of `str`. The word starts as `[*word, "</w>"]`,
+    then the rule above runs until no adjacent pair is a merge. The symbols of the result, concatenated
+    in order, always equal `word + "</w>"`. An empty word encodes to `["</w>"]`. - Raises `TypeError`
+    when `word` is not a `str`. - Raises `ValueError` when `word` contains whitespace or the text `</w>`.
+    - A character that no merge touches stays a single symbol. Nothing is `<unk>`.'
+  killed_by: test_real_gutenberg_words_preserve_case_and_unicode
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
