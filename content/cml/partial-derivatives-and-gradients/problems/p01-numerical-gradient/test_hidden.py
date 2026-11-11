@@ -197,3 +197,16 @@ def test_empty_input_raises_value_error_not_an_empty_gradient():
         "an empty x must raise ValueError, not return an empty gradient: check the size "
         "before looping over coordinates",
     )
+
+
+def test_small_coordinate_gets_the_small_step_not_a_larger_floor():
+    # d/dx sin(k x) = k cos(k x); k is large so the step's truncation error is visible
+    k = 1e4
+    x = np.array([0.3])
+    got = _gradient_or_nan(lambda v: float(np.sin(k * v[0])), x)
+    want = k * np.cos(k * x)
+    assert abs(got[0] - want[0]) <= 1.2e-3 * abs(want[0]), (
+        "a coordinate near zero was perturbed by too large a step: the step must follow the "
+        "contract's rule for small coordinates, not a larger fixed floor, otherwise the "
+        "truncation error of the difference is too big for this fast-varying function"
+    )

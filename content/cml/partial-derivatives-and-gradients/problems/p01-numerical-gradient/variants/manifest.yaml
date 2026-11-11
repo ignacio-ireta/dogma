@@ -1,4 +1,4 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
@@ -50,6 +50,14 @@ reject:
     evaluate it.'
   killed_by: test_gradient_of_sum_of_squares_is_twice_x
   visible: public
+- file: reject_small_step_floor.py
+  mistake: a coordinate near zero is perturbed by a step that is too large
+  clause: 'Returns: a NumPy array of shape `(n,)` and dtype `float64`. Component $i$ is $\dfrac{f(\mathbf{x}
+    + h_i\mathbf{e}_i) - f(\mathbf{x} - h_i\mathbf{e}_i)}{2h_i}$ with $h_i = \varepsilon^{1/3}\max(1,
+    |x_i|)$, where $\varepsilon$ is the float64 machine epsilon.'
+  killed_by: test_small_coordinate_gets_the_small_step_not_a_larger_floor
+  visible: hidden
 uncovered: []
 sweeps:
 - reject
+- mutants

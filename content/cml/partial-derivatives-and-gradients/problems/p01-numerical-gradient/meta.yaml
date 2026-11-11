@@ -1,5 +1,5 @@
 id: cml/partial-derivatives-and-gradients/p01-numerical-gradient
-version: 2
+version: 3
 title: Numerical gradient
 language: python
 runtime: py-numpy
