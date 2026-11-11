@@ -56,3 +56,4 @@ uncovered:
     row, which C9 forbids
 sweeps:
 - reject
+- mutants
