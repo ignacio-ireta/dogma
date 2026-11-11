@@ -1,7 +1,78 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_pivot_table.py
+  origin: freedom
+  freedom: builds the wide table with pivot_table instead of groupby and unstack
+reject:
+- file: reject_int_cells.py
+  mistake: integer amounts keep an integer dtype when every cell has revenue
+  clause: 'Returns: a `pandas.DataFrame` with `float64` values in every cell. - Index: region labels (strings),
+    sorted ascending, named `"region"`. - Columns: month labels `"YYYY-MM"` (strings), sorted ascending,
+    named `"month"`. - Each cell is the sum of the known amounts for that region and month. A region-month
+    pair with no known amount has the cell `0.0`, never NaN.'
+  killed_by: test_integer_amounts_on_a_full_grid_give_float64_cells
+  visible: hidden
+- file: reject_mutates_customers.py
+  mistake: the caller's customers table is changed when a customer has no region
+  clause: Must not mutate `orders` or `customers`.
+  killed_by: test_customers_with_a_missing_region_are_left_as_given
+  visible: hidden
+- file: reject_datetime_only_dates.py
+  mistake: dates are read with the dot dt accessor directly, so string dates fail
+  clause: '`orders`: a `pandas.DataFrame` with columns `order_id`, `customer_id`, `order_date`, `amount`.
+    `order_date` is a `datetime64` column or ISO-8601 date strings such as `"2024-03-05"`. `amount` is
+    numeric, integers or floats, and may contain NaN.'
+  killed_by: test_worked_example_matches_the_table_in_problem_md
+  visible: public
+- file: reject_fillna_zero_amounts.py
+  mistake: unknown amounts are filled with zero instead of dropped
+  clause: 'The rules, in order: 1. Left-merge `orders` onto `customers` by `customer_id` with `validate="many_to_one"`.
+    A duplicate `customer_id` in `customers` raises `ValueError`. pandas raises `MergeError`, which is
+    a `ValueError` subclass; let it propagate, do not catch it. 2. An order whose customer is not in `customers`
+    gets the region `"unknown"`. A customer who is in `customers` but whose `region` is missing (NaN)
+    also gets `"unknown"`, and its orders are kept. `"unknown"` is an ordinary label, so it sorts like
+    any other region name. 3. An order with NaN `amount` is dropped before grouping. Its amount is unknown,
+    not zero, so it creates no region row and no month column of its own. 4. The month of an order is
+    its calendar month, written `"YYYY-MM"`.'
+  killed_by: test_region_whose_only_order_has_no_amount_has_no_row
+  visible: public
+- file: reject_drop_duplicates_customers.py
+  mistake: duplicate customer ids are silently de-duplicated instead of raising
+  clause: 'Raises: `ValueError` when `customers` has a duplicate `customer_id`.'
+  killed_by: test_duplicate_customer_ids_raise_value_error
+  visible: public
+- file: reject_empty_no_column_name.py
+  mistake: the empty result has no name on its columns
+  clause: If no order has a known amount, return an empty frame with no rows and no columns. Its index
+    is named `"region"` and its columns are named `"month"`.
+  killed_by: test_all_amounts_unknown_gives_an_empty_frame_with_the_index_and_column_names
+  visible: hidden
+- file: reject_nan_cells.py
+  mistake: region month cells with no revenue are left as NaN instead of zero
+  clause: 'Returns: a `pandas.DataFrame` with `float64` values in every cell. - Index: region labels (strings),
+    sorted ascending, named `"region"`. - Columns: month labels `"YYYY-MM"` (strings), sorted ascending,
+    named `"month"`. - Each cell is the sum of the known amounts for that region and month. A region-month
+    pair with no known amount has the cell `0.0`, never NaN.'
+  killed_by: test_worked_example_matches_the_table_in_problem_md
+  visible: public
+- file: reject_drop_orders_without_region.py
+  mistake: a customer with no region is treated as bad data and its orders are dropped
+  clause: 'The rules, in order: 1. Left-merge `orders` onto `customers` by `customer_id` with `validate="many_to_one"`.
+    A duplicate `customer_id` in `customers` raises `ValueError`. pandas raises `MergeError`, which is
+    a `ValueError` subclass; let it propagate, do not catch it. 2. An order whose customer is not in `customers`
+    gets the region `"unknown"`. A customer who is in `customers` but whose `region` is missing (NaN)
+    also gets `"unknown"`, and its orders are kept. `"unknown"` is an ordinary label, so it sorts like
+    any other region name. 3. An order with NaN `amount` is dropped before grouping. Its amount is unknown,
+    not zero, so it creates no region row and no month column of its own. 4. The month of an order is
+    its calendar month, written `"YYYY-MM"`.'
+  killed_by: test_interview_prep_frames_match_the_pandas_merge_oracle
+  visible: hidden
+uncovered:
+- clause: '`customers`: a `pandas.DataFrame` with columns `customer_id` and `region` (strings). `customer_id`
+    is unique.'
+  reason: C2 names two columns and says customer_id is unique. Breaking the unique promise is the duplicate
+    check, already covered under C7, and no other valid input form in C2 is left to break
+sweeps:
+- reject

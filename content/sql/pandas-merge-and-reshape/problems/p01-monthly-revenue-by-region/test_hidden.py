@@ -304,3 +304,40 @@ def test_inputs_are_not_mutated() -> None:
     assert customers.equals(customers_before), (
         "customers was changed in place: do not modify the input table"
     )
+
+
+def test_integer_amounts_on_a_full_grid_give_float64_cells() -> None:
+    # Every region-month pair has an order, so no cell is filled with 0.0 and integer sums stay
+    # integer unless the result is cast to float64.
+    order_rows = [
+        (1, 1, "2024-01-05", 10),
+        (2, 1, "2024-02-06", 7),
+        (3, 2, "2024-01-01", 3),
+        (4, 2, "2024-02-01", 5),
+    ]
+    customer_rows = [(1, "North"), (2, "South")]
+    orders, customers = _frames(order_rows, customer_rows, amount_dtype="int64")
+    got = _run(orders, customers)
+    problem = _first_problem(got, _oracle(order_rows, customer_rows))
+    assert problem is None, problem
+    assert all(dtype == np.float64 for dtype in got.dtypes), (
+        "a value column is not float64 when every cell has revenue: the sums must be float64 too"
+    )
+
+
+def test_customers_with_a_missing_region_are_left_as_given() -> None:
+    orders = pd.DataFrame(
+        {
+            "order_id": [1, 2],
+            "customer_id": [1, 2],
+            "order_date": ["2024-01-05", "2024-02-05"],
+            "amount": [10.0, 4.0],
+        }
+    )
+    customers = pd.DataFrame({"customer_id": [1, 2], "region": ["North", np.nan]})
+    before = customers.copy(deep=True)
+    monthly_revenue_by_region(orders, customers)
+    assert customers.equals(before), (
+        "customers was changed in place: a missing region must stay missing in the input table; "
+        "the 'unknown' label belongs in the result only"
+    )
