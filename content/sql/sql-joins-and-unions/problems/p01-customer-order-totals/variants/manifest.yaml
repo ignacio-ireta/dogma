@@ -67,3 +67,4 @@ uncovered:
     their own tables, so it is not a mistake a learner makes
 sweeps:
 - reject
+- mutants
