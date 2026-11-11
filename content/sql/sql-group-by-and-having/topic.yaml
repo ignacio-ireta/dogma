@@ -13,4 +13,4 @@ interview_angle: >-
   line, how COUNT and SUM treat NULLs, and whether a join has quietly multiplied the rows.
 sources:
   - "book: Beaulieu, Learning SQL (3rd ed.), chapter on grouping and aggregates"
-status: verified
+status: reviewed

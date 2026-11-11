@@ -10,4 +10,4 @@ core: true
 tolerance: {atol: 0.0, rtol: 0.0}   # exact: lists of strings and round trips
 banned_imports: []                  # no tokenizer library is installed; the contract forbids them in words
 timeout_s: 30
-status: verified
+status: reviewed

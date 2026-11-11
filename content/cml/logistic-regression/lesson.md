@@ -59,7 +59,7 @@ Newton from $\boldsymbol\theta = 0$: the largest gradient entry goes $0.50 \to 0
 - **Unpenalised separation.** The coefficients grow without bound, and the solver either stops at an arbitrary point or diverges.
 - **Scale.** The penalty depends on the feature scale, so standardise features before comparing penalised fits.
 
-**Full Newton steps on real data.** Take the 569 raw breast-cancer rows (column means from 0.004 to 880), label the top 1% of a linear score as positive (6 positives), and use $\ell_2 = 0.001$. The textbook update that always takes the full Newton step drives the linear score to about $2\times10^{6}$ and makes the Hessian singular at step 11. The damped solver returns a finite fit whose largest score is about 1900. A naive $\log(1+e^{\eta})$ overflows on the same path, because $e^{\eta}$ is not finite beyond $\eta \approx 709$.
+**Full Newton steps on real data.** Take the 569 raw breast-cancer rows (column means from 0.004 to 880), label the top 1% of a linear score as positive (6 positives), and use $\ell_2 = 0.001$. The textbook update that always takes the full Newton step drives the linear score to about $2\times10^{6}$ and makes the Hessian singular after 11 steps. The damped solver returns a finite fit whose largest score is about 1900. A naive $\log(1+e^{\eta})$ overflows on the same path, because $e^{\eta}$ is not finite beyond $\eta \approx 709$.
 
 ## Interview angle
 

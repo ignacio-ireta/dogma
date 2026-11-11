@@ -82,7 +82,7 @@ In a fixed 2,000-sample draw from the `latencies` generator, the median is 50.4 
 
 For goodput, 2,000 requests arrive 10 ms apart, each with one latency draw as TTFT and one as its token gap. Mean TTFT
 is 78.6 ms and mean ITL 75.9 ms, both below SLOs of 120 ms and 100 ms. Yet only 1,680 requests meet both individually,
-giving 77.5 requests/s; counting all requests because the averages pass would claim 92.3 requests/s.
+giving 77.5 requests/s over the 21.7 s from first arrival to last completion. Counting all requests because the averages pass would claim 92.3 requests/s.
 
 ## Interview angle
 

@@ -79,20 +79,20 @@ build_cited_prompt(
 ```
 
 Real text: a paragraph of `gutenberg_pride_prejudice` (public domain) can hold a line break, as in
-`"It is a truth\nuniversally acknowledged"`. The chunk is printed with its line break and
-costs 6 words (splitting on spaces alone would count 5):
+`"in want of a wife.\nHowever"`. The chunk is printed with its line break and costs 6 words
+(splitting on spaces alone would count 5):
 
 ```python
 build_cited_prompt(
     "q",
     np.array([1.0]),
     ["p"],
-    ["It is a truth\nuniversally acknowledged"],
+    ["in want of a wife.\nHowever"],
     np.array([[1.0]]),
     k=1,
     word_budget=6,
 )
-# -> "Context:\n[p] It is a truth\nuniversally acknowledged\n\nQuestion: q"
+# -> "Context:\n[p] in want of a wife.\nHowever\n\nQuestion: q"
 ```
 
 ## Constraints

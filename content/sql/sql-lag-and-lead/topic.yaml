@@ -11,4 +11,4 @@ minutes: {lesson: 12, practice: 30, min_viable: 15}
 interview_angle: "Given events per user, compute the gap to the previous event and split sessions at a threshold, with the tie rule stated."
 sources:
   - "book: Molinaro & de Graaf, SQL Cookbook (2nd ed.), chapter on window functions"
-status: verified
+status: reviewed

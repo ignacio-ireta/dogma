@@ -72,7 +72,6 @@ with scikit-learn's `TfidfVectorizer` on random corpora, with and without a fixe
 the tokenizer (case folding, single characters dropped, digits kept, accented letters kept), the sorted
 default vocabulary, the idf of a term present in every document, that curly apostrophes and em dashes separate words in
 real prose (paragraphs of `gutenberg_pride_prejudice`, a public-domain novel), that each non-empty row
-has unit length,
-that an empty document gives a zero row, the order of a fixed vocabulary, and the errors for an empty
+has unit length, that an empty document gives a zero row, the order of a fixed vocabulary, and the errors for an empty
 corpus, a corpus with no tokens, a repeated vocabulary term and an empty vocabulary. They check that the
 inputs are unchanged, that the matrix is `float64`, and that a 3,000-document corpus finishes quickly.

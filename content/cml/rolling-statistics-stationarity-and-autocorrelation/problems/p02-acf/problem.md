@@ -8,7 +8,8 @@ estimator, and it is the most common wrong answer.
 ## Contract
 
 - `x`: 1-D sequence of finite real numbers (list, tuple or NumPy array), length n >= 2. Integers are allowed,
-  and so are float32 arrays: the sums are done in float64 on the stored values. Must not be mutated.
+  and their mean is the exact real mean: it is never rounded or floor-divided. float32 arrays are allowed
+  too: the sums are done in float64 on the stored values. Must not be mutated.
 - `nlags`: integer with 0 <= nlags <= n - 1. A bool or a float is rejected.
 - Returns: a float64 array of length `nlags + 1`. Entry k is the autocorrelation at lag k, and entry 0 is
   exactly 1.

@@ -16,4 +16,4 @@ sources:
   - "book: Little & Rubin, Statistical Analysis with Missing Data, the chapter on missing-data mechanisms"
   - "book: Iglewicz & Hoaglin 1993, How to Detect and Handle Outliers (modified z-score)"
   - "book: Kuhn & Johnson, Applied Predictive Modeling, chapter 3 (data pre-processing, missing values and outliers)"
-status: verified
+status: reviewed

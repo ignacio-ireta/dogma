@@ -14,4 +14,4 @@ interview_angle: >-
 sources:
   - "paper: Matthews 1975, Comparison of the predicted and observed secondary structure of T4 phage lysozyme (Biochimica et Biophysica Acta)"
   - "book: Hastie, Tibshirani & Friedman, The Elements of Statistical Learning, chapter 7 (model assessment)"
-status: verified
+status: reviewed

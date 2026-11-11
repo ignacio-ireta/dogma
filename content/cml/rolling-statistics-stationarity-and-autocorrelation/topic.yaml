@@ -15,4 +15,4 @@ sources:
   - "book: Box, Jenkins, Reinsel & Ljung, Time Series Analysis: Forecasting and Control (5th ed.), chapters on identifying ARMA models from the autocorrelation and partial autocorrelation functions"
   - "paper: Hyndman & Koehler 2006, Another look at measures of forecast accuracy (International Journal of Forecasting)"
   - "paper: Dickey & Fuller 1979, Distribution of the Estimators for Autoregressive Time Series with a Unit Root (Journal of the American Statistical Association)"
-status: verified
+status: reviewed

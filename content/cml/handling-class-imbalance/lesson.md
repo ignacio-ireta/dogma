@@ -59,8 +59,8 @@ Prior shift: a model trained on a 50% positive sample outputs $p=0.80$. The depl
 - **Too few minority examples** cannot be fixed by any method. Collect more data.
 
 On the real `breast_cancer` dataset, malignant cases are 212 of 569. A classifier that predicts
-every case benign still reports 62.7% accuracy while recall for malignant cases is 0%. A respectable
-looking accuracy can hide a model that finds none of the cases you care about.
+every case benign still reports 62.7% accuracy while recall for malignant cases is 0%. That accuracy
+looks like a score, yet the model finds none of the cases you care about.
 
 ## Interview angle
 

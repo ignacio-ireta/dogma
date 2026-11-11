@@ -8,8 +8,9 @@ Implement `roc_auc(y_true, scores)`. It returns the area under the ROC curve, co
 - Returns a Python float: the fraction of (positive, negative) pairs ordered correctly, where a tied pair counts as 0.5.
 - Method: rank all scores in ascending order, starting at 1. Tied scores share the average of the ranks they occupy. Let R_pos be the sum of the ranks of the positive samples, n_pos the number of positives and n_neg the number of negatives. Then AUC = (R_pos - n_pos (n_pos + 1) / 2) / (n_pos n_neg).
 - Raises `ValueError` for unequal lengths, empty input, labels other than 0 and 1, non-finite scores, and inputs with no positive or no negative samples (AUC is undefined).
-- Two scores are tied only when they are exactly equal as floats. No tolerance is applied, so the
-  value is unchanged when every score is multiplied by the same positive constant, even 1e-9.
+- Two scores are tied only when they are exactly equal as floats. No absolute tolerance is applied,
+  so scores that differ by more than one unit in the last place stay distinct when every score is
+  multiplied by a tiny positive constant such as 1e-9.
 - Must run in O(n log n) time. Must not mutate its inputs.
 
 ## Examples

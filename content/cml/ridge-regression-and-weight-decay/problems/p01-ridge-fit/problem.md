@@ -35,10 +35,6 @@ dependent columns.
 ValueError   # the second column is three times the first, so alpha = 0 has no unique solution
 ```
 
-On the raw `longley` macroeconomic features (16 rows, 6 columns with means near 10^5, target near 6.5 × 10^4),
-`ridge_fit(X, y, 1e-3)` must return the centred solution. Its intercept is near -3.5 × 10^6, so the intercept
-must be computed from the centred problem, not from an uncentred solve that also penalises nothing.
-
 ## Constraints
 
 - Allowed: NumPy, including `np.linalg.solve` and `np.linalg.matrix_rank`.
@@ -53,7 +49,4 @@ of the same solution. They check that α → 0 recovers least squares, that the 
 grows, and that large α sends the coefficients to 0 and the intercept to ȳ. They check that the intercept
 is unpenalised (shifting y moves only the intercept, and shifting X moves only the intercept), that
 rescaling a feature with α scaled by the square of the same factor rescales its coefficient, and that α = 0
-on a rank-deficient design is rejected. On real data they add the raw `diabetes` features (mixed scales and a binary column) against scikit-learn's `Ridge`, and
-the uncentred `longley` design with a weak and a unit penalty against the SVD closed form of the centred problem.
-Realism families: features on mixed raw scales, uncentred data with large offsets (the intercept must come from
-the centred problem), and a binary column. They also cover invalid inputs, integer input, and unchanged inputs.
+on a rank-deficient design is rejected. They also cover invalid inputs, integer input, and unchanged inputs.

@@ -15,7 +15,8 @@ most frequent pair in every word. Return the merges in the order they were learn
 - `num_merges`: a Python `int` of at least 0. `TypeError` for other types (`bool` included), `ValueError`
   when negative.
 - Symbols: a word `w` starts as `[*w, "</w>"]`. The marker is one symbol, so `"low"` starts as
-  `["l", "o", "w", "</w>"]`.
+  `["l", "o", "w", "</w>"]`. Case and punctuation are ordinary characters: `"Low."` starts as
+  `["L", "o", "w", ".", "</w>"]`, and `"Low"` and `"low"` share no symbols.
 - Pair counts: for a pair `(x, y)`, the count is the sum over words of `count(word) × k`, where `k` is the
   number of positions `i` with `symbols[i] == x` and `symbols[i + 1] == y`. Overlapping positions all count,
   so `"aaa"` has two `("a", "a")` pairs.

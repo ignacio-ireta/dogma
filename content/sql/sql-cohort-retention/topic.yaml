@@ -15,4 +15,4 @@ interview_angle: >-
 sources:
   - "book: Molinaro & de Graaf, SQL Cookbook (2nd ed.), grouping and date arithmetic recipes"
   - "book: Kimball & Ross, The Data Warehouse Toolkit (3rd ed.), the calendar (date) dimension"
-status: verified
+status: reviewed

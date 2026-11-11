@@ -1,6 +1,6 @@
-"""Hidden tests: interview-prep orders and hand-built tables checked against an independent pandas
-computation, plus edge cases. Each test name says what it checks, and each failure message names
-the likely mistake first."""
+"""Hidden tests: random order tables and interview-prep orders checked against an independent
+DuckDB window-function computation, plus edge cases. Each test name says what it checks, and each
+failure message names the likely mistake first."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from datetime import date, timedelta
 from typing import Any
 
+import duckdb
 import numpy as np
 import pandas as pd
 import pytest
@@ -70,33 +71,29 @@ def _frame(rows: Sequence[Row], as_strings: bool = False) -> pd.DataFrame:
 
 
 def _oracle(rows: Sequence[Row]) -> list[tuple[Any, ...]]:
-    """Independent pandas computation, in the contract's row order."""
-    frame = _frame(rows).copy()
-    frame["order_date"] = pd.to_datetime(frame["order_date"])
-    frame = frame.sort_values(["customer_id", "order_date", "order_id"], kind="stable").reset_index(
-        drop=True
+    """Independent answer from DuckDB window functions, in the contract's row order."""
+    con = duckdb.connect()
+    con.execute(
+        "CREATE TABLE o (order_id BIGINT, customer_id BIGINT, order_date DATE, amount DOUBLE)"
     )
-    grouped = frame.groupby("customer_id", sort=False)
-    totals = grouped["amount"].transform("sum")
-    frame["order_seq"] = grouped.cumcount() + 1
-    frame["share_of_customer_total"] = (frame["amount"] / totals).where(totals != 0.0)
-    frame["days_since_previous_order"] = grouped["order_date"].diff().dt.days.astype("float64")
-    frame["customer_running_total"] = grouped["amount"].cumsum().astype("float64")
-    frame["order_date"] = frame["order_date"].dt.date
-    return list(
-        frame[
-            [
-                "order_id",
-                "customer_id",
-                "order_date",
-                "amount",
-                "order_seq",
-                "share_of_customer_total",
-                "days_since_previous_order",
-                "customer_running_total",
-            ]
-        ].itertuples(index=False, name=None)
-    )
+    if rows:
+        con.executemany("INSERT INTO o VALUES (?, ?, ?, ?)", list(rows))
+    return con.execute(
+        """
+        SELECT order_id, customer_id, order_date, amount,
+               ROW_NUMBER() OVER w AS order_seq,
+               CASE WHEN SUM(amount) OVER (PARTITION BY customer_id) = 0 THEN NULL
+                    ELSE amount / SUM(amount) OVER (PARTITION BY customer_id) END AS share,
+               order_date - LAG(order_date) OVER w AS days,
+               SUM(amount) OVER (
+                   PARTITION BY customer_id ORDER BY order_date, order_id
+                   ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+               ) AS running
+        FROM o
+        WINDOW w AS (PARTITION BY customer_id ORDER BY order_date, order_id)
+        ORDER BY customer_id, order_date, order_id
+        """
+    ).fetchall()
 
 
 def _is_missing(value: object) -> bool:
@@ -233,7 +230,7 @@ def test_random_orders_match_the_duckdb_window_oracle(seed: int, as_strings: boo
     _check(_random_rows(np.random.default_rng(seed)), as_strings=as_strings)
 
 
-def test_interview_prep_orders_match_the_pandas_window_oracle(
+def test_interview_prep_orders_match_the_duckdb_window_oracle(
     interview_orders: list[Row],
 ) -> None:
     _check(interview_orders, as_strings=True)

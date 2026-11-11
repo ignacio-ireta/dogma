@@ -13,4 +13,4 @@ interview_angle: >-
   are handled, where NULLs sort, and whether the window is filtered in the right place.
 sources:
   - "book: Molinaro & de Graaf, SQL Cookbook (2nd ed.), §11.9 Ranking Results and appendix A Window Function Refresher"
-status: verified
+status: reviewed

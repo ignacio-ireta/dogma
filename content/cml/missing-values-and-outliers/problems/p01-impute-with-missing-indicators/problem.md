@@ -49,7 +49,7 @@ ValueError              # strategy must be "median" or "mean"
 
 On real `penguins` (344 × 7, loaded with `load_frame`), `impute_with_indicators(df, ["bill_length_mm",
 "body_mass_g"])` fills the two gaps in each column, which fall on the same rows, and adds
-`bill_length_mm_was_missing` and `body_mass_g_was_missing`. The NaN in `sex` and the NaN in
+`bill_length_mm_was_missing` and `body_mass_g_was_missing`. The 11 NaN in `sex` and the 2 NaN in
 `flipper_length_mm` stay as they are, with no indicator.
 
 ## Constraints

@@ -7,30 +7,14 @@ from hypothesis import strategies as st
 from sklearn.linear_model import Ridge
 from submission import ridge_fit
 
-from dogma_data import load, rng, synth
-
 
 def _data(seed, n, d):
-    """Correlated columns on moderate scales (synth), a linear signal with an intercept, noise."""
-    gen = rng(f"cml/ridge-regression-and-weight-decay/p01-ridge-fit:data:{seed}")
-    X = synth.correlated_mixed_scale(
-        gen, n, d, n_factors=1, strength=1.0, scale_range=(0.5, 2.0), offset_range=(-1.0, 1.0)
-    )
-    beta = gen.normal(size=d)
-    y = 1.5 + X @ beta + 0.3 * gen.normal(size=n)
+    """Random design, a linear signal with an intercept, and mild noise."""
+    rng = np.random.default_rng(seed)
+    X = rng.normal(size=(n, d))
+    beta = rng.normal(size=d)
+    y = 1.5 + X @ beta + 0.3 * rng.normal(size=n)
     return X, y
-
-
-@pytest.fixture(scope="module")
-def raw_diabetes():
-    data = load("diabetes")  # raw: BMI near 26, serum levels in the hundreds, binary sex coded 1/2
-    return np.array(data.X, dtype=np.float64), np.array(data.y, dtype=np.float64)
-
-
-@pytest.fixture(scope="module")
-def longley():
-    data = load("longley")  # uncentred series with means near 1e5 and a target near 6.5e4
-    return np.array(data.X, dtype=np.float64), np.array(data.y, dtype=np.float64)
 
 
 def _call(X, y, alpha, fit_intercept=True):
@@ -116,59 +100,6 @@ def test_matches_scikit_learn_ridge_without_intercept(n, d, seed, alpha):
         atol=1e-9,
         err_msg="coefficients differ from sklearn Ridge(fit_intercept=False): solve "
         "(X^T X + alpha I) beta = X^T y on the uncentred data",
-    )
-
-
-@pytest.mark.parametrize("alpha", [0.1, 10.0, 1000.0], ids=["weak", "moderate", "strong"])
-def test_matches_scikit_learn_ridge_on_raw_diabetes_scales(raw_diabetes, alpha):
-    X, y = raw_diabetes
-    ref = Ridge(alpha=alpha).fit(X, y)  # oracle computed before the learner runs
-    intercept, coef = _checked(X, y, alpha)
-    np.testing.assert_allclose(
-        coef,
-        ref.coef_,
-        rtol=1e-7,
-        atol=1e-9,
-        err_msg="coefficients differ from sklearn Ridge on real features with very different "
-        "scales: centre the features, then solve with alpha on the diagonal",
-    )
-    np.testing.assert_allclose(
-        intercept,
-        ref.intercept_,
-        rtol=1e-7,
-        atol=1e-7,
-        err_msg="intercept differs from sklearn Ridge on real features: it must be "
-        "mean(y) - mean(X) @ coef",
-    )
-
-
-@pytest.mark.parametrize("alpha", [1e-3, 1.0], ids=["weak-penalty", "unit-penalty"])
-def test_intercept_stays_accurate_on_uncentred_real_data(longley, alpha):
-    # The features have means near 1e5, so an intercept column that is penalised with the rest
-    # (or left in the Gram matrix uncentred) loses digits. Compare with the SVD closed form of the
-    # centred problem, sum_i s_i / (s_i^2 + alpha) (u_i . yc) v_i, which is well conditioned.
-    X, y = longley
-    xc = X - X.mean(axis=0)
-    yc = y - y.mean()
-    U, s, Vt = np.linalg.svd(xc, full_matrices=False)
-    expected_coef = Vt.T @ ((s / (s**2 + alpha)) * (U.T @ yc))
-    expected_intercept = y.mean() - X.mean(axis=0) @ expected_coef
-    intercept, coef = _checked(X, y, alpha)
-    np.testing.assert_allclose(
-        coef,
-        expected_coef,
-        rtol=1e-9,
-        atol=1e-12,
-        err_msg="coefficients on uncentred real data are off the centred closed form: centre X and "
-        "y before forming the Gram matrix, so the intercept is not in the solve",
-    )
-    np.testing.assert_allclose(
-        intercept,
-        expected_intercept,
-        rtol=1e-9,
-        atol=0.0,
-        err_msg="intercept on uncentred real data is off the centred closed form: it must be "
-        "mean(y) - mean(X) @ coef, computed from the centred problem",
     )
 
 

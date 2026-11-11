@@ -77,7 +77,7 @@ Regularization, arXiv:1711.05101).
 - **Dependent columns with $\alpha=0$.** No unique solution exists. Use $\alpha>0$, or drop columns.
 - **Adaptive optimisers.** Adam with an L2 term is not weight decay. Use AdamW when you want decoupled decay.
 
-**Real data: uncentred ridge loses digits.** On longley at $\alpha = 10^{-3}$ the feature means are near $10^{5}$ and the intercept is about $-3.5\times10^{6}$. Solving the augmented system $[\mathbf{1}\mid X]$, with the intercept unpenalised but not centred, puts the intercept off by $7\times10^{-3}$ (relative $2\times10^{-9}$) and every slope off by about $2\times10^{-9}$ relative. Centring first gives about $10^{-13}$. The penalty is not the cause: the cancellation comes from the large offsets in the Gram matrix, so centre before you solve.
+**Real data: uncentred ridge loses digits.** On longley at $\alpha = 10^{-3}$ the feature means run from $10^{2}$ to $4\times10^{5}$ and the intercept is about $-3.5\times10^{6}$. Solving the augmented system $[\mathbf{1}\mid X]$, with the intercept unpenalised but not centred, puts the intercept off by $7\times10^{-3}$ (relative $2\times10^{-9}$) and the slope vector off by about $2\times10^{-9}$ relative in norm. Centring first gives about $10^{-13}$. The penalty is not the cause: the cancellation comes from the large offsets in the Gram matrix, so centre before you solve.
 
 ## Interview angle
 

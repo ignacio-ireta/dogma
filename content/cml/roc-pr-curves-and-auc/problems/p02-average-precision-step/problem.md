@@ -8,8 +8,9 @@ Implement `average_precision(y_true, scores)`. It returns the average precision 
 - Let t_1 > t_2 > ... > t_m be the distinct score values, highest first. At each t_k, predict positive every sample whose score is greater than or equal to t_k. Let P_k be the precision and R_k the recall of those predictions, with R_k = TP_k / n_pos.
 - AP = sum over k of (R_k - R_{k-1}) P_k, where R_0 = 0. This is a sum of rectangles of width equal to the recall gained, each at the precision reached at its threshold.
 - Tied samples share one threshold. They are never split.
-- Two scores are tied only when they are exactly equal as floats. No tolerance is applied, so the value is
-  unchanged when every score is multiplied by the same positive constant, even 1e-9.
+- Two scores are tied only when they are exactly equal as floats. No absolute tolerance is applied,
+  so scores that differ by more than one unit in the last place stay distinct when every score is
+  multiplied by a tiny positive constant such as 1e-9.
 - Returns a Python float.
 - Raises `ValueError` for unequal lengths, empty input, labels other than 0 and 1, non-finite scores, and input with no positive sample.
 - Must not mutate its inputs.

@@ -349,9 +349,11 @@ def test_matches_scikit_learn_on_raw_breast_cancer_with_graded_relevance(
     )
 
 
-def test_only_the_order_and_equality_of_scores_matter_at_tiny_magnitudes() -> None:
-    names = list(load("breast_cancer").feature_names)
-    data = load("breast_cancer")
+def test_only_the_order_and_equality_of_scores_matter_at_tiny_magnitudes(
+    breast_cancer: Any,
+) -> None:
+    names = list(breast_cancer.feature_names)
+    data = breast_cancer
     relevance = _graded_quartiles(data.X[:, names.index("area error")])
     scores = data.X[:, names.index("worst concave points")]
     base = _solve(relevance, scores, 25)

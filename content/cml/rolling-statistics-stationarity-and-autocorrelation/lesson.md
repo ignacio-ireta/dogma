@@ -72,7 +72,7 @@ Centre near an observed value and rescale before squaring at extreme magnitudes,
 - **Seasonality that moves.** Holidays shift, and a fixed $m$ misses them.
 - **Look-ahead.** Centred windows read future values. A trailing window is causal even if precomputed; shift it if the prediction precedes the current observation.
 - **Over-differencing.** A lag-1 ACF near $-0.5$ after differencing can suggest an unnecessary difference; it is not proof.
-- **Integer input.** Nile flow volumes are integers, but a 10-year window mean is a fraction. Floor division of the window sum loses up to 0.90 per window (mean 0.44, in 85 of 91 windows). The level drop stays visible (window means 1110.7 for the windows ending 1880-1884, 824.5 for those ending 1920-1924), so the error is silent. Check the fractional part, not the shape.
+- **Integer input.** Nile flow volumes are integers, but a 10-year window mean is a fraction. Floor division of the window sum loses up to 0.90 per window (mean 0.44, in 85 of 91 windows). The level drop stays visible (window means 1110.7 for the windows ending 1880-1884, 836.8 for those ending 1920-1924), so the error is silent. Check the fractional part, not the shape.
 - **Long lags on real data.** The $n-k$ divisor is invisible at short lags and large at long ones. On sunspots ($n = 309$), the biased estimator gives $r_{10} = 0.659$ and $r_{100} = 0.166$. The $n-k$ divisor gives 0.681 and 0.245, 48% higher at lag 100. Use the biased estimator the contract defines, and say which one you computed.
 
 ## Interview angle

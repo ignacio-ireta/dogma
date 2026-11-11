@@ -57,7 +57,8 @@ Customers 105 and 109 both total 250.0, so 105 comes first. The orders for custo
 are not in the customer table, so they do not appear.
 
 Large totals keep their cents. A customer with orders of 1234.56 and 789.01 totals 2023.57. A
-query that sums in REAL returns a total that is off in the cents.
+query that casts `amount` to REAL before summing returns 2023.570068, which is off past the fourth
+decimal and outside the tolerance.
 
 ## Constraints
 
