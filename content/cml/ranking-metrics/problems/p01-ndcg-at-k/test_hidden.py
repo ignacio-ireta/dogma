@@ -372,7 +372,11 @@ def test_only_the_order_and_equality_of_scores_matter_at_tiny_magnitudes(
 
 def test_a_matrix_of_scores_alone_raises_value_error() -> None:
     _expect_value_error(
-        lambda: ndcg_at_k([1.0, 0.0], [[1.0, 2.0, 3.0], [0.5, 0.2, 0.1]], None),
+        lambda: ndcg_at_k(
+            [1.0, 0.0],
+            [[1.0, 2.0, 3.0], [0.5, 0.2, 0.1]],  # type: ignore[list-item]
+            None,
+        ),
         "a matrix of scores was accepted or failed with the wrong error: both inputs must be "
         "one-dimensional, so raise ValueError when only one of them is a matrix",
     )
