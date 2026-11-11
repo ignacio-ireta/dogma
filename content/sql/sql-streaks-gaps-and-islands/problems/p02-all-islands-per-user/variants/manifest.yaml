@@ -2,6 +2,44 @@ problem_version: 3
 accept:
 - file: accept_blind.sql
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_duplicate_days_counted.sql
+  mistake: duplicate visits on one day are not merged, so a second visit splits a streak
+  clause: Duplicate rows for the same user and date count as one active day.
+  killed_by: test_first_example_splits_a_user_into_two_streaks_at_a_gap
+  visible: public
+- file: reject_single_day_dropped.sql
+  mistake: single-day streaks are left out so only runs of two or more days come back
+  clause: 'Each streak is a maximal run: its first day has no active previous day, and its last day has
+    no active next day. A single active day is a streak of length one.'
+  killed_by: test_first_example_splits_a_user_into_two_streaks_at_a_gap
+  visible: public
+- file: reject_days_count_off_by_one.sql
+  mistake: the day count is last date minus first date with no plus one for inclusive days
+  clause: 'Output columns, in order, with these types: `user_id BIGINT`, `island_start DATE`, `island_end
+    DATE`, `island_days BIGINT`. `island_start` and `island_end` are inclusive and `island_days` counts
+    the active days.'
+  killed_by: test_first_example_splits_a_user_into_two_streaks_at_a_gap
+  visible: public
+- file: reject_order_start_desc.sql
+  mistake: streaks of one user come out with the latest start first
+  clause: Final output order is `user_id ASC, island_start ASC`.
+  killed_by: test_first_example_splits_a_user_into_two_streaks_at_a_gap
+  visible: public
+- file: reject_day_of_year_gap.sql
+  mistake: consecutive days are detected by day of year so every year end breaks a streak
+  clause: 'A run continues from one calendar date to the next across month ends, year ends and leap days:
+    31 December 2028 is followed by 1 January 2029, and 28 February 2028 by 29 February.'
+  killed_by: test_matches_the_oracle_on_the_fixture
+  visible: hidden
+- file: reject_empty_table_placeholder_row.sql
+  mistake: a placeholder row of zero days appears when the visits table is empty
+  clause: Users with no visits do not appear. An empty table returns no rows, with the stated columns
+    and types.
+  killed_by: test_empty_table_returns_no_rows_with_the_declared_schema
+  visible: public
+uncovered:
+- clause: Do not change the `visits` table.
+  reason: a read-only query cannot change the visits table, so no wrong solution exists
+sweeps:
+- reject

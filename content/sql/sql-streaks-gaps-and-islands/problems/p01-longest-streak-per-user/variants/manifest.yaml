@@ -2,6 +2,55 @@ problem_version: 2
 accept:
 - file: accept_blind.sql
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_qualify_for_longest.sql
+  origin: freedom
+  freedom: picks the longest run with QUALIFY on the islands CTE instead of a ranked CTE
+reject:
+- file: reject_duplicate_days_counted.sql
+  mistake: duplicate visits on one day are not merged, so one day counts twice
+  clause: Duplicate rows for the same user and date count as one active day.
+  killed_by: test_worked_example_returns_longest_run_per_user_with_its_dates
+  visible: public
+- file: reject_visits_counted_not_days.sql
+  mistake: the streak length counts visits, so two visits on one day lengthen a streak
+  clause: A streak's length is the number of distinct active days in it. Two visits on one day do not
+    make a longer streak.
+  killed_by: test_worked_example_returns_longest_run_per_user_with_its_dates
+  visible: public
+- file: reject_tie_later_start.sql
+  mistake: on a tie in length the later streak wins instead of the earlier
+  clause: For each user with at least one visit, return one row with the longest streak. If two of a user's
+    streaks have the same length, return the one with the earlier start.
+  killed_by: test_worked_example_returns_longest_run_per_user_with_its_dates
+  visible: public
+- file: reject_day_count_off_by_one.sql
+  mistake: the day count is last date minus first date with no plus one for inclusive days
+  clause: '`streak_days` is the number of days in that streak. `streak_start` and `streak_end` are its
+    first and last dates, inclusive.'
+  killed_by: test_worked_example_returns_longest_run_per_user_with_its_dates
+  visible: public
+- file: reject_order_user_desc.sql
+  mistake: final rows are sorted by user descending instead of ascending
+  clause: Final output order is `user_id ASC`.
+  killed_by: test_worked_example_returns_longest_run_per_user_with_its_dates
+  visible: public
+- file: reject_year_assumed_365_days.sql
+  mistake: day keys assume every year has 365 days so a run breaks at a leap year end
+  clause: 'A run continues from one calendar date to the next across month ends, year ends and leap days:
+    31 December 2028 is followed by 1 January 2029, and 28 February 2028 by 29 February.'
+  killed_by: test_matches_the_oracle_on_a_holiday_burst_across_a_leap_year_end
+  visible: hidden
+- file: reject_empty_table_placeholder_row.sql
+  mistake: a placeholder row of zero days appears when the visits table is empty
+  clause: Users with no visits do not appear. An empty table returns no rows, with the stated columns
+    and types.
+  killed_by: test_empty_table_returns_no_rows_with_the_declared_schema
+  visible: public
+uncovered:
+- clause: 'Output columns, in order, with these types: `user_id BIGINT`, `streak_days BIGINT`, `streak_start
+    DATE`, `streak_end DATE`.'
+  reason: every test checks this first, so a wrong solution fails all of them
+- clause: Do not change the `visits` table.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject
