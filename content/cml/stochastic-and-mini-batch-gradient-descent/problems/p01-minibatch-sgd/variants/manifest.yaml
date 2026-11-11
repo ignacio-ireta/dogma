@@ -73,3 +73,4 @@ uncovered:
     it also breaks the length check in C8
 sweeps:
 - reject
+- mutants
