@@ -2,6 +2,67 @@ problem_version: 1
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_cutoffs_by_range_comprehension.py
+  origin: freedom
+  freedom: builds the splits with a range over the cutoffs and a list comprehension instead of a while
+    loop
+reject:
+- file: reject_rolling_window_one_row_too_long.py
+  mistake: rolling window one row longer than initial_train from the second split on
+  clause: '`initial_train`: int `>= 1`. The size of the first training window. With `expanding=True`,
+    later windows grow from row 0. With `expanding=False`, every window has exactly `initial_train` rows.'
+  killed_by: test_rolling_window_keeps_its_length
+  visible: public
+- file: reject_test_window_one_row_short.py
+  mistake: test window one row shorter than horizon
+  clause: '`horizon`: int `>= 1`. The number of rows in each test window.'
+  killed_by: test_expanding_windows_grow_from_row_zero_and_advance_by_step
+  visible: public
+- file: reject_cutoff_advances_by_horizon.py
+  mistake: training cutoff advances by horizon instead of step
+  clause: '`step`: int `>= 1`. How far the training cutoff moves between consecutive splits.'
+  killed_by: test_splits_match_the_brute_force_reference
+  visible: hidden
+- file: reject_gap_ignored_in_test_window.py
+  mistake: test window starts at the cutoff and ignores gap
+  clause: '`gap`: int `>= 0`. The number of rows skipped between the last training row and the first test
+    row, for example because labels arrive late.'
+  killed_by: test_gap_skips_rows_between_training_and_testing
+  visible: public
+- file: reject_expanding_default_false.py
+  mistake: expanding defaults to False
+  clause: '`expanding`: bool, default `True`.'
+  killed_by: test_expanding_windows_grow_from_row_zero_and_advance_by_step
+  visible: public
+- file: reject_last_split_must_end_before_n.py
+  mistake: last split whose test window ends exactly at n is dropped
+  clause: 'Splits are generated while the test window ends at or before `n`: `c_j + gap + horizon <= n`.
+    The first split is the same in both modes.'
+  killed_by: test_expanding_windows_grow_from_row_zero_and_advance_by_step
+  visible: public
+- file: reject_initial_train_not_checked.py
+  mistake: no check that initial_train is at least 1
+  clause: Raises `ValueError` when `initial_train`, `horizon` or `step` is below 1, when `gap` is negative,
+    or when `n < initial_train + gap + horizon` (no split fits).
+  killed_by: test_invalid_parameters_raise_value_error
+  visible: hidden
+- file: reject_fit_check_rejects_exact_fit.py
+  mistake: raises when n equals initial_train plus gap plus horizon, where one split fits
+  clause: Raises `ValueError` when `initial_train`, `horizon` or `step` is below 1, when `gap` is negative,
+    or when `n < initial_train + gap + horizon` (no split fits).
+  killed_by: test_splits_match_the_brute_force_reference
+  visible: hidden
+uncovered:
+- clause: '`n`: int, the number of rows, in time order (row `0` is the oldest).'
+  reason: n is only read by the fit check and the loop bound, both covered by the C8 and C10 rejects
+- clause: '**Split `j`** (`j = 0, 1, 2, …`) has cutoff `c_j = initial_train + j * step`. Its training
+    rows are `[0, c_j)` when expanding, or `[c_j - initial_train, c_j)` when rolling. Its test rows are
+    `[c_j + gap, c_j + gap + horizon)`.'
+  reason: the cutoff formula is covered by the C2 and C4 rejects, both killed
+- clause: 'Returns: a list of `(train_idx, test_idx)` pairs in split order. Both arrays are 1-D `np.intp`,
+    consecutive and ascending.'
+  reason: cap of eight wrong solutions per problem
+- clause: Must not mutate inputs.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

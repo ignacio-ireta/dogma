@@ -2,6 +2,52 @@ problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_categories_coerced_without_object_dtype.py
+  mistake: labels converted to one common array type so that an integer and a string with the same text
+    merge
+  clause: '`categories`: 1-D sequence of hashable labels (ints or strings), one per row, in time order.'
+  killed_by: test_integer_and_string_labels_that_print_alike_stay_distinct
+  visible: hidden
+- file: reject_target_rounded_to_whole_numbers.py
+  mistake: targets rounded to whole numbers before averaging
+  clause: '`target`: 1-D array-like of finite real numbers, one per row.'
+  killed_by: test_first_occurrence_is_nan_and_second_equals_the_first_target
+  visible: hidden
+- file: reject_rows_visited_in_target_order.py
+  mistake: rows processed in order of target value instead of position
+  clause: Rows are ordered by position alone. The position is the clock.
+  killed_by: test_string_categories_use_only_earlier_rows_of_the_same_category
+  visible: public
+- file: reject_unseen_category_encoded_as_zero.py
+  mistake: first row of a category encoded as zero instead of NaN
+  clause: 'Returns: a float64 array of length `n`. Entry `i` is the mean of `target[j]` over all `j <
+    i` with `categories[j] == categories[i]`. It is NaN when no earlier row shares that category.'
+  killed_by: test_string_categories_use_only_earlier_rows_of_the_same_category
+  visible: public
+- file: reject_row_own_target_read_after_update.py
+  mistake: row encoded after its own target joins the running state
+  clause: The encoding of row `i` must not depend on `target[i]` or on any later row.
+  killed_by: test_string_categories_use_only_earlier_rows_of_the_same_category
+  visible: public
+- file: reject_mean_window_capped_at_three_rows.py
+  mistake: running mean weights only the last few earlier rows
+  clause: 'The encoding is the plain expanding mean over the whole earlier history of the category, however
+    long that history is: no recent window, no decay, no smoothing, and no reset of the state partway
+    through.'
+  killed_by: test_alternating_categories_keep_their_running_state_across_the_series
+  visible: hidden
+- file: reject_nan_checked_but_infinity_passes.py
+  mistake: infinite target accepted, only NaN rejected
+  clause: Raises `ValueError` when the two inputs have different lengths, when either is not 1-D, or when
+    `target` contains NaN or infinity.
+  killed_by: test_invalid_target_raises_value_error
+  visible: hidden
+- file: reject_caller_array_scaled_in_place.py
+  mistake: caller float array scaled in place during the call
+  clause: Must not mutate inputs.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
