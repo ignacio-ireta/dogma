@@ -2,6 +2,54 @@ problem_version: 3
 accept:
 - file: accept_blind.sql
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_qualify_window.sql
+  origin: freedom
+  freedom: first and last picked by a QUALIFY window in CTEs then joined on user_id, instead of an aggregate
+    with arg_min and arg_max
+reject:
+- file: reject_first_tie_takes_largest_id.sql
+  mistake: first event on a tied time taken as the one with the largest event id
+  clause: '**First event** of a user: the smallest `event_time`. When several events share it, the one
+    with the **smallest** `event_id`.'
+  killed_by: test_ties_on_first_and_last_time_use_the_smallest_and_largest_event_id
+  visible: public
+- file: reject_last_tie_takes_smallest_id.sql
+  mistake: last event on a tied time taken as the one with the smallest event id
+  clause: '**Last event** of a user: the largest `event_time`. When several events share it, the one with
+    the **largest** `event_id`.'
+  killed_by: test_ties_on_first_and_last_time_use_the_smallest_and_largest_event_id
+  visible: public
+- file: reject_type_picked_by_id_not_time.sql
+  mistake: first event type taken from the smallest event id instead of the earliest event
+  clause: Exactly one row per user. The times and types of a row come from the same event.
+  killed_by: test_event_type_is_selected_by_time_rather_than_alphabetically
+  visible: public
+- file: reject_output_ordered_by_user_desc.sql
+  mistake: users returned in descending user id order
+  clause: Final output order is `user_id ASC`.
+  killed_by: test_ties_on_first_and_last_time_use_the_smallest_and_largest_event_id
+  visible: public
+- file: reject_single_event_last_type_null.sql
+  mistake: a user with one event gets a null last event type
+  clause: A user with a single event has the same event as first and last.
+  killed_by: test_ties_on_first_and_last_time_use_the_smallest_and_largest_event_id
+  visible: public
+- file: reject_labels_lower_and_trimmed.sql
+  mistake: event labels trimmed and lower-cased before they are returned
+  clause: '`event_type` is returned exactly as stored: its case and any surrounding spaces are part of
+    the value. Labels are not trimmed or case-folded.'
+  killed_by: test_event_labels_come_back_exactly_as_stored_on_a_dirty_log
+  visible: hidden
+- file: reject_empty_table_placeholder_row.sql
+  mistake: empty events table returns a placeholder row instead of no rows
+  clause: An empty table returns an empty result with these column names and types.
+  killed_by: test_empty_table_returns_no_rows_with_the_declared_schema
+  visible: public
+uncovered:
+- clause: 'Output columns, in this order: `user_id BIGINT`, `first_event_time TIMESTAMP`, `first_event_type
+    VARCHAR`, `last_event_time TIMESTAMP`, `last_event_type VARCHAR`.'
+  reason: every test checks this first, so a wrong solution fails all of them
+- clause: Do not change the input table.
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject
