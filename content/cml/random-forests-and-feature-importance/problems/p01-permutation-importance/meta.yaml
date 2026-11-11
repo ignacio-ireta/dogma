@@ -1,6 +1,6 @@
 # Problem metadata (CONTENT_SPEC §6.2).
 id: cml/random-forests-and-feature-importance/p01-permutation-importance
-version: 2                      # bump when tests, tolerances or the contract change
+version: 3                      # bump when tests, tolerances or the contract change
 title: Permutation feature importance
 language: python                # python | sql
 runtime: py-numpy               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch

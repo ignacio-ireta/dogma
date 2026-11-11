@@ -366,3 +366,36 @@ def test_non_integer_seed_raises_value_error():
         n_repeats=2,
         seed=2.5,
     )
+
+
+def test_metric_is_called_with_true_targets_first():
+    X = np.array([[0.0, 5.0], [1.0, 3.0], [2.0, 9.0], [3.0, 1.0]])
+    y = np.array([0, 0, 1, 1])
+    calls = []
+
+    def metric(y_true, y_pred):
+        calls.append((np.asarray(y_true), np.asarray(y_pred)))
+        return _accuracy(y_true, y_pred)
+
+    permutation_importance(
+        lambda Z: np.ones(np.asarray(Z).shape[0]), X, y, metric, n_repeats=2, seed=0
+    )
+    assert calls, "the metric was never called, so no score was computed"
+    for y_true, _ in calls:
+        assert np.array_equal(y_true, y), (
+            "the metric got its arguments in the wrong order: the true targets must come first"
+        )
+
+
+def test_plain_list_predictions_are_accepted():
+    X = np.array([[0.0, 5.0], [1.0, 3.0], [2.0, 9.0], [3.0, 1.0]])
+    y = np.array([0, 0, 1, 1])
+
+    def predict_list(Z):
+        return [int(v >= 1.5) for v in np.asarray(Z)[:, 0]]
+
+    mean_drop, _ = _call(X, y, predict=predict_list, n_repeats=2)
+    assert mean_drop[1] == 0.0, (
+        "a predict that returns a plain list is valid, and a feature the model never reads "
+        "cannot change the predictions, so its drop is exactly 0"
+    )

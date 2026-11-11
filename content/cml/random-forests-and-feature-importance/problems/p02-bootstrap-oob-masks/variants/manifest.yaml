@@ -2,6 +2,41 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_n_one_rejected.py
+  mistake: one row training set rejected
+  clause: '`n`: integer, at least 1, the number of training rows.'
+  killed_by: test_single_row_is_always_in_bag
+  visible: public
+- file: reject_one_tree_short.py
+  mistake: one tree fewer than n_trees built
+  clause: '`n_trees`: integer, at least 1.'
+  killed_by: test_each_tree_draws_n_rows_with_replacement
+  visible: public
+- file: reject_seed_zero_becomes_one.py
+  mistake: seed zero treated as seed one
+  clause: '`seed`: non-negative integer.'
+  killed_by: test_matches_an_independent_counter_that_follows_the_protocol
+  visible: hidden
+- file: reject_draws_without_replacement.py
+  mistake: bootstrap drawn as a permutation without replacement
+  clause: '**Protocol (exact):** create one generator, `rng = np.random.default_rng(seed)`. For tree `t
+    = 0, ..., n_trees-1`, in order, draw `rng.integers(0, n, size=n)`. Those are the indices of the tree''s
+    bootstrap sample, with repeats. `in_bag[t, i]` is the number of times row `i` was drawn.'
+  killed_by: test_matches_an_independent_counter_that_follows_the_protocol
+  visible: hidden
+- file: reject_bincount_without_minlength.py
+  mistake: counts built without a minimum length so unused trailing rows are dropped
+  clause: 'Returns: `(in_bag, oob)`. - `in_bag`: integer array of shape `(n_trees, n)`. Each row sums
+    to `n`. - `oob`: boolean array of the same shape, with `oob[t, i] = (in_bag[t, i] == 0)`.'
+  killed_by: test_each_tree_draws_n_rows_with_replacement
+  visible: public
+- file: reject_zero_trees_accepted.py
+  mistake: zero trees accepted instead of raising
+  clause: 'Raises: `ValueError` when `n` or `n_trees` is not an integer of at least 1, or when `seed`
+    is not a non-negative integer.'
+  killed_by: test_invalid_arguments_raise_value_error
+  visible: public
 uncovered: []
-sweeps: []
+sweeps:
+- reject
