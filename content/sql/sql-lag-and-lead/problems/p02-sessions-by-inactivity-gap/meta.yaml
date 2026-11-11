@@ -1,5 +1,5 @@
 id: sql/sql-lag-and-lead/p02-sessions-by-inactivity-gap
-version: 2
+version: 3
 title: Sessions by inactivity gap
 language: sql
 runtime: sql-duckdb

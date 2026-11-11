@@ -1,7 +1,61 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.sql
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_nested_subquery_case.sql
+  origin: freedom
+  freedom: a nested subquery with CASE in place of a CTE with OR
+reject:
+- file: reject_output_ordered_by_view_id.sql
+  mistake: output ordered by view id before viewed time within a visitor
+  clause: Final output order is `visitor_id ASC, viewed_at ASC, view_id ASC`.
+  killed_by: test_output_orders_each_visitor_by_time_before_view_id
+  visible: hidden
+- file: reject_gap_30_minutes_inclusive.sql
+  mistake: exactly 30 minutes opens a new session
+  clause: The gap is `viewed_at` minus the previous view's `viewed_at`. A gap of exactly 30 minutes does
+    not start a session. A gap of 30 minutes and one second does.
+  killed_by: test_thirty_minutes_exactly_continues_and_thirty_one_minutes_starts_a_session
+  visible: public
+- file: reject_first_view_not_session_start.sql
+  mistake: a visitor first view does not open a session
+  clause: The first view of a visitor always starts session 1.
+  killed_by: test_thirty_minutes_exactly_continues_and_thirty_one_minutes_starts_a_session
+  visible: public
+- file: reject_gap_in_whole_seconds.sql
+  mistake: gap measured in whole seconds, so a fraction of a second is dropped
+  clause: Timestamps keep their fractions of a second, so the gap is exact to the microsecond. A gap of
+    30 minutes and one millisecond does start a session.
+  killed_by: test_gap_of_thirty_minutes_and_one_millisecond_starts_a_session
+  visible: hidden
+- file: reject_session_number_not_reset_per_visitor.sql
+  mistake: session count runs across visitors instead of restarting for each one
+  clause: Session numbers restart at 1 for each visitor.
+  killed_by: test_matches_pandas_session_oracle_on_seeded_views_with_boundary_gaps
+  visible: hidden
+- file: reject_same_timestamp_views_dropped.sql
+  mistake: views sharing a visitor and a timestamp are collapsed into one row
+  clause: Every input row appears exactly once. An empty table returns no rows, with the stated schema.
+  killed_by: test_equal_timestamps_at_a_boundary_let_the_lower_view_id_open_the_session
+  visible: public
+- file: reject_tie_order_by_higher_view_id.sql
+  mistake: previous view breaks timestamp ties by the higher view id
+  clause: Order each visitor's views by `viewed_at ASC`, then by `view_id ASC`. That order defines "previous"
+    and the running count. Equal timestamps are ordered by the lower `view_id` first.
+  killed_by: test_equal_timestamps_at_a_boundary_let_the_lower_view_id_open_the_session
+  visible: public
+uncovered:
+- clause: 'Table `screen_views` has columns: | Column | DuckDB type | Rules | |---|---|---| | visitor_id
+    | BIGINT | Non-null | | view_id | BIGINT | Non-null, globally unique | | viewed_at | TIMESTAMP | Non-null.
+    Several views of one visitor may share a timestamp | Return these columns, in this order and with
+    these types: | Column | DuckDB type | Meaning | |---|---|---| | visitor_id | BIGINT | Same as input
+    | | view_id | BIGINT | Same as input | | viewed_at | TIMESTAMP | Same as input | | session_number
+    | BIGINT | 1 for the visitor''s first session, incremented at each session start | | starts_session
+    | BOOLEAN | TRUE only on the view that opens a session | The types are checked exactly. `session_number`
+    must be `BIGINT`, although DuckDB''s `SUM` over integers returns a wider integer type by default,
+    so the result needs an explicit type.'
+  reason: every test checks this first, so a wrong solution fails all of them
+- clause: Do not change the input table.
+  reason: a read-only query cannot change the input table, so no wrong solution can break this
+sweeps:
+- reject

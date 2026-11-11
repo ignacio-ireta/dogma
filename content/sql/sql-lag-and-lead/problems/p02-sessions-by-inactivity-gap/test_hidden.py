@@ -214,3 +214,19 @@ def test_millisecond_clocks_with_skewed_visitors_match_the_oracle():
             "second, so judge it as an exact interval",
             pytrace=False,
         )
+
+
+def test_output_orders_each_visitor_by_time_before_view_id():
+    # Visitor 6 has a later view with the lower view id. Sorted by time, the 07:00 view comes
+    # first and opens session 1; the view five minutes later is within 30 minutes, so it stays
+    # in session 1 and does not open one.
+    t0 = datetime(2026, 5, 2, 7, 0)
+    later = t0 + timedelta(minutes=5)
+    rows = [(6, 2, later), (6, 9, t0)]
+    expected = [(6, 9, t0, 1, True), (6, 2, later, 1, False)]
+    result = _run(rows)
+    if result != expected:
+        pytest.fail(
+            "each visitor's rows must come out in time order first, and only then by view id",
+            pytrace=False,
+        )

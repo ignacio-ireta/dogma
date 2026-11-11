@@ -2,6 +2,44 @@ problem_version: 1
 accept:
 - file: accept_blind.sql
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_self_join_previous.sql
+  origin: freedom
+  freedom: previous row found by a self-join on the latest earlier day, not by a window
+reject:
+- file: reject_previous_is_calendar_day.sql
+  mistake: previous means the calendar day before, so a gap day gives NULL
+  clause: '"Previous" means the previous recorded row for the same account. Do not fill in missing calendar
+    days; a gap of two days is still a one-row step.'
+  killed_by: test_first_day_per_account_has_null_previous_fields_and_change
+  visible: public
+- file: reject_window_without_partition.sql
+  mistake: look-back runs across accounts instead of inside each account
+  clause: '"Previous" means the previous recorded row for the same account. Do not fill in missing calendar
+    days; a gap of two days is still a one-row step.'
+  killed_by: test_first_day_per_account_has_null_previous_fields_and_change
+  visible: public
+- file: reject_missing_predecessor_zero.sql
+  mistake: missing predecessor filled with 0 instead of NULL
+  clause: A missing predecessor is NULL, never 0.
+  killed_by: test_first_day_per_account_has_null_previous_fields_and_change
+  visible: public
+- file: reject_change_sign_reversed.sql
+  mistake: change computed as previous minus current
+  clause: The change is current minus previous. A decrease is negative.
+  killed_by: test_first_day_per_account_has_null_previous_fields_and_change
+  visible: public
+- file: reject_output_ordered_by_date_first.sql
+  mistake: output ordered by usage date before account
+  clause: Final output order is `account_id ASC, usage_date ASC`.
+  killed_by: test_first_day_per_account_has_null_previous_fields_and_change
+  visible: public
+- file: reject_empty_table_placeholder_row.sql
+  mistake: empty usage table returns one placeholder row of NULLs
+  clause: An empty table returns no rows, with the stated column names and types.
+  killed_by: test_empty_table_returns_no_rows_with_the_declared_schema
+  visible: public
+uncovered:
+- clause: Do not change the input table.
+  reason: a read-only query cannot change the input table, so no wrong solution can break this
+sweeps:
+- reject
