@@ -376,3 +376,43 @@ def test_single_sample_with_positive_penalty_has_zero_slopes_and_target_intercep
         [0.0, 0.0],
         err_msg="a one-sample centered penalised design has zero slopes",
     )
+
+
+def test_alpha_zero_gives_exact_least_squares_on_a_nearly_collinear_design():
+    n = 20
+    x1 = np.arange(n) / 10.0
+    x2 = x1 + 0.01 * np.sin(np.arange(n))
+    X = np.column_stack([x1, x2])
+    y = 1.0 + 2.0 * x1 + 0.5 * x2 + 0.1 * np.cos(3 * np.arange(n))
+    # Exact least squares through the centred design, from the SVD (no normal equations).
+    xc = X - X.mean(axis=0)
+    yc = y - y.mean()
+    u, s, vt = np.linalg.svd(xc, full_matrices=False)
+    beta = vt.T @ ((u.T @ yc) / s)
+    intercept_expected = y.mean() - X.mean(axis=0) @ beta
+    intercept, coef = _checked(X, y, 0.0)
+    np.testing.assert_allclose(
+        coef,
+        beta,
+        rtol=1e-9,
+        atol=1e-9,
+        err_msg="alpha zero must give exact least squares, not a small penalty in its place",
+    )
+    np.testing.assert_allclose(
+        intercept,
+        intercept_expected,
+        rtol=1e-9,
+        atol=1e-9,
+        err_msg="alpha zero must give exact least squares, not a small penalty in its place",
+    )
+
+
+def test_alpha_zero_with_intercept_checks_the_rank_after_centring():
+    a = np.array([1.0, 2.0, 3.0, 4.0])
+    X = np.column_stack([a, a + 8.0])
+    y = np.array([1.0, 2.0, 2.5, 4.0])
+    _expect_value_error(
+        lambda: ridge_fit(X, y, 0.0, fit_intercept=True),
+        "alpha zero with an intercept accepted a design whose columns are dependent once their "
+        "means are removed",
+    )

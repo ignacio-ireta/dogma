@@ -1,5 +1,5 @@
 id: cml/ridge-regression-and-weight-decay/p01-ridge-fit
-version: 2
+version: 3
 title: Ridge fit with an unpenalised intercept
 language: python
 runtime: py-numpy
