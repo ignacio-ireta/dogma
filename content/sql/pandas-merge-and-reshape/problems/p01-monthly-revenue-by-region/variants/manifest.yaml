@@ -76,3 +76,4 @@ uncovered:
     check, already covered under C7, and no other valid input form in C2 is left to break
 sweeps:
 - reject
+- mutants
