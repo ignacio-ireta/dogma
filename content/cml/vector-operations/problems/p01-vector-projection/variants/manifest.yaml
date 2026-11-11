@@ -44,6 +44,14 @@ reject:
   clause: 'Returns: a NumPy array of shape `(n,)` and dtype `float64`, equal to $\dfrac{\mathbf{a}\cdot\mathbf{b}}{\mathbf{b}\cdot\mathbf{b}}\,\mathbf{b}$.'
   killed_by: test_matches_independent_reference_on_random_vectors
   visible: hidden
+- file: reject_or_to_and_one_dimension.py
+  mistake: a scalar given where a vector belongs is accepted until a later step crashes with the wrong
+    error
+  clause: Raises `ValueError` when `a` or `b` is not 1-D, when their lengths differ, when they are empty,
+    or when every entry of `b` is zero. A nonzero `b` with tiny or huge entries is valid input.
+  killed_by: test_zero_dimensional_input_raises_value_error
+  visible: hidden
 uncovered: []
 sweeps:
 - reject
+- mutants

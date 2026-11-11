@@ -202,3 +202,10 @@ def test_float_b_whose_largest_entry_is_not_one_is_not_mutated():
         b_copy,
         err_msg="input b was modified in place when its largest entry is not 1",
     )
+
+
+def test_zero_dimensional_input_raises_value_error():
+    _raised_value_error(
+        lambda: vector_projection(np.array(3.0), [1.0, 2.0]),
+        "an input that is not one-dimensional must raise ValueError",
+    )
