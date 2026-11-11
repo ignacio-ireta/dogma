@@ -47,7 +47,13 @@ def settings(repo: Path) -> Settings:
 
 @pytest.fixture
 def cli() -> CliRunner:
-    return CliRunner()
+    """A runner whose output is plain text wherever the tests run.
+
+    Typer forces Rich's terminal mode when ``GITHUB_ACTIONS`` (or ``FORCE_COLOR``) is set, so
+    help text arrives with ANSI styling between the words the tests look for. A dumb terminal
+    has no colour system, which turns the styling off without changing the wording.
+    """
+    return CliRunner(env={"TERM": "dumb", "NO_COLOR": "1"})
 
 
 @pytest.fixture

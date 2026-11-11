@@ -75,6 +75,7 @@ Commit both `web/src/api/openapi.json` and `web/src/api/schema.d.ts`. Interactiv
 | `DOGMA_LLM_MODEL` | `qwen3.8-27b-q6` | Model id sent to the local server |
 | `DOGMA_ALLOW_EXTERNAL` | `false` | Reserved for future external providers; does not enable one |
 | `DOGMA_RUN_TIMEOUT_S` | `30` | Harness timeout when the problem does not override it |
+| `DOGMA_RUN_TIMEOUT_SCALE` | `1.0` | Multiplies every run's time limit, including a problem's own `timeout_s`. For machines slower than the one the limits were calibrated on; CI sets `3`. Cannot be below 1 |
 | `DOGMA_RUN_MEMORY_MB` | `2048` | Harness process-tree RSS limit |
 | `DOGMA_RECORD_ATTEMPTS` | `true` | Whether graded attempts are recorded in learner progress |
 

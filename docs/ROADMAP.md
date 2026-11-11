@@ -353,9 +353,37 @@ and results) · what's left or blocked.*
   disagrees with the reference on an underflowed probability; the sampling problem whose
   statement does not fix how the value is drawn; `uncovered` entries that later tests made
   stale (adamw C1 and C3, prefill C2, k-means p02 C5).
-- **State of the branches:** `main` was fast-forwarded to the end of `i32-test-strength`.
-  `origin` has the branch only up to `dfc48f2`; later commits and `main` were not pushed.
+- **State of the branches:** `main` was fast-forwarded to the end of `i32-test-strength`, and
+  both were pushed at the owner's request. Before the push, the five commits that `origin/main`
+  had gained (CI workflow, licenses, CLI test fixture, run-timeout scale; the entry below) were
+  read one by one and merged. One of them put the demo's address in the README; it holds the
+  account name, which the local privacy audit refuses (4 hits, one line). The README now points
+  to the website link in the repository page's About box instead, and the audit is clean.
 - **Left:** nothing in the status table. Every increment is `done`.
+
+### 2026-11-10 · Public-repository hardening (agent): CI, license, run-timeout scale
+
+- **Added:** `.github/workflows/ci.yml`, two macOS jobs on every push: lint, types, tests and the web checks;
+  and `dogma content verify --all`. The privacy audit stays local because its rules are never committed.
+  `LICENSE` (MIT, code) and `LICENSE-CONTENT.md` (curriculum all rights reserved), with a License section in the
+  README. The README's Requirements now state that Run and Submit need macOS. New setting
+  `DOGMA_RUN_TIMEOUT_SCALE` (default 1, cannot go below 1) multiplies every run's time limit, in
+  `runner.run.effective_timeout_s`; documented in `.env.example` and DEVELOPMENT.
+- **Fixed:** two CLI help tests failed only on GitHub Actions, where Typer forces Rich's terminal mode and the
+  help text carries ANSI styling. The shared `cli` fixture now uses a dumb terminal; the duplicate fixture in
+  `test_cli_runs.py` is gone. Reproduce the old failure with `GITHUB_ACTIONS=true uv run --frozen pytest`.
+- **Found on CI:** content verification failed twice on the shared runner, each time on one starter run ending
+  with status `timeout` at 30 s, and on a different problem each time (`cml/shuffling-splitting-and-batching-data`
+  p01, then `cml/ranking-metrics` p01). Both are property-heavy and pass locally in a few seconds. The content
+  job sets the scale to 3. No problem's tests, tolerances, contract or `timeout_s` changed.
+- **Changed:** `tools/docmd/LICENSE` names the dogma contributors, so the audit's attribution exemption table
+  is empty.
+- **Verified:** locally `make lint`, mypy strict (173 files), 4 import contracts, 1700 Python tests (also under
+  `GITHUB_ACTIONS=true`), `gen:api --check`; `dogma content verify --all` on all 175 topics before the scale
+  change, and on the two affected topics with the scale set to 3. `make audit` was not run: this checkout has no
+  `private/denylist.txt`. CI result for this commit is on GitHub.
+- **Left:** content verification takes about 47 minutes on the shared runner. Sharding it by track would cut
+  that, at the cost of running the repository-level checks separately.
 
 ### 2026-11-10 · First 170 problems fully swept; hygiene and blind accepts done for all 251 · I-32b and I-32c done, I-32d in progress
 

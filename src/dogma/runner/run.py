@@ -9,6 +9,7 @@ directories and broken infrastructure raise ``RunnerError``.
 from __future__ import annotations
 
 import logging
+import math
 import re
 import uuid
 from dataclasses import dataclass
@@ -50,6 +51,16 @@ class _HarnessReport(BaseModel):
     tests: tuple[TestResult, ...] = ()
     stdout: str = ""
     collection_error: str | None = None
+
+
+def effective_timeout_s(problem_timeout_s: int | None, cfg: Settings) -> int:
+    """The wall-clock limit for one run: the problem's own limit, or the default, scaled.
+
+    ``run_timeout_scale`` is 1 on the learner's machine. A slower machine raises it so that a
+    limit calibrated elsewhere still means "this run is stuck", not "this machine is slow".
+    """
+    base = problem_timeout_s if problem_timeout_s is not None else cfg.run_timeout_s
+    return math.ceil(base * cfg.run_timeout_scale)
 
 
 @dataclass(frozen=True)
@@ -141,7 +152,7 @@ def run(
     ensure_available(meta.runtime)
     policy.ensure_supported()
     run_dir = _create_run_dir(cfg.runs_dir, attempt)
-    timeout_s = meta.timeout_s if meta.timeout_s is not None else cfg.run_timeout_s
+    timeout_s = effective_timeout_s(meta.timeout_s, cfg)
     limit_mb = memory_limit_mb if memory_limit_mb is not None else cfg.run_memory_mb
     with staged_tests(run_dir, submission, problem_dir, meta, tests) as tests_dir:
         result = sandbox.execute(

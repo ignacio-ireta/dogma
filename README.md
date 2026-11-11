@@ -10,6 +10,11 @@ planned Library refresh.
 
 ## Requirements
 
+- macOS. Run and Submit execute your code under the system sandbox (`sandbox-exec`), with no
+  network and writes confined to the attempt directory; on other systems the grader refuses to
+  run rather than run unsandboxed. To try dogma without installing anything, use the
+  interactive demo, which grades in the browser. Its link is the website in the About box of
+  this repository's page.
 - Python 3.12, managed by `uv` (see `.python-version`).
 - For the browser: Node.js 22 or newer and pnpm 12.8.1, as specified in
   [web/package.json](web/package.json).
@@ -121,3 +126,9 @@ in `private/` and third-party documents and indexes in `corpus/` stay local.
 | [docs/CONTENT_SPEC.md](docs/CONTENT_SPEC.md) | Exact topic-package format for authors |
 | [docs/LEARNER_PROFILE.md](docs/LEARNER_PROFILE.md) | General learning and interface design principles |
 | [docs/IMPORT_PLAN.md](docs/IMPORT_PLAN.md) | What material was imported, and the privacy rules |
+
+## License
+
+The code is released under the [MIT License](LICENSE). The curriculum (lessons, problems, tests,
+hints and cards) is not: it is all rights reserved, free to study with but not to republish. See
+[LICENSE-CONTENT.md](LICENSE-CONTENT.md).

@@ -29,11 +29,6 @@ def settings(tmp_path: Path) -> Settings:
     return Settings(repo_root=tmp_path / "repo")
 
 
-@pytest.fixture
-def cli() -> CliRunner:
-    return CliRunner()
-
-
 def _run_dir(settings: Settings, name: str, completed: datetime | None) -> Path:
     path = settings.runs_dir / name
     path.mkdir(parents=True)
