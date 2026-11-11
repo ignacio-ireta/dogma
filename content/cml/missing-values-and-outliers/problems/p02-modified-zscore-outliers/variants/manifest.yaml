@@ -1,7 +1,73 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_loop_over_scores.py
+  origin: freedom
+  freedom: builds the flags with a Python loop over the scores instead of a vectorised comparison
+reject:
+- file: reject_default_threshold_three.py
+  mistake: default threshold set too low
+  clause: '`threshold`: a positive finite number, default `3.5`.'
+  killed_by: test_value_between_three_and_the_default_is_not_flagged_without_a_threshold
+  visible: hidden
+- file: reject_integer_input_refused.py
+  mistake: refuses integer input that is valid
+  clause: '`x`: one-dimensional array-like of finite real numbers, with at least one value. Integers are
+    allowed.'
+  killed_by: test_single_large_value_is_flagged_by_the_modified_score
+  visible: public
+- file: reject_midpoint_overflows.py
+  mistake: median midpoint of two large values overflows
+  clause: 'Let `median` be the median of `x` (the mean of the two middle values for an even count), and
+    `MAD` the median of `|x - median|`. Compute each midpoint without overflow when its exact value is
+    finite: the median of `1.6e308` and `1.7e308` is `1.65e308`.'
+  killed_by: test_midpoint_of_two_huge_same_sign_values_does_not_overflow
+  visible: hidden
+- file: reject_overflowed_difference_not_recomputed.py
+  mistake: overflowing difference is not recomputed, so its score is lost
+  clause: The modified z-score is `M = 0.6745 * (x - median) / MAD`, computed element by element. The
+    difference `x - median` can overflow for finite values such as `-1.7e308` and `1.5e308`. `M` is still
+    representable there, and it must be correct.
+  killed_by: test_raw_deviation_that_overflows_still_gets_its_modified_score
+  visible: hidden
+- file: reject_non_strict_threshold.py
+  mistake: compares with greater-or-equal instead of strictly greater
+  clause: 'Returns a boolean array of the same length as `x`: `True` where `|M| > threshold` (strictly
+    greater), `False` elsewhere.'
+  killed_by: test_comparison_is_strict_at_the_threshold
+  visible: hidden
+- file: reject_zero_mad_flags_only_above.py
+  mistake: zero MAD flags only values above the median
+  clause: '**Zero MAD.** When `MAD` is exactly `0`, the score is undefined. In that case a value is flagged
+    exactly when it differs from `median`. A value equal to the median is never flagged.'
+  killed_by: test_zero_mad_flags_values_different_from_the_median_only
+  visible: hidden
+- file: reject_infinite_threshold_accepted.py
+  mistake: an infinite threshold is accepted instead of raising
+  clause: Raises `ValueError` when `x` is not one-dimensional, when it is empty, when it holds a NaN or
+    an infinity, or when `threshold` is not a positive finite number.
+  killed_by: test_invalid_inputs_raise_value_error
+  visible: hidden
+- file: reject_sorts_input_in_place.py
+  mistake: sorts the caller's array in place during the median
+  clause: Must not mutate `x`.
+  killed_by: test_flags_match_independent_scipy_mad_computation
+  visible: hidden
+- file: reject_constant_as_inverse_of_one_point_four_eight.py
+  mistake: scale constant replaced by one over one point four eight
+  clause: The modified z-score is `M = 0.6745 * (x - median) / MAD`, computed element by element. The
+    difference `x - median` can overflow for finite values such as `-1.7e308` and `1.5e308`. `M` is still
+    representable there, and it must be correct.
+  killed_by: test_comparison_is_strict_at_the_threshold
+  visible: hidden
+- file: reject_lower_median_even_count.py
+  mistake: even-count median takes the lower middle value
+  clause: 'Let `median` be the median of `x` (the mean of the two middle values for an even count), and
+    `MAD` the median of `|x - median|`. Compute each midpoint without overflow when its exact value is
+    finite: the median of `1.6e308` and `1.7e308` is `1.65e308`.'
+  killed_by: test_flags_match_independent_scipy_mad_computation
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

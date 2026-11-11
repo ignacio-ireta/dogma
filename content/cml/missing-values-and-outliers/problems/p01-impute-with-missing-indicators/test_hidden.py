@@ -214,3 +214,10 @@ def test_gaps_in_unnamed_columns_stay_as_they_are_on_real_penguins(penguins):
             pytest.fail(f"an unnamed column was changed: {name} must be copied unchanged")
     if out["body_mass_g"].isna().any():
         pytest.fail("the named gap in body_mass_g was not filled")
+
+
+def test_returned_frame_keeps_the_input_index():
+    df = pd.DataFrame({"age": [20.0, np.nan, 40.0]}, index=[10, 20, 30])
+    out = _run(df, ["age"])
+    if not out.index.equals(df.index):
+        pytest.fail("the returned frame must keep the index of the input frame, not a new one")

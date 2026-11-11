@@ -1,7 +1,99 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_accepts_boolean_column.py
+  mistake: accepts a boolean column as numeric
+  clause: '`numeric`: list of column names. Each name must be a column of `df` with a numeric dtype (booleans
+    are not numeric here). Each name may appear once. The list may be empty.'
+  killed_by: test_boolean_column_is_not_numeric_here
+  visible: hidden
+- file: reject_unknown_strategy_falls_back.py
+  mistake: unknown strategy silently uses the mean instead of raising
+  clause: '`strategy`: `"median"` or `"mean"`. Any other value raises `ValueError`.'
+  killed_by: test_mean_strategy_and_unknown_strategy
+  visible: public
+- file: reject_indicator_in_frame_order.py
+  mistake: indicator columns follow frame column order instead of the order named
+  clause: 'Returns a new DataFrame, with: - the same index and the same original columns, in the same
+    order; - each named column that has at least one missing value converted to float64, with its missing
+    values filled by the chosen statistic of that column''s observed values in `df`; - a column `"<name>_was_missing"`
+    of dtype `int8` (1 where the value was missing, 0 otherwise), **only** for named columns that have
+    at least one missing value in `df`. These indicator columns come after all original columns, in the
+    order the names appear in `numeric`; - every other column copied unchanged, including its dtype and
+    its missing values. A gap in a column that is not named gets no fill and no indicator.'
+  killed_by: test_layout_has_indicators_only_for_gapped_columns_in_named_order
+  visible: hidden
+- file: reject_indicator_int64.py
+  mistake: indicator column has int64 dtype instead of int8
+  clause: 'Returns a new DataFrame, with: - the same index and the same original columns, in the same
+    order; - each named column that has at least one missing value converted to float64, with its missing
+    values filled by the chosen statistic of that column''s observed values in `df`; - a column `"<name>_was_missing"`
+    of dtype `int8` (1 where the value was missing, 0 otherwise), **only** for named columns that have
+    at least one missing value in `df`. These indicator columns come after all original columns, in the
+    order the names appear in `numeric`; - every other column copied unchanged, including its dtype and
+    its missing values. A gap in a column that is not named gets no fill and no indicator.'
+  killed_by: test_gap_is_filled_with_median_and_indicator_is_appended
+  visible: public
+- file: reject_fills_unnamed_gap_columns.py
+  mistake: fills and adds indicators for gaps in columns that were not named
+  clause: 'Returns a new DataFrame, with: - the same index and the same original columns, in the same
+    order; - each named column that has at least one missing value converted to float64, with its missing
+    values filled by the chosen statistic of that column''s observed values in `df`; - a column `"<name>_was_missing"`
+    of dtype `int8` (1 where the value was missing, 0 otherwise), **only** for named columns that have
+    at least one missing value in `df`. These indicator columns come after all original columns, in the
+    order the names appear in `numeric`; - every other column copied unchanged, including its dtype and
+    its missing values. A gap in a column that is not named gets no fill and no indicator.'
+  killed_by: test_gaps_in_unnamed_columns_stay_as_they_are_on_real_penguins
+  visible: hidden
+- file: reject_duplicate_name_accepted.py
+  mistake: a column named twice is accepted instead of raising
+  clause: Raises `ValueError` when `strategy` is unknown; when a name is missing from `df` or is not numeric;
+    when a name is listed twice; when a column needs imputation but has no observed value; and when the
+    indicator `<name>_was_missing` of a column with a gap already exists in `df`.
+  killed_by: test_invalid_requests_raise_value_error
+  visible: hidden
+- file: reject_all_missing_column_passes.py
+  mistake: column with no observed value is accepted and left as NaN instead of raising
+  clause: Raises `ValueError` when `strategy` is unknown; when a name is missing from `df` or is not numeric;
+    when a name is listed twice; when a column needs imputation but has no observed value; and when the
+    indicator `<name>_was_missing` of a column with a gap already exists in `df`.
+  killed_by: test_invalid_requests_raise_value_error
+  visible: hidden
+- file: reject_fills_input_in_place.py
+  mistake: writes the fill into the caller's input frame
+  clause: Must not mutate `df`.
+  killed_by: test_values_and_indicators_match_sklearn_simple_imputer
+  visible: hidden
+- file: reject_index_reset.py
+  mistake: returned frame loses the input index
+  clause: 'Returns a new DataFrame, with: - the same index and the same original columns, in the same
+    order; - each named column that has at least one missing value converted to float64, with its missing
+    values filled by the chosen statistic of that column''s observed values in `df`; - a column `"<name>_was_missing"`
+    of dtype `int8` (1 where the value was missing, 0 otherwise), **only** for named columns that have
+    at least one missing value in `df`. These indicator columns come after all original columns, in the
+    order the names appear in `numeric`; - every other column copied unchanged, including its dtype and
+    its missing values. A gap in a column that is not named gets no fill and no indicator.'
+  killed_by: test_returned_frame_keeps_the_input_index
+  visible: hidden
+- file: reject_complete_columns_become_float.py
+  mistake: a column with no gaps is converted to float64
+  clause: 'Returns a new DataFrame, with: - the same index and the same original columns, in the same
+    order; - each named column that has at least one missing value converted to float64, with its missing
+    values filled by the chosen statistic of that column''s observed values in `df`; - a column `"<name>_was_missing"`
+    of dtype `int8` (1 where the value was missing, 0 otherwise), **only** for named columns that have
+    at least one missing value in `df`. These indicator columns come after all original columns, in the
+    order the names appear in `numeric`; - every other column copied unchanged, including its dtype and
+    its missing values. A gap in a column that is not named gets no fill and no indicator.'
+  killed_by: test_frame_without_gaps_gets_no_indicator_and_keeps_dtypes
+  visible: public
+uncovered:
+- clause: '`df`: a pandas DataFrame.'
+  reason: the only argument is a DataFrame, and any change that mishandles it also breaks the layout or
+    copy rules of other bullets
+- clause: Missing values are NaN.
+  reason: changing what counts as missing also changes the fill and indicator outputs already covered
+    by C5
+sweeps:
+- reject

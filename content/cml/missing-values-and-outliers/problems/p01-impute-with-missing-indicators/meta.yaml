@@ -1,5 +1,5 @@
 id: cml/missing-values-and-outliers/p01-impute-with-missing-indicators
-version: 4
+version: 5
 title: Imputation with missing-value indicators
 language: python
 runtime: py-data

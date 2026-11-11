@@ -253,3 +253,16 @@ def test_default_threshold_is_three_point_five():
         "with the default threshold a modified score of about 4 must be flagged: the default"
         " threshold is 3.5"
     )
+
+
+def test_value_between_three_and_the_default_is_not_flagged_without_a_threshold():
+    # Median 0 and MAD 1, so the modified score of 4.8 is 0.6745 * 4.8, about 3.24: below 3.5.
+    x = np.array([-1.0, 0.0, 1.0, 4.8, -1.0, 1.0, 0.0])
+    try:
+        out = robust_zscore_outliers(x)
+    except Exception as exc:
+        pytest.fail(f"a call without a threshold must work; raised {type(exc).__name__}")
+    assert np.asarray(out).tolist()[3] is False, (
+        "a call without a threshold flagged a value the default threshold does not flag:"
+        " check the default threshold"
+    )
