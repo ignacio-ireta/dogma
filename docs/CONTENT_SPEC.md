@@ -231,6 +231,7 @@ Therefore:
   `@settings(deadline=None, report_multiple_bugs=False, …)`) and `HIDDEN_ASSERT_MESSAGE` (every
   `assert` has a message; every `np.testing` or `torch.testing` call has `err_msg` or `msg`).
   No digit may appear inside the `[...]` part of a hidden test name, dtype names excepted.
+  Validation reports each finding under the rule's name.
 
 ### 6.6 Test data
 
@@ -344,6 +345,7 @@ by `dogma content verify`:
 | `VARIANT_CLAUSE_NOT_IN_STATEMENT` | Every `clause` is in `problem.md`, word for word |
 | `VARIANT_KILLED_BY_UNKNOWN` | `killed_by` is a test function of the file that `visible` names |
 | `VARIANT_VERSION_STALE` | `problem_version` equals `meta.yaml: version` |
+| `VARIANTS_REQUIRED` | A `verified` or `reviewed` problem has a blind accept and, for its Contract, at least one reject or `uncovered` entry |
 
 `make test-all` replays every manifest through the grader (`scripts/exercise_gate.py variants`).
 After any edit to a problem's tests, run

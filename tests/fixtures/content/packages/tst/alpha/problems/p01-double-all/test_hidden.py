@@ -10,18 +10,18 @@ def test_matches_numpy_on_random_input() -> None:
 
 
 def test_integer_input_returns_floats() -> None:
-    assert all(isinstance(value, float) for value in double_all([1, 2]))
+    assert all(isinstance(value, float) for value in double_all([1, 2])), "result is not floats"
 
 
 def test_large_magnitudes_double_without_overflow() -> None:
-    assert double_all([1e300]) == [2e300]
+    assert double_all([1e300]) == [2e300], "large values overflow"
 
 
 def test_tiny_magnitudes_are_kept() -> None:
-    assert double_all([1e-300]) == [2e-300]
+    assert double_all([1e-300]) == [2e-300], "tiny values lost"
 
 
 def test_input_list_is_not_mutated() -> None:
     values = [1.0, 2.0]
     double_all(values)
-    assert values == [1.0, 2.0]
+    assert values == [1.0, 2.0], "input list was mutated"

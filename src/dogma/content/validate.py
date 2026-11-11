@@ -27,6 +27,7 @@ from dogma.content.loader import (
 )
 from dogma.content.pyfacts import PythonFacts
 from dogma.content.schemas import PROBLEM_DIR_PATTERN, CorePath, Syllabus, VariantsManifest
+from dogma.content.testlint import lint_hidden_tests
 from dogma.core.config import Settings
 from dogma.core.errors import ContentError, ErrorCode
 
@@ -81,7 +82,7 @@ DEBRIEF_SECTIONS = ("Reframe", "Ask", "Structure", "Synthesize")
 REVEAL_MIN, REVEAL_MAX = 2, 8
 EXHIBIT_SUFFIXES = (".png", ".csv")
 # Off until the variant sweeps (I-32e) exist. Then verified and reviewed problems need variants.
-VARIANTS_REQUIRED = False
+VARIANTS_REQUIRED = True
 VARIANT_STATUSES_REQUIRING = ("verified", "reviewed")
 
 _CARD_NUMBER = re.compile(r"[1-9][0-9]*")
@@ -680,6 +681,12 @@ def _check_python(problem: ProblemPackage) -> list[Issue]:
         if name.startswith("test_"):
             runtime = meta.runtime if meta is not None else None
             issues.extend(_check_test_module(name, path, facts, entry, language, runtime=runtime))
+        if name == "test_hidden.py":
+            source = (problem.dir / name).read_text(encoding="utf-8")
+            issues.extend(
+                Issue(finding.rule, path, f"line {finding.line}: {finding.message}")
+                for finding in lint_hidden_tests(source)
+            )
     return issues
 
 
