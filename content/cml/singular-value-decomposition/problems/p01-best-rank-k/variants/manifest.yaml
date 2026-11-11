@@ -2,6 +2,43 @@ problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+reject:
+- file: reject_rejects_single_row_or_column.py
+  mistake: rejects a valid one-row or one-column matrix
+  clause: '`A`: 2-D array-like of real numbers, shape `(m, n)` with `m >= 1` and `n >= 1`. Integers allowed.
+    Every entry is finite.'
+  killed_by: test_error_equals_frobenius_norm_of_the_residual
+  visible: hidden
+- file: reject_bool_k_accepted.py
+  mistake: accepts True as k, treating a bool as the integer 1
+  clause: '`k`: an `int` with `0 <= k <= min(m, n)`. Booleans are rejected.'
+  killed_by: test_invalid_matrix_or_rank_raises_value_error
+  visible: hidden
+- file: reject_error_spectral_norm.py
+  mistake: error is the largest discarded singular value instead of the Frobenius norm of the discarded
+    ones
+  clause: 'Returns: a tuple `(A_k, error)`. - `A_k`: float64 array of shape `(m, n)`. If the singular
+    values of `A` are `s_1 >= s_2 >= ...`, with singular vectors `u_i` and `v_i`, then `A_k = sum of s_i
+    u_i v_i^T` over `i <= k`. It is the zero matrix when `k = 0`. - `error`: a Python float, `sqrt(s_{k+1}^2
+    + s_{k+2}^2 + ...)`, which is the Frobenius norm of `A - A_k`. When `k` is at least the rank of `A`,
+    the error is zero up to rounding.'
+  killed_by: test_k_zero_returns_zero_matrix_and_the_full_frobenius_norm
+  visible: public
+- file: reject_float_k_accepted.py
+  mistake: accepts a non-integer k and truncates it
+  clause: Raises `ValueError` when `A` is not 2-D, is empty, contains NaN or infinity, or when `k` is
+    not an integer in `[0, min(m, n)]`.
+  killed_by: test_invalid_matrix_or_rank_raises_value_error
+  visible: hidden
+- file: reject_scaled_input_in_place.py
+  mistake: rescales a float64 input array in place before the SVD
+  clause: Must not mutate its input.
+  killed_by: test_k_zero_returns_zero_matrix_and_the_full_frobenius_norm
+  visible: public
+uncovered:
+- clause: When `s_k = s_{k+1}`, several rank-`k` matrices are optimal and any one of them is accepted.
+    The error is the same for all of them.
+  reason: several optimal matrices are allowed on ties, so a wrong solution that breaks this choice also
+    breaks the error or rank bullet
+sweeps:
+- reject

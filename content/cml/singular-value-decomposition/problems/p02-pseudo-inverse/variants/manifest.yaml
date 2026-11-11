@@ -2,6 +2,43 @@ problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_single_row_or_column.py
+  mistake: rejects a valid one-row or one-column matrix
+  clause: '`A`: 2-D array-like of real numbers, shape `(m, n)` with `m >= 1` and `n >= 1`. Integers allowed.
+    Every entry is finite.'
+  killed_by: test_penrose_identities_hold_on_random_rank_deficient_matrices
+  visible: hidden
+- file: reject_rcond_bool_accepted.py
+  mistake: accepts True as rcond, treating a bool as the number 1
+  clause: '`rcond`: keyword-only, a finite real number `>= 0`, default `1e-15`. Booleans are rejected.'
+  killed_by: test_invalid_matrix_or_rcond_raises_value_error
+  visible: hidden
+- file: reject_absolute_cutoff.py
+  mistake: uses rcond as an absolute cutoff instead of a fraction of the largest singular value
+  clause: 'Cutoff: let `s_max` be the largest singular value of `A`. Every singular value `s_i <= rcond
+    * s_max` is treated as zero. The others are inverted. This is the rule of `numpy.linalg.pinv(A, rcond=rcond)`.
+    The cutoff is relative to `s_max`, not absolute. If `A` is the zero matrix, every singular value is
+    zero and the result is the zero matrix.'
+  killed_by: test_cutoff_is_relative_to_the_largest_singular_value
+  visible: public
+- file: reject_float32_result.py
+  mistake: returns single precision float32 instead of float64
+  clause: 'Returns: a float64 array of shape `(n, m)`, equal to `V diag(s_plus) U^T`, where `s_plus_i
+    = 1 / s_i` for kept singular values and `0` otherwise.'
+  killed_by: test_rank_one_matrix_drops_the_zero_singular_value
+  visible: public
+- file: reject_negative_rcond_accepted.py
+  mistake: accepts a negative rcond
+  clause: Raises `ValueError` when `A` is not 2-D, is empty, contains NaN or infinity, or when `rcond`
+    is not a finite number `>= 0`.
+  killed_by: test_negative_rcond_raises_value_error
+  visible: public
+- file: reject_scaled_input_in_place.py
+  mistake: rescales a float64 input array in place before the SVD
+  clause: Must not mutate its input.
+  killed_by: test_matches_numpy_pseudo_inverse_on_random_full_rank_matrices
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
