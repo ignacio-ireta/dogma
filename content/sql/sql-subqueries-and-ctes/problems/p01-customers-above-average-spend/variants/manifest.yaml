@@ -70,3 +70,4 @@ uncovered:
   reason: a hard-coded answer is forbidden by K2, and it is not a mistake a learner makes
 sweeps:
 - reject
+- mutants
