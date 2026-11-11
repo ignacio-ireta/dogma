@@ -2,6 +2,70 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_explicit_merge_share.py
+  origin: freedom
+  freedom: customer totals come from a separate per-customer table joined back by customer id, not a transform
+reject:
+- file: reject_empty_input_crashes.py
+  mistake: reads the date type from the first row, so an empty frame raises an index error
+  clause: '`orders`: a `pandas.DataFrame` with columns `order_id` (int64, unique), `customer_id` (int64),
+    `order_date` (datetime64, or ISO-8601 date strings such as `"2024-03-05"`, dates only with no time
+    part) and `amount` (finite float64, signed amounts including refunds and zero allowed). It may have
+    zero rows.'
+  killed_by: test_empty_orders_keep_the_same_columns_and_dtypes
+  visible: hidden
+- file: reject_dtype_breaks_when_empty.py
+  mistake: leaves the day gap as pandas gives it, so an empty frame gets an integer dtype
+  clause: The dtypes above hold for every input, including an empty one.
+  killed_by: test_empty_orders_keep_the_same_columns_and_dtypes
+  visible: hidden
+- file: reject_mutates_input_dates.py
+  mistake: parses string dates on the caller frame before copying it
+  clause: 'Must not mutate `orders`: no added or removed columns, no reordered rows, no changed dtypes.'
+  killed_by: test_input_orders_are_not_mutated
+  visible: hidden
+- file: reject_ties_by_arrival.py
+  mistake: ties on the same date keep arrival order instead of order id
+  clause: 'Returns: a new `pandas.DataFrame` with one row per input row, sorted by `customer_id`, then
+    `order_date`, then `order_id`, all ascending. Its index is a fresh 0 to n-1 RangeIndex. Its columns,
+    in this order, are: - `order_id`: int64, as input. - `customer_id`: int64, as input. - `order_date`:
+    datetime64, the input dates parsed. - `amount`: float64, as input. - `order_seq`: int64. 1 for the
+    customer''s first order in sort order, 2 for the next, and so on. - `share_of_customer_total`: float64.
+    `amount` divided by the sum of that customer''s amounts over all of their orders. `NaN` when that
+    sum is `0.0`. - `days_since_previous_order`: float64. The calendar days from the customer''s previous
+    order date to this order''s date. `0.0` when two orders share a date. `NaN` for the customer''s first
+    order. - `customer_running_total`: float64. The sum of that customer''s amounts up to and including
+    this order, in sort order, accumulated in float64 (a float32 accumulator loses cents on large totals).'
+  killed_by: test_worked_example_matches_problem_md
+  visible: public
+- file: reject_index_not_reset.py
+  mistake: rows are sorted but the index keeps the input labels
+  clause: 'Returns: a new `pandas.DataFrame` with one row per input row, sorted by `customer_id`, then
+    `order_date`, then `order_id`, all ascending. Its index is a fresh 0 to n-1 RangeIndex. Its columns,
+    in this order, are: - `order_id`: int64, as input. - `customer_id`: int64, as input. - `order_date`:
+    datetime64, the input dates parsed. - `amount`: float64, as input. - `order_seq`: int64. 1 for the
+    customer''s first order in sort order, 2 for the next, and so on. - `share_of_customer_total`: float64.
+    `amount` divided by the sum of that customer''s amounts over all of their orders. `NaN` when that
+    sum is `0.0`. - `days_since_previous_order`: float64. The calendar days from the customer''s previous
+    order date to this order''s date. `0.0` when two orders share a date. `NaN` for the customer''s first
+    order. - `customer_running_total`: float64. The sum of that customer''s amounts up to and including
+    this order, in sort order, accumulated in float64 (a float32 accumulator loses cents on large totals).'
+  killed_by: test_random_orders_match_the_duckdb_window_oracle
+  visible: hidden
+- file: reject_float32_running_total.py
+  mistake: amounts are downcast to float32 before the running total losing cents
+  clause: 'Returns: a new `pandas.DataFrame` with one row per input row, sorted by `customer_id`, then
+    `order_date`, then `order_id`, all ascending. Its index is a fresh 0 to n-1 RangeIndex. Its columns,
+    in this order, are: - `order_id`: int64, as input. - `customer_id`: int64, as input. - `order_date`:
+    datetime64, the input dates parsed. - `amount`: float64, as input. - `order_seq`: int64. 1 for the
+    customer''s first order in sort order, 2 for the next, and so on. - `share_of_customer_total`: float64.
+    `amount` divided by the sum of that customer''s amounts over all of their orders. `NaN` when that
+    sum is `0.0`. - `days_since_previous_order`: float64. The calendar days from the customer''s previous
+    order date to this order''s date. `0.0` when two orders share a date. `NaN` for the customer''s first
+    order. - `customer_running_total`: float64. The sum of that customer''s amounts up to and including
+    this order, in sort order, accumulated in float64 (a float32 accumulator loses cents on large totals).'
+  killed_by: test_interview_prep_orders_match_the_duckdb_window_oracle
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
