@@ -2,6 +2,68 @@ problem_version: 3
 accept:
 - file: accept_blind.sql
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_preaggregated_orders.sql
+  origin: freedom
+  freedom: sums orders in a subquery before joining to the customers
+reject:
+- file: reject_sum_in_real.sql
+  mistake: sums amount after casting to REAL so cents drift in large totals
+  clause: 'Returns: one row per current customer, with exactly these columns in this order: `customer_id`,
+    `customer_name`, `order_count`, `total_amount`. - `customer_name`: the name on the current version.
+    - `order_count`: the number of orders with that `customer_id`. An integer, `0` when there are none.
+    - `total_amount`: the sum of those orders'' `amount`. A float, `0.0` when there are none. Never NULL.
+    Sum in DOUBLE, the type of `amount`: a narrower type such as REAL keeps only about seven significant
+    digits, so cents drift in large totals.'
+  killed_by: test_cent_amounts_with_large_totals_keep_double_precision
+  visible: hidden
+- file: reject_versions_not_filtered.sql
+  mistake: treats every customer version as its own customer and skips the is_current filter
+  clause: 'Input: two tables. - `customers`: `customer_id` (BIGINT), `customer_name` (VARCHAR), `is_current`
+    (BOOLEAN). The table keeps one row per version of a customer. Each `customer_id` has exactly one row
+    with `is_current = TRUE`. Older versions have `FALSE`. - `orders`: `order_id` (BIGINT), `customer_id`
+    (BIGINT), `order_date` (DATE), `amount` (DOUBLE, never NULL).'
+  killed_by: test_fixture_totals_match_the_pandas_answer
+  visible: public
+- file: reject_total_null_when_no_orders.sql
+  mistake: customers with no orders get a NULL total instead of zero
+  clause: 'Returns: one row per current customer, with exactly these columns in this order: `customer_id`,
+    `customer_name`, `order_count`, `total_amount`. - `customer_name`: the name on the current version.
+    - `order_count`: the number of orders with that `customer_id`. An integer, `0` when there are none.
+    - `total_amount`: the sum of those orders'' `amount`. A float, `0.0` when there are none. Never NULL.
+    Sum in DOUBLE, the type of `amount`: a narrower type such as REAL keeps only about seven significant
+    digits, so cents drift in large totals.'
+  killed_by: test_fixture_totals_match_the_pandas_answer
+  visible: public
+- file: reject_count_star_counts_null_rows.sql
+  mistake: order count uses COUNT star so customers with no orders count one
+  clause: 'Returns: one row per current customer, with exactly these columns in this order: `customer_id`,
+    `customer_name`, `order_count`, `total_amount`. - `customer_name`: the name on the current version.
+    - `order_count`: the number of orders with that `customer_id`. An integer, `0` when there are none.
+    - `total_amount`: the sum of those orders'' `amount`. A float, `0.0` when there are none. Never NULL.
+    Sum in DOUBLE, the type of `amount`: a narrower type such as REAL keeps only about seven significant
+    digits, so cents drift in large totals.'
+  killed_by: test_fixture_totals_match_the_pandas_answer
+  visible: public
+- file: reject_unknown_customer_orders_kept.sql
+  mistake: orders whose customer is missing from the customer table are added as extra rows
+  clause: Orders whose `customer_id` has no current row in `customers` are excluded from every count and
+    every sum.
+  killed_by: test_fixture_totals_match_the_pandas_answer
+  visible: public
+- file: reject_tie_break_descending_id.sql
+  mistake: equal totals are ordered by customer id descending
+  clause: 'Row order: `total_amount` descending, then `customer_id` ascending. Row order is part of the
+    answer.'
+  killed_by: test_fixture_totals_match_the_pandas_answer
+  visible: public
+- file: reject_empty_customers_gives_placeholder.sql
+  mistake: an empty customer table returns a placeholder row of zeros
+  clause: If `customers` is empty, return zero rows with the same four columns.
+  killed_by: test_no_customers_returns_zero_rows_with_the_four_columns
+  visible: hidden
+uncovered:
+- clause: Must read from `customers` and `orders`. Do not write the answer as literal rows.
+  reason: a hard-coded answer is a cheat that the Constraints already forbid and the hidden tests build
+    their own tables, so it is not a mistake a learner makes
+sweeps:
+- reject

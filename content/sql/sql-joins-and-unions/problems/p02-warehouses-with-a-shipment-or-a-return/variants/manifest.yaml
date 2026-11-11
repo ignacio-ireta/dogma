@@ -2,6 +2,51 @@ problem_version: 3
 accept:
 - file: accept_blind.sql
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_union_all_then_distinct.sql
+  origin: freedom
+  freedom: stacks both tables with UNION ALL and removes duplicates with DISTINCT
+reject:
+- file: reject_union_all_repeats_codes.sql
+  mistake: UNION ALL keeps a row for every shipment and return so shared codes repeat
+  clause: 'Returns: one column, named `warehouse_code`, with one row per distinct non-NULL code that appears
+    in `shipments`, in `returns`, or in both.'
+  killed_by: test_fixture_codes_match_the_python_set_answer
+  visible: public
+- file: reject_trim_spaces_before_union.sql
+  mistake: trims stray spaces so padded codes merge with clean spellings
+  clause: Codes are compared and returned exactly as stored. `bos-1` and `BOS-1` are different codes.
+    Do not change case or spacing.
+  killed_by: test_event_log_dirty_categories_match_the_pandas_union_oracle
+  visible: hidden
+- file: reject_upper_merges_case_variants.sql
+  mistake: upper-cases codes so lowercase and uppercase spellings merge
+  clause: Codes are compared and returned exactly as stored. `bos-1` and `BOS-1` are different codes.
+    Do not change case or spacing.
+  killed_by: test_fixture_codes_match_the_python_set_answer
+  visible: public
+- file: reject_null_filter_on_one_branch.sql
+  mistake: the NULL filter is applied to shipments only so NULL return codes appear
+  clause: NULL codes never appear in the result.
+  killed_by: test_fixture_codes_match_the_python_set_answer
+  visible: public
+- file: reject_sorted_descending.sql
+  mistake: codes are sorted descending instead of ascending
+  clause: 'Row order: `warehouse_code` ascending. Row order is part of the answer.'
+  killed_by: test_fixture_codes_match_the_python_set_answer
+  visible: public
+- file: reject_placeholder_when_no_codes.sql
+  mistake: when no table has a code a placeholder row with the text none is returned
+  clause: If neither table has a non-NULL code, return zero rows with the one column.
+  killed_by: test_random_tables_match_the_python_set_answer
+  visible: hidden
+uncovered:
+- clause: 'Input: two tables. - `shipments`: `shipment_id` (BIGINT), `warehouse_code` (VARCHAR, may be
+    NULL), `shipped_on` (DATE). - `returns`: `return_id` (BIGINT), `warehouse_code` (VARCHAR, may be NULL),
+    `returned_on` (DATE).'
+  reason: the input layout only sets up the tables, and every wrong solution that breaks it also breaks
+    the output bullets
+- clause: Must read from `shipments` and `returns`. Do not write the answer as literal rows.
+  reason: a hard-coded answer is a cheat that the Constraints already forbid and the hidden tests build
+    their own tables, so it is not a mistake a learner makes
+sweeps:
+- reject
