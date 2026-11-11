@@ -87,3 +87,4 @@ uncovered:
   reason: wrong solution survives, see notes
 sweeps:
 - reject
+- mutants
