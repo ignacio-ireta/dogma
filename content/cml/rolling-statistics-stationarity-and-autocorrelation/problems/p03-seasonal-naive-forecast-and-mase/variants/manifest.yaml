@@ -2,6 +2,63 @@ problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_loop_forecast.py
+  origin: freedom
+  freedom: forecast built by a Python loop over the steps, not by one vectorised index, so the values
+    are the same
+- file: accept_python_sum_scale.py
+  origin: freedom
+  freedom: scale summed one term at a time in Python, not with NumPy pairwise summation, so only the last
+    digits differ
+reject:
+- file: reject_scale_uses_test_values.py
+  mistake: builds the scale from train and test values together
+  clause: '`test`: 1-D sequence of finite real numbers, length H >= 1. The realised values for the forecast
+    steps. They are used only for the error, never for the forecast or the scale.'
+  killed_by: test_season_three_forecast_and_mase_match_hand_values
+  visible: public
+- file: reject_accepts_float_season.py
+  mistake: accepts a float or bool season
+  clause: '`season`: integer >= 1. A bool or a float is rejected. `season = 1` is the naive method, which
+    repeats the last value.'
+  killed_by: test_invalid_season_raises_value_error
+  visible: hidden
+- file: reject_forecast_phase_off_by_one.py
+  mistake: repeats the wrong season phase for each step
+  clause: 'Forecast for step h = 1 .. H, with train positions counted from 1 and n = len(train): yhat(n
+    + h) = y(n + h - season * ceil(h / season))'
+  killed_by: test_season_three_forecast_and_mase_match_hand_values
+  visible: public
+- file: reject_scale_drops_first_term.py
+  mistake: drops the first in-sample difference from the scale
+  clause: 'Scale: s = mean of |y_t - y_(t - season)| over t = season + 1 .. n. This has n - season terms.'
+  killed_by: test_season_three_forecast_and_mase_match_hand_values
+  visible: public
+- file: reject_mase_uses_root_mean_square.py
+  mistake: uses root mean square error instead of mean absolute error
+  clause: MASE = (mean over h of |test_h - yhat(n + h)|) / s.
+  killed_by: test_season_three_forecast_and_mase_match_hand_values
+  visible: public
+- file: reject_returns_forecast_as_list.py
+  mistake: returns the forecast as a list
+  clause: 'Returns: `(forecast, mase)`, where `forecast` is a float64 array of length H and `mase` is
+    a float.'
+  killed_by: test_matches_explicit_formulas_on_seeded_series
+  visible: hidden
+- file: reject_empty_test_not_checked.py
+  mistake: accepts an empty test
+  clause: Raises `ValueError` when an input is not 1-D or has NaN or infinity; when `test` is empty; when
+    `season` is not a positive integer; when `len(train) < season + 1`; or when the scale is zero, because
+    the training series repeats exactly at lag `season` and MASE is then undefined.
+  killed_by: test_empty_test_raises_value_error
+  visible: public
+- file: reject_mutates_train_scaling.py
+  mistake: rescales the caller's train array in place
+  clause: Must not mutate its inputs.
+  killed_by: test_shifting_and_scaling_train_and_test_together_leaves_mase_unchanged
+  visible: hidden
+uncovered:
+- clause: '`train`: 1-D sequence of finite real numbers, length n >= season + 1.'
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

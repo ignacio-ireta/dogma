@@ -1,7 +1,37 @@
-problem_version: 5
+problem_version: 6
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+reject:
+- file: reject_raises_only_for_wide_window.py
+  mistake: accepts a min_periods above a window of one
+  clause: Raises `ValueError` when `x` is not 1-D, when it contains NaN or infinity, when `window` or
+    `min_periods` is not a positive integer, or when `min_periods > window`.
+  killed_by: test_min_periods_above_a_window_of_one_raises_value_error
+  visible: hidden
+- file: reject_accepts_float_window.py
+  mistake: accepts a float or bool window
+  clause: '`window`: integer >= 1. A bool or a float is rejected.'
+  killed_by: test_invalid_window_or_min_periods_raises_value_error
+  visible: hidden
+- file: reject_min_periods_zero_accepted.py
+  mistake: accepts min_periods of zero
+  clause: '`min_periods`: integer with 1 <= min_periods <= window, or `None`, which means `window`.'
+  killed_by: test_invalid_window_or_min_periods_raises_value_error
+  visible: hidden
+- file: reject_single_value_std_is_zero.py
+  mistake: gives zero spread instead of NaN for a window of one value
+  clause: 'Returns: `(means, stds)`, two float64 arrays of length n. An entry is NaN wherever the window
+    holds fewer than `min_periods` values. The standard deviation is also NaN wherever the window holds
+    one value.'
+  killed_by: test_min_periods_one_keeps_partial_windows_and_nan_spread_for_one_value
+  visible: public
+- file: reject_rounds_float_input_in_place.py
+  mistake: rounds a float64 input array in place
+  clause: '`x`: 1-D sequence of finite real numbers (list, tuple or NumPy array), length n >= 0. Integers
+    are allowed, and an integer window mean is fractional: it is never rounded. Must not be mutated.'
+  killed_by: test_large_and_small_readings_keep_a_representable_sample_spread
+  visible: public
 uncovered: []
-sweeps: []
+sweeps:
+- reject

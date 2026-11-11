@@ -348,3 +348,12 @@ def test_matches_pandas_on_integer_valued_nile_volumes_across_the_level_change(n
         "rolling std differs from pandas on integer input: check the ddof=1 denominator",
         nan_mistake=STD_NAN,
     )
+
+
+def test_min_periods_above_a_window_of_one_raises_value_error():
+    # The Contract requires min_periods <= window. Here min_periods is 2 and window is 1,
+    # so the call must raise ValueError, even though the window is the smallest allowed.
+    _expect_value_error(
+        lambda: rolling_mean_std([1.0, 2.0, 3.0], 1, min_periods=2),
+        "a min_periods larger than the window was accepted: min_periods must not exceed window",
+    )
