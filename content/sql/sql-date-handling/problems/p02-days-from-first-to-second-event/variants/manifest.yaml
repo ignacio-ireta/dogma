@@ -48,3 +48,4 @@ uncovered:
     since a changed column list or a literal row breaks C4 or C7 too
 sweeps:
 - reject
+- mutants

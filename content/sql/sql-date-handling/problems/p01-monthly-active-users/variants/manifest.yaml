@@ -68,3 +68,4 @@ uncovered:
     without breaking C2 or C3
 sweeps:
 - reject
+- mutants
