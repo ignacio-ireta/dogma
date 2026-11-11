@@ -47,8 +47,27 @@ reject:
   clause: Must not mutate its inputs.
   killed_by: test_targets_above_one_are_not_mutated
   visible: hidden
+- file: reject_targets_single_precision.py
+  mistake: the targets are rounded to single precision before the gradient is computed
+  clause: 'Returns: a NumPy array of shape `(d,)` and dtype `float64`, the gradient of $L$ with respect
+    to `w`.'
+  killed_by: test_targets_are_used_at_full_double_precision
+  visible: hidden
+- file: reject_weights_single_precision.py
+  mistake: the weights are rounded to single precision before the gradient is computed
+  clause: 'Returns: a NumPy array of shape `(d,)` and dtype `float64`, the gradient of $L$ with respect
+    to `w`.'
+  killed_by: test_weights_are_used_at_full_double_precision
+  visible: hidden
+- file: reject_inputs_single_precision.py
+  mistake: the input features are rounded to single precision before the gradient is computed
+  clause: 'Returns: a NumPy array of shape `(d,)` and dtype `float64`, the gradient of $L$ with respect
+    to `w`.'
+  killed_by: test_input_features_are_used_at_full_double_precision
+  visible: hidden
 uncovered:
 - clause: '`w`: 1-D array-like of `d` finite real numbers.'
   reason: a float32 rounding of w survives and no Contract sentence forbids it, so no test added
 sweeps:
 - reject
+- mutants

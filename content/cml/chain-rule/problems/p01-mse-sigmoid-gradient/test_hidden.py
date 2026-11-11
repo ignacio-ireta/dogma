@@ -211,3 +211,45 @@ def test_targets_above_one_are_not_mutated():
         before,
         err_msg="must not mutate its inputs: a target above 1 was changed in place",
     )
+
+
+def test_targets_are_used_at_full_double_precision():
+    # one sample, one weight: the target 0.6 has no exact single-precision form
+    X = np.array([[1.0]])
+    w = np.array([0.5])
+    y = np.array([0.6])
+    s_ref, sp_ref = _sigmoid_and_derivative_decimal(0.5)
+    want = 2.0 * (s_ref - 0.6) * sp_ref * 1.0
+    got = _gradient_or_nan(w, X, y)
+    assert abs(got[0] - want) <= 1e-10 * abs(want), (
+        "the targets were rounded to single precision before the gradient was computed: "
+        "each target must enter the gradient as given, at full double precision"
+    )
+
+
+def test_weights_are_used_at_full_double_precision():
+    # one sample, one weight: the weight 0.1 has no exact single-precision form
+    X = np.array([[1.0]])
+    w = np.array([0.1])
+    y = np.array([0.4])
+    s_ref, sp_ref = _sigmoid_and_derivative_decimal(0.1)
+    want = 2.0 * (s_ref - 0.4) * sp_ref * 1.0
+    got = _gradient_or_nan(w, X, y)
+    assert abs(got[0] - want) <= 1e-10 * abs(want), (
+        "the weights were rounded to single precision before the gradient was computed: "
+        "each weight must be used as given, at full double precision"
+    )
+
+
+def test_input_features_are_used_at_full_double_precision():
+    # one sample, one weight: the feature 1.2345678901 has no exact single-precision form
+    X = np.array([[1.2345678901]])
+    w = np.array([0.5])
+    y = np.array([0.25])
+    s_ref, sp_ref = _sigmoid_and_derivative_decimal(1.2345678901 * 0.5)
+    want = 2.0 * (s_ref - 0.25) * sp_ref * 1.2345678901
+    got = _gradient_or_nan(w, X, y)
+    assert abs(got[0] - want) <= 1e-10 * abs(want), (
+        "the input features were rounded to single precision before the gradient was computed: "
+        "each entry of X must be used as given, at full double precision"
+    )
