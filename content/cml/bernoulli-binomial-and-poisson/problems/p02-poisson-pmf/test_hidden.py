@@ -211,3 +211,16 @@ def test_negative_counts_in_k_are_not_overwritten():
         before,
         err_msg="input k was modified in place: negative counts were overwritten",
     )
+
+
+def test_very_large_count_keeps_its_probability():
+    # A count far above the usual integer range still has a positive, scipy-checked probability.
+    k = np.array([2**31 + 5], dtype=np.int64)
+    lam = 2.0**31 + 5
+    _check_pmf(
+        k,
+        lam,
+        stats.poisson.pmf(k, lam),
+        "a very large count gets the wrong probability: every count must keep its full value",
+        rtol=1e-3,
+    )

@@ -33,6 +33,13 @@ reject:
   clause: Must not mutate its inputs.
   killed_by: test_negative_counts_in_k_are_not_overwritten
   visible: hidden
+- file: reject_count_cut_to_32_bits.py
+  mistake: counts are cut to a narrow integer, so a very large count gets the wrong probability
+  clause: 'Returns: NumPy `float64` array with the same shape as `k`, holding $P(X=k)$. A scalar `k` gives
+    a 0-d array.'
+  killed_by: test_very_large_count_keeps_its_probability
+  visible: hidden
 uncovered: []
 sweeps:
 - reject
+- mutants
