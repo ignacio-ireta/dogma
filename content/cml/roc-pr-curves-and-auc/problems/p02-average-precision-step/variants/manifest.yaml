@@ -2,6 +2,71 @@ problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_reverse_python_sum.py
+  origin: freedom
+  freedom: terms summed in reverse order in plain Python instead of by NumPy
+reject:
+- file: reject_rejects_single_sample.py
+  mistake: a single valid sample is rejected instead of scored
+  clause: '`y_true`: 1-D labels, each 0 or 1. `scores`: 1-D finite real numbers. Both have the same length
+    n, and at least one sample is positive.'
+  killed_by: test_constant_scores_give_the_positive_rate
+  visible: hidden
+- file: reject_ascending_thresholds.py
+  mistake: thresholds visited lowest score first instead of highest first
+  clause: Let t_1 > t_2 > ... > t_m be the distinct score values, highest first. At each t_k, predict
+    positive every sample whose score is greater than or equal to t_k. Let P_k be the precision and R_k
+    the recall of those predictions, with R_k = TP_k / n_pos.
+  killed_by: test_example_is_the_step_sum_of_recall_gain_times_precision
+  visible: public
+- file: reject_plain_mean_of_precisions.py
+  mistake: plain mean of precisions instead of the recall-gain weighted step sum
+  clause: AP = sum over k of (R_k - R_{k-1}) P_k, where R_0 = 0. This is a sum of rectangles of width
+    equal to the recall gained, each at the precision reached at its threshold.
+  killed_by: test_example_is_the_step_sum_of_recall_gain_times_precision
+  visible: public
+- file: reject_splits_tied_scores.py
+  mistake: tied samples split into separate thresholds
+  clause: Tied samples share one threshold. They are never split.
+  killed_by: test_one_tied_threshold_gives_the_prevalence
+  visible: public
+- file: reject_absolute_tie_tolerance.py
+  mistake: scores closer than a fixed absolute gap are merged into one threshold
+  clause: Two scores are tied only when they are exactly equal as floats. No absolute tolerance is applied,
+    so scores that differ by more than one unit in the last place stay distinct when every score is multiplied
+    by a tiny positive constant such as 1e-9.
+  killed_by: test_only_the_order_and_equality_of_scores_matter_at_tiny_magnitudes
+  visible: hidden
+- file: reject_returns_single_precision.py
+  mistake: result rounded through single precision floating point
+  clause: Returns a Python float.
+  killed_by: test_example_is_the_step_sum_of_recall_gain_times_precision
+  visible: public
+- file: reject_no_positive_check_dropped.py
+  mistake: input with no positive sample not rejected
+  clause: Raises `ValueError` for unequal lengths, empty input, labels other than 0 and 1, non-finite
+    scores, and input with no positive sample.
+  killed_by: test_no_positives_raise_value_error
+  visible: public
+- file: reject_centres_input_in_place.py
+  mistake: scores shifted by writing into the caller's array
+  clause: Must not mutate its inputs.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
+- file: reject_harvest_absolute_tolerance_thresholds.py
+  mistake: thresholds within a fixed absolute gap of eight decimals merged into one
+  clause: Two scores are tied only when they are exactly equal as floats. No absolute tolerance is applied,
+    so scores that differ by more than one unit in the last place stay distinct when every score is multiplied
+    by a tiny positive constant such as 1e-9.
+  killed_by: test_only_the_order_and_equality_of_scores_matter_at_tiny_magnitudes
+  visible: hidden
+- file: reject_harvest_round_to_eight_decimals.py
+  mistake: scores rounded to eight decimals before thresholds, merging tiny-scale ties
+  clause: Two scores are tied only when they are exactly equal as floats. No absolute tolerance is applied,
+    so scores that differ by more than one unit in the last place stay distinct when every score is multiplied
+    by a tiny positive constant such as 1e-9.
+  killed_by: test_only_the_order_and_equality_of_scores_matter_at_tiny_magnitudes
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

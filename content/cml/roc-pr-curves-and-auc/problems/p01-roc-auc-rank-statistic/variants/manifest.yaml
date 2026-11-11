@@ -2,6 +2,64 @@ problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_loop_ranks.py
+  origin: freedom
+  freedom: ranks filled by a plain Python loop instead of a vectorised assignment
+reject:
+- file: reject_ties_by_position.py
+  mistake: tied scores ranked by their position in the input instead of sharing their average rank
+  clause: 'Returns a Python float: the fraction of (positive, negative) pairs ordered correctly, where
+    a tied pair counts as 0.5.'
+  killed_by: test_tied_pair_counts_as_half
+  visible: public
+- file: reject_descending_ranks.py
+  mistake: ranks counted from the largest score down instead of ascending
+  clause: 'Method: rank all scores in ascending order, starting at 1. Tied scores share the average of
+    the ranks they occupy. Let R_pos be the sum of the ranks of the positive samples, n_pos the number
+    of positives and n_neg the number of negatives. Then AUC = (R_pos - n_pos (n_pos + 1) / 2) / (n_pos
+    n_neg).'
+  killed_by: test_example_counts_correctly_ordered_pairs
+  visible: public
+- file: reject_absolute_tie_tolerance.py
+  mistake: scores closer than a fixed absolute gap are merged into one tie
+  clause: Two scores are tied only when they are exactly equal as floats. No absolute tolerance is applied,
+    so scores that differ by more than one unit in the last place stay distinct when every score is multiplied
+    by a tiny positive constant such as 1e-9.
+  killed_by: test_only_the_order_and_equality_of_scores_matter_at_tiny_magnitudes
+  visible: hidden
+- file: reject_accepts_infinite_scores.py
+  mistake: positive infinity accepted as a score instead of raising
+  clause: Raises `ValueError` for unequal lengths, empty input, labels other than 0 and 1, non-finite
+    scores, and inputs with no positive or no negative samples (AUC is undefined).
+  killed_by: test_invalid_input_raises_value_error
+  visible: hidden
+- file: reject_centres_input_in_place.py
+  mistake: scores centred by writing into the caller's array
+  clause: Must run in O(n log n) time. Must not mutate its inputs.
+  killed_by: test_inputs_are_not_mutated
+  visible: hidden
+- file: reject_pairwise_loop.py
+  mistake: pairwise comparison of every positive with every negative, quadratic time
+  clause: Must run in O(n log n) time. Must not mutate its inputs.
+  killed_by: test_large_input_is_ranked_quickly_and_matches_scikit_learn
+  visible: hidden
+- file: reject_harvest_absolute_tolerance_ties.py
+  mistake: scores within a fixed absolute gap of eight decimals merged into one tie
+  clause: Two scores are tied only when they are exactly equal as floats. No absolute tolerance is applied,
+    so scores that differ by more than one unit in the last place stay distinct when every score is multiplied
+    by a tiny positive constant such as 1e-9.
+  killed_by: test_only_the_order_and_equality_of_scores_matter_at_tiny_magnitudes
+  visible: hidden
+- file: reject_harvest_round_to_eight_decimals.py
+  mistake: scores rounded to eight decimals before ranking, merging tiny-scale ties
+  clause: Two scores are tied only when they are exactly equal as floats. No absolute tolerance is applied,
+    so scores that differ by more than one unit in the last place stay distinct when every score is multiplied
+    by a tiny positive constant such as 1e-9.
+  killed_by: test_only_the_order_and_equality_of_scores_matter_at_tiny_magnitudes
+  visible: hidden
+uncovered:
+- clause: '`y_true`: 1-D labels, each 0 or 1 (integers or booleans). `scores`: 1-D finite real numbers.
+    Both have the same length n.'
+  reason: wrong solution survives, see notes
+sweeps:
+- reject
