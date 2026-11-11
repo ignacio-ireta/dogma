@@ -59,7 +59,7 @@ def _run_learner_query(con: duckdb.DuckDBPyConnection) -> pd.DataFrame:
     got, problem = _query(con)
     if problem is not None:
         pytest.fail(problem)
-    assert got is not None
+    assert got is not None, "the query returned no result table to compare"
     return got
 
 
@@ -246,7 +246,7 @@ def test_random_sessions_match_the_pandas_computation(seed: int) -> None:
     rows = _random_rows(rng)
     got, problem = _query(_connect(rows))
     if problem is None:
-        assert got is not None
+        assert got is not None, "the query returned no result table to compare"
         problem = _first_problem(got, rows)
     assert problem is None, problem
 
@@ -256,7 +256,7 @@ def test_event_log_sessions_match_the_pandas_aggregation_oracle(
 ) -> None:
     got, problem = _query(_connect(event_log_sessions))
     if problem is None:
-        assert got is not None
+        assert got is not None, "the query returned no result table to compare"
         problem = _first_problem(got, event_log_sessions)
     assert problem is None, problem
 
