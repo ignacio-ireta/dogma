@@ -2,6 +2,77 @@ problem_version: 3
 accept:
 - file: accept_blind.sql
   origin: blind
-reject: []
+- file: accept_filter_clause.sql
+  origin: freedom
+  freedom: counts converted sessions with COUNT FILTER WHERE instead of SUM CASE
+- file: accept_cte_source.sql
+  origin: freedom
+  freedom: reads the table through a CTE named base before aggregating
+reject:
+- file: reject_normalized_channel_names.sql
+  mistake: channel names are lowercased and trimmed before grouping
+  clause: Channel values are grouped exactly as stored; casing and surrounding whitespace are not normalized.
+  killed_by: test_event_log_sessions_match_the_pandas_aggregation_oracle
+  visible: hidden
+- file: reject_null_revenue_rows_dropped.sql
+  mistake: sessions with no recorded revenue are removed before grouping
+  clause: 'Input: one table, `sessions`. - `session_id`: BIGINT, unique. - `channel`: VARCHAR, never NULL.
+    Lowercase names such as `ads`. - `device`: VARCHAR, never NULL. Either `''mobile''` or `''desktop''`.
+    - `converted`: BOOLEAN, never NULL. TRUE when the session converted. - `revenue`: DOUBLE, may be NULL.
+    The revenue recorded on the session. NULL means no revenue is recorded, and it adds nothing to a sum.'
+  killed_by: test_fixture_answer_matches_the_pandas_computation
+  visible: public
+- file: reject_converted_counts_all_rows.sql
+  mistake: converted sessions counted with COUNT so FALSE rows are included
+  clause: 'Returns: one row per channel that has at least one session, with exactly these columns in this
+    order: - `channel`: the channel name. - `sessions`: the number of sessions in the channel, on every
+    device, converted or not. - `converted_sessions`: the number of those sessions with `converted = TRUE`.
+    `0` when none. - `conversion_rate`: `converted_sessions / sessions` as a fraction (0.25 means 25%),
+    rounded to 4 decimal places with `ROUND(x, 4)`. `0.0` when no session converted. Never NULL. - `mobile_revenue`:
+    the sum of `revenue` over the channel''s mobile sessions, converted or not. `0.0` when the channel
+    has no mobile session with a recorded revenue. Never NULL. - `desktop_revenue`: the same sum over
+    the channel''s desktop sessions.'
+  killed_by: test_fixture_answer_matches_the_pandas_computation
+  visible: public
+- file: reject_lowercase_order.sql
+  mistake: rows ordered by the lowercased channel name
+  clause: 'Row order: `channel` ascending.'
+  killed_by: test_event_log_sessions_match_the_pandas_aggregation_oracle
+  visible: hidden
+- file: reject_default_row_when_empty.sql
+  mistake: an empty table returns one placeholder row
+  clause: If `sessions` has no rows, return zero rows with the same six columns.
+  killed_by: test_random_sessions_match_the_pandas_computation
+  visible: hidden
+- file: reject_literal_answer.sql
+  mistake: the fixture answer typed in as literal rows
+  clause: Must read from `sessions`. Do not write the answer as literal rows.
+  killed_by: test_random_sessions_match_the_pandas_computation
+  visible: hidden
+- file: reject_null_revenue_sum.sql
+  mistake: mobile revenue sum is NULL instead of 0.0 when no mobile revenue
+  clause: 'Returns: one row per channel that has at least one session, with exactly these columns in this
+    order: - `channel`: the channel name. - `sessions`: the number of sessions in the channel, on every
+    device, converted or not. - `converted_sessions`: the number of those sessions with `converted = TRUE`.
+    `0` when none. - `conversion_rate`: `converted_sessions / sessions` as a fraction (0.25 means 25%),
+    rounded to 4 decimal places with `ROUND(x, 4)`. `0.0` when no session converted. Never NULL. - `mobile_revenue`:
+    the sum of `revenue` over the channel''s mobile sessions, converted or not. `0.0` when the channel
+    has no mobile session with a recorded revenue. Never NULL. - `desktop_revenue`: the same sum over
+    the channel''s desktop sessions.'
+  killed_by: test_fixture_answer_matches_the_pandas_computation
+  visible: public
+- file: reject_revenue_only_converted.sql
+  mistake: mobile revenue summed only over converted sessions
+  clause: 'Returns: one row per channel that has at least one session, with exactly these columns in this
+    order: - `channel`: the channel name. - `sessions`: the number of sessions in the channel, on every
+    device, converted or not. - `converted_sessions`: the number of those sessions with `converted = TRUE`.
+    `0` when none. - `conversion_rate`: `converted_sessions / sessions` as a fraction (0.25 means 25%),
+    rounded to 4 decimal places with `ROUND(x, 4)`. `0.0` when no session converted. Never NULL. - `mobile_revenue`:
+    the sum of `revenue` over the channel''s mobile sessions, converted or not. `0.0` when the channel
+    has no mobile session with a recorded revenue. Never NULL. - `desktop_revenue`: the same sum over
+    the channel''s desktop sessions.'
+  killed_by: test_random_sessions_match_the_pandas_computation
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject
