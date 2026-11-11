@@ -67,8 +67,8 @@ Work stops and resumes across sessions through the status table and the handoff 
 | I-31b | Data realism content sweep: real and realistic data in the tests, statements and lessons of the affected problems (slices S1–S7) | — | I-31a | done |
 | I-31c | Data realism review: second-agent review per slice, fresh exercise audit, statuses back to `reviewed` | — | I-31b | done |
 | I-32a | Test-strength platform: hidden-test lint, `variants/` manifest, `scripts/exercise_gate.py`, docs and variants for the example problem (plan `2026-11-09-test-strength.md`; a1–a4) | — | I-31a | done |
-| I-32b | Hygiene sweep: messages, ids, Hypothesis flags and `pytest.raises` in hidden tests, outcomes unchanged | — | I-32a, I-31c | in-progress |
-| I-32c | One blind solution per problem, committed as `variants/accept_blind` | — | I-32a, I-31c | in-progress |
+| I-32b | Hygiene sweep: messages, ids, Hypothesis flags and `pytest.raises` in hidden tests, outcomes unchanged | — | I-32a, I-31c | done |
+| I-32c | One blind solution per problem, committed as `variants/accept_blind` | — | I-32a, I-31c | done |
 | I-32d | Reject sweep and mutant triage: one wrong solution per Contract bullet, gaps closed by gated tests | — | I-32b, I-32c | in-progress |
 | I-32e | Test-strength close-out: enforce the rules in the gate, re-audit, report | — | I-32d | todo |
 
@@ -304,6 +304,45 @@ proves equal.
 
 *Newest first. One entry per session or agent: what changed · what was verified (exact commands
 and results) · what's left or blocked.*
+
+### 2026-11-10 · First 170 problems fully swept; hygiene and blind accepts done for all 251 · I-32b and I-32c done, I-32d in progress
+
+- **Done for the 170 problems outside the 48 I-31 topics:** hygiene (I-32b), the reject sweep
+  (I-32d) and the mutant triage (I-32d2). Their manifests now record 1,218 wrong solutions that the
+  tests reject, 321 accepted ones and 101 Contract bullets marked uncovered with a reason. The
+  mutant triage looked at about 418 surviving one-token mutants once: 268 cannot change a result,
+  124 change something no Contract sentence covers, 2 have no usable witness, and 19 hidden tests
+  were added in 13 problems.
+- **Done for the 81 problems in the I-31 topics, after `main` was merged in (`8d744a0`):** a blind
+  accept each (I-32c: 62 from the solutions written blind during I-31, submitted again against
+  the current tests, and 19 from fresh blind solvers; all 81 passed on the first submission) and
+  the hygiene fixes for the 15 problems that had lint findings. `worklist --kind blind` and
+  `worklist --kind hygiene` are empty for all 251 problems.
+- **Tag:** `i32-start` now sits on the merge `8d744a0`, so the version check of the I-31 problems
+  starts from their I-31c versions. The old position (`dc33fc6`) is kept as `i32-start-phase1`
+  for the close-out statistics.
+- **Review by the coordinator:** every topic was gated per problem, verified and Ruff-checked
+  before its commit, and every new hidden test was read against its Contract. In the mutant
+  triage five executor tests did not reach a commit as written (a 4% kill margin; two tests built
+  on an object that imitates a `str`; a non-tensor argument the Raises bullet does not name; a
+  test that depended on the learner's free choice of start vector, replaced by one that does
+  not). The reasons and the saved patches are in `docs/audits/test-strength-decisions.md`.
+- **Verified:** `make check` exit 0 on `fba52e0` (the end of the first 170). `make test-all` exit 0
+  on `8d744a0` in a clean worktree: Ruff and format, strict mypy (180 files), 6 import contracts,
+  content types (251 problems), 2,192 Python tests, 175 topics verified, 187 browser tests and
+  the build, audit clean (5,388 files), `exercise_gate.py variants` 1,539 ok and 0 mismatches in
+  170 problems, 11 e2e/slow tests, 22 Playwright tests. `main` was fast-forwarded to `8d744a0`.
+  Commits after `8d744a0` (blind accepts, hygiene and reject work in the I-31 topics) are gated
+  per problem and not yet under a full gate.
+- **Left:** the reject sweep and the mutant triage for the 81 problems in the I-31 topics (one
+  topic is done), then I-32e (close-out), then the last merge to `main`.
+- **For the owner:** `docs/audits/test-strength-decisions.md` has three entries from this session
+  with a "Waiting for the owner" section each. The main ones: Contract sentences that are missing
+  (minimums in the KV-cache problems, non-tensor arguments, defaults that live only in a
+  signature), the kl-divergence blind accept that disagrees with the reference on an underflowed
+  probability, and the sampling problem whose statement does not fix how the value is drawn.
+  The branch `i32-test-strength` was pushed to `origin` at `dfc48f2` at the owner's request;
+  `main` was not pushed.
 
 ### 2026-11-10 · I-32 merged to main as far as it is swept · I-32b, I-32c, I-32d in progress
 
