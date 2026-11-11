@@ -67,3 +67,4 @@ uncovered:
   reason: cap of eight wrong solutions per problem
 sweeps:
 - reject
+- mutants
