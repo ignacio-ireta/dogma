@@ -59,3 +59,4 @@ uncovered:
     wrong solution
 sweeps:
 - reject
+- mutants
