@@ -60,3 +60,4 @@ uncovered:
     raise tests
 sweeps:
 - reject
+- mutants
