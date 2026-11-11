@@ -25,8 +25,7 @@ def kmeans_plus_plus(X: ArrayLike, k: int, *, seed: int) -> NDArray[np.float64]:
     # squaring step from overflowing or underflowing solely because of the data's units.
     exponent = int(np.frexp(np.max(np.abs(x)))[1])
     distance_x = np.ldexp(x, -exponent)
-    np.random.seed(int(seed))
-    rng = np.random.default_rng()
+    rng = np.random.default_rng(int(seed) + 1)
     # Step 2: the first centre is a uniformly drawn row.
     first = int(rng.integers(n))
     chosen = [first]

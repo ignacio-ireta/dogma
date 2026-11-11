@@ -16,11 +16,6 @@ reject:
   clause: '`k`: integer, with $1 \le k \le n$. Booleans are not integers here.'
   killed_by: test_invalid_inputs_raise_value_error
   visible: hidden
-- file: reject_global_seed_unseeded_draw.py
-  mistake: seeds the global state but draws from an unseeded generator
-  clause: '`seed`: a non-negative integer. It is the only argument of the random generator.'
-  killed_by: test_seed_zero_on_four_points_gives_the_protocol_centres
-  visible: public
 - file: reject_too_few_check_off_by_one.py
   mistake: rejects input with exactly k distinct rows
   clause: '`X` must have at least `k` distinct rows, so that $\sum_i D_i^2 > 0$ at every step.'
@@ -48,8 +43,20 @@ reject:
   clause: 'Returns: a `float64` array of shape `(k, d)`. Each row is a row of `X`, copied.'
   killed_by: test_integer_samples_give_float64_centres
   visible: hidden
+- file: reject_no_shape_guard.py
+  mistake: a sample array with more than two dimensions was accepted
+  clause: 'Raises: `ValueError` for an invalid `k` or `seed`, bad shapes, non-finite values, or too few
+    distinct rows.'
+  killed_by: test_three_dimensional_input_raises_value_error
+  visible: hidden
+- file: reject_generator_seeded_with_shifted_seed.py
+  mistake: the generator is seeded with a number other than the seed, so the draws do not follow the protocol
+  clause: '`seed`: a non-negative integer. It is the only argument of the random generator.'
+  killed_by: test_seed_zero_on_four_points_gives_the_protocol_centres
+  visible: public
 uncovered:
 - clause: 'Returns: a `float64` array of shape `(k, d)`. Each row is a row of `X`, copied.'
   reason: wrong solution survives, see notes
 sweeps:
 - reject
+- mutants

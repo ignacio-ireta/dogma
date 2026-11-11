@@ -224,3 +224,9 @@ def test_integer_samples_give_float64_centres():
     # The samples are integers, but the Contract promises a float64 array of centres.
     out = _call([[0, 1], [3, 7], [2, 2]], 2, 0)
     assert out.dtype == np.float64, "the centres must be a float64 array whatever the dtype of X"
+
+
+def test_three_dimensional_input_raises_value_error():
+    _expect_value_error(
+        "a sample array with more than two dimensions must be rejected", np.ones((3, 2, 2)), 1, 0
+    )
