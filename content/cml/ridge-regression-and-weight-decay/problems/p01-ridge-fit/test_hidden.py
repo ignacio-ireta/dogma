@@ -408,8 +408,8 @@ def test_alpha_zero_gives_exact_least_squares_on_a_nearly_collinear_design():
 
 
 def test_alpha_zero_with_intercept_checks_the_rank_after_centring():
-    a = np.array([1.0, 2.0, 3.0, 4.0])
-    X = np.column_stack([a, a + 8.0])
+    a = np.array([0.1, 0.2, 0.3, 0.4])
+    X = np.column_stack([a, a + 0.7])
     y = np.array([1.0, 2.0, 2.5, 4.0])
     _expect_value_error(
         lambda: ridge_fit(X, y, 0.0, fit_intercept=True),
