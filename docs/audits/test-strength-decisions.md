@@ -387,3 +387,133 @@ None.
 - `rl/sarsa-and-expected-sarsa/p01-sarsa-and-expected-sarsa-updates`: reject_checks_a_next_when_terminal.py: test_terminal_next_state_targets_the_reward_alone shows kind=bare_exception
 - `rl/sarsa-and-expected-sarsa/p01-sarsa-and-expected-sarsa-updates`: reject_rejects_integer_reward.py: test_outputs_are_float_tables_of_the_input_shape shows kind=bare_exception
 - `rl/sarsa-and-expected-sarsa/p01-sarsa-and-expected-sarsa-updates`: reject_rejects_integer_table.py: test_outputs_are_float_tables_of_the_input_shape shows kind=bare_exception
+
+## 2026-11-10 · Mutant triage (I-32d2) for the first 170 problems
+
+Scope: the 170 problems outside the 48 I-31 topics. The coordinator ran step 1 (mutate, summary,
+survivors) for all 120 topics itself and executors started at step 2, two or three topics each.
+About 418 surviving one-token mutants were looked at once: 268 cannot change a result or an
+error type, 124 change something no Contract sentence covers, 2 have no usable witness, and 19
+hidden tests were added in 13 problems. 26 topics had no surviving mutant.
+
+### Waiting for the owner
+
+Contract gaps that the triage found and did not close, because a test would need a sentence the
+statement does not have:
+
+- `inf/kv-cache-size-arithmetic` (both problems): the Raises bullet says `ValueError` when
+  `num_layers`, `num_kv_heads` or `head_dim` is "below its minimum", and no sentence states that
+  minimum. Six mutants that lower a minimum from 1 to 0 survive. The existing tests already
+  assume 1 for `num_layers`.
+- Non-tensor arguments: `dl/adam`, `dl/sgd-with-momentum`, `dl/adamw-decoupled-weight-decay`,
+  `dl/scaled-dot-product-attention` and `llm/direct-preference-optimization-dpo/p01` raise
+  `ValueError` for a list where a tensor is expected, but their Raises bullets list only shape,
+  dtype and range mistakes. Mutants that drop the type check survive in all five. One wording
+  for all of them would settle it.
+- Defaults that live only in the signature: `eps` in `dl/layer-normalization/p01` and
+  `dl/rmsnorm/p01`, `merge` in `llm/lora-adapters/p01`, the tolerance in
+  `rl/mdps-and-discounted-returns/p02`. A changed default survives in each.
+- `dl/scaled-dot-product-attention/p01`: the Raises bullet does not name a `k` and a `v` with a
+  different number of positions.
+- `cml/sigmoid-and-log-odds/p02-logit`: the body of the statement says the function "keeps its
+  relative precision across the whole open interval", and that sentence is not a Contract
+  bullet. Two mutants that lose precision (about 1e-12 near one half, 1e-11 near one) survive.
+- `dl/training-an-mlp-from-scratch/p01`: "Convert to float64" cannot be enforced while the
+  oracle tolerance of the file is `rtol=1e-6`. See the withdrawn test below.
+- `cml/bernoulli-binomial-and-poisson/p01`: bullets C1 and C5 do not say which applies to an
+  infinite `k`.
+- `llm/temperature-top-k-and-top-p-sampling/p02`: 8 of 10 survivors sit in the rounding guards
+  or turn on how the uniform value is drawn. Same open question as in the previous entry.
+
+### Decided by the coordinator on review
+
+Five tests written by executors did not reach a commit as written:
+
+- `dl/training-an-mlp-from-scratch/p01`: a test for inputs cast to float32 was withdrawn. The
+  wrong solution missed the tolerance by a factor of 1.04 on one array and passed on the others.
+- `llm/chat-templates-and-tool-call-formats/p01`: two tests whose role was a
+  `collections.UserString` were withdrawn. Bullet C3 says a non-`str` role raises `ValueError`,
+  so by the letter they are promised. They were judged an imitation of a valid value, not a
+  realistic mistake: a plain membership check renders such a role correctly. The owner can
+  restore them from the saved patch if the letter of C3 should be enforced.
+- `llm/direct-preference-optimization-dpo/p01`: a test that required `ValueError` for a list in
+  place of `logits` was withdrawn, for the reason given under "Non-tensor arguments".
+- `cml/eigenvalues-and-eigenvectors/p01`: a test for the stopping rule with a negative
+  eigenvalue depended on the learner's start vector, which bullet C4 leaves free. A simulation
+  of the stated rule over 10,000 start vectors needed more updates than the test allowed for 31%
+  of them. It was replaced by a design that holds for every start vector (two eigenvalues of the
+  same sign and a tolerance for which the stop already holds after the first update).
+
+Each withdrawn mutant is recorded as `unpromised` with the reason. The patches and the wrong
+solutions are under `var/audit-i32/coord/held/`. Other review changes before commit:
+
+- `cml/bernoulli-binomial-and-poisson/p02`: the tolerance of the new test for a count above
+  2^31 was loosened from `rtol=1e-6` to `1e-3`. At that size the log-space sum has a float
+  spacing of 7.6e-6 relative, so the tighter bound could fail a correct solution by one unit in
+  the last place of `lgamma`. The wrong solution returns 0, so the test still rejects it.
+- `cml/bias-variance-decomposition/p01`: two failure messages that named the reference's
+  internals were reworded.
+- `cml/vector-operations/p01`: an `unpromised` call was overruled and one test added. A
+  zero-dimensional array is not 1-D, so bullet C3 promises `ValueError`.
+- `cml/lagrange-multipliers/p01`: five guard mutants were judged "same behaviour" by reasoning
+  only. The coordinator ran them against the reference on 1,680 combinations of malformed and
+  valid inputs and found no difference in result or exception class.
+- From the second wave on, executors got three extra rules with their brief: no test on a
+  precision-only mutant unless it misses the tolerance by a factor of ten; no test built on an
+  object that imitates a valid value; no test for an argument of the wrong kind unless the
+  Raises bullet names it. They are in `var/audit-i32/coord/d2-brief.md`, not in the runbook.
+
+### For a person to look at
+
+- `llm/moe-top-k-routing` (both problems): the two new tie-rule tests are sound, but the wrong
+  solutions they reject rely on what `torch.sort(stable=False)` does with ties on this platform
+  (it reorders from about 64 experts up). On another platform those two reject files could pass
+  the tests, and `exercise_gate.py variants` would then report a mismatch.
+- `cml/chain-rule/p01`: three new tests compare against the file's Decimal reference at a
+  relative 1e-10, tighter than the older tests of the file. Measured margins: the reference is
+  near 1e-16, the wrong solutions are 29 to 11,000 times over the bound.
+- `cml/maximum-likelihood-and-map/p02`: a `>` to `>=` mutant at `alpha == 1` raises
+  `ZeroDivisionError` for one corner input where the reference returns zeros. Recorded as
+  `unpromised`, because the case turns on the last digit of a float.
+- `rl/action-value-estimates/p01`: a mutant that casts action indices to int32 breaks bullet C6
+  only for indices from 2^31 up. A test would need an array of more than 16 GB (`no-witness`).
+- `cml/bias-variance-decomposition/p01`: the `overreach` and `no-witness` rows below are one
+  case. The witness needed exact summation to keep a small term next to two cancelling huge
+  ones, and the Contract does not promise that, so the blind accept is right to differ.
+- Process: the hand-out gave each executor two or three topics where the coordinator runbook
+  says one, and several `survivors.json` files list a mutant twice (two step-1 runs overlapped
+  on a few topics). Each key was triaged once.
+- 123 `unpromised` and 2 `inspect` rows are not listed here.
+  `scripts/exercise_gate.py ledger --all --kind unpromised --kind inspect` prints them.
+
+### Checked
+
+`make check` exit 0 on `fba52e0` in a clean worktree: Ruff and format (3,781 files), strict mypy
+(180 files), 6 import contracts, content types (251 problems), 2,192 Python tests, 175 topics
+verified, 187 browser tests and the build, privacy audit clean. Every topic was also gated per
+problem, verified and Ruff-checked before its commit. `make test-all` was not run on this head.
+
+### question
+
+None.
+
+### overreach
+
+- `cml/bias-variance-decomposition/p01-bias-variance-from-predictions`: mean of models 1e308, -1e308 and 3 (true mean 1) with truth 1: the exact small contribution is lost in a plain sum, fails accept_blind. No retry
+
+### no-witness
+
+- `cml/bias-variance-decomposition/p01-bias-variance-from-predictions`: mutant b9e4ad8b0b93d4ee breaks C4 (sum instead of mean in the overflow branch); the only nonzero-mean witness tried failed accept_blind, so no test added
+- `rl/action-value-estimates/p01-incremental-action-values`: mutant 15fa6334e1fd822f casts action indices to int32 and differs from the reference only for indices from 2 to the 31 up, breaks C6, a test would need an array over 16 GB, no test added
+
+### reference-doubt
+
+None.
+
+### blocked
+
+None.
+
+### message-defect
+
+None in this sweep (the mutant triage adds no wrong solutions except with a new test).
