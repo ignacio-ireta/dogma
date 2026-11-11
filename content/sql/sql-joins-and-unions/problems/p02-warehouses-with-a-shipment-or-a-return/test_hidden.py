@@ -161,7 +161,7 @@ def _random_rows(rng: np.random.Generator, n: int, first_id: int) -> list[tuple[
     return rows
 
 
-@settings(max_examples=60, deadline=None)
+@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(seed=st.integers(min_value=0, max_value=10_000))
 def test_random_tables_match_the_python_set_answer(seed: int) -> None:
     rng = np.random.default_rng(seed)
