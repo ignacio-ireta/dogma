@@ -1,5 +1,5 @@
 id: cml/bootstrap-and-permutation-resampling/p01-bootstrap-percentile-ci
-version: 4
+version: 5
 title: Bootstrap percentile interval
 language: python
 runtime: py-numpy

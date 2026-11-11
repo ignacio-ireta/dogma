@@ -2,6 +2,61 @@ problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_vectorised_draws.py
+  origin: freedom
+  freedom: draws every relabelling at once from random keys, a different stream of random numbers
+reject:
+- file: reject_truncates_float_values.py
+  mistake: casts values to whole numbers so non-integer data is truncated
+  clause: '`a`, `b`: 1-D sequences of finite real numbers (lists or NumPy arrays), each non-empty. Integers
+    are allowed.'
+  killed_by: test_p_value_is_close_to_exact_enumeration
+  visible: hidden
+- file: reject_default_permutations_1000.py
+  mistake: default number of relabellings is 1000 not 5000
+  clause: '`n_permutations`: integer `≥ 1`. Default `5000`.'
+  killed_by: test_default_number_of_permutations_is_5000
+  visible: hidden
+- file: reject_ignores_seed.py
+  mistake: draws from an unseeded generator so the seed does not fix the result
+  clause: '`seed`: required integer. For a fixed seed the result is deterministic.'
+  killed_by: test_same_seed_gives_the_same_p_value
+  visible: hidden
+- file: reject_loose_tie_tolerance.py
+  mistake: uses a loose relative tolerance that counts near-ties as extreme
+  clause: 'Algorithm: 1. `d_obs = |mean(a) − mean(b)|`. 2. Pool the two samples. Draw `n_permutations`
+    random relabellings (shuffles of the pooled sample). In each shuffle the first `len(a)` values form
+    a new group A* and the rest form B*. Set `d* = |mean(A*) − mean(B*)|`. 3. A shuffle counts as *at
+    least as extreme* when `d* ≥ d_obs · (1 − 1e-9)`. The relative tolerance absorbs floating-point rounding
+    on exact ties, because two relabellings can give the same difference mathematically while their float
+    results differ in the last bit. 4. `p = (count + 1) / (n_permutations + 1)`, where `count` is the
+    number of shuffles that counted.'
+  killed_by: test_a_near_tie_below_the_observed_difference_is_not_counted
+  visible: hidden
+- file: reject_p_without_correction.py
+  mistake: reports count over n without the plus one correction
+  clause: 'Algorithm: 1. `d_obs = |mean(a) − mean(b)|`. 2. Pool the two samples. Draw `n_permutations`
+    random relabellings (shuffles of the pooled sample). In each shuffle the first `len(a)` values form
+    a new group A* and the rest form B*. Set `d* = |mean(A*) − mean(B*)|`. 3. A shuffle counts as *at
+    least as extreme* when `d* ≥ d_obs · (1 − 1e-9)`. The relative tolerance absorbs floating-point rounding
+    on exact ties, because two relabellings can give the same difference mathematically while their float
+    results differ in the last bit. 4. `p = (count + 1) / (n_permutations + 1)`, where `count` is the
+    number of shuffles that counted.'
+  killed_by: test_p_value_has_the_plus_one_form_and_is_never_zero
+  visible: hidden
+- file: reject_nan_not_checked.py
+  mistake: accepts NaN and infinite observations instead of raising
+  clause: Raises `ValueError` when `a` or `b` is not 1-D, when either is empty, when a value is NaN or
+    infinite, or when `n_permutations < 1`.
+  killed_by: test_invalid_input_raises_value_error
+  visible: hidden
+- file: reject_sorts_caller_array.py
+  mistake: sorts the first input array in place
+  clause: Must not mutate its inputs.
+  killed_by: test_input_arrays_are_not_mutated
+  visible: hidden
+uncovered:
+- clause: 'Returns: a float in `(0, 1]`.'
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

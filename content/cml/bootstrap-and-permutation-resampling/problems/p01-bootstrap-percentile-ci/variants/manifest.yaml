@@ -1,7 +1,62 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
-uncovered: []
-sweeps: []
+- file: accept_manual_quantile.py
+  origin: freedom
+  freedom: computes the two quantiles by sorting the replicates and interpolating by hand, a different
+    rounding path
+reject:
+- file: reject_rejects_single_value.py
+  mistake: rejects a one-value sample
+  clause: '`x`: 1-D sequence of finite real numbers (a list or a NumPy array) of length `n ≥ 1`. Integers
+    are allowed, and so are float32 arrays: `statistic` always receives float64 resamples.'
+  killed_by: test_a_single_value_sample_gives_a_point_interval
+  visible: hidden
+- file: reject_float32_not_cast.py
+  mistake: keeps float32 input in float32 so the statistic gets float32 resamples
+  clause: '`statistic`: a function that takes a 1-D float array and returns a float. It is called once
+    per resample, on a resample of length `n`.'
+  killed_by: test_matches_protocol_on_float32_storage_of_iris_sepal_lengths
+  visible: hidden
+- file: reject_default_resamples_1000.py
+  mistake: default number of resamples is 1000 not 2000
+  clause: '`n_resamples`: integer `≥ 1`. Default `2000`.'
+  killed_by: test_default_resample_count_and_confidence_follow_the_protocol
+  visible: hidden
+- file: reject_ignores_seed.py
+  mistake: draws from an unseeded generator so the seed does not fix the result
+  clause: '`seed`: required integer. The result depends only on `x`, `statistic`, `n_resamples`, `confidence`
+    and `seed`. Do not use unseeded or global randomness.'
+  killed_by: test_matches_protocol_reference_for_seeded_samples
+  visible: hidden
+- file: reject_returns_hi_first.py
+  mistake: returns the upper bound before the lower bound
+  clause: 'Returns: a tuple `(lo, hi)` of two floats, with `lo ≤ hi`.'
+  killed_by: test_example_interval_follows_the_resampling_protocol
+  visible: public
+- file: reject_alpha_not_halved.py
+  mistake: uses alpha instead of alpha over two for the quantile levels
+  clause: '**Resampling protocol** (the grader checks against this exact draw): 1. `rng = np.random.default_rng(seed)`
+    2. `idx = rng.integers(0, n, size=(n_resamples, n))`. Row `b` is resample `b`, drawn with replacement.
+    Repeated values are separate rows: a value that appears `k` times in `x` has `k` rows to be drawn
+    from. 3. Replicate `b` is `statistic(x[idx[b]])`. 4. With `alpha = 1 - confidence`: `lo, hi = np.quantile(replicates,
+    [alpha / 2, 1 - alpha / 2], method="linear")`.'
+  killed_by: test_example_interval_follows_the_resampling_protocol
+  visible: public
+- file: reject_no_nan_check.py
+  mistake: accepts NaN and infinite observations instead of raising
+  clause: Raises `ValueError` when `x` is not 1-D, when it is empty, when it contains NaN or infinity,
+    when `n_resamples < 1`, or when `confidence` is not strictly between 0 and 1.
+  killed_by: test_invalid_input_raises_value_error
+  visible: hidden
+- file: reject_rounds_caller_array.py
+  mistake: rounds the caller's float array in place
+  clause: Must not mutate its input.
+  killed_by: test_same_seed_reproduces_the_interval_exactly
+  visible: hidden
+uncovered:
+- clause: '`confidence`: a float strictly between 0 and 1. Default `0.95`.'
+  reason: cap of eight wrong solutions per problem
+sweeps:
+- reject

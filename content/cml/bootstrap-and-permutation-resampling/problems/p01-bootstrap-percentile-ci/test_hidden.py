@@ -221,3 +221,13 @@ def test_matches_protocol_on_float32_storage_of_iris_sepal_lengths(iris_sepal_le
         atol=1e-12,
         err_msg="float32 input is resampled in float32: convert x to float64 before the draws",
     )
+
+
+def test_a_single_value_sample_gives_a_point_interval():
+    try:
+        lo, hi = bootstrap_percentile_ci([4.0], np.mean, seed=0)
+    except ValueError:
+        pytest.fail("a sample of one value is valid: it must return an interval, not raise")
+    assert (lo, hi) == (4.0, 4.0), (
+        "a sample of one value is valid: every resample repeats it, so the interval is a point"
+    )
