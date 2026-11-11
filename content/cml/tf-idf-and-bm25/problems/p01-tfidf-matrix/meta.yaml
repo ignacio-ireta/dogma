@@ -1,5 +1,5 @@
 id: cml/tf-idf-and-bm25/p01-tfidf-matrix
-version: 4                      # bump when tests, tolerances or the contract change
+version: 5                      # bump when tests, tolerances or the contract change
 title: TF-IDF matrix with l2 normalisation
 language: python
 runtime: py-numpy

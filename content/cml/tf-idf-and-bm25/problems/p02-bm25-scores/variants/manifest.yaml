@@ -1,7 +1,69 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_repeat_as_multiplier.py
+  origin: freedom
+  freedom: a repeated query token is scored once and multiplied by its count, so the sum runs over distinct
+    tokens
+reject:
+- file: reject_sorts_caller_query_in_place.py
+  mistake: sorts the caller's query list in place
+  clause: Must not mutate its inputs.
+  killed_by: test_query_list_keeps_its_original_order
+  visible: hidden
+- file: reject_repeated_query_token_counted_once.py
+  mistake: scores a repeated query token only once
+  clause: '`query_tokens`: a sequence of `str`. It may be empty. Each occurrence counts: a token that
+    appears twice in the query contributes twice.'
+  killed_by: test_matches_the_numpy_reference_on_random_collections
+  visible: hidden
+- file: reject_empty_document_refused.py
+  mistake: refuses an empty document instead of scoring it
+  clause: '`docs_tokens`: a non-empty sequence of documents. Each document is a sequence of `str` tokens
+    and may be empty. Let `N` be the number of documents.'
+  killed_by: test_matches_the_numpy_reference_on_random_collections
+  visible: hidden
+- file: reject_avgdl_skips_empty_documents.py
+  mistake: average length leaves out the empty documents
+  clause: For a document `D`, let `|D|` be its token count, and `f(q, D)` the number of times token `q`
+    occurs in `D`. Let `avgdl` be the mean of `|D|` over **all** `N` documents, empty ones included.
+  killed_by: test_matches_the_numpy_reference_on_random_collections
+  visible: hidden
+- file: reject_idf_without_lucene_plus_one.py
+  mistake: idf is the classic form without the plus one inside the log
+  clause: 'Let `n(q)` be the number of documents that contain `q` at least once. The inverse document
+    frequency is the Lucene form, which is always positive: `idf(q) = ln(1 + (N - n(q) + 0.5) / (n(q)
+    + 0.5))`.'
+  killed_by: test_single_term_scores_follow_idf_saturation_and_length
+  visible: public
+- file: reject_length_norm_divisor_shifted.py
+  mistake: length normalisation divides by avgdl plus one
+  clause: 'Score of `D`: the sum over the query tokens `q` of `idf(q) * f(q, D) * (k1 + 1) / (f(q, D)
+    + k1 * (1 - b + b * |D| / avgdl))`. A term with `f(q, D) = 0` contributes `0`. A query token that
+    is in no document contributes `0`.'
+  killed_by: test_single_term_scores_follow_idf_saturation_and_length
+  visible: public
+- file: reject_norm_precomputed_crashes_on_all_empty.py
+  mistake: length norm precomputed for every document so an all-empty collection divides by zero
+  clause: If every document is empty, `avgdl` is 0 and every score is `0.0`. Do not divide by zero.
+  killed_by: test_collection_of_empty_documents_gives_zeros
+  visible: hidden
+- file: reject_empty_query_raises.py
+  mistake: an empty query raises instead of giving zeros
+  clause: An empty query gives `0.0` for every document.
+  killed_by: test_empty_query_scores_zero_for_every_document
+  visible: public
+- file: reject_scores_in_reverse_order.py
+  mistake: scores come back in reverse input order
+  clause: 'Returns: a list of `N` Python floats, in input order.'
+  killed_by: test_single_term_scores_follow_idf_saturation_and_length
+  visible: public
+- file: reject_b_bounds_exclude_endpoints.py
+  mistake: b equal to 0 or 1 is refused
+  clause: 'Raises `ValueError` for: an empty `docs_tokens`, a negative `k1`, and a `b` outside `[0, 1]`.'
+  killed_by: test_with_b_zero_document_length_does_not_matter
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

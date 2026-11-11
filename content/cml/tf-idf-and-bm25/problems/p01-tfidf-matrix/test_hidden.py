@@ -269,3 +269,12 @@ def test_curly_apostrophes_and_em_dashes_separate_words_as_on_real_prose(prose: 
         "'don\u2019t' into 'dont' or 'word\u2014word' into one word"
     )
     assert np.allclose(got_matrix, want_matrix, rtol=1e-9, atol=1e-12), MATRIX_MISTAKE
+
+
+def test_documents_with_capitals_are_left_as_the_caller_wrote_them() -> None:
+    docs = ["Cat Sat On The Mat", "DOG dog Dog"]
+    before = list(docs)
+    _solve(docs)
+    assert docs == before, (
+        "the caller's documents were changed: lowercase each document into a new string instead"
+    )

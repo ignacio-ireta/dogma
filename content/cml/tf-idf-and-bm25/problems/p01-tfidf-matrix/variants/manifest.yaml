@@ -1,7 +1,73 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
-reject: []
+- file: accept_norm_via_linalg.py
+  origin: freedom
+  freedom: row lengths computed with np.linalg.norm instead of a sum of squares and a square root
+reject:
+- file: reject_lowercases_caller_list.py
+  mistake: lowercases the caller's list of documents in place
+  clause: Must not mutate its inputs.
+  killed_by: test_documents_with_capitals_are_left_as_the_caller_wrote_them
+  visible: hidden
+- file: reject_single_document_squeezed.py
+  mistake: drops the row axis when only one document is given
+  clause: '`docs`: a non-empty sequence of `str`. `n` is its length.'
+  killed_by: test_matches_scikit_learn_with_a_fixed_vocabulary
+  visible: hidden
+- file: reject_ascii_token_pattern.py
+  mistake: uses ASCII-only word characters so accented letters split words
+  clause: '**Tokens.** Lowercase each document with `str.lower`, then take every match of the regular
+    expression `(?u)\b\w\w+\b`. A token is a run of two or more word characters, so single characters
+    such as `a`, `I` and `7` are dropped, and `42` is kept. Punctuation separates tokens, including a
+    curly apostrophe (`’`) and an em dash (`—`): `don’t` gives `don`, and `word—word` gives two tokens.'
+  killed_by: test_matches_scikit_learn_on_random_corpora
+  visible: hidden
+- file: reject_log_scaled_tf.py
+  mistake: log-scales the term counts instead of using raw counts
+  clause: '**Term frequency** `tf(d, t)`: the raw count of token `t` in document `d`. No logarithm.'
+  killed_by: test_matches_scikit_learn_on_random_corpora
+  visible: hidden
+- file: reject_df_counts_occurrences.py
+  mistake: document frequency counts occurrences instead of documents
+  clause: '**Document frequency** `df(t)`: the number of documents that contain `t`, counted over all
+    of `docs`, even when a `vocabulary` is given.'
+  killed_by: test_two_documents_with_repeated_term
+  visible: public
+- file: reject_idf_without_one_in_numerator.py
+  mistake: idf uses n instead of 1 + n in the numerator
+  clause: '**Inverse document frequency:** `idf(t) = ln((1 + n) / (1 + df(t))) + 1`. A term present in
+    every document has `idf = 1`.'
+  killed_by: test_two_documents_with_repeated_term
+  visible: public
+- file: reject_l1_row_normalised.py
+  mistake: divides each row by its l1 norm instead of its l2 norm
+  clause: '**Weight:** `tf(d, t) * idf(t)`. Each row is then divided by its l2 norm. A row whose weights
+    are all zero (an empty document, or only dropped tokens) stays all zeros.'
+  killed_by: test_two_documents_with_repeated_term
+  visible: public
+- file: reject_vocabulary_in_first_seen_order.py
+  mistake: default vocabulary keeps first-seen order instead of sorting
+  clause: '**Vocabulary.** If `vocabulary` is `None`, the terms are every token that occurs in `docs`,
+    sorted in ascending string order. Otherwise the terms are the given strings in the given order, which
+    fixes the column order. Tokens that are not in the given vocabulary are ignored. A vocabulary term
+    that no document contains is still a column (its weight is 0).'
+  killed_by: test_matches_scikit_learn_on_random_corpora
+  visible: hidden
+- file: reject_float32_matrix.py
+  mistake: builds the matrix as float32 instead of float64
+  clause: 'Returns `(matrix, vocabulary)`: `matrix` is a NumPy `float64` array of shape `(n, number of
+    terms)`, and `vocabulary` is a new `list[str]` naming the columns.'
+  killed_by: test_matches_scikit_learn_on_random_corpora
+  visible: hidden
+- file: reject_empty_corpus_check_dropped.py
+  mistake: drops the check that raises on an empty corpus
+  clause: 'Raises `ValueError` for: an empty `docs`; a `vocabulary` that repeats a term; and an empty
+    vocabulary, which happens when no token survives (no document has a two-character token and no vocabulary
+    is given, or the given vocabulary is empty).'
+  killed_by: test_empty_corpus_raises_even_with_a_fixed_vocabulary
+  visible: hidden
 uncovered: []
-sweeps: []
+sweeps:
+- reject

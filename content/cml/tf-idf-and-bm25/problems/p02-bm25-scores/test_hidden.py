@@ -255,3 +255,13 @@ def test_large_collection_finishes_quickly_and_matches_the_reference() -> None:
         "per document"
     )
     assert np.allclose(got, want, rtol=1e-9, atol=1e-12), SCORE_MISTAKE
+
+
+def test_query_list_keeps_its_original_order() -> None:
+    query = ["sat", "cat", "dog"]
+    docs = [["cat", "sat"], ["dog"], ["cat", "cat", "dog"]]
+    before = list(query)
+    bm25_scores(query, docs)
+    assert query == before, (
+        "the caller's query list was reordered: read the query tokens without sorting them in place"
+    )
