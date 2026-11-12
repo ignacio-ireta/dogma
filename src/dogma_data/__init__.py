@@ -7,6 +7,7 @@ functions that need them.
 """
 
 from dogma_data import synth
+from dogma_data.draws import sample_rows, sample_window, sampleable
 from dogma_data.real import (
     RealData,
     available,
@@ -15,6 +16,8 @@ from dogma_data.real import (
     load_frame,
     load_series,
     load_text,
+    retail_events,
+    retail_invoices,
 )
 from dogma_data.seeds import rng
 
@@ -26,6 +29,11 @@ __all__ = [
     "load_frame",
     "load_series",
     "load_text",
+    "retail_events",
+    "retail_invoices",
     "rng",
+    "sample_rows",
+    "sample_window",
+    "sampleable",
     "synth",
 ]

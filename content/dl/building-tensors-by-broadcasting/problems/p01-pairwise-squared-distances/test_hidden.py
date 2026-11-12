@@ -8,7 +8,19 @@ from hypothesis.extra.numpy import arrays
 from scipy.spatial.distance import cdist
 from submission import pairwise_sq_distances
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 FINITE = st.floats(min_value=-1e3, max_value=1e3, allow_nan=False, allow_infinity=False)
+
+
+def _real_rows(gen, n, d):
+    """n real rows with d standardised features: breast_cancer, or digits when d is above 30.
+
+    The features are correlated and skewed, and many values repeat, as measured data does.
+    """
+    name = "breast_cancer" if d <= 30 else "digits"
+    return sample_rows(name, gen, n, d, standardize=True)[0]
 
 
 @st.composite
@@ -60,11 +72,11 @@ def _raised_value_error(call, mistake):
 
 
 def test_matches_scipy_cdist_on_random_gaussian_points():
-    rng = np.random.default_rng(0)
+    rng = data_rng("pairwise-sq-distances-p01:cdist")
     shapes = [(5, 5, 3), (4, 7, 3), (7, 4, 3), (1, 6, 2), (6, 1, 2), (3, 4, 1), (10, 12, 50)]
     for n, m, d in shapes:
-        X = rng.normal(size=(n, d))
-        Y = rng.normal(size=(m, d))
+        points = _real_rows(rng, n + m, d)
+        X, Y = points[:n], points[n:]
         _assert_close(
             pairwise_sq_distances(X, Y),
             cdist(X, Y, "sqeuclidean"),
@@ -78,9 +90,9 @@ def test_matches_scipy_cdist_on_random_gaussian_points():
 
 
 def test_points_far_from_origin_keep_their_small_distances():
-    rng = np.random.default_rng(2)
-    X = 1e8 + rng.normal(size=(6, 3))
-    Y = 1e8 + rng.normal(size=(5, 3))
+    points = _real_rows(data_rng("pairwise-sq-distances-p01:offset"), 11, 3)
+    X = 1e8 + points[:6]
+    Y = 1e8 + points[6:]
     _assert_close(
         pairwise_sq_distances(X, Y),
         cdist(X, Y, "sqeuclidean"),
@@ -120,8 +132,7 @@ def test_every_entry_is_non_negative(pair):
 def test_self_distances_stay_non_negative_for_large_coordinates():
     # Identical points must come out exactly non-negative. Rounding in the expansion can turn a
     # true zero into a small negative number, and a square root of that is NaN.
-    rng = np.random.default_rng(4)
-    X = rng.normal(size=(200, 3)) * 1e3
+    X = _real_rows(data_rng("pairwise-sq-distances-p01:non-negative"), 200, 3) * 1e3
     D = pairwise_sq_distances(X, X)
     assert D.min() >= 0.0, (
         "a squared distance came out negative: rounding in an expansion needs clipping at zero"
@@ -131,9 +142,8 @@ def test_self_distances_stay_non_negative_for_large_coordinates():
 def test_no_python_loop_over_rows_or_pairs():
     # Broadcasting runs a fixed number of lines however many points there are. A loop over rows
     # or pairs runs at least one line per row or pair, so 200 points would run hundreds of them.
-    rng = np.random.default_rng(5)
-    X = rng.normal(size=(200, 3))
-    Y = rng.normal(size=(200, 3))
+    points = _real_rows(data_rng("pairwise-sq-distances-p01:no-loop"), 400, 3)
+    X, Y = points[:200], points[200:]
     executed = 0
 
     def count_lines(frame, event, arg):

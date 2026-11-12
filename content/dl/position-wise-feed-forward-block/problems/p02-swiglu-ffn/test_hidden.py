@@ -2,11 +2,38 @@
 # and never print hidden inputs, shapes or expected values.
 from __future__ import annotations
 
+import math
+
 import pytest
 import torch
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import swiglu_ffn as _learner
+
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p02-swiglu-ffn:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
 
 
 def _call(*args):
@@ -29,9 +56,9 @@ def _invalid(*args):
 
 def _weights(gen, d_model, d_ff):
     return (
-        torch.randn(d_ff, d_model, generator=gen, dtype=torch.float64),
-        torch.randn(d_ff, d_model, generator=gen, dtype=torch.float64),
-        torch.randn(d_model, d_ff, generator=gen, dtype=torch.float64),
+        _real_values(gen, [d_ff, d_model], torch.float64),
+        _real_values(gen, [d_ff, d_model], torch.float64),
+        _real_values(gen, [d_model, d_ff], torch.float64),
     )
 
 
@@ -45,7 +72,7 @@ def _oracle(x, W, V, W2):
 def test_matches_pytorch_reference_on_seeded_batches():
     gen = torch.Generator().manual_seed(61)
     for shape, d_model, d_ff in [((4,), 3, 8), ((2, 5), 4, 6), ((3, 2, 4), 4, 10)]:
-        x = torch.randn(*shape, d_model, generator=gen, dtype=torch.float64)
+        x = _real_values(gen, [*shape, d_model], torch.float64)
         W, V, W2 = _weights(gen, d_model, d_ff)
         torch.testing.assert_close(
             _call(x, W, V, W2),
@@ -59,7 +86,7 @@ def test_matches_pytorch_reference_on_seeded_batches():
 def test_silu_applies_to_the_gate_path_not_the_up_path():
     gen = torch.Generator().manual_seed(62)
     d_model, d_ff = 3, 5
-    x = torch.randn(4, d_model, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [4, d_model], torch.float64)
     W, V, W2 = _weights(gen, d_model, d_ff)
     torch.testing.assert_close(
         _call(x, W, V, W2),
@@ -93,7 +120,7 @@ def test_activation_is_silu_not_relu_or_gelu():
 def test_weights_use_nn_linear_orientation_on_non_square_matrices():
     gen = torch.Generator().manual_seed(64)
     d_model, d_ff = 2, 7
-    x = torch.randn(5, d_model, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [5, d_model], torch.float64)
     W, V, W2 = _weights(gen, d_model, d_ff)
     torch.testing.assert_close(
         _call(x, W, V, W2),
@@ -107,7 +134,7 @@ def test_weights_use_nn_linear_orientation_on_non_square_matrices():
 def test_positions_are_independent():
     gen = torch.Generator().manual_seed(65)
     W, V, W2 = _weights(gen, 3, 6)
-    x = torch.randn(5, 3, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [5, 3], torch.float64)
     base = _call(x, W, V, W2)
     changed = x.clone()
     changed[1] *= -4.0
@@ -124,7 +151,7 @@ def test_positions_are_independent():
 
 def test_empty_gate_returns_zeros():
     gen = torch.Generator().manual_seed(66)
-    x = torch.randn(2, 3, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [2, 3], torch.float64)
     empty = torch.zeros(0, 3, dtype=torch.float64)
     W2 = torch.zeros(3, 0, dtype=torch.float64)
     out = _call(x, empty, empty, W2)
@@ -149,7 +176,7 @@ def test_single_gate_value_matches_reference_across_range(value):
 def test_large_magnitudes_stay_finite():
     gen = torch.Generator().manual_seed(67)
     W, V, W2 = _weights(gen, 3, 6)
-    x = torch.randn(4, 3, generator=gen, dtype=torch.float64) * 1e3
+    x = _real_values(gen, [4, 3], torch.float64) * 1e3
     out = _call(x, W, V, W2)
     assert torch.isfinite(out).all(), "large inputs must not produce NaN or infinity"
     torch.testing.assert_close(
@@ -164,7 +191,7 @@ def test_large_magnitudes_stay_finite():
 def test_small_magnitudes_match_reference():
     gen = torch.Generator().manual_seed(68)
     W, V, W2 = _weights(gen, 3, 6)
-    x = torch.randn(4, 3, generator=gen, dtype=torch.float64) * 1e-9
+    x = _real_values(gen, [4, 3], torch.float64) * 1e-9
     torch.testing.assert_close(
         _call(x, W, V, W2),
         _oracle(x, W, V, W2),
@@ -177,7 +204,7 @@ def test_small_magnitudes_match_reference():
 def test_output_dtype_and_shape_follow_input():
     gen = torch.Generator().manual_seed(69)
     W, V, W2 = _weights(gen, 4, 9)
-    x = torch.randn(2, 5, 4, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [2, 5, 4], torch.float64)
     out = _call(x, W, V, W2)
     assert out.dtype == torch.float64, "output dtype must be float64"
     assert tuple(out.shape) == (2, 5, 4), "output shape must equal (..., d_model)"
@@ -203,7 +230,7 @@ def test_wrong_down_projection_shape_raises_value_error():
 
 def test_inputs_are_not_mutated():
     gen = torch.Generator().manual_seed(73)
-    x = torch.randn(3, 2, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [3, 2], torch.float64)
     W, V, W2 = _weights(gen, 2, 4)
     before = [t.clone() for t in (x, W, V, W2)]
     _call(x, W, V, W2)
@@ -214,7 +241,7 @@ def test_inputs_are_not_mutated():
 def test_one_dimensional_input_is_a_single_position():
     gen = torch.Generator().manual_seed(74)
     d_model, d_ff = 3, 5
-    x = torch.randn(d_model, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [d_model], torch.float64)
     W, V, W2 = _weights(gen, d_model, d_ff)
     out = _call(x, W, V, W2)
     assert tuple(out.shape) == (d_model,), (

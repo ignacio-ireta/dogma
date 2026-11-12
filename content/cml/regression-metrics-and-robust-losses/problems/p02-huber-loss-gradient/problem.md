@@ -45,3 +45,6 @@ They check each branch on its own, the continuity at |r| = δ, and that the grad
 for outliers. They also check the homogeneity rule (scaling the residuals and δ together), that the loss
 is a mean and not a sum, the rejected inputs (empty, non-finite, non-positive or non-finite δ, wrong
 shape), integer input, and that the caller's array is left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `california_housing` (see
+`docs/DATASETS.md`).

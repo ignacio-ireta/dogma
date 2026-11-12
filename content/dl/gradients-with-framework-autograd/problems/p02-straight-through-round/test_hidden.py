@@ -4,6 +4,9 @@ import numpy as np
 import torch
 from submission import ste_quantize
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 ATOL = 1e-9  # matches meta.yaml tolerance
 RTOL = 1e-9  # matches meta.yaml tolerance
 
@@ -33,8 +36,10 @@ def rejects(call) -> None:
 
 
 def test_forward_matches_numpy_round_half_to_even_on_random_inputs():
-    rng = np.random.default_rng(0)
-    values = rng.normal(scale=3.0, size=(4, 5))
+    # Real values of both signs: four tumours by five standardised breast_cancer measurements,
+    # tripled.
+    gen = data_rng("ste-quantize-p02:forward")
+    values = 3.0 * sample_rows("breast_cancer", gen, 4, 5, standardize=True)[0]
     step = 0.375
     expected = np.round(values / step) * step  # numpy also rounds half to even
     got = checked(lambda: ste_quantize(torch.tensor(values), step))

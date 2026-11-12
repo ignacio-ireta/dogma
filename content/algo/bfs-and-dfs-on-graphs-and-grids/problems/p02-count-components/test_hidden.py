@@ -7,6 +7,7 @@ signal handler is restored after each call.
 
 from __future__ import annotations
 
+import functools
 import random
 import signal
 import threading
@@ -14,8 +15,11 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Any
 
+import numpy as np
 import pytest
 from submission import count_components
+
+from dogma_data import load
 
 SMALL_CALL_S = 5.0
 LARGE_CALL_S = 10.0
@@ -115,10 +119,35 @@ def _check(grid: list[str], limit: float = SMALL_CALL_S) -> None:
         )
 
 
+@functools.cache
+def _digit_images() -> Any:
+    """The 1,797 handwritten digits of scikit-learn: 8 by 8 pixels, ink from 0 to 16."""
+    return load("digits").X.reshape(-1, 8, 8)
+
+
+@functools.cache
+def _ink_level(wall_rate: float) -> float:
+    """The ink level that the share ``wall_rate`` of all pixels is darker than."""
+    return float(np.quantile(_digit_images(), 1.0 - wall_rate))
+
+
 def _random_grid(rng: random.Random, rows: int, cols: int, wall_rate: float) -> list[str]:
-    return [
-        "".join("#" if rng.random() < wall_rate else "." for _ in range(cols)) for _ in range(rows)
-    ]
+    """A grid cut from real images: digits tiled side by side and cropped to the size asked.
+
+    A cell is a wall where the ink is darker than the level for ``wall_rate``, so walls come as
+    strokes and loops with open background around and inside them, not as scattered cells.
+    About half of all pixels have any ink, so that is the densest a grid gets. A rate of zero
+    gives an open grid.
+    """
+    images = _digit_images()
+    canvas = np.block(
+        [
+            [images[rng.randrange(len(images))] for _ in range(-(-cols // 8))]
+            for _ in range(-(-rows // 8))
+        ]
+    )
+    level = _ink_level(wall_rate) if wall_rate > 0 else 16.0
+    return ["".join("#" if canvas[r, c] > level else "." for c in range(cols)) for r in range(rows)]
 
 
 def test_seeded_random_grids_match_the_union_find_oracle() -> None:

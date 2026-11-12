@@ -6,6 +6,9 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import matmul
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 SMALL = st.integers(min_value=-9, max_value=9)
 MISMATCHED_SHAPES = [
     ((2, 3), (2, 3)),
@@ -82,10 +85,11 @@ def _names_shape(message, shape):
 
 
 def test_matches_numpy_matmul_on_random_integer_matrices():
-    rng = np.random.default_rng(0)
+    rng = data_rng("matmul-p01:integers")
     for m, n, p in [(1, 1, 1), (1, 4, 1), (4, 1, 3), (3, 3, 3), (2, 5, 4), (6, 7, 3)]:
-        A = rng.integers(-5, 6, size=(m, n)).tolist()
-        B = rng.integers(-5, 6, size=(n, p)).tolist()
+        # Real whole numbers of both signs: digit-image pixels (0 to 16) with 8 subtracted.
+        A = (sample_rows("digits", rng, m, n)[0] - 8).astype(int).tolist()
+        B = (sample_rows("digits", rng, n, p)[0] - 8).astype(int).tolist()
         expected = (np.array(A) @ np.array(B)).tolist()
         assert matmul(A, B) == expected, (
             "integer product differs from numpy's @: "
@@ -94,10 +98,11 @@ def test_matches_numpy_matmul_on_random_integer_matrices():
 
 
 def test_matches_numpy_matmul_on_random_float_matrices():
-    rng = np.random.default_rng(1)
+    rng = data_rng("matmul-p01:floats")
     for m, n, p in [(2, 3, 4), (5, 1, 5), (1, 6, 1), (6, 6, 6)]:
-        A = rng.normal(size=(m, n)).tolist()
-        B = rng.normal(size=(n, p)).tolist()
+        # Real measurements: blocks of standardised wine columns.
+        A = sample_rows("wine", rng, m, n, standardize=True)[0].tolist()
+        B = sample_rows("wine", rng, n, p, standardize=True)[0].tolist()
         _assert_close(
             np.array(matmul(A, B), dtype=float),
             np.array(A) @ np.array(B),

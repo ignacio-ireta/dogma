@@ -78,3 +78,6 @@ added once. They check the gradient of a random linear loss with respect to `A` 
 finite-difference check, on both paths. They check that `W` and `b` receive no gradient, that no input
 changes, that a large `alpha` with tiny factors and a small `alpha` with large factors both keep their
 precision, the output dtype, and every `ValueError` rule.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

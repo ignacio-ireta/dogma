@@ -14,6 +14,7 @@ For each query $\mathbf{q}$, compute the Euclidean distance $d_j = \lVert \mathb
 - Returns: a 1-D integer array of shape `(m,)` containing a label from `y_train` for each query row.
 - Raises: `ValueError` when `k` is not an integer or is outside $[1, n]$, when an array is not 2-D or 1-D as required, when the column counts differ, when `y_train` does not have an integer dtype (floats such as `[0.0, 1.0]` are rejected), or when a feature is not finite.
 - Features may be as large as `1e200`. Compare distances without overflow, so that unequal finite distances never tie.
+- Equal distances. Compute each distance from the coordinate differences $x_j - q$. Two rows whose differences have the same absolute values, coordinate by coordinate, are at exactly the same distance, and the lower index is nearer. Two rows at the same distance on paper but with different differences, such as $(1, 3, 3)$ and $(3, 3, 1)$, may or may not tie after rounding: either order is accepted, and the tests do not depend on it.
 - Must not mutate inputs.
 
 ## Examples
@@ -37,4 +38,7 @@ The second example is a vote tie: labels 3 and 5 each get one vote among the two
 - Not allowed: `sklearn`, `scipy`, and approximate-search libraries (`faiss`, `annoy`, `hnswlib`). A library neighbour search would skip the thing this problem is about.
 
 ## Done looks like
-All public tests pass, then **Submit** runs the hidden tests. They check: agreement with a brute-force reference on random data, including many equal distances and many vote ties; agreement with scikit-learn's brute-force classifier on tie-free binary data with odd $k$; that equal distances are ordered by training index; that the nearest tied class wins a vote tie, not the smallest label; $k = 1$ and $k = n$; the $k$ bounds and shape, dtype and finiteness rules; an empty query; a translation of all points by a large constant, which must not change any prediction; and that the inputs are left unchanged.
+All public tests pass, then **Submit** runs the hidden tests. They check: agreement with a brute-force reference on random data, including many equal distances (rows with the same coordinate differences up to sign) and many vote ties; agreement with scikit-learn's brute-force classifier on tie-free binary data with odd $k$; that equal distances are ordered by training index; that the nearest tied class wins a vote tie, not the smallest label; $k = 1$ and $k = n$; the $k$ bounds and shape, dtype and finiteness rules; an empty query; a translation of all points by a large constant, which must not change any prediction; and that the inputs are left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `california_housing` (see
+`docs/DATASETS.md`).

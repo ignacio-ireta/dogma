@@ -41,3 +41,6 @@ The examples and edge cases pass. Hidden tests cover a seeded independent oracle
 inputs, output types, invalid arguments, scale extremes within the contract and input preservation.
 The local derivatives of these functions are implemented and checked by independent finite
 differences in the optional p02 problem.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

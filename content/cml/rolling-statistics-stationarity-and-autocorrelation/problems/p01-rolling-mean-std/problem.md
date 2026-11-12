@@ -53,3 +53,6 @@ series at a large common offset must keep its spread against a per-window two-pa
 series must have zero spread. Readings near `1e200` and `1e-200`, whose squares overflow or underflow,
 must keep their spread. Equal neighbours at window two must have a spread of zero up to rounding. The hidden tests also cover invalid inputs, empty input, integer input, and
 inputs that must not be mutated.
+
+The hidden tests draw their bulk inputs from the real datasets `elnino`, `nile` and `sunspots` (see
+`docs/DATASETS.md`).

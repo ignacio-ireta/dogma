@@ -88,4 +88,7 @@ The result matches an independent oracle that takes each user's distinct dates, 
 runs in Python. The seeded fixture and the hidden cases cover: duplicate visits on one day; a single-day
 user; a gap of exactly one day that breaks a run; a run across a month end and a year end; a leap day; ties
 in length, where the earliest start must win; a user whose longest run comes after a shorter one; many users
-in shuffled insertion order; an empty table; the exact output types; and the final ordering. A dense holiday burst across a leap-year end, with heavy-tailed users and duplicate visits, is the realistic family.
+in shuffled insertion order; an empty table; the exact output types; and the final ordering. Real retail activity (`online_retail`) moved onto a leap-year end, with heavy-tailed users and duplicate visits, is the realistic family.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

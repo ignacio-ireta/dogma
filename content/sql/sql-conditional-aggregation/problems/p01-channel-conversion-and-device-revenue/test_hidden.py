@@ -17,8 +17,9 @@ import pandas as pd
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from scipy.special import ndtr
 
-from dogma_data import rng, synth
+from dogma_data import retail_events, rng, sample_rows
 
 COLUMNS = [
     "channel",
@@ -35,6 +36,56 @@ SESSIONS_DDL = (
 CHANNELS = ["ads", "email", "organic", "podcast", "referral", "social"]
 # One ROUND(x, 4) step is 1e-4. Half a step plus float noise is the largest honest difference.
 HALF_STEP = 5e-5 + 1e-9
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
 
 
 def _connect(rows: Sequence[tuple[Any, ...]]) -> duckdb.DuckDBPyConnection:
@@ -193,30 +244,34 @@ def _check_same_result(got: pd.DataFrame, rows: Sequence[tuple[Any, ...]]) -> No
 
 @pytest.fixture(scope="module")
 def event_log_sessions() -> list[tuple[Any, ...]]:
-    generated = synth.event_log(
-        rng(
-            "sql/sql-conditional-aggregation/p01-channel-conversion-and-device-revenue:event-log:0"
-        ),
-        5_000,
-        n_users=300,
-        categories=tuple(CHANNELS),
-        start="2024-01-01",
-        days=90,
-        amount_median=30.0,
-        amount_sigma=1.0,
-        dirty_rate=0.15,
+    """Real rows of an online retailer (online_retail): 5,000 invoice lines as sessions.
+
+    The channel is the country of the order as stored, so one channel holds five sessions in
+    six and the others are thin. The device is mobile for an order placed on a Sunday or
+    outside 9 to 17 o'clock, and desktop otherwise. The revenue is the line total, negative for
+    a return, and a session counts as converted when its revenue is in the top 15%. The source
+    spells every country one way and the contract has a rule for spellings that differ in
+    case, so one line in seven has its country put in lower case here.
+    """
+    gen = rng(
+        "sql/sql-conditional-aggregation/p01-channel-conversion-and-device-revenue:event-log:0"
     )
-    conversion_cutoff = float(pd.Series(generated["amount"]).quantile(0.85))
+    events = retail_events()
+    picked = events.iloc[gen.permutation(len(events))[:5000]]
+    lowered = _real_unit(gen, len(picked)) < 1.0 / 7.0
+    hours = picked["ts"].dt.hour
+    off_hours = (picked["ts"].dt.dayofweek == 6) | (hours < 9) | (hours >= 17)
+    conversion_cutoff = float(picked["amount"].quantile(0.85))
     return [
         (
             int(event_id),
-            str(channel),
-            "mobile" if int(event_id) % 2 == 0 else "desktop",
+            str(country).lower() if lower else str(country),
+            "mobile" if mobile else "desktop",
             bool(float(amount) >= conversion_cutoff),
             float(amount),
         )
-        for event_id, channel, amount in zip(
-            generated["event_id"], generated["category"], generated["amount"], strict=True
+        for event_id, country, mobile, amount, lower in zip(
+            picked["event_id"], picked["country"], off_hours, picked["amount"], lowered, strict=True
         )
     ]
 

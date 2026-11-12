@@ -65,3 +65,6 @@ skipped and never returned, a customer with a single known amount, orders with n
 customer with several qualifying orders (one row per order, not per customer), output ordered by
 order id even when rows were inserted out of order, a result with no row, and random tables checked
 against an independent pandas computation.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

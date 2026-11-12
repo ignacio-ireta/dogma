@@ -6,6 +6,31 @@ from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 from submission import seasonal_naive_forecast_and_mase
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows, sample_window
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
 
 def _require(ok, mistake):
     """Fail with the mistake's name only. Hypothesis and the grader show this first line."""
@@ -64,9 +89,10 @@ def _unpack(result, horizon, mistake):
     ids=["season-one", "season-three", "season-four", "long-horizon", "season-twelve"],
 )
 def test_matches_explicit_formulas_on_seeded_series(n, season, horizon, seed):
-    rng = np.random.default_rng(seed)
-    train = rng.normal(loc=10.0, scale=3.0, size=n)
-    test = rng.normal(loc=10.0, scale=3.0, size=horizon)
+    # One real run of monthly sea-surface temperatures, split in time order: the series has a
+    # yearly season, so the season length matters to the forecast and to the scale.
+    series = sample_window("elnino", data_rng(f"mase-p03:formulas:{seed}"), n + horizon)
+    train, test = series[:n], series[n:]
     ref_forecast, ref_mase = _reference(train, test, season)
     forecast, mase = _unpack(
         _run(
@@ -117,9 +143,8 @@ def test_season_one_repeats_the_last_value():
 
 
 def test_shifting_and_scaling_train_and_test_together_leaves_mase_unchanged():
-    rng = np.random.default_rng(10)
-    train = rng.normal(size=24)
-    test = rng.normal(size=6)
+    series = sample_window("elnino", data_rng("mase-p03:shift-and-scale"), 30)
+    train, test = series[:24], series[24:]
     base_f, base_m = _unpack(
         _run(lambda: seasonal_naive_forecast_and_mase(train, test, 4), "call raised"), 6, "base"
     )
@@ -153,10 +178,10 @@ def test_shifting_and_scaling_train_and_test_together_leaves_mase_unchanged():
 
 def test_forecast_depends_on_training_values_only():
     rng = np.random.default_rng(11)
-    train = rng.normal(size=20)
+    train = sample_window("sunspots", data_rng("mase-p03:training-only"), 20)
     first_f, _ = _unpack(
         _run(
-            lambda: seasonal_naive_forecast_and_mase(train, rng.normal(size=5), 5),
+            lambda: seasonal_naive_forecast_and_mase(train, _real_normal(rng, 5), 5),
             "call raised",
         ),
         5,
@@ -164,7 +189,7 @@ def test_forecast_depends_on_training_values_only():
     )
     second_f, _ = _unpack(
         _run(
-            lambda: seasonal_naive_forecast_and_mase(train, rng.normal(size=5) * 100.0, 5),
+            lambda: seasonal_naive_forecast_and_mase(train, _real_normal(rng, 5) * 100.0, 5),
             "call raised",
         ),
         5,
@@ -177,10 +202,9 @@ def test_forecast_depends_on_training_values_only():
 
 
 def test_scale_does_not_depend_on_the_test_values():
-    rng = np.random.default_rng(12)
-    train = rng.normal(size=18)
-    test_a = rng.normal(size=4)
-    test_b = rng.normal(size=4) * 2.0
+    series = sample_window("co2", data_rng("mase-p03:two-tests"), 26)  # weekly CO2, trending
+    train, test_a = series[:18], series[18:22]
+    test_b = series[22:] * 2.0
     forecast, _ = _reference(train, test_a, 3)
     error_a = float(np.mean(np.abs(test_a - forecast)))
     error_b = float(np.mean(np.abs(test_b - forecast)))

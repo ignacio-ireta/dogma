@@ -59,3 +59,6 @@ NaN); agreement with IEEE single precision on seeded random fp32 patterns and on
 check; agreement of bfloat16 with the top 16 bits of an fp32 pattern; formats with a non-IEEE
 bias and a small mantissa, checked by hand; the sign of zero; the two special exponent cases;
 and the `ValueError` rules (range of each parameter, a `bool` argument, and `bits` too large).
+
+The hidden tests draw their bulk inputs from the real datasets `adult`, `california_housing`, `co2`
+and `gutenberg_walden` (see `docs/DATASETS.md`).

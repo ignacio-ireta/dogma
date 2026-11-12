@@ -75,3 +75,6 @@ every output channel sums all input channels with its own filter; the bias added
 channel; the batch examples computed independently; a float32 dtype check; the input and kernel left
 unchanged; and every `ValueError` rule. When an output matches a known wrong variant, the failure names
 that mistake.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `digits` (see
+`docs/DATASETS.md`).

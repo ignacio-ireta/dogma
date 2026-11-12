@@ -47,3 +47,5 @@ indefinite `Q` raise `ValueError` even when a plain solve would not fail; scalin
 and of the constraint rows, including tiny and huge magnitudes; a one-variable case with a hand
 answer; invalid shapes, non-finite values and asymmetric matrices; integer input; and that the
 inputs are left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `wine` (see `docs/DATASETS.md`).

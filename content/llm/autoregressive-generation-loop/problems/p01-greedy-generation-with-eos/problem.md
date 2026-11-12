@@ -74,3 +74,6 @@ a prefix that grows by one column per call, with `pad_id` in finished rows; a ze
 a copy and not an alias; the prompt left unchanged; a batch of one; a large vocabulary; the output
 dtype; and the `ValueError` rules for invalid arguments and for a model that returns the wrong
 shape.
+
+The hidden tests draw their bulk inputs from the real datasets `gutenberg_frankenstein`,
+`gutenberg_pride_prejudice` and `gutenberg_walden` (see `docs/DATASETS.md`).

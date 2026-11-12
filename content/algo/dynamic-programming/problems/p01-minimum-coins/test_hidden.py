@@ -8,6 +8,7 @@ failure on every replay.
 
 from __future__ import annotations
 
+import functools
 import random
 import signal
 import threading
@@ -20,6 +21,8 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import min_coins
+
+from dogma_data import retail_events
 
 
 class _TooSlow(BaseException):
@@ -38,6 +41,22 @@ LARGE_AMOUNT = 50_000
 # After one call times out, later calls fail at once with the same message, so a slow learner
 # costs one budget instead of one budget per Hypothesis example.
 _HUNG: list[bool] = []
+
+
+@functools.cache
+def _units() -> tuple[int, ...]:
+    events = retail_events()
+    return tuple(int(q) for q in events.loc[events["quantity"] > 0, "quantity"])
+
+
+@functools.cache
+def _prices() -> tuple[int, ...]:
+    events = retail_events()
+    sold = events[events["quantity"] > 0]
+    return tuple(
+        round(float(a) / int(q) * 100)
+        for a, q in zip(sold["amount"], sold["quantity"], strict=True)
+    )
 
 
 @contextmanager
@@ -140,8 +159,11 @@ MISTAKE = (
 @given(seed=st.integers(min_value=0, max_value=10_000))
 def test_small_random_inputs_match_breadth_first_search(seed: int) -> None:
     rng = random.Random(seed)  # noqa: S311 -- seeded synthetic inputs, not security.
-    coins = [rng.randrange(1, 10) for _ in range(rng.randrange(0, 5))]
-    amount = rng.randrange(0, 41)
+    # Coin values are real too: the units on real invoice lines, below 10.
+    small = [units for units in _units() if units < 10]
+    coins = [rng.choice(small) for _ in range(rng.randrange(0, 5))]
+    # A real amount: the units on one invoice line of an online retailer, up to 40.
+    amount = min(rng.choice(_units()), 40)
     got = _answer(coins, amount)
     _check(got == _bfs(coins, amount), MISTAKE)
 
@@ -149,8 +171,11 @@ def test_small_random_inputs_match_breadth_first_search(seed: int) -> None:
 def test_random_larger_inputs_match_the_coin_by_coin_table() -> None:
     rng = random.Random(2026)  # noqa: S311 -- seeded synthetic inputs, not security.
     for _ in range(40):
-        coins = [rng.randrange(1, 60) for _ in range(rng.randrange(1, 8))]
-        amount = rng.randrange(0, 600)
+        # Coin values are real prices below 60 pence; the amount is the price of one product
+        # in pence, up to 599.
+        small = [price for price in _prices() if price < 60]
+        coins = [rng.choice(small) for _ in range(rng.randrange(1, 8))]
+        amount = min(rng.choice(_prices()), 599)
         _check(_answer(coins, amount) == _coin_by_coin(coins, amount), MISTAKE)
 
 

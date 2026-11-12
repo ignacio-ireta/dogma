@@ -58,3 +58,6 @@ year boundaries (the first and last day of 2024 in, the days either side out), s
 other than `completed` (including the same word with another capitalisation), NULL amounts, a
 zero amount, ties at the cutoff, fewer than five matches, no matches, and random tables checked
 against an independent pandas computation.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

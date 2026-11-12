@@ -76,3 +76,6 @@ on seeded random batches with random masks. They check the one-token shift, a ro
 tokens, a batch with no scored tokens, logits with very large magnitudes and very small
 probabilities, float32 dtype, a mask on the first token, out-of-range token ids, wrong dtypes and
 shapes, a float64 finite-difference gradient check through the logits, and no in-place mutation.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

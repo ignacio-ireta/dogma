@@ -31,3 +31,6 @@ The result is in **nats** (natural logarithm), not bits. Labels are compared by 
 ## Done looks like
 
 All public tests pass, then **Submit** runs the hidden tests. They check: agreement with a reference mutual information on random string and integer labels; symmetry in the two arguments; invariance to renaming the labels; the entropy of the label for identical labels; zero for independent and for constant labels; a deterministic non-linear dependence where Pearson correlation is zero; rejection of empty, unequal-length, and two-dimensional input; a large input counted within the time budget; a property check that the value lies between zero and the smaller entropy; a `float` return; and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `adult` and `breast_cancer` (see
+`docs/DATASETS.md`).

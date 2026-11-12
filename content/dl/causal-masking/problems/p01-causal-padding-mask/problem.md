@@ -64,3 +64,6 @@ an independent AND, confirm that the single-query decode step sees every key, sh
 bottom-right alignment differs from torch's top-left `is_causal` mask when `L < S`, check fully
 masked rows (including all-padding batches), boolean output dtype, the shape rules, zero and
 invalid sizes, and input non-mutation.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

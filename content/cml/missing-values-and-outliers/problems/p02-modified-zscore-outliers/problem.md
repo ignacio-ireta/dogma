@@ -59,3 +59,6 @@ positive scaling of `x`; symmetry under negation; the output shape and dtype; a 
 threshold and the flagged set; integer input; large magnitudes; a single value; a comparison that is strict; and
 the invalid cases (wrong rank, empty, NaN, infinity, and non-positive or non-finite thresholds). Inputs are left
 unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `california_housing` (see
+`docs/DATASETS.md`).

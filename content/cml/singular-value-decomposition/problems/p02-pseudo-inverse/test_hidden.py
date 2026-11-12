@@ -4,12 +4,38 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import pseudo_inverse
 
+from dogma_data import rng, sample_rows
+
 SEEDS = st.integers(min_value=0, max_value=10**6)
 DIMS = st.integers(min_value=1, max_value=6)
 
 
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
 def _matrix(seed, m, n):
-    return np.random.default_rng(seed).normal(size=(m, n))
+    """m rows and n columns of standardised wine: a real data matrix with correlated columns."""
+    A, _ = sample_rows("wine", rng(f"pseudo-inverse-p02:data:{seed}"), m, n, standardize=True)
+    return A
 
 
 def _call(A, mistake, **kwargs):
@@ -79,7 +105,7 @@ def test_matches_numpy_pseudo_inverse_on_random_full_rank_matrices(seed, m, n):
 )
 def test_matches_numpy_on_rank_deficient_matrices_under_an_explicit_cutoff(seed, m, n, r):
     rng = np.random.default_rng(seed)
-    A = rng.normal(size=(m, r)) @ rng.normal(size=(r, n))
+    A = _real_normal(rng, (m, r)) @ _real_normal(rng, (r, n))
     result = _as_matrix(
         _call(A, "a rank-deficient matrix was rejected or failed", rcond=1e-10), (n, m)
     )
@@ -98,7 +124,7 @@ def test_matches_numpy_on_rank_deficient_matrices_under_an_explicit_cutoff(seed,
 def test_penrose_identities_hold_on_random_rank_deficient_matrices(seed, m, n, data):
     r = data.draw(st.integers(min_value=1, max_value=min(m, n)))
     rng = np.random.default_rng(seed)
-    A = rng.normal(size=(m, r)) @ rng.normal(size=(r, n))
+    A = _real_normal(rng, (m, r)) @ _real_normal(rng, (r, n))
     P = _as_matrix(_call(A, "a valid rank-deficient matrix was rejected", rcond=1e-10), (n, m))
     atol_A = 1e-8 * _scale(A)
     atol_P = 1e-8 * _scale(P)
@@ -191,8 +217,8 @@ def test_singular_value_equal_to_the_cutoff_is_dropped():
 
 def test_rank_one_matrix_has_the_closed_form_pseudo_inverse():
     rng = np.random.default_rng(17)
-    u = rng.normal(size=4)
-    v = rng.normal(size=3)
+    u = _real_normal(rng, 4)
+    v = _real_normal(rng, 3)
     A = np.outer(u, v)
     result = _as_matrix(_call(A, "a rank-one matrix was rejected or failed"), (3, 4))
     expected = np.outer(v, u) / ((u @ u) * (v @ v))

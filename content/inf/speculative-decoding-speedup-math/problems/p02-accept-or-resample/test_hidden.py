@@ -2,9 +2,14 @@
 # uniform grid with midpoints, so no floating-point tolerance is needed there. The empirical check
 # uses a 5-sigma bound: for N draws the standard error of a frequency is at most sqrt(0.25 / N),
 # so 5 * sqrt(0.25 / N) makes a false failure with seeded draws very unlikely.
+import collections
+import re
+
 import numpy as np
 import pytest
 from submission import accept_or_resample
+
+from dogma_data import load_text
 
 
 class ScriptedRng:
@@ -162,8 +167,16 @@ def test_invalid_probabilities_or_draft_token_raise_value_error(p, q, x):
 
 
 def test_empirical_output_distribution_equals_target_within_five_sigma():
-    p = np.array([0.5, 0.3, 0.15, 0.05])
-    q = np.array([0.1, 0.2, 0.6, 0.1])
+    # Real next-word distributions over the same six words: the target model is Pride and
+    # Prejudice and the draft model is Walden.
+    words = ("the", "to", "of", "and", "i", "her")
+    target = collections.Counter(
+        re.findall(r"[a-z]+", load_text("gutenberg_pride_prejudice").lower())
+    )
+    draft = collections.Counter(re.findall(r"[a-z]+", load_text("gutenberg_walden").lower()))
+    p = np.array([target[word] for word in words], dtype=np.float64)
+    q = np.array([draft[word] for word in words], dtype=np.float64)
+    p, q = p / p.sum(), q / q.sum()
     n = 50_000
     draft_rng = np.random.default_rng(11)  # draws the draft token from q
     accept_rng = np.random.default_rng(12)  # the step's own draws

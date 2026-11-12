@@ -5,7 +5,29 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import rolling_mean_std
 
-from dogma_data import load_series
+from dogma_data import load_series, rng, sample_rows, sample_window
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
 
 
 def _require(ok, mistake):
@@ -87,7 +109,8 @@ PANDAS_CASES = [(60, 5, None), (120, 10, 3), (80, 1, None), (30, 45, 1), (200, 3
     ids=["short", "partial", "window-one", "long-window", "full-only"],
 )
 def test_matches_pandas_rolling_on_random_series(n, window, min_periods):
-    values = np.random.default_rng(n + window).normal(loc=2.0, scale=3.0, size=n)
+    # A real run of the yearly sunspot numbers: an eleven-year cycle, far from white noise.
+    values = sample_window("sunspots", rng(f"rolling-p01:pandas:{n}:{window}"), n)
     need = window if min_periods is None else min_periods
     ref_means, ref_stds = _pandas_reference(values, window, need)
     result = _run(
@@ -110,7 +133,13 @@ def test_matches_pandas_rolling_on_random_series(n, window, min_periods):
 
 
 def test_window_of_two_spread_is_gap_over_root_two():
-    values = np.random.default_rng(21).normal(size=50)
+    # Real annual river flow. A run in which two neighbouring years are equal is skipped: a
+    # zero gap is the constant-window case, which has its own test and its own bound.
+    gen = rng("rolling-p01:window-two")
+    while True:
+        values = sample_window("nile", gen, 50)
+        if np.all(np.diff(values) != 0.0):
+            break
     closed_spread = np.abs(np.diff(values)) / np.sqrt(2.0)
     closed_mean = (values[1:] + values[:-1]) / 2.0
     means, stds = _unpack(
@@ -132,10 +161,9 @@ def test_window_of_two_spread_is_gap_over_root_two():
 
 
 def test_earlier_outputs_do_not_depend_on_later_values():
-    rng = np.random.default_rng(22)
-    values = rng.normal(size=60)
+    values = sample_window("elnino", rng("rolling-p01:later-values"), 60)  # monthly sea temperature
     changed = values.copy()
-    changed[30:] = rng.normal(loc=50.0, scale=10.0, size=30)
+    changed[30:] = _real_normal(np.random.default_rng(22), 30, loc=50.0, scale=10.0)
     first = _unpack(
         _run(lambda: rolling_mean_std(values, 5, min_periods=1), "rolling_mean_std raised"),
         60,
@@ -159,7 +187,7 @@ def test_earlier_outputs_do_not_depend_on_later_values():
 
 
 def test_large_common_offset_over_long_series_keeps_the_spread():
-    values = 1e9 + np.random.default_rng(5).normal(size=20_000)
+    values = 1e9 + _real_normal(np.random.default_rng(5), 20_000)
     expected_stds = _two_pass(values, 50, 50)[1][49:]
     _, stds = _unpack(
         _run(lambda: rolling_mean_std(values, 50), "rolling_mean_std raised on a valid series"),
@@ -191,7 +219,7 @@ def test_constant_series_has_zero_spread_and_its_own_mean():
 
 
 def test_repeated_pairs_have_numerically_zero_spread_at_window_two():
-    values = np.repeat(np.random.default_rng(31).normal(size=12) * 3.7, 2)
+    values = np.repeat(_real_normal(np.random.default_rng(31), 12) * 3.7, 2)
     _, stds = _unpack(
         _run(lambda: rolling_mean_std(values, 2), "rolling_mean_std raised on a valid series"),
         values.size,
@@ -206,7 +234,7 @@ def test_repeated_pairs_have_numerically_zero_spread_at_window_two():
 
 
 def test_window_of_one_returns_the_values_and_nan_spread():
-    values = np.random.default_rng(23).normal(size=12)
+    values = sample_window("elnino", rng("rolling-p01:window-one"), 12)
     means, stds = _unpack(
         _run(lambda: rolling_mean_std(values, 1), "rolling_mean_std raised on a valid series"),
         12,

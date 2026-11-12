@@ -1,10 +1,37 @@
 from __future__ import annotations
 
+import math
+
 import pytest
 import torch
 from submission import build_adamw_groups
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 LR = 0.05
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p02-decay-parameter-groups:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
 
 
 def _named(seed: int) -> list[tuple[str, torch.Tensor]]:
@@ -12,7 +39,7 @@ def _named(seed: int) -> list[tuple[str, torch.Tensor]]:
     gen = torch.Generator().manual_seed(seed)
 
     def make(*shape: int) -> torch.Tensor:
-        return torch.randn(shape, generator=gen, dtype=torch.float64)
+        return _real_values(gen, [shape], torch.float64)
 
     return [
         ("embed.weight", make(5, 3)),
@@ -117,7 +144,7 @@ def test_adamw_run_with_these_groups_matches_torch_adamw_with_reference_groups()
     gen = torch.Generator().manual_seed(seed + 100)
     for _ in range(8):
         for (_, a), (_, b) in zip(named_a, named_b, strict=True):
-            grad = torch.randn(a.shape, generator=gen, dtype=torch.float64)
+            grad = _real_values(gen, [a.shape], torch.float64)
             a.grad = grad.clone()
             b.grad = grad.clone()
         opt_a.step()

@@ -70,3 +70,6 @@ being scaled together with the position, not added after scaling; relative-offse
 under a common shift; large offsets; extreme magnitudes; float32; inputs left unchanged; and every
 `ValueError` rule above. A wrong variant gets a named message, for example a changed base instead of
 scaled positions, or an offset that is not divided by the scale.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

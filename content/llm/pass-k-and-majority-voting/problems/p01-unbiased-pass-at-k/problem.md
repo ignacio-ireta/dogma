@@ -48,3 +48,5 @@ The public examples pass, plus the degenerate and invalid-argument cases. Hidden
 against the exact binomial ratio on seeded small inputs, check the boundary where `n - c = k`, test
 large `n` with an exact known value, and test tiny results at relative accuracy. They also check
 that the value never decreases as `k` grows, and that every invalid-argument family is rejected.
+
+Some hidden tests take their inputs from the real dataset `wine` (see `docs/DATASETS.md`).

@@ -4,7 +4,11 @@ import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from scipy.special import ndtr
 from submission import posterior
+
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
 
 SEEDS = st.integers(min_value=0, max_value=10**6)
 LIK = [[0.9, 0.1], [0.2, 0.8]]
@@ -39,6 +43,56 @@ TOLERANCE_HINT = (
 )
 
 
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
+
+
 def _weights(prior, likelihood, observations):
     """Unnormalised exact weights prior_i * prod_t likelihood[i, o_t], as Fractions."""
     out = []
@@ -58,22 +112,49 @@ def _exact(prior, likelihood, observations):
 
 
 def _fraction_model(seed, h, o, t):
-    """Probabilities that are multiples of 1/10, so the exact answer is a rational number.
+    """A real model whose probabilities are exact fractions of counts.
 
-    Draws again until the evidence is positive, so the update is defined.
+    The hypotheses are the classes of a real dataset (tumour type, iris species, wine cultivar)
+    and an observation is the band, out of ``o``, that one measurement of a specimen falls in.
+    A sequence longer than those datasets uses California districts: the hypotheses are the
+    ``h`` price tiers of the districts drawn and a specimen is a district.
+    The prior is the class shares among ten specimens drawn first, so a class none of them
+    belongs to has prior zero. The likelihood table is counted on forty other specimens, and a
+    band that a class never reaches there has likelihood zero. The observations are the bands
+    of ``t`` further specimens. Draws again until every class is in the forty and the evidence
+    is positive, so the update is defined.
     """
-    rng = np.random.default_rng(seed)
+    name = "breast_cancer" if h == 2 else ("iris", "wine")[(seed // 4) % 2]
+    gen = data_rng(f"p01-bayes-posterior:model:{seed}")
     while True:
-        prior = [Fraction(int(c), 10) for c in rng.multinomial(10, [1 / h] * h)]
-        lik = [[Fraction(int(c), 10) for c in rng.multinomial(10, [1 / o] * o)] for _ in range(h)]
-        obs = rng.integers(0, o, size=t).tolist()
+        if t > 100:
+            values, price = sample_rows("california_housing", gen, 50 + t, 1)
+            tiers = np.quantile(price, np.arange(1, h) / h)
+            labels = np.searchsorted(tiers, price, side="right")
+        else:
+            values, target = sample_rows(name, gen, 50 + t, 1)
+            labels = target.astype(int)
+        edges = np.quantile(values[10:50, 0], np.arange(1, o) / o)
+        bands = np.searchsorted(edges, values[:, 0], side="right")
+        sizes = [int(np.sum(labels[10:50] == i)) for i in range(h)]
+        if min(sizes) == 0:
+            continue
+        prior = [Fraction(int(np.sum(labels[:10] == i)), 10) for i in range(h)]
+        lik = [
+            [
+                Fraction(int(np.sum((labels[10:50] == i) & (bands[10:50] == j))), sizes[i])
+                for j in range(o)
+            ]
+            for i in range(h)
+        ]
+        obs = bands[50:].tolist()
         if sum(_weights(prior, lik, obs)) > 0:
             return prior, lik, obs
 
 
 def _positive_model(rng, h, o):
     """Every probability is positive, so the evidence is always positive."""
-    return rng.dirichlet(np.ones(h)), rng.dirichlet(np.ones(o), size=h)
+    return _real_shares(rng, np.ones(h)), _real_shares(rng, np.ones(o), h)
 
 
 def _fail(why):
@@ -170,7 +251,7 @@ def test_fifteen_hundred_random_observations_match_exact_posterior(seed):
 def test_updating_in_two_steps_equals_one_batch_update(seed, t):
     rng = np.random.default_rng(seed)
     prior, lik = _positive_model(rng, 3, 3)
-    obs = rng.integers(0, 3, size=t).tolist()
+    obs = _real_ints(rng, 0, 3, t).tolist()
     cut = t // 2
     batch, problem = _outputs(prior, lik, obs, SEQUENCE_HINT)
     if problem is None:
@@ -187,7 +268,7 @@ def test_updating_in_two_steps_equals_one_batch_update(seed, t):
 def test_order_of_observations_does_not_change_the_posterior(seed, t):
     rng = np.random.default_rng(seed)
     prior, lik = _positive_model(rng, 2, 3)
-    obs = rng.integers(0, 3, size=t)
+    obs = _real_ints(rng, 0, 3, t)
     shuffled = rng.permutation(obs)
     original, problem = _outputs(prior, lik, obs.tolist(), ORDER_HINT)
     if problem is None:
@@ -202,7 +283,7 @@ def test_order_of_observations_does_not_change_the_posterior(seed, t):
 def test_posterior_is_a_float64_distribution_over_hypotheses(seed, t):
     rng = np.random.default_rng(seed)
     prior, lik = _positive_model(rng, 4, 2)
-    obs = rng.integers(0, 2, size=t).tolist()
+    obs = _real_ints(rng, 0, 2, t).tolist()
     got, problem = _outputs(
         prior, lik, obs, "the posterior must be a distribution over the hypotheses"
     )

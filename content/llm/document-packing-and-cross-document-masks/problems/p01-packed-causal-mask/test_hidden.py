@@ -2,11 +2,16 @@
 # Failure messages name the kind of mistake. They never print hidden inputs, shapes or values.
 from __future__ import annotations
 
+import functools
+
 import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import packed_causal_mask, restart_positions
+
+from dogma_data import load_text
+from dogma_data import rng as data_rng
 
 
 def _close(actual, desired, *, err_msg, **tolerance):
@@ -140,13 +145,30 @@ def test_single_document_row_equals_plain_causal_mask(label):
         )
 
 
+@functools.cache
+def _line_lengths():
+    """Number of words of every non-empty line of Walden: the lengths of real documents."""
+    lines = load_text("gutenberg_walden").splitlines()
+    return tuple(len(line.split()) for line in lines if line.split())
+
+
+def _real_row(gen):
+    """One packed row: one to five real lines of a book, each a document of one id per word.
+
+    The id of a document is the number of its line in the book, so the ids are distinct and
+    in no order. A line is cut at eight words to keep the mask small.
+    """
+    lengths = _line_lengths()
+    count = int(gen.integers(1, 6))
+    labels = gen.choice(len(lengths), size=count, replace=False)
+    sizes = [min(lengths[label], 8) for label in labels]
+    return np.repeat(labels, sizes).astype(np.int64)
+
+
 def test_mask_matches_block_diagonal_oracle_on_seeded_rows():
-    rng = np.random.default_rng(7)
+    rng = data_rng("p01-packed-causal-mask:mask")
     for _ in range(50):
-        count = int(rng.integers(1, 6))
-        lengths = rng.integers(1, 7, size=count)
-        labels = rng.permutation(100)[:count]
-        doc_ids = np.repeat(labels, lengths).astype(np.int64)
+        doc_ids = _real_row(rng)
         _equal(
             _mask(doc_ids),
             _block_diagonal_oracle(doc_ids),
@@ -155,12 +177,9 @@ def test_mask_matches_block_diagonal_oracle_on_seeded_rows():
 
 
 def test_restart_positions_match_per_document_ranges_on_seeded_rows():
-    rng = np.random.default_rng(13)
+    rng = data_rng("p01-packed-causal-mask:positions")
     for _ in range(50):
-        count = int(rng.integers(1, 6))
-        lengths = rng.integers(1, 7, size=count)
-        labels = rng.permutation(100)[:count]
-        doc_ids = np.repeat(labels, lengths).astype(np.int64)
+        doc_ids = _real_row(rng)
         _equal(
             restart_positions(doc_ids),
             _positions_oracle(doc_ids),

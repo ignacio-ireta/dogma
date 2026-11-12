@@ -28,9 +28,17 @@ def test_todo_hidden_inputs_are_not_mutated():
 
 # Real or semi-synthetic data (CONTENT_SPEC §6.6): uncomment to use. Load it in module-scoped
 # fixtures, never at import, and compare with a library oracle computed on the same arrays.
+# Bulk inputs are draws of real rows, not rng.normal (docs/DATASETS.md, "Real draws instead of
+# random numbers"); random numbers stay for parameters and for properties set exactly.
 # import numpy as np
 # import pytest
-# from dogma_data import load, rng, synth
+# from dogma_data import load, rng, sample_rows, synth
+#
+#
+# def _rows(seed, n, d):
+#     """n real rows and d real columns of wine, where a test would have used rng.normal."""
+#     X, _ = sample_rows("wine", rng(f"p01-todo:rows:{seed}"), n, d)
+#     return X
 #
 #
 # @pytest.fixture(scope="module")

@@ -3,7 +3,10 @@
 # using exact Fractions. Failure messages name the kind of mistake and never show hidden inputs.
 from __future__ import annotations
 
+import collections
+import functools
 import math
+import re
 from fractions import Fraction
 from itertools import pairwise
 
@@ -11,6 +14,9 @@ import numpy as np
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import round_to_format
+
+from dogma_data import load_frame, load_text, sample_rows
+from dogma_data import rng as data_rng
 
 
 def _round_or_report(x: float, e: int, m: int, b: int) -> tuple[float | None, str | None]:
@@ -36,12 +42,51 @@ def _assert_all_match(got_values: list[float | None], want: np.ndarray, kind: st
     assert mismatches == 0, f"{kind}"
 
 
+@functools.cache
+def _real_numbers() -> np.ndarray:
+    """Real numbers across forty orders of magnitude, with both signs, as float64.
+
+    Measurements: every value of 150 California districts (fractions of a room, populations in
+    the thousands, negative longitudes). Census weights of 300 people (tens of thousands to a
+    million) and the differences between neighbours. Probabilities of real phrases: the first
+    1 to 12 words of 100 lines of Walden under the word frequencies of the book, from about
+    1e-2 down to 1e-45, with the differences between neighbours, their logarithms and their
+    reciprocals ("one in N"). No value is generated.
+    """
+    housing, _ = sample_rows(
+        "california_housing", data_rng("p02-round-to-nearest-even:housing"), 150
+    )
+    weights = load_frame("adult")["fnlwgt"].to_numpy(dtype=np.float64)[:300]
+    lines = [
+        re.findall(r"[a-z]+", line.lower()) for line in load_text("gutenberg_walden").splitlines()
+    ]
+    counts = collections.Counter(word for line in lines for word in line)
+    total = sum(counts.values())
+    phrases = []
+    for line in [line for line in lines if line][:100]:
+        probability = 1.0
+        for word in line[:12]:
+            probability *= counts[word] / total
+            phrases.append(probability)
+    odds = np.array(phrases, dtype=np.float64)
+    parts = [
+        housing.ravel(),
+        weights,
+        np.diff(weights),
+        odds,
+        np.diff(odds),
+        np.log(odds),
+        1.0 / odds,
+    ]
+    return np.concatenate(parts)
+
+
 def test_fp16_matches_numpy_half_cast_on_random_inputs():
-    # Random magnitudes across the normal, subnormal and overflow ranges of fp16, with both signs.
-    rng = np.random.default_rng(7)
-    exponents = rng.uniform(-30.0, 18.0, size=4000)
-    signs = rng.choice([-1.0, 1.0], size=4000)
-    xs = signs * 2.0**exponents * rng.uniform(1.0, 2.0, size=4000)
+    # Real numbers across the normal, subnormal and overflow ranges of fp16, with both signs:
+    # measurements are normal, phrase probabilities fall in the subnormal range and below it,
+    # census weights and reciprocals lie beyond the largest fp16 value.
+    xs = _real_numbers()
+    xs = xs[np.abs(xs) < 2.0**24]
     decoded = [_round_or_report(float(x), 5, 10, 15) for x in xs]
     failures = [err for _, err in decoded if err is not None]
     assert not failures, f"fp16 rounding raised: {failures[0]}"
@@ -73,10 +118,11 @@ def test_fp16_exact_ties_all_round_to_even_neighbours():
 def test_bfloat16_matches_bit_level_rounding():
     # bfloat16 is the top 16 bits of fp32. For a float32 input, adding 0x7FFF plus the lowest kept
     # bit and then truncating is round-to-nearest-even on those 16 bits.
-    rng = np.random.default_rng(11)
-    xs32 = rng.standard_normal(3000).astype(np.float32) * np.float32(10.0) ** rng.integers(
-        -30, 30, size=3000
-    ).astype(np.float32)
+    # Real numbers stored as float32, from phrase probabilities near 1e-38 to reciprocals
+    # near 1e38. Values that overflow float32 are left out.
+    with np.errstate(over="ignore", under="ignore"):
+        xs32 = _real_numbers().astype(np.float32)
+    xs32 = xs32[np.isfinite(xs32)]
     bits = xs32.view(np.uint32).astype(np.uint64)
     kept_lsb = (bits >> np.uint64(16)) & np.uint64(1)
     rounded_bits = ((bits + np.uint64(0x7FFF) + kept_lsb) >> np.uint64(16)) << np.uint64(16)
@@ -138,8 +184,10 @@ def test_small_custom_formats_match_brute_force_nearest_search():
         table = _all_candidates(e, m, b)
         finite = sorted({value for value, _ in table})
         largest = float(finite[-2])  # the last entry is the virtual overflow value
-        rng = np.random.default_rng(100 + e)
-        samples = list(rng.uniform(-2 * largest, 2 * largest, size=300))
+        # Real numbers that lie within twice the largest value of the format, 300 of them.
+        inside = _real_numbers()
+        inside = inside[np.abs(inside) <= 2 * largest]
+        samples = inside[:: max(1, inside.size // 300)][:300].tolist()
         grid = [float(v) for v in finite]
         midpoints = [float((lo + hi) / 2) for lo, hi in pairwise(finite)]
         for x in samples + grid + midpoints + [-v for v in grid]:

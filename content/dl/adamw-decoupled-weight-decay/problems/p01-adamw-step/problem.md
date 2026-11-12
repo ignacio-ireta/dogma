@@ -56,3 +56,6 @@ strengths. They also check the zero-gradient decay factor, that the learning rat
 decay, the zero-decay case, the first counter value, input immutability, scale extremes, invalid
 arguments and dtype. A failing test names the mistake, such as decay folded into the gradient or
 a decay factor that leaves out the learning rate.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

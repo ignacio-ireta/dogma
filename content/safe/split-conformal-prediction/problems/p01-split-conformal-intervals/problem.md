@@ -59,3 +59,6 @@ Passing means the two examples match and the rank rule holds at every level. Hid
 - invariance to the order of calibration points;
 - invalid inputs and integer inputs;
 - a seeded simulation whose empirical coverage must be at least `1 - alpha`, within a stated bound.
+
+The hidden tests draw their bulk inputs from the real dataset `california_housing` (see
+`docs/DATASETS.md`).

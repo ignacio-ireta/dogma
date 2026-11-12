@@ -2,11 +2,38 @@
 # and never print hidden inputs, shapes or expected values.
 from __future__ import annotations
 
+import math
+
 import pytest
 import torch
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import apply_rope as _learner
+
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p02-rope-rotations:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
 
 
 def _rope(x):
@@ -41,7 +68,7 @@ def _invalid(fn, *args):
 def test_matches_complex_multiplication_reference_on_seeded_batches():
     gen = torch.Generator().manual_seed(7)
     for shape in [(2, 5, 8), (3, 7, 4), (6, 2)]:
-        x = torch.randn(*shape, generator=gen, dtype=torch.float64)
+        x = _real_values(gen, [*shape], torch.float64)
         torch.testing.assert_close(
             _rope(x),
             _oracle(x),
@@ -78,7 +105,7 @@ def test_sine_sign_and_angle_at_position_one_for_first_pair():
 
 def test_position_zero_is_identity_for_any_values():
     gen = torch.Generator().manual_seed(11)
-    x = torch.randn(4, 6, 8, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [4, 6, 8], torch.float64)
     out = _rope(x)
     torch.testing.assert_close(
         out[..., 0, :],
@@ -91,7 +118,7 @@ def test_position_zero_is_identity_for_any_values():
 
 def test_each_row_keeps_its_euclidean_norm():
     gen = torch.Generator().manual_seed(5)
-    x = torch.randn(2, 9, 6, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [2, 9, 6], torch.float64)
     out = _rope(x)
     torch.testing.assert_close(
         out.norm(dim=-1),
@@ -105,8 +132,8 @@ def test_each_row_keeps_its_euclidean_norm():
 def test_query_key_dot_product_depends_only_on_relative_offset():
     d, length = 6, 10
     gen = torch.Generator().manual_seed(2)
-    q_vec = torch.randn(d, generator=gen, dtype=torch.float64)
-    k_vec = torch.randn(d, generator=gen, dtype=torch.float64)
+    q_vec = _real_values(gen, [d], torch.float64)
+    k_vec = _real_values(gen, [d], torch.float64)
     q = _rope(q_vec.expand(length, d).contiguous())
     k = _rope(k_vec.expand(length, d).contiguous())
     scores = q @ k.T  # scores[m, n] = (rotated q at m) . (rotated k at n)
@@ -124,7 +151,7 @@ def test_query_key_dot_product_depends_only_on_relative_offset():
 @given(st.integers(min_value=1, max_value=6), st.integers(min_value=1, max_value=5))
 def test_leading_batch_axes_are_independent(batch, half):
     gen = torch.Generator().manual_seed(batch * 10 + half)
-    x = torch.randn(batch, 4, 2 * half, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [batch, 4, 2 * half], torch.float64)
     together = _rope(x)
     separately = torch.stack([_rope(x[b]) for b in range(batch)])
     torch.testing.assert_close(
@@ -155,7 +182,7 @@ def test_large_positions_match_reference():
 
 def test_small_magnitudes_scale_linearly():
     gen = torch.Generator().manual_seed(9)
-    x = torch.randn(5, 4, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [5, 4], torch.float64)
     scale = 1e-150
     torch.testing.assert_close(
         _rope(x * scale),
@@ -190,7 +217,7 @@ def test_zero_feature_width_raises_value_error():
 
 def test_input_is_not_mutated():
     gen = torch.Generator().manual_seed(4)
-    x = torch.randn(3, 5, 6, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [3, 5, 6], torch.float64)
     before = x.clone()
     _rope(x)
     assert torch.equal(x, before), "the input tensor must not be modified in place"

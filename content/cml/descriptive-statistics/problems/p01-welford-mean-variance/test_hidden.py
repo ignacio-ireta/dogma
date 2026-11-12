@@ -8,6 +8,30 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import welford
 
+from dogma_data import rng, sample_rows, sample_window
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
 
 def _stream(values):
     """A one-shot generator over ``values``: it can be consumed only once."""
@@ -29,8 +53,8 @@ def _expect_value_error(call, mistake):
     ("n", "seed"), [(2, 0), (3, 1), (10, 2), (100, 3), (1000, 4)], ids=list("abcde")
 )
 def test_matches_numpy_mean_and_sample_variance(n, seed):
-    rng = np.random.default_rng(seed)
-    values = rng.normal(loc=3.0, scale=2.0, size=n)
+    # Real block groups of california_housing: average rooms per household, heavy-tailed.
+    values = sample_rows("california_housing", rng(f"welford-p01:numpy:{seed}"), n)[0][:, 2]
     count, mean, variance = welford(values)
     assert count == n, "count disagrees with the number of values"
     np.testing.assert_allclose(
@@ -75,7 +99,7 @@ def test_property_agrees_with_numpy_on_any_finite_list(values):
 
 def test_large_offset_does_not_destroy_the_variance():
     rng = np.random.default_rng(5)
-    values = 1e9 + rng.normal(size=1000)
+    values = 1e9 + _real_normal(rng, 1000)
     _, _, variance = welford(values)
     np.testing.assert_allclose(
         variance,
@@ -87,7 +111,7 @@ def test_large_offset_does_not_destroy_the_variance():
 
 
 def test_generator_input_matches_the_array_result():
-    values = np.random.default_rng(6).normal(size=200)
+    values = sample_window("sunspots", rng("welford-p01:stream"), 200)  # real yearly counts
     from_array = welford(values)
     from_stream = welford(_stream(values))
     assert from_stream[0] == from_array[0] == 200, "generator input must be counted in full"
@@ -105,7 +129,7 @@ def test_generator_input_matches_the_array_result():
 def test_streams_the_input_in_constant_memory():
     count = 300_000
     rng = np.random.default_rng(7)
-    values = rng.normal(size=count)
+    values = _real_normal(rng, count)
     tracemalloc.start()
     try:
         n, _, variance = welford(_stream(values))
@@ -148,7 +172,7 @@ def test_integer_input_returns_float_mean_and_variance():
 
 @pytest.mark.parametrize("scale", [1e-3, 1e6], ids=["small-scale", "large-scale"])
 def test_scaling_the_data_scales_the_variance_by_the_square(scale):
-    values = np.random.default_rng(8).normal(size=50)
+    values = sample_window("nile", rng("welford-p01:scale"), 50)  # real annual river flow
     _, _, base = welford(values)
     _, _, scaled = welford(values * scale)
     np.testing.assert_allclose(
@@ -167,7 +191,7 @@ def test_empty_generator_raises_value_error():
 
 
 def test_long_stream_agrees_with_numpy():
-    values = np.random.default_rng(9).normal(loc=-4.0, scale=0.5, size=20_000)
+    values = _real_normal(np.random.default_rng(9), 20_000, loc=-4.0, scale=0.5)
     start = time.perf_counter()
     n, mean, variance = welford(_stream(values))
     assert time.perf_counter() - start < 10, "a single pass over 20k values should be fast"

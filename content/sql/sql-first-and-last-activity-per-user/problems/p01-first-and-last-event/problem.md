@@ -74,3 +74,6 @@ second-resolution times) whose labels carry case and spacing noise. Hidden cases
 the last time, users with one event, event ids out of time order, a user whose events all share one time, large
 identifiers, empty input, the exact column types and the order of the output rows. Labels come back exactly as stored.
 Every returned time and type belongs to the same event.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

@@ -10,6 +10,8 @@ from hypothesis import strategies as st
 from scipy.stats import median_abs_deviation
 from submission import robust_zscore_outliers
 
+from dogma_data import rng, sample_rows
+
 SETTINGS = settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 
 
@@ -45,12 +47,14 @@ def _expect_value_error(call, mistake):
 
 
 def _sample(seed):
-    rng = np.random.default_rng(seed)
-    n = int(rng.integers(1, 60))
-    values = rng.normal(size=n) * 2 + 3
-    k = int(rng.integers(0, 4))
-    values[: min(k, n)] += rng.choice([-1, 1]) * rng.uniform(10, 60, size=min(k, n))
-    return values
+    """Occupants per household in n real california_housing block groups.
+
+    Most block groups sit between 2 and 4; a few hold institutions and reach the hundreds, so
+    real outliers turn up without being planted.
+    """
+    gen = rng(f"modified-zscore-p02:sample:{seed}")
+    n = int(gen.integers(1, 60))
+    return sample_rows("california_housing", gen, n)[0][:, 5]
 
 
 @SETTINGS

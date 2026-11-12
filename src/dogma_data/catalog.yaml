@@ -15,11 +15,103 @@ breast_cancer:
   - 21 feature pairs have |corr| > 0.9
   - standardized logistic regression reaches 99.3% training accuracy (nearly separable)
   fits:
-  - logistic-regression
+  - a-b-test-design-and-analysis
+  - a-complete-training-loop
+  - absmax-and-zero-point-int8-quantization
+  - adaboost-and-gradient-boosting
+  - adam
+  - adamw-decoupled-weight-decay
+  - arithmetic-intensity-and-the-roofline
+  - backprop-through-a-dense-layer
+  - batch-normalization
+  - bayes-theorem
+  - bias-variance-decomposition
+  - bradley-terry-reward-models
+  - building-tensors-by-broadcasting
+  - causal-masking
+  - chain-rule
+  - choosing-a-tree-split
+  - confusion-matrix-and-count-based-scores
+  - convolution-forward-pass
+  - cosine-similarity
+  - counting-network-parameters
   - covariance-and-correlation
+  - cross-entropy
+  - dense-layer-forward-pass
+  - descriptive-statistics
+  - determinants-and-trace
+  - direct-preference-optimization-dpo
+  - eigenvalues-and-eigenvectors
+  - entropy-and-mutual-information
+  - gpt-forward-pass
+  - gqa-mqa-and-cross-layer-kv-sharing
+  - gradient-descent
+  - gradients-with-framework-autograd
+  - grpo-and-its-variants
+  - handling-class-imbalance
+  - heaps-and-priority-queues
+  - incremental-decoding-with-a-kv-cache
+  - instruction-tuning-batches-and-loss-masks
+  - k-fold-cross-validation
+  - k-means
+  - kl-divergence
+  - lasso-and-elastic-net
+  - layer-normalization
+  - leakage-and-walk-forward-validation
+  - learning-rate-decay-schedules
+  - learning-rate-warmup
+  - llm-as-judge-and-agreement-with-humans
+  - logistic-regression
+  - lora-adapters
+  - lora-parameter-and-memory-arithmetic
+  - matrix-inverse-and-rank
+  - maximum-likelihood-and-map
+  - mdps-and-discounted-returns
+  - missing-values-and-outliers
+  - moe-top-k-routing
+  - multi-head-attention
+  - nearest-neighbour-search-and-knn
+  - negative-log-likelihood-and-perplexity
+  - normal-and-multivariate-gaussian
+  - normal-equation
+  - over-and-underfitting-early-stopping
+  - position-wise-feed-forward-block
+  - positional-encodings
+  - precision-recall-and-f1
+  - prefix-sums
+  - preprocessing-pipelines
+  - principal-component-analysis
+  - probability-basics
   - random-forests-and-feature-importance
+  - ranking-metrics
+  - regression-metrics-and-robust-losses
+  - reinforce
+  - relu-family-activations
+  - residual-connections
+  - retrieval-augmented-generation-pipeline
+  - ridge-regression-and-weight-decay
+  - rmsnorm
   - roc-pr-curves-and-auc
-  - bootstrap-and-permutation-resampling
+  - rolling-statistics-stationarity-and-autocorrelation
+  - rotary-position-embeddings-rope
+  - sampling-distributions-standard-errors-and-cis
+  - sarsa-and-expected-sarsa
+  - scaled-dot-product-attention
+  - sgd-with-momentum
+  - sigmoid-and-log-odds
+  - singular-value-decomposition
+  - smooth-activations-tanh-gelu-swish
+  - softmax
+  - split-conformal-prediction
+  - sql-conditional-aggregation
+  - sql-group-by-and-having
+  - sql-ranking-window-functions
+  - t-tests-and-anova
+  - temperature-top-k-and-top-p-sampling
+  - tensors-in-pytorch-and-tinygrad
+  - transformer-block
+  - xavier-and-he-initialization
+  - xgboost-second-order-objective
 co2:
   id: co2
   kind: statsmodels
@@ -34,9 +126,9 @@ co2:
   - 59 NaN kept in the series
   - trend plus yearly season
   fits:
+  - floating-point-formats
   - rolling-statistics-stationarity-and-autocorrelation
-  - missing-values-and-outliers
-  - leakage-and-walk-forward-validation
+  - two-pointers-and-sliding-windows
 customers:
   id: customers
   kind: vendored
@@ -52,9 +144,7 @@ customers:
   - gender and plan_type have casing variants and a blank value
   - malformed or blank signup_date values (not_a_date, 2025/13/01, N/A, blank); 200 NaN annual_income
   fits:
-  - sql-select-filter-and-sort
-  - sql-conditional-aggregation
-  - handling-class-imbalance
+  - none (no problem uses it at present)
 diabetes:
   id: diabetes
   kind: sklearn
@@ -69,9 +159,23 @@ diabetes:
   - sex is binary with values 1.0 and 2.0
   - 442 rows, 10 features, continuous target
   fits:
-  - ridge-regression-and-weight-decay
+  - a-complete-training-loop
+  - adaboost-and-gradient-boosting
+  - arithmetic-intensity-and-the-roofline
+  - bias-variance-decomposition
+  - counting-network-parameters
+  - k-fold-cross-validation
   - lasso-and-elastic-net
-  - random-forests-and-feature-importance
+  - learning-rate-decay-schedules
+  - learning-rate-warmup
+  - lora-parameter-and-memory-arithmetic
+  - normal-equation
+  - one-training-step
+  - principal-component-analysis
+  - ridge-regression-and-weight-decay
+  - stochastic-and-mini-batch-gradient-descent
+  - training-an-mlp-from-scratch
+  - xavier-and-he-initialization
 digits:
   id: digits
   kind: sklearn
@@ -86,9 +190,35 @@ digits:
   - 20 pixel columns have IQR = 0
   - 64 integer-valued features in 0..16
   fits:
-  - principal-component-analysis
-  - singular-value-decomposition
-  - k-means
+  - arithmetic-intensity-and-the-roofline
+  - backprop-through-a-dense-layer
+  - bfs-and-dfs-on-graphs-and-grids
+  - binary-search
+  - building-tensors-by-broadcasting
+  - convolution-forward-pass
+  - cosine-similarity
+  - counting-network-parameters
+  - cross-entropy
+  - dense-layer-forward-pass
+  - epsilon-greedy-exploration
+  - feature-scaling
+  - infonce-contrastive-loss
+  - learning-rate-decay-schedules
+  - learning-rate-warmup
+  - lora-parameter-and-memory-arithmetic
+  - matrix-multiplication
+  - matrix-shapes-and-transpose
+  - model-parameter-and-memory-footprint
+  - precision-recall-and-f1
+  - prefix-sums
+  - random-forests-and-feature-importance
+  - sarsa-and-expected-sarsa
+  - shuffling-splitting-and-batching-data
+  - split-conformal-prediction
+  - t-tests-and-anova
+  - tensors-in-pytorch-and-tinygrad
+  - vector-operations
+  - xavier-and-he-initialization
 elnino:
   id: elnino
   kind: statsmodels
@@ -102,8 +232,12 @@ elnino:
   - 61 years x 12 months flattened row-major to 732 monthly values, no NaN
   - lag-12 autocorrelation about 0.76 (seasonal)
   fits:
+  - heaps-and-priority-queues
+  - mdps-and-discounted-returns
+  - prefix-sums
   - rolling-statistics-stationarity-and-autocorrelation
-  - leakage-and-walk-forward-validation
+  - stacks-and-queues
+  - two-pointers-and-sliding-windows
 engel:
   id: engel
   kind: statsmodels
@@ -118,9 +252,7 @@ engel:
   - foodexp (y) is right-skewed (skewness about 1.7)
   - 235 households, one feature
   fits:
-  - bootstrap-and-permutation-resampling
-  - regression-metrics-and-robust-losses
-  - normal-equation
+  - descriptive-statistics
 iris:
   id: iris
   kind: sklearn
@@ -135,10 +267,25 @@ iris:
   - values have one decimal, so many ties
   - three balanced classes of 50
   fits:
-  - k-means
-  - nearest-neighbour-search-and-knn
+  - arithmetic-intensity-and-the-roofline
+  - bayes-theorem
+  - binary-search
+  - bootstrap-and-permutation-resampling
+  - choosing-a-tree-split
+  - counting-network-parameters
+  - expectation-and-variance
+  - gaussian-mixtures-and-em
+  - k-fold-cross-validation
+  - kl-divergence
+  - learning-rate-decay-schedules
+  - learning-rate-warmup
+  - llm-as-judge-and-agreement-with-humans
+  - lora-parameter-and-memory-arithmetic
+  - monte-carlo-simulation
+  - random-forests-and-feature-importance
+  - shuffling-splitting-and-batching-data
   - t-tests-and-anova
-  - feature-scaling
+  - xavier-and-he-initialization
 linnerud:
   id: linnerud
   kind: sklearn
@@ -152,8 +299,7 @@ linnerud:
   - 20 rows; y is 2-D with three physiological targets (Weight, Waist, Pulse)
   - 3 exercise features (Chins, Situps, Jumps), small n
   fits:
-  - ridge-regression-and-weight-decay
-  - covariance-and-correlation
+  - none (no problem uses it at present)
 longley:
   id: longley
   kind: statsmodels
@@ -168,8 +314,6 @@ longley:
   - 16 rows, 6 regressors on very different scales (YEAR, POP vs GNPDEFL)
   fits:
   - normal-equation
-  - ridge-regression-and-weight-decay
-  - regression-metrics-and-robust-losses
 macrodata:
   id: macrodata
   kind: statsmodels
@@ -184,8 +328,7 @@ macrodata:
   - trending real series (realgdp, cpi, m1)
   - 'y is None: all columns are features'
   fits:
-  - rolling-statistics-stationarity-and-autocorrelation
-  - leakage-and-walk-forward-validation
+  - none (no problem uses it at present)
 nile:
   id: nile
   kind: statsmodels
@@ -199,8 +342,10 @@ nile:
   - 100 yearly values, 1871 to 1970
   - 'level change near 1898: mean about 1098 before, about 850 after'
   fits:
-  - rolling-statistics-stationarity-and-autocorrelation
+  - descriptive-statistics
   - leakage-and-walk-forward-validation
+  - mdps-and-discounted-returns
+  - rolling-statistics-stationarity-and-autocorrelation
 orders:
   id: orders
   kind: vendored
@@ -215,9 +360,71 @@ orders:
   - lognormal amounts (right-skewed)
   - customer_id values are drawn from the customers ids
   fits:
-  - sql-group-by-and-having
+  - none (no problem uses it at present)
+mt_bench_judgments:
+  id: mt_bench_judgments
+  kind: hf
+  loader: load_frame-only
+  licence: CC BY 4.0 (MT-Bench human judgments, LMSYS; via lmsys/mt_bench_human_judgments; see data/hf/NOTICE)
+  shape:
+  - 3355
+  - 5
+  sha256: 002fd680d481e155c5b1431127cbcfcf3459088a0884c47fc5298b22372824aa
+  quirks:
+  - one expert verdict per row on a question, a turn and an ordered pair of six chat models
+  - the verdict is model_a, model_b or tie; 23% are ties and the two positions win about equally
+  - 1,814 distinct question, turn and model-pair items; 582 of them were judged in both orders
+  - the same item is often judged by several experts, who do not always agree
+  fits:
+  - llm-as-judge-and-agreement-with-humans
+online_retail:
+  id: online_retail
+  kind: hf
+  loader: load_frame-only
+  licence: CC BY 4.0 (Online Retail II, UCI; via apurba-pal/online_retail; see data/hf/NOTICE)
+  shape:
+  - 8768
+  - 8
+  sha256: 08a9945f443e8829660f3fcb8b5bad3c4981ae3c1caad5dd2ade36a1beff0c6d
+  quirks:
+  - every invoice line of the 60 customers whose id ends in 77, December 2009 to December 2011
+  - 568 invoices; the 112 whose number starts with C are cancellations with negative quantities
+  - 226 exact duplicate lines; 83% of the lines are from the United Kingdom, the rest from 3 countries
+  - half the customers have 4 invoices or fewer and one has 91; invoice totals are heavy-tailed
+  - the lines of an invoice share its minute (one invoice spans two); no invoice falls on a Saturday
+  - descriptions are as typed, 27 with a leading or trailing space, 348 with a doubled space, 44 not in capitals
+  - 7 products are stored under two or three spellings that differ only in spaces
+  fits:
+  - a-b-test-design-and-analysis
+  - action-value-estimates
+  - bernoulli-binomial-and-poisson
+  - binary-search
+  - chat-templates-and-tool-call-formats
+  - continuous-batching
+  - cost-per-token-and-break-even
+  - dynamic-programming
+  - heaps-and-priority-queues
+  - inverse-transform-sampling
+  - lru-cache
+  - mixed-precision
+  - pandas-groupby-aggregate-and-transform
   - pandas-merge-and-reshape
+  - sort-then-sweep
+  - sql-cohort-retention
+  - sql-conditional-aggregation
+  - sql-date-handling
+  - sql-first-and-last-activity-per-user
+  - sql-group-by-and-having
+  - sql-joins-and-unions
   - sql-lag-and-lead
+  - sql-ranking-window-functions
+  - sql-running-totals-and-frames
+  - sql-select-filter-and-sort
+  - sql-streaks-gaps-and-islands
+  - sql-subqueries-and-ctes
+  - sql-top-n-and-latest-row-per-group
+  - topological-sort
+  - ttft-itl-and-throughput
 penguins:
   id: penguins
   kind: vendored
@@ -231,10 +438,7 @@ penguins:
   - 344 rows; 2 NaN in each measurement column, 11 NaN in sex
   - string categoricals species, island, sex
   fits:
-  - preprocessing-pipelines
   - missing-values-and-outliers
-  - gaussian-mixtures-and-em
-  - choosing-a-tree-split
 spector:
   id: spector
   kind: statsmodels
@@ -248,8 +452,8 @@ spector:
   - GRADE is binary (0/1), 32 rows
   - small logit set (32 rows)
   fits:
+  - a-b-test-design-and-analysis
   - logistic-regression
-  - handling-class-imbalance
 stackloss:
   id: stackloss
   kind: statsmodels
@@ -263,8 +467,7 @@ stackloss:
   - 21 rows; observation 21 has the largest OLS studentized residual (about 2.6)
   - fit on the full 21 rows is sensitive to observation 21
   fits:
-  - regression-metrics-and-robust-losses
-  - missing-values-and-outliers
+  - normal-equation
 sunspots:
   id: sunspots
   kind: statsmodels
@@ -279,8 +482,10 @@ sunspots:
   - ACF peaks near lag 10 to 11 (0.66 at lag 10)
   - no NaN
   fits:
+  - descriptive-statistics
+  - heaps-and-priority-queues
   - rolling-statistics-stationarity-and-autocorrelation
-  - leakage-and-walk-forward-validation
+  - stacks-and-queues
 surveys:
   id: surveys
   kind: vendored
@@ -294,8 +499,7 @@ surveys:
   - 3000 rows; 145 NaN satisfaction_score, 100 NaN nps_score
   - customer_id values sampled without replacement
   fits:
-  - sql-joins-and-unions
-  - missing-values-and-outliers
+  - none (no problem uses it at present)
 wine:
   id: wine
   kind: sklearn
@@ -309,9 +513,42 @@ wine:
   - proline (std ~314) carries about 99.8% of total variance unscaled
   - 13 features, 3 cultivars
   fits:
-  - principal-component-analysis
+  - arithmetic-intensity-and-the-roofline
+  - backprop-through-a-chain-of-scalars
+  - bayes-theorem
+  - binary-tree-recursion-and-traversal
+  - counting-network-parameters
+  - covariance-and-correlation
+  - derivatives
+  - determinants-and-trace
+  - dropout
+  - eigenvalues-and-eigenvectors
+  - epsilon-greedy-exploration
   - feature-scaling
-  - k-means
+  - gaussian-mixtures-and-em
+  - gradient-descent
+  - k-fold-cross-validation
+  - lagrange-multipliers
+  - learning-rate-decay-schedules
+  - learning-rate-warmup
+  - lora-parameter-and-memory-arithmetic
+  - matrix-inverse-and-rank
+  - matrix-multiplication
+  - matrix-shapes-and-transpose
+  - maximum-likelihood-and-map
+  - monte-carlo-simulation
+  - normal-and-multivariate-gaussian
+  - partial-derivatives-and-gradients
+  - pass-k-and-majority-voting
+  - principal-component-analysis
+  - q-learning
+  - random-forests-and-feature-importance
+  - reverse-mode-autograd-engine
+  - shuffling-splitting-and-batching-data
+  - singular-value-decomposition
+  - vector-and-matrix-norms
+  - vector-operations
+  - xavier-and-he-initialization
 adult:
   id: adult
   kind: hf
@@ -326,11 +563,14 @@ adult:
   - '"?" marks missing values: workclass 338, occupation 340, native.country 98'
   - string categoricals, several with high cardinality (native.country, occupation)
   fits:
-  - categorical-encoding
+  - a-b-test-design-and-analysis
+  - confusion-matrix-and-count-based-scores
+  - entropy-and-mutual-information
+  - floating-point-formats
   - handling-class-imbalance
-  - missing-values-and-outliers
+  - leakage-and-walk-forward-validation
   - preprocessing-pipelines
-  - data-quality-and-drift-detection
+  - probability-basics
 california_housing:
   id: california_housing
   kind: hf
@@ -344,9 +584,21 @@ california_housing:
   - target MedHouseVal is censored at 5.00001 (about $500,001); 241 rows sit at the cap
   - AveRooms, AveOccup and Population are heavy-tailed with extreme outliers
   fits:
+  - arithmetic-intensity-and-the-roofline
+  - bayes-theorem
+  - bootstrap-and-permutation-resampling
+  - counting-network-parameters
+  - data-quality-and-drift-detection
+  - descriptive-statistics
+  - floating-point-formats
+  - k-means
+  - missing-values-and-outliers
+  - monte-carlo-simulation
+  - nearest-neighbour-search-and-knn
+  - ranking-metrics
   - regression-metrics-and-robust-losses
-  - ridge-regression-and-weight-decay
-  - feature-scaling
+  - sampling-distributions-standard-errors-and-cis
+  - split-conformal-prediction
 gsm8k:
   id: gsm8k
   kind: hf
@@ -360,7 +612,12 @@ gsm8k:
   - every answer ends with "#### <number>", the final numeric answer
   - answers contain worked steps with <<calculator>> annotations
   fits:
+  - chat-templates-and-tool-call-formats
+  - continuous-batching
+  - instruction-tuning-batches-and-loss-masks
+  - paged-kv-cache
   - pass-k-and-majority-voting
+  - positional-encodings
 gutenberg_frankenstein:
   id: gutenberg_frankenstein
   kind: hf
@@ -373,11 +630,25 @@ gutenberg_frankenstein:
   quirks:
   - about 40 KB starting at Letter 1; real English word frequencies, punctuation, blank lines
   fits:
-  - bpe-merge-training
+  - autoregressive-generation-loop
   - bpe-encode-and-decode
-  - word-and-character-tokenizers
+  - bpe-merge-training
+  - direct-preference-optimization-dpo
+  - dynamic-programming
+  - gpt-forward-pass
+  - gpu-memory-and-capacity-sizing
+  - hash-maps-and-sets
+  - kv-cache-size-arithmetic
+  - model-parameter-and-memory-footprint
+  - negative-log-likelihood-and-perplexity
+  - next-token-targets-and-batches
+  - padding-truncation-and-pad-masks
+  - prefill-vs-decode-bottlenecks
+  - reservoir-sampling
+  - scaling-laws-and-compute-budgets
+  - temperature-top-k-and-top-p-sampling
   - tf-idf-and-bm25
-  - retrieval-augmented-generation-pipeline
+  - word-and-character-tokenizers
 gutenberg_pride_prejudice:
   id: gutenberg_pride_prejudice
   kind: hf
@@ -390,11 +661,22 @@ gutenberg_pride_prejudice:
   quirks:
   - about 40 KB starting at chapter 1 ("IT is a truth", a small-caps artefact); dialogue, quotes
   fits:
-  - bpe-merge-training
-  - bpe-encode-and-decode
-  - word-and-character-tokenizers
-  - tf-idf-and-bm25
+  - autoregressive-generation-loop
+  - direct-preference-optimization-dpo
+  - dynamic-programming
+  - gpt-forward-pass
+  - gpu-memory-and-capacity-sizing
+  - hash-maps-and-sets
+  - kv-cache-size-arithmetic
+  - negative-log-likelihood-and-perplexity
+  - next-token-targets-and-batches
+  - padding-truncation-and-pad-masks
+  - prefill-vs-decode-bottlenecks
   - retrieval-augmented-generation-pipeline
+  - scaling-laws-and-compute-budgets
+  - speculative-decoding-speedup-math
+  - tf-idf-and-bm25
+  - word-and-character-tokenizers
 gutenberg_walden:
   id: gutenberg_walden
   kind: hf
@@ -407,7 +689,20 @@ gutenberg_walden:
   quirks:
   - about 40 KB starting at "Economy"; long sentences, numbers and currency amounts
   fits:
-  - bpe-merge-training
-  - word-and-character-tokenizers
-  - tf-idf-and-bm25
+  - autoregressive-generation-loop
+  - direct-preference-optimization-dpo
+  - document-packing-and-cross-document-masks
+  - dynamic-programming
+  - floating-point-formats
+  - gpt-forward-pass
+  - gpu-memory-and-capacity-sizing
+  - hash-maps-and-sets
+  - kv-cache-size-arithmetic
+  - negative-log-likelihood-and-perplexity
+  - next-token-targets-and-batches
+  - padding-truncation-and-pad-masks
+  - prefill-vs-decode-bottlenecks
   - retrieval-augmented-generation-pipeline
+  - scaling-laws-and-compute-budgets
+  - speculative-decoding-speedup-math
+  - tf-idf-and-bm25

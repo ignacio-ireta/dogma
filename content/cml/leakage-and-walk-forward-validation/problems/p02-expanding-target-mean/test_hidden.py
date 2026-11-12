@@ -1,11 +1,76 @@
+import functools
+
 import numpy as np
 import pandas as pd
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from scipy.special import ndtr
 from submission import expanding_target_mean
 
-from dogma_data import load_frame
+from dogma_data import load_frame, rng, sample_rows
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
+
+
+@functools.cache
+def _adult():
+    return load_frame("adult")
+
+
+def _census(key, n, column):
+    """n adult census rows in drawn order: one key column and weekly hours in full-time units."""
+    rows = rng(key).choice(len(_adult()), size=n, replace=False)
+    picked = _adult().iloc[rows]
+    return picked[column].tolist(), picked["hours.per.week"].to_numpy(dtype=np.float64) / 40.0
 
 
 def _encode(categories, target):
@@ -64,10 +129,9 @@ def _assert_encoding(got, expected, mistake):
 def test_a_rows_encoding_ignores_its_own_and_every_later_target(cats, seed, data):
     n = len(cats)
     i = data.draw(st.integers(min_value=0, max_value=n - 1), label="row")
-    rng = np.random.default_rng(seed)
-    y = rng.normal(size=n)
+    _, y = _census(f"expanding-target-mean-p02:own-and-later:{seed}", n, "occupation")
     changed = y.copy()
-    changed[i:] = 100.0 * rng.normal(size=n - i)
+    changed[i:] = 100.0 * _real_normal(np.random.default_rng(seed), n - i)
     before = _encode(cats, y)
     after = _encode(cats, changed)
     # Tolerance, not exact equality: summation order may shift the last bits, but real leakage
@@ -121,9 +185,8 @@ def test_alternating_categories_keep_their_running_state_across_the_series():
 
 @pytest.mark.parametrize("seed", [0, 1, 2], ids=["seed-zero", "seed-one", "seed-two"])
 def test_integer_categories_match_the_pandas_expanding_idiom(seed):
-    rng = np.random.default_rng(seed)
-    cats = rng.integers(0, 4, size=40).tolist()
-    y = rng.normal(size=40)
+    # Integer keys: years of education, 16 levels with very uneven shares.
+    cats, y = _census(f"expanding-target-mean-p02:integer-keys:{seed}", 40, "education.num")
     expected = _pandas_reference(cats, y)
     _assert_encoding(
         _encode(cats, y),
@@ -134,9 +197,7 @@ def test_integer_categories_match_the_pandas_expanding_idiom(seed):
 
 
 def test_string_categories_match_the_pandas_expanding_idiom():
-    rng = np.random.default_rng(3)
-    cats = [str(v) for v in rng.choice(["red", "green", "blue", "teal"], size=60)]
-    y = rng.normal(loc=2.0, size=60)
+    cats, y = _census("expanding-target-mean-p02:string-keys", 60, "marital.status")
     expected = _pandas_reference(cats, y)
     _assert_encoding(
         _encode(cats, y),
@@ -147,8 +208,8 @@ def test_string_categories_match_the_pandas_expanding_idiom():
 
 def test_matches_brute_force_reference_on_mixed_labels():
     rng = np.random.default_rng(4)
-    cats = [int(v) if v % 2 else f"s{v}" for v in rng.integers(0, 5, size=30)]
-    y = rng.normal(size=30)
+    cats = [int(v) if v % 2 else f"s{v}" for v in _real_ints(rng, 0, 5, 30)]
+    y = _real_normal(rng, 30)
     expected = _brute_force(cats, y)
     _assert_encoding(
         _encode(cats, y),
@@ -170,8 +231,8 @@ def test_integer_and_string_labels_that_print_alike_stay_distinct():
 
 def test_large_magnitude_targets_match_the_reference():
     rng = np.random.default_rng(5)
-    cats = rng.integers(0, 3, size=50).tolist()
-    y = 1e12 + rng.normal(size=50)
+    cats = _real_ints(rng, 0, 3, 50).tolist()
+    y = 1e12 + _real_normal(rng, 50)
     expected = _brute_force(cats, y)
     _assert_encoding(
         _encode(cats, y),
@@ -182,8 +243,8 @@ def test_large_magnitude_targets_match_the_reference():
 
 def test_small_positive_magnitude_targets_match_the_reference():
     rng = np.random.default_rng(6)
-    cats = rng.integers(0, 3, size=50).tolist()
-    y = 1e-9 * rng.uniform(1.0, 2.0, size=50)
+    cats = _real_ints(rng, 0, 3, 50).tolist()
+    y = 1e-9 * (1.0 + (2.0 - 1.0) * _real_unit(rng, 50))
     expected = _brute_force(cats, y)
     got = _encode(cats, y)
     finite = ~np.isnan(expected)

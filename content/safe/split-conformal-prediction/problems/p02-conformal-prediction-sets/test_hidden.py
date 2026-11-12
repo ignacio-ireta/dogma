@@ -7,11 +7,63 @@ from decimal import ROUND_CEILING, Decimal, localcontext
 
 import numpy as np
 import pytest
+from scipy.special import ndtr
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from submission import prediction_sets
 
-from dogma_data import load, rng, synth
+from dogma_data import load, rng, sample_rows, synth
+from dogma_data import rng as data_rng
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
 
 
 def exact_rank(n, alpha):
@@ -46,19 +98,37 @@ def call(cal_probs, cal_labels, test_probs, alpha):
     return mask
 
 
-def random_probs(rng, rows, classes):
-    return rng.dirichlet(np.ones(classes), size=rows)
+def digit_probs(gen, rows, classes):
+    """Real class probabilities and the real labels for digits images of classes 0..classes-1.
+
+    The classifier is nearest centroid on eight randomly chosen pixels: the probabilities are
+    the softmax of minus the squared distance to each class's mean image, divided by 20. Eight
+    pixels are too few to be sure, so the true class often has a middling probability and is
+    sometimes not the top one.
+    """
+    X, label = sample_rows("digits", gen, 600)
+    pixels = gen.choice(X.shape[1], size=8, replace=False)
+    X, label = X[:, pixels], label.astype(np.int64)
+    centroids = np.stack([X[label == c].mean(axis=0) for c in range(classes)])
+    keep = np.flatnonzero(label < classes)[:rows]
+    logits = -((X[keep, None, :] - centroids[None, :, :]) ** 2).sum(axis=2) / 20.0
+    logits -= logits.max(axis=1, keepdims=True)
+    probs = np.exp(logits)
+    return probs / probs.sum(axis=1, keepdims=True), label[keep]
+
+
+def random_probs(gen, rows, classes):
+    return digit_probs(gen, rows, classes)[0]
 
 
 def test_random_inputs_match_sorted_score_oracle():
-    rng = np.random.default_rng(77)
+    rng = data_rng("conformal-sets-p02:oracle")
     alphas = [0.01, 0.05, 0.1, 0.2, 0.3, 0.5, 0.9]
     for _ in range(60):
         n = int(rng.integers(1, 26))
         classes = int(rng.integers(2, 7))
         alpha = alphas[int(rng.integers(len(alphas)))]
-        cal_probs = random_probs(rng, n, classes)
-        cal_labels = rng.integers(0, classes, size=n)
+        cal_probs, cal_labels = digit_probs(rng, n, classes)
         test_probs = random_probs(rng, 6, classes)
         mask = call(cal_probs, cal_labels, test_probs, alpha)
         want = oracle(cal_probs, cal_labels, test_probs, alpha)
@@ -102,9 +172,7 @@ def test_rank_above_calibration_size_includes_every_class():
 
 
 def test_confident_prediction_always_keeps_its_class():
-    rng = np.random.default_rng(3)
-    cal_probs = random_probs(rng, 12, 4)
-    cal_labels = rng.integers(0, 4, size=12)
+    cal_probs, cal_labels = digit_probs(data_rng("conformal-sets-p02:certain-class"), 12, 4)
     for alpha in (0.01, 0.2, 0.5, 0.99):
         test = np.eye(4)  # one row per class, probability 1 on that class
         mask = call(cal_probs, cal_labels, test, alpha)
@@ -114,9 +182,8 @@ def test_confident_prediction_always_keeps_its_class():
 
 
 def test_sets_are_nested_as_alpha_decreases():
-    rng = np.random.default_rng(12)
-    cal_probs = random_probs(rng, 30, 5)
-    cal_labels = rng.integers(0, 5, size=30)
+    rng = data_rng("conformal-sets-p02:nested")
+    cal_probs, cal_labels = digit_probs(rng, 30, 5)
     test = random_probs(rng, 20, 5)
     previous = None
     for alpha in (0.9, 0.5, 0.3, 0.1, 0.05):
@@ -191,9 +258,8 @@ def test_zero_test_rows_returns_empty_mask_with_k_columns():
 
 
 def test_inputs_are_not_mutated():
-    rng = np.random.default_rng(4)
-    cal_probs = random_probs(rng, 10, 3)
-    cal_labels = rng.integers(0, 3, size=10)
+    rng = data_rng("conformal-sets-p02:not-mutated")
+    cal_probs, cal_labels = digit_probs(rng, 10, 3)
     test_probs = random_probs(rng, 5, 3)
     before = cal_probs.copy(), cal_labels.copy(), test_probs.copy()
     call(cal_probs, cal_labels, test_probs, 0.2)
@@ -213,7 +279,7 @@ def test_empirical_coverage_meets_one_minus_alpha_within_a_stated_bound():
     alpha, n, classes, trials = 0.15, 9, 3, 4000
     covered = 0
     for _ in range(trials):
-        probs = rng.dirichlet(np.ones(classes), size=n + 1)
+        probs = _real_shares(rng, np.ones(classes), n + 1)
         labels = np.array([rng.choice(classes, p=row) for row in probs])
         mask = call(probs[:n], labels[:n], probs[n : n + 1], alpha)
         covered += int(mask[0, labels[n]])
@@ -310,7 +376,7 @@ def _oracle_masks(cal_probs, cal_labels, test_probs, alpha):
 def test_coverage_on_over_confident_probabilities_meets_the_finite_sample_bound(n, alpha):
     gen = rng(f"{PROBLEM}:peaked-coverage:{n}:0")
     classes, trials = 10, 3000
-    labels = gen.integers(0, classes, size=(trials, n + 1))
+    labels = _real_ints(gen, 0, classes, (trials, n + 1))
     probs = synth.peaked_probs(gen, labels.reshape(-1), classes).reshape(trials, n + 1, classes)
     covered = 0
     for t in range(trials):

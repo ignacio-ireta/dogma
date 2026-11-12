@@ -57,3 +57,5 @@ slice and for pure single-sample steps; the special case where one batch holds a
 gradient against finite differences of the batch loss; convergence to the least-squares fit on
 noise-free data; seed reproducibility and seed dependence; linearity in the targets; validation of
 batch size, shapes, learning rate and epochs; integer inputs; and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `diabetes` (see `docs/DATASETS.md`).

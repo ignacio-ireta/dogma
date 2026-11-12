@@ -41,3 +41,5 @@ directly, including values very close to 0 and 1; one call to `rng.random(n)`; t
 (doubling the rate halves every draw under the same seed); a Kolmogorov–Smirnov goodness-of-fit
 check at a fixed seed; the shape and dtype for empty and non-empty output; and validation of `rate`
 and `n`.
+
+Some hidden tests take their inputs from the real dataset `online_retail` (see `docs/DATASETS.md`).

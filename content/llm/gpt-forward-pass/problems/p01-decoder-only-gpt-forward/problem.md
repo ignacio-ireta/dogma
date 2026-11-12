@@ -101,3 +101,7 @@ negative token ids rejected; large and small magnitudes; float32 inputs returnin
 inputs and parameters left unchanged; and every `ValueError` rule above. A wrong variant gets a
 named message, for example an untied head where the tie was intended, a transposed head or a
 missing position table.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer`,
+`gutenberg_frankenstein`, `gutenberg_pride_prejudice` and `gutenberg_walden` (see
+`docs/DATASETS.md`).

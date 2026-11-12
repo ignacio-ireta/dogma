@@ -5,12 +5,15 @@ Failure messages name the kind of mistake. They never print hidden configs or ex
 
 from __future__ import annotations
 
+import functools
 import math
 import random
 from typing import Any
 
 import pytest
 from submission import kv_cache_bytes
+
+from dogma_data import load_text
 
 BYTES = {"fp32": 4, "fp16": 2, "bf16": 2, "fp8": 1}
 
@@ -40,6 +43,24 @@ def _expect_error(exc_type: type[Exception], call: Any, mistake: str) -> None:
     pytest.fail(mistake)
 
 
+@functools.cache
+def _passage_lengths() -> tuple[int, ...]:
+    """Lengths, in words, of real passages: the first k lines of a novel, for every k.
+
+    A sequence length in the seeded test is the length of one such passage from Frankenstein,
+    Pride and Prejudice or Walden, a word standing for a token. Lengths from 0 to 20000 words
+    are kept.
+    """
+    lengths = set()
+    for name in ("gutenberg_frankenstein", "gutenberg_pride_prejudice", "gutenberg_walden"):
+        total = 0
+        for line in load_text(name).splitlines():
+            total += len(line.split())
+            lengths.add(total)
+    lengths.add(0)
+    return tuple(sorted(length for length in lengths if 0 <= length <= 20000))
+
+
 def test_seeded_random_configs_match_independent_formula() -> None:
     rng = random.Random(2026)  # noqa: S311 -- seeded synthetic configs, not security.
     dtypes = sorted(BYTES)
@@ -51,7 +72,7 @@ def test_seeded_random_configs_match_independent_formula() -> None:
         }
         if rng.random() < 0.5:
             config["sliding_window"] = rng.randint(1, 8192)
-        seq_len = rng.randint(0, 20000)
+        seq_len = rng.choice(_passage_lengths())
         batch = rng.randint(1, 16)
         dtype = rng.choice(dtypes)
         expected = _oracle(config, seq_len, batch, dtype)

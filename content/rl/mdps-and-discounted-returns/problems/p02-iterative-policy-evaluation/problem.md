@@ -61,3 +61,6 @@ tests compare against an independent linear-system solve on random MDPs with sev
 check the zero-discount and absorbing-state cases, a duplicated action with split probability,
 large reward magnitudes, invalid probabilities, `gamma = 1`, invalid `tol`, shape mismatch, and
 input mutation.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `elnino` (see
+`docs/DATASETS.md`).

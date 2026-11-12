@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import copy
+import functools
 import random
+import re
 
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import simulate_batching
+
+from dogma_data import load_frame, retail_invoices
 
 
 def run(arrivals, prompts, outputs, max_batch, budget, policy):  # noqa: PLR0917
@@ -68,12 +72,48 @@ def step_model(arrivals, prompts, outputs, max_batch, budget, policy):  # noqa: 
     return list(zip(first, finish, strict=False))
 
 
+@functools.cache
+def _gsm8k_lengths() -> tuple[tuple[int, int], ...]:
+    """(prompt length, output length) of real GSM8K problems, in the small units of this model.
+
+    The prompt length is the number of sentences of the question and the output length is the
+    number of calculations in the worked answer. Both stand in for token counts at a scale a
+    step-by-step simulation can follow. Problems outside 1..6 on either count are left out, so
+    every prompt fits the smallest budget.
+    """
+    table = load_frame("gsm8k")
+    pairs = []
+    for question, answer in zip(table["question"], table["answer"], strict=True):
+        sentences = len(re.findall(r"[.?!](?:\s|$)", question))
+        calculations = answer.count("<<")
+        if 1 <= sentences <= 6 and 1 <= calculations <= 6:
+            pairs.append((sentences, calculations))
+    return tuple(pairs)
+
+
+@functools.cache
+def _arrival_steps() -> tuple[int, ...]:
+    """Real arrival steps: the minute of the hour of every real invoice, in six-minute steps.
+
+    Ten steps, 0 to 9. Invoices cluster on a few steps and several share one, as requests do.
+    """
+    stamps = retail_invoices()["invoice_ts"]
+    return tuple((stamps.dt.minute // 6).tolist())
+
+
 def random_workload(rng: random.Random):
+    """Requests are real GSM8K problems arriving at real invoice minutes; the batch limit and
+    the budget are generated.
+
+    The budget is drawn from the longest prompt upward, over seven values, so one workload in
+    seven has a prompt that fills the budget exactly: the tightest case the contract allows.
+    """
     n = rng.randint(1, 9)
-    budget = rng.randint(6, 12)
-    arrivals = [rng.randint(0, 10) for _ in range(n)]
-    prompts = [rng.randint(1, 6) for _ in range(n)]
-    outputs = [rng.randint(1, 6) for _ in range(n)]
+    arrivals = [rng.choice(_arrival_steps()) for _ in range(n)]
+    lengths = rng.sample(_gsm8k_lengths(), n)
+    prompts = [prompt for prompt, _ in lengths]
+    outputs = [output for _, output in lengths]
+    budget = max(prompts) + rng.randint(0, 6)
     return arrivals, prompts, outputs, rng.randint(1, 4), budget
 
 

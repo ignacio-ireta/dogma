@@ -3,9 +3,11 @@ import pytest
 from scipy import stats
 from submission import sample_size_two_proportions
 
+from dogma_data import load, retail_invoices
+
 # (p_baseline, mde, alpha, power). Chosen so the continuous n sits well away from an integer,
 # which makes ceil differ from round (for example at 0.30 + 0.05) and from floor everywhere.
-GRID = [
+GRID: list[tuple[float | str, float, float, float]] = [
     (0.10, 0.02, 0.05, 0.8),
     (0.30, 0.05, 0.05, 0.8),
     (0.05, 0.01, 0.05, 0.8),
@@ -17,6 +19,31 @@ GRID = [
     (0.25, 0.025, 0.05, 0.9),
     (0.50, 0.001, 0.05, 0.8),
 ]
+
+
+# Baseline rates counted from real tables, each with an effect a team might look for. The name
+# is replaced by the rate inside the test (`_baseline`), so no dataset is read at import.
+GRID += [
+    ("cancelled-invoices", -0.03, 0.05, 0.8),
+    ("malignant-tumours", 0.05, 0.05, 0.9),
+    ("improved-grades", 0.04, 0.01, 0.8),
+]
+
+
+def _baseline(value):
+    """A number as it is; a name as the real rate it stands for.
+
+    The share of invoices that were cancelled (Online Retail II sample), the share of tumours
+    that were malignant (breast_cancer) and the share of students whose grade improved
+    (spector).
+    """
+    if value == "cancelled-invoices":
+        return float(retail_invoices()["cancelled"].mean())
+    if value == "malignant-tumours":
+        return float(1.0 - load("breast_cancer").y.mean())
+    if value == "improved-grades":
+        return float(load("spector").y.mean())
+    return value
 
 
 def _reference(p_baseline, mde, alpha, power):
@@ -66,6 +93,7 @@ def _must_raise_value_error(call, mistake):
     ids=[f"grid{index}" for index in range(len(GRID))],
 )
 def test_matches_independent_formula_on_grid(p_baseline, mde, alpha, power):
+    p_baseline = _baseline(p_baseline)
     assert sample_size_two_proportions(p_baseline, mde, alpha=alpha, power=power) == _reference(
         p_baseline, mde, alpha, power
     ), (

@@ -86,3 +86,6 @@ result with an exact rational computation over seeded random models, shapes and 
 the new token; prefill FLOPs that scale with both prompt length and batch; decode throughput that never falls as the
 batch grows; a decode step that costs less than the batch times one step; a compute-bound and a memory-bound regime
 for each phase; configs that must not change; the exact key set and float types; and each validation rule.
+
+Some hidden tests take their inputs from the real datasets `gutenberg_frankenstein`,
+`gutenberg_pride_prejudice` and `gutenberg_walden` (see `docs/DATASETS.md`).

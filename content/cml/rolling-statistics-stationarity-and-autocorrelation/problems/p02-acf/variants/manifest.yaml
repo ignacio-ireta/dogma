@@ -4,8 +4,8 @@ accept:
   origin: blind
 - file: accept_loop_sums.py
   origin: freedom
-  freedom: lag sums added one product at a time in a Python loop, not with a dot product, so only the
-    last digits differ
+  freedom: lag sums and the denominator added one product at a time in a Python loop, not with a dot product,
+    so only the last digits differ
 reject:
 - file: reject_mutates_caller_array.py
   mistake: writes the centred values into the caller's float array
@@ -51,6 +51,13 @@ reject:
   clause: 'Returns: a float64 array of length `nlags + 1`. Entry k is the autocorrelation at lag k, and
     entry 0 is exactly 1.'
   killed_by: test_huge_readings_of_opposite_sign_give_finite_autocorrelations
+  visible: hidden
+- file: reject_lag_zero_sums_differ.py
+  mistake: adds the lag sums in a Python loop but the denominator with a dot product, so lag 0 is not
+    exactly one on some series
+  clause: 'Returns: a float64 array of length `nlags + 1`. Entry k is the autocorrelation at lag k, and
+    entry 0 is exactly 1.'
+  killed_by: test_lag_zero_is_exactly_one_on_random_series
   visible: hidden
 uncovered: []
 sweeps:

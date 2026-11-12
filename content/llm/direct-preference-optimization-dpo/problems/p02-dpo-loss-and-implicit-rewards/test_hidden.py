@@ -4,10 +4,18 @@
 # Messages name the kind of mistake and never show hidden inputs or expected values.
 from __future__ import annotations
 
+import collections
+import functools
+import math
+import re
+
 import pytest
 import torch
 import torch.nn.functional as ref_f  # oracle only
 from submission import dpo_loss_and_implicit_rewards
+
+from dogma_data import load_text
+from dogma_data import rng as data_rng
 
 ATOL = 1e-9
 RTOL = 1e-9
@@ -16,21 +24,47 @@ RTOL = 1e-9
 FLOAT32_ATOL = 1e-5
 
 
-def _gen(seed: int) -> torch.Generator:
-    return torch.Generator().manual_seed(seed)
+@functools.cache
+def _language_models():
+    """Two real unigram language models and the responses they score.
 
-
-def _logp(shape, seed, dtype=torch.float64):
-    """Random sequence log-probs: strictly negative, spread over a few nats."""
-    return (-(torch.rand(shape, generator=_gen(seed), dtype=dtype) * 20.0) - 0.05).clone()
+    The policy is the word frequencies of Frankenstein and the reference those of Walden, both
+    with one added count per word of the joint vocabulary. A response is the first three words
+    of a line of Pride and Prejudice, and its log-probability under a model is the sum of the
+    log-probabilities of its words: strictly negative, spread over a few nats.
+    """
+    words = {
+        name: re.findall(r"[a-z]+", load_text(name).lower())
+        for name in ("gutenberg_frankenstein", "gutenberg_walden", "gutenberg_pride_prejudice")
+    }
+    vocab = sorted(set().union(*words.values()))
+    tables = []
+    for name in ("gutenberg_frankenstein", "gutenberg_walden"):
+        counts = collections.Counter(words[name])
+        total = len(words[name]) + len(vocab)
+        tables.append({word: math.log((counts[word] + 1) / total) for word in vocab})
+    responses = [
+        tuple(re.findall(r"[a-z]+", line.lower())[:3])
+        for line in load_text("gutenberg_pride_prejudice").splitlines()
+    ]
+    responses = [response for response in responses if len(response) == 3]
+    scores = [[sum(table[word] for word in response) for response in responses] for table in tables]
+    return torch.tensor(scores, dtype=torch.float64)
 
 
 def _inputs(seed, batch=8, dtype=torch.float64):
+    """Policy and reference log-probabilities of real chosen and rejected responses."""
+    scores = _language_models()
+    picked = data_rng(f"p02-dpo-loss-and-implicit-rewards:responses:{seed}").choice(
+        scores.shape[1], size=2 * batch, replace=False
+    )
+    chosen, rejected = torch.tensor(picked[:batch]), torch.tensor(picked[batch:])
+    policy, reference = scores[0].to(dtype), scores[1].to(dtype)
     return (
-        _logp((batch,), seed, dtype),
-        _logp((batch,), seed + 1, dtype),
-        _logp((batch,), seed + 2, dtype),
-        _logp((batch,), seed + 3, dtype),
+        policy[chosen].clone(),
+        policy[rejected].clone(),
+        reference[chosen].clone(),
+        reference[rejected].clone(),
     )
 
 

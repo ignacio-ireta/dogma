@@ -43,3 +43,6 @@ logits of very large magnitude, in both directions; relative precision on the ne
 a 60-digit reference; exact $0.5$ at zero and the symmetry $\sigma(-z) = 1 - \sigma(z)$ in the bulk;
 the infinite limits; NaN input; empty, scalar and matrix shapes; integer input; and that the input is
 left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

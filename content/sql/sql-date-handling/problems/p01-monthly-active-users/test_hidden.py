@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 import pytest
 
-from dogma_data import rng, synth
+from dogma_data import load_frame, rng
 
 COLUMNS = ["month", "active_users"]
 EVENTS_DDL = "CREATE TABLE events (user_id BIGINT, event_ts TIMESTAMP)"
@@ -84,17 +84,22 @@ def _must_equal(got: list[tuple[Any, ...]], want: list[tuple[date, int]], mistak
 
 @pytest.fixture(scope="module")
 def event_log_events() -> list[tuple[int, datetime]]:
-    generated = synth.event_log(
-        rng("sql/sql-date-handling/p01-monthly-active-users:event-log:0"),
-        5_000,
-        n_users=500,
-        start="2022-10-01",
-        days=1200,
-        dirty_rate=0.1,
-    )
+    """A real activity log, moved forward in time so the range of the statement falls inside it.
+
+    Each event is one invoice line of an online retailer's customer (online_retail): two years
+    of real activity, December 2009 to December 2011, with busy and quiet months and many lines
+    per customer and minute. Every timestamp is moved forward by exactly 13 years, to December
+    2022 through December 2024, so the log holds the four months asked for and also the same
+    month numbers of other years. A random nine tenths of the lines is used.
+    """
+    gen = rng("sql/sql-date-handling/p01-monthly-active-users:event-log:0")
+    lines = load_frame("online_retail")
+    keep = gen.permutation(len(lines))[: len(lines) * 9 // 10]
+    users = lines["Customer ID"].to_numpy()[keep]
+    stamps = (pd.to_datetime(lines["InvoiceDate"]) + pd.DateOffset(years=13)).to_numpy()[keep]
     return [
         (int(user_id), pd.Timestamp(stamp).to_pydatetime())
-        for user_id, stamp in zip(generated["user_id"], generated["ts"], strict=True)
+        for user_id, stamp in zip(users, stamps, strict=True)
     ]
 
 

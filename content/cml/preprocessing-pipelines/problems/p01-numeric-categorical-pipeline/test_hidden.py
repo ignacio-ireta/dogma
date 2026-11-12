@@ -3,22 +3,81 @@ plus leakage, rule and validation cases. Each failure names the likely mistake f
 
 from __future__ import annotations
 
+import functools
+
 import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from scipy.special import ndtr
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from submission import fit_transform_pipeline
 
-from dogma_data import load_frame
+from dogma_data import load_frame, sample_rows
+from dogma_data import rng as data_rng
 
 NUMERIC = ["age", "income", "count", "const"]
 CATEGORICAL = ["city", "plan"]
 SETTINGS = settings(max_examples=40, deadline=None, report_multiple_bugs=False)
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
+
+
+@functools.cache
+def _adult():
+    return load_frame("adult")
 
 
 def _oracle(train, test, numeric=NUMERIC, categorical=CATEGORICAL):
@@ -49,20 +108,31 @@ def _oracle(train, test, numeric=NUMERIC, categorical=CATEGORICAL):
 
 
 def _frames(seed):
-    rng = np.random.default_rng(seed)
+    """Train and test frames of real adult census rows, with gaps placed by the draw.
+
+    age: age in years. income: the census weight of the row in thousands, a right-skewed
+    amount (the table holds no income in dollars). count: capital gain in dollars, an integer
+    column that is zero for nine people in ten. city: the
+    workclass, nine levels from very common to almost unseen, "?" among them. plan: the sex
+    column. The values are real; about a fifth of each listed column is removed at random,
+    because the pipeline is about gaps and the source marks them with "?" instead.
+    """
+    rng = data_rng(f"numeric-categorical-pipeline-p01:frames:{seed}")
     n = int(rng.integers(4, 30))
     m = int(rng.integers(1, 15))
+    adult = _adult()
 
     def make(rows, shift):
-        age = rng.normal(size=rows) * 3 + shift
-        age[rng.random(rows) < 0.25] = np.nan
-        income = rng.lognormal(size=rows)
-        income[rng.random(rows) < 0.2] = np.nan
-        count = rng.integers(0, 9, size=rows)
-        city = rng.choice(["north", "south", "east"], size=rows).astype(object)
-        city[rng.random(rows) < 0.2] = np.nan
-        plan = np.where(rng.random(rows) < 0.5, "basic", "pro").astype(object)
-        plan[rng.random(rows) < 0.1] = np.nan
+        picked = adult.iloc[rng.choice(len(adult), size=rows, replace=False)]
+        age = picked["age"].to_numpy(dtype=np.float64) + shift
+        age[_real_unit(rng, rows) < 0.25] = np.nan
+        income = picked["fnlwgt"].to_numpy(dtype=np.float64) / 1000.0
+        income[_real_unit(rng, rows) < 0.2] = np.nan
+        count = picked["capital.gain"].to_numpy(dtype=np.int64)
+        city = picked["workclass"].to_numpy(dtype=object).copy()
+        city[_real_unit(rng, rows) < 0.2] = np.nan
+        plan = picked["sex"].to_numpy(dtype=object).copy()
+        plan[_real_unit(rng, rows) < 0.1] = np.nan
         return pd.DataFrame(
             {
                 "age": age,
@@ -78,7 +148,7 @@ def _frames(seed):
     test = make(m, 4.0)
     test.loc[test.index[::3], "city"] = "west"  # an unseen category
     # Every listed column keeps one observed training value, so the fit is defined.
-    train.loc[0, ["age", "income", "city", "plan"]] = [2.0, 1.0, "north", "basic"]
+    train.loc[0, ["age", "income", "city", "plan"]] = [39.0, 180.0, "Private", "Male"]
     return train, test
 
 

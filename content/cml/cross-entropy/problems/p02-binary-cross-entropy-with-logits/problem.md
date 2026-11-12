@@ -50,3 +50,6 @@ confident-correct losses must not round to zero), where a
 probability-based formula returns the wrong value or NaN; no overflow warning for any logit in the finite
 range; soft targets; the mean, not the sum; integer input; every rejection family (shapes and lengths, empty
 input, NaN and infinite logits, targets outside $[0, 1]$, NaN targets); and that the inputs are left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

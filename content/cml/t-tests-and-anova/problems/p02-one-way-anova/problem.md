@@ -49,3 +49,6 @@ groups `F` equals the square of the pooled-variance t statistic, that a very sma
 upper tail and not as one minus the CDF, that float32 storage of real measurements (the iris species) gives scipy's result, that a singleton group is allowed, that shifting, rescaling and
 reordering the groups changes nothing, that a large common offset is handled, that invalid inputs raise
 `ValueError` (including the degrees-of-freedom and zero-variation cases), and that inputs are left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `digits` and `iris` (see
+`docs/DATASETS.md`).

@@ -57,3 +57,6 @@ require identical action sequences for several epsilon values and tie patterns. 
 that a call with epsilon zero consumes exactly one uniform draw, that the selection frequencies
 match the analytic table within 0.02, that ties are broken by lowest index, and
 the invalid-input cases.
+
+The hidden tests draw their bulk inputs from the real datasets `digits` and `wine` (see
+`docs/DATASETS.md`).

@@ -6,6 +6,7 @@ answer.
 
 from __future__ import annotations
 
+import functools
 import math
 
 import numpy as np
@@ -15,6 +16,9 @@ from hypothesis import strategies as st
 from scipy import stats
 from submission import mc_estimate
 
+from dogma_data import load, sample_rows
+from dogma_data import rng as data_rng
+
 Z95 = float(stats.norm.ppf(0.975))
 
 
@@ -22,23 +26,39 @@ def _identity(x):
     return x
 
 
-def _uniform_draws(rng, n):
-    return rng.random(n)
-
-
-def _normal_draws(rng, n):
-    return rng.standard_normal(n)
-
-
 def _square(x):
     return np.asarray(x) ** 2
 
 
-SAMPLERS = {
-    "uniform": _uniform_draws,
-    "normal": _normal_draws,
-    "exponential": lambda rng, n: rng.exponential(2.0, n),
-}
+@functools.cache
+def _population(name):
+    """A real population to sample from, sorted so its order is the same in every run.
+
+    house-values: the median house value of 6,000 California districts, in units of 100,000
+    dollars, skewed and capped at 5. wine-alcohol: the alcohol content of 178 wines, in
+    percent. petal-length: the petal length of 150 irises, in centimetres, with two modes.
+    """
+    if name == "house-values":
+        _, values = sample_rows("california_housing", data_rng("p01-mc-estimate:values"), 6000)
+    elif name == "wine-alcohol":
+        values = load("wine").X[:, 0]
+    else:
+        values = load("iris").X[:, 2]
+    return np.sort(np.asarray(values, dtype=np.float64))
+
+
+def _resample(name):
+    """A sampler that draws n members of a real population, with replacement."""
+
+    def draw(rng, n):
+        values = _population(name)
+        return values[rng.integers(0, values.shape[0], size=n)]
+
+    return draw
+
+
+_house_value_draws = _resample("house-values")
+SAMPLERS = {name: _resample(name) for name in ("house-values", "wine-alcohol", "petal-length")}
 INTEGRANDS = {"identity": _identity, "square": _square, "exp": np.exp}
 
 
@@ -137,7 +157,7 @@ def test_sample_is_called_exactly_once_with_all_n_draws():
 
     def recording_sample(rng, n):
         calls.append(n)
-        return rng.random(n)
+        return _house_value_draws(rng, n)
 
     _unpack(_mc(_identity, recording_sample, 50, seed=3))
     assert calls == [50], (
@@ -152,7 +172,7 @@ def test_f_is_applied_once_to_the_whole_sample_array():
         shapes.append(np.shape(x))
         return _square(x)
 
-    _unpack(_mc(recording_f, _uniform_draws, 40, seed=1))
+    _unpack(_mc(recording_f, _house_value_draws, 40, seed=1))
     assert shapes == [(40,)], (
         "f must be applied once to the whole (n,) array, not element by element or twice"
     )
@@ -186,9 +206,9 @@ def test_sample_array_returned_by_sample_is_not_modified():
 
 
 def test_same_seed_reproduces_the_result_and_another_seed_changes_it():
-    first = _unpack(_mc(_square, _uniform_draws, 500, seed=11))
-    again = _unpack(_mc(_square, _uniform_draws, 500, seed=11))
-    other = _unpack(_mc(_square, _uniform_draws, 500, seed=12))
+    first = _unpack(_mc(_square, _house_value_draws, 500, seed=11))
+    again = _unpack(_mc(_square, _house_value_draws, 500, seed=11))
+    other = _unpack(_mc(_square, _house_value_draws, 500, seed=12))
     assert first == again, (
         "the same seed must give identical output: build the generator from seed in the function"
     )
@@ -196,10 +216,12 @@ def test_same_seed_reproduces_the_result_and_another_seed_changes_it():
 
 
 def test_interval_covers_the_truth_at_the_nominal_rate_across_seeds():
+    # The truth is known exactly: the mean of the squared values over the whole real population.
+    truth = float(np.mean(_population("house-values") ** 2))
     hits = 0
     for seed in range(1000):
-        _, _, lo, hi = _unpack(_mc(_square, _uniform_draws, 200, seed=seed))
-        hits += lo <= 1 / 3 <= hi
+        _, _, lo, hi = _unpack(_mc(_square, _house_value_draws, 200, seed=seed))
+        hits += lo <= truth <= hi
     window = 4 * math.sqrt(0.95 * 0.05 / 1000)
     assert abs(hits / 1000 - 0.95) <= window, (
         "interval coverage is far from the nominal 95%: check the normal quantile z and the "
@@ -208,7 +230,9 @@ def test_interval_covers_the_truth_at_the_nominal_rate_across_seeds():
 
 
 def test_expected_exp_of_a_standard_normal_matches_the_closed_form():
-    estimate, se, lo, hi = _unpack(_mc(np.exp, _normal_draws, 200_000, seed=1))
+    estimate, se, lo, hi = _unpack(
+        _mc(np.exp, lambda rng, n: rng.standard_normal(n), 200_000, seed=1)
+    )
     truth = math.exp(0.5)
     assert lo <= truth <= hi, (
         "the 95% interval should cover E[exp(Z)] = e^(1/2): check the interval and f"
@@ -221,8 +245,8 @@ def test_expected_exp_of_a_standard_normal_matches_the_closed_form():
 def test_standard_error_shrinks_like_one_over_root_n():
     ratios = []
     for seed in range(200):
-        _, se_small, _, _ = _unpack(_mc(_identity, _uniform_draws, 1000, seed=seed))
-        _, se_large, _, _ = _unpack(_mc(_identity, _uniform_draws, 4000, seed=seed))
+        _, se_small, _, _ = _unpack(_mc(_identity, _house_value_draws, 1000, seed=seed))
+        _, se_large, _, _ = _unpack(_mc(_identity, _house_value_draws, 4000, seed=seed))
         ratios.append(se_large / se_small)
     assert abs(float(np.mean(ratios)) - 0.5) <= 0.02, (
         "quadrupling n must halve the standard error: check the division by sqrt(n)"
@@ -231,10 +255,10 @@ def test_standard_error_shrinks_like_one_over_root_n():
 
 def test_standard_error_is_accurate_at_a_large_offset():
     def shifted_draws(rng, n):
-        return 1e9 + rng.standard_normal(n)
+        return 1e9 + _house_value_draws(rng, n)
 
     _, se, _, _ = _unpack(_mc(_identity, shifted_draws, 1000, seed=5))
-    values = 1e9 + np.random.default_rng(5).standard_normal(1000)
+    values = 1e9 + _house_value_draws(np.random.default_rng(5), 1000)
     expected = float(np.std(values, ddof=1)) / math.sqrt(1000)
     np.testing.assert_allclose(
         se,
@@ -249,7 +273,7 @@ def test_constant_integrand_has_zero_standard_error_and_a_point_interval():
     def constant(x):
         return np.full(np.shape(x), 2.0)
 
-    estimate, se, lo, hi = _unpack(_mc(constant, _uniform_draws, 10, seed=0))
+    estimate, se, lo, hi = _unpack(_mc(constant, _house_value_draws, 10, seed=0))
     assert estimate == 2.0, "a constant integrand has that constant as its expectation"
     assert se == 0.0, "no variation in f means a standard error of exactly zero"
     assert lo == hi == 2.0, "with zero standard error the interval collapses onto the estimate"
@@ -258,7 +282,7 @@ def test_constant_integrand_has_zero_standard_error_and_a_point_interval():
 @pytest.mark.parametrize("n", [0, 1, -3], ids=["no-draws", "one-draw", "negative"])
 def test_sample_size_below_two_raises_value_error(n):
     _raises_value_error(
-        lambda: mc_estimate(_identity, _uniform_draws, n, seed=0),
+        lambda: mc_estimate(_identity, _house_value_draws, n, seed=0),
         "fewer than two draws has no sample standard deviation: raise ValueError before "
         "dividing by n - 1",
     )
@@ -269,13 +293,13 @@ def test_sample_size_below_two_raises_value_error(n):
 )
 def test_confidence_outside_the_open_unit_interval_raises_value_error(confidence):
     _raises_value_error(
-        lambda: mc_estimate(_identity, _uniform_draws, 20, seed=0, confidence=confidence),
+        lambda: mc_estimate(_identity, _house_value_draws, 20, seed=0, confidence=confidence),
         "a confidence level must be strictly between 0 and 1: raise ValueError",
     )
 
 
 def test_return_value_is_a_three_tuple_with_a_pair_for_the_interval():
-    result = _mc(_identity, _uniform_draws, 20, seed=0)
+    result = _mc(_identity, _house_value_draws, 20, seed=0)
     assert isinstance(result, tuple) and len(result) == 3, (
         "return a 3-tuple: (estimate, standard_error, (lo, hi))"
     )
@@ -306,7 +330,7 @@ def test_seed_is_used_only_to_build_the_generator_and_leaves_numpy_global_state_
     np.random.seed(12345)
     expected_next_draw = np.random.random()
     np.random.seed(12345)
-    _mc(_identity, _uniform_draws, 50, seed=7)
+    _mc(_identity, _house_value_draws, 50, seed=7)
     actual_next_draw = np.random.random()
     assert actual_next_draw == expected_next_draw, (
         "seed is used only to build rng: the global NumPy generator was reseeded or advanced "

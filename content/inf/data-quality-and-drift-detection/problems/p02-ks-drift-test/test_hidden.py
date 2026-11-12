@@ -7,6 +7,9 @@ from hypothesis import strategies as st
 from scipy import stats
 from submission import ks_drift
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 
 def _require(ok, mistake):
     """Fail with the mistake's name only. Hypothesis and the grader show this first line."""
@@ -88,7 +91,13 @@ def _check_p_value(p_value, expected, statistic, n, m):
 
 
 def _sample(rng, size, shift, spread):
-    return rng.normal(loc=shift, scale=spread, size=size)
+    """Median income of real california_housing block groups, standardised, then drifted.
+
+    The feature is right-skewed with a long upper tail. The shift and the spread move and
+    rescale the real values by the amount the case states.
+    """
+    values = sample_rows("california_housing", rng, size, standardize=True)[0][:, 0]
+    return values * spread + shift
 
 
 @pytest.mark.parametrize(
@@ -103,7 +112,7 @@ def _sample(rng, size, shift, spread):
     ids=["similar", "shifted-unequal", "wider-current", "large-samples", "tiny-samples"],
 )
 def test_statistic_matches_scipy_on_seeded_samples(seed, n, m, shift, spread):
-    rng = np.random.default_rng(seed)
+    rng = data_rng(f"ks-drift-p02:samples:{seed}")
     reference = _sample(rng, n, 0.0, 1.0)
     current = _sample(rng, m, shift, spread)
     expected_statistic = float(stats.ks_2samp(reference, current).statistic)
@@ -113,9 +122,11 @@ def test_statistic_matches_scipy_on_seeded_samples(seed, n, m, shift, spread):
 
 @pytest.mark.parametrize("seed", [10, 11, 12], ids=["ties-a", "ties-b", "ties-c"])
 def test_statistic_matches_scipy_with_heavy_ties(seed):
-    rng = np.random.default_rng(seed)
-    reference = rng.integers(0, 5, size=80).astype(np.float64)
-    current = rng.integers(1, 7, size=50).astype(np.float64)
+    # House age in whole decades: a real feature recorded on a coarse grid, so most values
+    # are shared by many block groups. The current sample is a second draw, one decade older.
+    rng = data_rng(f"ks-drift-p02:ties:{seed}")
+    reference = np.floor(sample_rows("california_housing", rng, 80)[0][:, 1] / 10.0)
+    current = np.floor(sample_rows("california_housing", rng, 50)[0][:, 1] / 10.0) + 1.0
     expected_statistic = float(stats.ks_2samp(reference, current).statistic)
     statistic, _, _ = _run(lambda: ks_drift(reference, current), "ks_drift raised on tied samples")
     _check_statistic(statistic, expected_statistic, reference, current)
@@ -150,7 +161,7 @@ def test_tied_values_are_counted_as_one_block():
     ],
 )
 def test_p_value_matches_the_limiting_distribution_at_the_effective_size(seed, n, m, shift):
-    rng = np.random.default_rng(seed)
+    rng = data_rng(f"ks-drift-p02:samples:{seed}")
     reference = _sample(rng, n, 0.0, 1.0)
     current = _sample(rng, m, shift, 1.0)
     expected_statistic = float(stats.ks_2samp(reference, current).statistic)
@@ -179,7 +190,7 @@ def test_identical_samples_have_zero_statistic_unit_p_value_and_no_drift():
 
 
 def test_one_sided_shift_is_detected_with_the_full_statistic():
-    rng = np.random.default_rng(30)
+    rng = data_rng("ks-drift-p02:half-sd-shift")
     reference = _sample(rng, 300, 0.0, 1.0)
     current = _sample(rng, 300, -0.5, 1.0)
     expected_statistic = float(stats.ks_2samp(reference, current).statistic)
@@ -203,7 +214,7 @@ def test_disjoint_samples_have_statistic_one_and_drift():
 
 
 def test_drift_flag_follows_the_p_value_against_alpha():
-    rng = np.random.default_rng(31)
+    rng = data_rng("ks-drift-p02:alpha")
     reference = _sample(rng, 150, 0.0, 1.0)
     current = _sample(rng, 90, 0.35, 1.0)
     expected_p = _limit_p(float(stats.ks_2samp(reference, current).statistic), 150, 90)

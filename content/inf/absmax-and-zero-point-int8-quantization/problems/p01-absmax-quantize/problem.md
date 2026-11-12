@@ -72,3 +72,6 @@ resolved to even codes; the error bound `|x - x_hat| <= scale / 2`; codes that s
 all-zero channels next to non-zero ones; integer input; very small and very large magnitudes;
 invalid dtypes, shapes, axes, empty and nonfinite inputs; inputs that are not mutated; and the
 shape rules of the dequantizer.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

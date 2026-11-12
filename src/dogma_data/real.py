@@ -4,8 +4,10 @@ Numeric tabular sets (``load``) come from sklearn and statsmodels bundles, raw a
 Series (``load_series``) keep their NaNs. Vendored CSVs (``load_frame`` only) are copied from
 ``sources/`` and are deliberately not cleaned. HuggingFace snapshots are vendored text files under
 ``data/hf/`` (``scripts/sync_hf_datasets.py``): tables load with ``load_frame``, books with
-``load_text``. Everything reads local files; nothing uses the network. pandas, sklearn and
-statsmodels are imported inside the functions that need them.
+``load_text``. ``retail_events`` and ``retail_invoices`` give the online_retail lines as an
+activity log and as one row per invoice.
+Everything reads local files; nothing uses the network. pandas, sklearn and statsmodels are
+imported inside the functions that need them.
 """
 
 from __future__ import annotations
@@ -15,6 +17,7 @@ import importlib
 import io
 import json
 from dataclasses import dataclass
+from functools import cache
 from importlib.resources import files
 from typing import Any
 
@@ -30,6 +33,8 @@ _HF_TABLES = {
     "adult": "adult.csv",
     "california_housing": "california_housing.csv",
     "gsm8k": "gsm8k.jsonl",
+    "mt_bench_judgments": "mt_bench_judgments.csv",
+    "online_retail": "online_retail.csv",
 }
 _HF_TEXTS = ("gutenberg_frankenstein", "gutenberg_pride_prejudice", "gutenberg_walden")
 
@@ -266,6 +271,76 @@ def load_frame(name: str) -> Any:
             index = pd.RangeIndex(len(values))
         return pd.DataFrame({name: values}, index=index)
     return load(name).frame()
+
+
+@cache
+def _retail_invoices() -> Any:
+    pd = _pandas()
+
+    lines = _hf_table("online_retail")
+    lines = lines.assign(
+        line_total=lines["Quantity"] * lines["Price"],
+        invoice_ts=pd.to_datetime(lines["InvoiceDate"]).astype("datetime64[s]"),
+    )
+    grouped = lines.groupby("Invoice", sort=False)
+    table = pd.DataFrame(
+        {
+            "invoice": [str(key) for key in grouped.groups],
+            "customer_id": grouped["Customer ID"].first().to_numpy().astype(np.int64),
+            "invoice_ts": grouped["invoice_ts"].first().to_numpy(),
+            "country": grouped["Country"].first().to_numpy(),
+            "n_lines": grouped.size().to_numpy().astype(np.int64),
+            "amount": np.round(grouped["line_total"].sum().to_numpy().astype(np.float64), 2),
+        }
+    )
+    table["cancelled"] = table["invoice"].str.startswith("C").to_numpy(dtype=bool)
+    return table.sort_values(["invoice_ts", "invoice"], kind="stable").reset_index(drop=True)
+
+
+def retail_invoices() -> Any:
+    """Return the online_retail snapshot rolled up to one row per invoice (fresh each call).
+
+    Columns: ``invoice`` (str; a cancellation starts with ``C``), ``customer_id`` (int64),
+    ``invoice_ts`` (naive ``datetime64[s]``, minute resolution), ``country`` (str),
+    ``n_lines`` (int64), ``amount`` (the sum of quantity times price over the lines, rounded to
+    cents; negative for a cancellation) and ``cancelled`` (bool). Rows are in time order.
+    """
+    return _retail_invoices().copy(deep=True)
+
+
+@cache
+def _retail_events() -> Any:
+    pd = _pandas()
+
+    lines = _hf_table("online_retail")
+    return pd.DataFrame(
+        {
+            "event_id": np.arange(1, len(lines) + 1, dtype=np.int64),
+            "user_id": lines["Customer ID"].to_numpy().astype(np.int64),
+            "ts": pd.to_datetime(lines["InvoiceDate"]).astype("datetime64[s]").to_numpy(),
+            "label": lines["Description"].to_numpy(),
+            "code": lines["StockCode"].to_numpy(),
+            "country": lines["Country"].to_numpy(),
+            "quantity": lines["Quantity"].to_numpy().astype(np.int64),
+            "amount": np.round((lines["Quantity"] * lines["Price"]).to_numpy(), 2),
+            "invoice": lines["Invoice"].astype(str).to_numpy(),
+            "cancelled": lines["Invoice"].astype(str).str.startswith("C").to_numpy(dtype=bool),
+        }
+    )
+
+
+def retail_events() -> Any:
+    """Return the online_retail snapshot as an activity log, one row per invoice line (fresh).
+
+    Columns: ``event_id`` (int64, the line's position in the file, from 1), ``user_id`` (int64,
+    the customer), ``ts`` (naive ``datetime64[s]``; the lines of an invoice share its
+    minute), ``label`` (the product description exactly as typed: capitals, leading and
+    doubled spaces), ``code`` (the stock code), ``country``, ``quantity`` (int64, negative on
+    a cancellation), ``amount`` (quantity times price, rounded to cents, negative on a
+    cancellation), ``invoice`` and ``cancelled`` (bool). Rows are in file order, which is
+    time order but for one line.
+    """
+    return _retail_events().copy(deep=True)
 
 
 def fingerprint(name: str) -> str:

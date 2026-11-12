@@ -85,3 +85,5 @@ per-class test counts within one row of their ideal count; labels whose first-se
 from their sorted order; a singleton class that stays in training; reproducibility for a fixed seed
 and dependence on the seed; invalid `n`, `test_size`, and `stratify` shapes; empty training sides;
 integer dtype; and the labels left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `digits` (see `docs/DATASETS.md`).

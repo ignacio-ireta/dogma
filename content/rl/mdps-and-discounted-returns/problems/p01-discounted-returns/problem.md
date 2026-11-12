@@ -48,3 +48,6 @@ The examples pass, and the empty episode and the `gamma = 0` edge case are handl
 compare against an exact rational computation for a dyadic discount, against a direct forward
 sum for random episodes, and check gamma = 1, gamma = 0, empty and tiny or huge rewards, integer
 input, invalid rewards and gamma values, and input mutation.
+
+The hidden tests draw their bulk inputs from the real datasets `elnino` and `nile` (see
+`docs/DATASETS.md`).

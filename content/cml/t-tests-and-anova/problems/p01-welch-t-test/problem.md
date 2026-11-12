@@ -46,3 +46,6 @@ spreads give `df = 2(n − 1)`, that the test is two-sided and invariant to swap
 rescaling (including data at very large or very small magnitudes), that a very small two-sided p-value is computed in the tail and does not round to zero, that float32 storage of real measurements (iris, unequal spreads) gives scipy's result, that one constant sample is allowed,
 that invalid inputs raise `ValueError` (with the constant-samples case named), and that inputs are left
 unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `iris` (see
+`docs/DATASETS.md`).

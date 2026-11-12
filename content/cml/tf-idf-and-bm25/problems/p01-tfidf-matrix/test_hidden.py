@@ -5,6 +5,7 @@ Each failure message names the kind of mistake. No message contains a hidden inp
 
 from __future__ import annotations
 
+import functools
 import math
 import time
 from collections.abc import Callable
@@ -18,6 +19,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from submission import tfidf_matrix
 
 from dogma_data import load_text, rng
+from dogma_data import rng as data_rng
 
 LARGE_DOCS = 3_000
 LARGE_TIME_LIMIT_S = 5.0
@@ -27,6 +29,15 @@ MATRIX_MISTAKE = (
     "the matrix differs from the reference: tokens are lowercased runs of two or more word "
     "characters, idf is ln((1 + n) / (1 + df)) + 1, and each row is divided by its l2 norm"
 )
+
+
+BOOKS = ("gutenberg_frankenstein", "gutenberg_pride_prejudice", "gutenberg_walden")
+
+
+@functools.cache
+def _book_lines() -> tuple[str, ...]:
+    """Every non-blank line of the three vendored novels: real English prose, about 120 KB."""
+    return tuple(line for name in BOOKS for line in load_text(name).splitlines() if line.strip())
 
 
 def _fail(why: str) -> None:
@@ -59,14 +70,18 @@ def _solve(docs: Any, **kwargs: Any) -> tuple[np.ndarray, list[str]]:
 
 
 def _random_docs(rng: np.random.Generator, n_docs: int) -> list[str]:
+    """Documents of real prose: each is a line of a novel, as printed, or now and then empty.
+
+    Real lines carry capitals, apostrophes, hyphens, curly quotes, one-letter words and
+    numerals. Lines are drawn with replacement, so a large corpus repeats some of them.
+    """
+    lines = _book_lines()
     docs = []
     for _ in range(n_docs):
-        length = int(rng.integers(0, 9))
-        pieces = []
-        for _ in range(length):
-            pieces.append(WORDS[int(rng.integers(0, len(WORDS)))])
-            pieces.append(SEPARATORS[int(rng.integers(0, len(SEPARATORS)))])
-        docs.append("".join(pieces))
+        if rng.random() < 0.1:
+            docs.append("")
+        else:
+            docs.append(lines[int(rng.integers(0, len(lines)))])
     return docs
 
 
@@ -81,7 +96,7 @@ def _reference(
 
 @pytest.mark.parametrize("seed", range(12), ids=[f"corpus-{s}" for s in range(12)])
 def test_matches_scikit_learn_on_random_corpora(seed: int) -> None:
-    rng = np.random.default_rng(seed)
+    rng = data_rng(f"tfidf-p01:corpora:{seed}")
     docs = _random_docs(rng, int(rng.integers(2, 12)))
     if not any(_has_token(doc) for doc in docs):
         docs.append("cat dog")  # keep the vocabulary non-empty; the empty case is tested below
@@ -99,11 +114,11 @@ def test_matches_scikit_learn_on_random_corpora(seed: int) -> None:
 
 @pytest.mark.parametrize("seed", range(6), ids=[f"fixed-{s}" for s in range(6)])
 def test_matches_scikit_learn_with_a_fixed_vocabulary(seed: int) -> None:
-    rng = np.random.default_rng(100 + seed)
+    rng = data_rng(f"tfidf-p01:fixed-vocabulary:{seed}")
     docs = _random_docs(rng, int(rng.integers(2, 10)))
     if not any(_has_token(doc) for doc in docs):
         docs.append("cat dog")
-    vocabulary = ["sat", "cat", "zebra", "dog", "42", "mat"][: int(rng.integers(1, 7))]
+    vocabulary = ["was", "the", "zebra", "and", "42", "of"][: int(rng.integers(1, 7))]
     want_matrix, want_vocab = _reference(docs, vocabulary)
     got_matrix, got_vocab = _solve(docs, vocabulary=vocabulary)
     assert got_vocab == want_vocab == vocabulary, (
@@ -213,7 +228,7 @@ def test_every_non_empty_row_is_unit_length(words: list[str]) -> None:
 
 
 def test_large_corpus_finishes_quickly_and_matches_scikit_learn() -> None:
-    rng = np.random.default_rng(5)
+    rng = data_rng("tfidf-p01:large-corpus")
     docs = _random_docs(rng, LARGE_DOCS)
     docs.append("cat dog")
     want_matrix, want_vocab = _reference(docs)

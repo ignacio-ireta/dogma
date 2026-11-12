@@ -55,3 +55,5 @@ Initial and updated checkpoints follow the exact convention. Hidden families
 cover initialization order, every parameter's finite-difference derivative,
 multi-step numeric-gradient oracles, fixed-seed reproducibility, singleton and
 integer data, a simple fit, input/global-RNG preservation, and invalid inputs.
+
+The hidden tests draw their bulk inputs from the real dataset `diabetes` (see `docs/DATASETS.md`).

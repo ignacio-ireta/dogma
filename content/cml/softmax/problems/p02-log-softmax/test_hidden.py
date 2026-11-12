@@ -1,3 +1,4 @@
+import math
 import warnings
 
 import numpy as np
@@ -7,7 +8,22 @@ from hypothesis import strategies as st
 from scipy.special import log_softmax as scipy_log_softmax
 from submission import log_softmax
 
+from dogma_data import rng, sample_rows
+
 FINITE = st.floats(min_value=-30.0, max_value=30.0, allow_nan=False, allow_infinity=False)
+
+
+def _real_scores(key, shape):
+    """Real numbers of the given shape, standing in for logits.
+
+    The values are standardised breast_cancer measurements, tripled: skewed, correlated along
+    the last axis and with a few entries far larger than the rest, as the scores of a trained
+    classifier are.
+    """
+    shape = tuple(shape)
+    rows = math.prod(shape[:-1])
+    drawn, _ = sample_rows("breast_cancer", rng(key), rows, shape[-1], standardize=True)
+    return 3.0 * drawn.reshape(shape)
 
 
 def _call(logits, **kwargs):
@@ -53,8 +69,7 @@ def _expect_value_error(logits, **kwargs):
     ids=["vector", "matrix-last", "matrix-first", "cube-middle", "cube-last"],
 )
 def test_random_inputs_match_an_independent_reference(shape, axis):
-    rng = np.random.default_rng(4)
-    z = rng.normal(scale=3.0, size=shape)
+    z = _real_scores(f"log-softmax-p02:reference:{len(shape)}:{axis}", shape)
     expected = scipy_log_softmax(z, axis=axis)
     np.testing.assert_allclose(
         _call(z, axis=axis),
@@ -67,8 +82,7 @@ def test_random_inputs_match_an_independent_reference(shape, axis):
 
 
 def test_square_matrix_is_normalised_along_each_axis_correctly():
-    rng = np.random.default_rng(5)
-    z = rng.normal(size=(3, 3))
+    z = _real_scores("log-softmax-p02:square", (3, 3)) / 3.0
     for axis in (0, -1):
         expected = scipy_log_softmax(z, axis=axis)
         np.testing.assert_allclose(

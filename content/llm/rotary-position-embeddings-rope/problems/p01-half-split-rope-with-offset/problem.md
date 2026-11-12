@@ -73,3 +73,6 @@ sequence; the value-free contract (only two tensors returned); large offsets and
 inputs; inputs left unchanged; and every `ValueError` rule above. A wrong variant gets a named message, for
 example the adjacent-pair layout, a shift applied to only one of q and k, or a block of positions that
 starts at 1 instead of at `offset`.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

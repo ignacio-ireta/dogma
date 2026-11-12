@@ -74,3 +74,33 @@
   rows: {start: 0, stop: 1}
   text: {column: TEXT, max_chars: 40000, start_after: When I wrote the following pages}
   format: txt
+# Online Retail II (UCI): two years of invoice lines of a UK online gift retailer. One 96 MB CSV
+# is streamed once; the filter keeps every line of the customers whose id ends in 77 (about 1 in
+# 100), so each kept customer has a complete two-year history. Lines with no customer id drop out.
+# The product descriptions are kept as typed: capitals, stray spaces and all.
+- id: online_retail
+  repo: apurba-pal/online_retail
+  revision: 69d033176f8c8884f6abd61ad7ded6dfd6ae034d
+  split: train
+  licence: cc-by-4.0
+  notice: >-
+    Online Retail II by Daqing Chen (UCI Machine Learning Repository, 2019,
+    doi 10.24432/C5CG6D), licensed CC BY 4.0. Rows were selected; values are unchanged.
+  columns: [Invoice, StockCode, Description, Quantity, InvoiceDate, Price, Customer ID, Country]
+  filter: {column: Customer ID, contains: '77.0'}
+  format: csv
+# Human pair judgments from MT-Bench. A row is one expert's verdict on one question, one turn and
+# one ordered pair of models: winner is model_a, model_b or tie. The same two models are often
+# judged on the same question in both orders (by different experts). The two conversation
+# columns (the full model answers) and the annotator id are left out.
+- id: mt_bench_judgments
+  repo: lmsys/mt_bench_human_judgments
+  revision: f7d2896d2cc5d80f8b55c2bbc722613555233c25
+  split: human
+  licence: cc-by-4.0
+  notice: >-
+    MT-Bench human judgments by Zheng et al. (LMSYS, 2023, "Judging LLM-as-a-Judge with
+    MT-Bench and Chatbot Arena"), licensed CC BY 4.0. Columns were selected; values are
+    unchanged.
+  columns: [question_id, model_a, model_b, winner, turn]
+  format: csv

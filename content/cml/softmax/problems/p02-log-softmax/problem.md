@@ -44,3 +44,6 @@ warning, including a tail probability that a plain log of a softmax would lose; 
 to 1; that a row of huge logits does not change its neighbours; shift invariance per slice; square matrices
 normalised along each axis; integer input; empty, scalar, NaN, infinite and out-of-range-axis inputs; and that
 the input is left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

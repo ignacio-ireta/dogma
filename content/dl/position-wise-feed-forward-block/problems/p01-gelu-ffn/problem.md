@@ -61,3 +61,6 @@ others (changing one token must not change another); the empty hidden layer (`d_
 and weight orientation on non-square, non-symmetric weights; the `ValueError` rules (scalar input,
 feature mismatch, weight and bias shapes); large and small magnitudes, including negative tails
 where `1 + erf` cancels; float64 dtype and shape; and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

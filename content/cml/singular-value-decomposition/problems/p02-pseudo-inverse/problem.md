@@ -50,3 +50,6 @@ dropping a singular value below it as well as keeping one above it; the cutoff b
 largest singular value, including very small and very large scales; a singular value equal to the
 cutoff, which is dropped; the rank-one closed form; the zero matrix; invalid input and `rcond`;
 integer input; scaling by a constant; and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `wine` (see
+`docs/DATASETS.md`).

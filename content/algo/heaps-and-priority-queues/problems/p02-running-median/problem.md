@@ -48,3 +48,6 @@ inputs, duplicates, negative numbers and large magnitudes with small differences
 empty input. They check that NaN and infinite values raise `ValueError`, that the result is a list of
 floats, and that the input is unchanged. A 60,000-value input must finish within a time limit, which a
 sort of each prefix does not meet.
+
+The hidden tests draw their bulk inputs from the real datasets `elnino` and `sunspots` (see
+`docs/DATASETS.md`).

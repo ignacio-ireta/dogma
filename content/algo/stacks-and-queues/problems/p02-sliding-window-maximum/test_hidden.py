@@ -25,6 +25,9 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import sliding_window_max
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_window
+
 LARGE_N = 200_000
 LARGE_K = 50_000
 TIME_LIMIT_S = 5.0
@@ -139,9 +142,10 @@ def _verify(values: list[float], k: int) -> None:
 @settings(max_examples=80, deadline=None, report_multiple_bugs=False)
 @given(seed=st.integers(min_value=0, max_value=10_000))
 def test_small_random_lists_match_brute_force(seed: int) -> None:
-    rng = np.random.default_rng(seed)
+    rng = data_rng(f"sliding-window-max-p02:small:{seed}")
     n = int(rng.integers(1, 16))
-    values = [float(x) for x in rng.integers(-5, 8, size=n)]  # small range: ties are common
+    # Real monthly sea-surface temperatures in whole degrees around 24: ties are common.
+    values = [float(x) for x in np.round(sample_window("elnino", rng, n)) - 24.0]
     k = int(rng.integers(1, n + 1))
     _verify(values, k)
 
@@ -149,9 +153,10 @@ def test_small_random_lists_match_brute_force(seed: int) -> None:
 @settings(max_examples=40, deadline=None, report_multiple_bugs=False)
 @given(seed=st.integers(min_value=0, max_value=10_000))
 def test_medium_random_lists_match_brute_force(seed: int) -> None:
-    rng = np.random.default_rng(seed)
+    rng = data_rng(f"sliding-window-max-p02:medium:{seed}")
     n = int(rng.integers(60, 300))
-    values = [float(x) for x in rng.integers(-1000, 1000, size=n)]
+    # A real run of yearly sunspot numbers: an eleven-year cycle of long rises and falls.
+    values = [float(x) for x in sample_window("sunspots", rng, n)]
     k = int(rng.integers(1, 60))
     _verify(values, k)
 

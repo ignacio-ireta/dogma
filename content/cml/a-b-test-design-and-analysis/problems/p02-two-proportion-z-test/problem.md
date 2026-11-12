@@ -49,3 +49,5 @@ the sign convention and that swapping the arms flips only the sign, that doublin
 square root of two, that a very small p-value is computed in the tail and does not round to zero, that equal rates
 give `z = 0` and `p = 1`, that integer counts of any integer type are accepted, that a zero pooled rate and invalid
 counts raise `ValueError`, and that non-integer counts are rejected.
+
+The hidden tests draw their bulk inputs from the real dataset `adult` (see `docs/DATASETS.md`).

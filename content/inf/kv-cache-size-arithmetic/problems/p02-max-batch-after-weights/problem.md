@@ -61,3 +61,6 @@ that fits exactly, and one byte short of fitting; weights larger than memory; a 
 the window; a window longer than the sequence; zero-byte weights; very large budgets that stay exact beyond float
 precision; the return type; each validation rule; and random configurations compared against an independent
 search over batch sizes.
+
+Some hidden tests take their inputs from the real datasets `gutenberg_frankenstein`,
+`gutenberg_pride_prejudice` and `gutenberg_walden` (see `docs/DATASETS.md`).

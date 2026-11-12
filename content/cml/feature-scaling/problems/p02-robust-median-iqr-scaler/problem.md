@@ -61,3 +61,6 @@ standard deviation would move; held-out values that never change the fitted stat
 and zero-IQR columns (scale one, including varying columns with zero IQR); an IQR of `1e-15`, which
 gets scale one, while `3e-15` is kept; even and odd training counts for the median; integer inputs;
 the empty-values case; invalid inputs; and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `digits` and `wine` (see
+`docs/DATASETS.md`).

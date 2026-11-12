@@ -9,6 +9,43 @@ from hypothesis import strategies as st
 from sklearn.cluster import KMeans
 from submission import kmeans
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+RATIO_COLUMNS = (2, 3, 5)  # rooms, bedrooms and occupants per household
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _points(gen, n, d):
+    """n real block groups of california_housing with d per-household averages, standardised.
+
+    The averages are ratios of counts, so no two distances tie exactly, and they are
+    heavy-tailed: a few block groups sit far from everything else, as real outliers do.
+    """
+    X, _ = sample_rows("california_housing", gen, n, standardize=True)
+    return X[:, RATIO_COLUMNS[:d]]
+
 
 def _call(X, C0, **kwargs):
     """Run with NumPy warnings as errors; a crash on valid input is a contract failure."""
@@ -80,7 +117,7 @@ def _reference(X, C0, max_iter, tol):
 def test_matches_scikit_learn_lloyd_on_well_separated_blobs():
     rng = np.random.default_rng(0)
     centres = np.array([[0.0, 0.0], [10.0, 0.0], [0.0, 10.0]])
-    X = np.vstack([c + rng.normal(scale=0.5, size=(30, 2)) for c in centres])
+    X = np.vstack([c + _real_normal(rng, (30, 2), scale=0.5) for c in centres])
     C0 = centres + np.array([[1.0, 1.0], [-1.0, 1.0], [1.0, -1.0]])
     ref = KMeans(n_clusters=3, init=C0, n_init=1, algorithm="lloyd", tol=1e-14, max_iter=500).fit(X)
     C, labels, inertia, _ = _call(X, C0, max_iter=500, tol=1e-12)
@@ -103,11 +140,11 @@ def test_matches_scikit_learn_lloyd_on_well_separated_blobs():
 
 def test_matches_independent_reference_including_iteration_count():
     for seed in range(12):
-        rng = np.random.default_rng(100 + seed)
+        rng = data_rng(f"lloyd-kmeans-p01:{100 + seed}")
         n = int(rng.integers(6, 40))
         d = int(rng.integers(1, 4))
         k = int(rng.integers(1, min(5, n) + 1))
-        X = rng.normal(size=(n, d))
+        X = _points(rng, n, d)
         C0 = X[rng.choice(n, size=k, replace=False)]
         max_iter, tol = 50, 1e-6
         want_C, want_labels, want_inertia, want_iter = _reference(
@@ -130,8 +167,8 @@ def test_matches_independent_reference_including_iteration_count():
 
 
 def test_empty_cluster_keeps_its_centroid_on_random_data():
-    rng = np.random.default_rng(200)
-    X = rng.normal(size=(20, 2))
+    rng = data_rng(f"lloyd-kmeans-p01:{200}")
+    X = _points(rng, 20, 2)
     far = np.array([[1000.0, 1000.0]])
     C0 = np.vstack([X[0], far])
     C, labels, _, _ = _call(X, C0, max_iter=20, tol=1e-9)
@@ -171,8 +208,8 @@ def test_stops_when_the_largest_shift_equals_tol():
 
 
 def test_max_iter_caps_the_number_of_iterations():
-    rng = np.random.default_rng(300)
-    X = rng.normal(size=(60, 2))
+    rng = data_rng(f"lloyd-kmeans-p01:{300}")
+    X = _points(rng, 60, 2)
     C0 = X[:3]
     want = _reference(X.tolist(), C0.tolist(), 3, 0.0)
     _, _, _, n_iter = _call(X, C0, max_iter=3, tol=0.0)
@@ -204,8 +241,8 @@ def test_returned_labels_match_the_returned_centroids():
 
 def test_inertia_never_increases_as_more_iterations_are_allowed():
     for seed in range(8):
-        rng = np.random.default_rng(400 + seed)
-        X = rng.normal(size=(50, 2))
+        rng = data_rng(f"lloyd-kmeans-p01:{400 + seed}")
+        X = _points(rng, 50, 2)
         C0 = X[rng.choice(50, size=4, replace=False)]
         values = [_call(X, C0, max_iter=m, tol=0.0)[2] for m in range(1, 9)]
         for before, after in itertools.pairwise(values):
@@ -215,8 +252,8 @@ def test_inertia_never_increases_as_more_iterations_are_allowed():
 
 
 def test_large_common_offset_does_not_change_the_clustering():
-    rng = np.random.default_rng(500)
-    X = rng.normal(size=(60, 3))
+    rng = data_rng(f"lloyd-kmeans-p01:{500}")
+    X = _points(rng, 60, 3)
     C0 = X[:4].copy()
     base_C, base_labels, _, base_iter = _call(X, C0, max_iter=100, tol=1e-9)
     off = 1e7
@@ -237,9 +274,9 @@ def test_large_common_offset_does_not_change_the_clustering():
 @settings(max_examples=40, deadline=None, report_multiple_bugs=False)
 @given(st.integers(min_value=0, max_value=5000))
 def test_centroids_stay_inside_the_bounding_box_of_the_samples(seed):
-    rng = np.random.default_rng(seed)
+    rng = data_rng(f"lloyd-kmeans-p01:{seed}")
     n = int(rng.integers(2, 20))
-    X = rng.normal(size=(n, 2))
+    X = _points(rng, n, 2)
     k = int(rng.integers(1, n + 1))
     C0 = X[:k]
     cents, _, _, _ = _call(X, C0, max_iter=30, tol=1e-9)
@@ -251,8 +288,8 @@ def test_centroids_stay_inside_the_bounding_box_of_the_samples(seed):
 
 def test_stopping_uses_the_largest_single_move_as_a_length():
     for seed in range(8):
-        rng = np.random.default_rng(700 + seed)
-        X = rng.normal(size=(40, 2)) * 3
+        rng = data_rng(f"lloyd-kmeans-p01:{700 + seed}")
+        X = _points(rng, 40, 2) * 3
         C0 = X[rng.choice(40, size=4, replace=False)]
         for tol in (0.3, 0.5, 1.0):
             want = _reference(X.tolist(), C0.tolist(), 200, tol)[3]
@@ -293,8 +330,8 @@ def test_invalid_inputs_raise_value_error(X, C0, kwargs):
 
 
 def test_inputs_are_not_mutated():
-    rng = np.random.default_rng(600)
-    X = rng.normal(size=(15, 2))
+    rng = data_rng(f"lloyd-kmeans-p01:{600}")
+    X = _points(rng, 15, 2)
     C0 = X[:3].copy()
     X0, C00 = X.copy(), C0.copy()
     _call(X, C0, max_iter=20, tol=1e-6)

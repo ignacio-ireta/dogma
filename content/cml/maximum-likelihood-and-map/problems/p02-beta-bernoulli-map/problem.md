@@ -46,3 +46,6 @@ search over the log-posterior, in the interior case and at both boundaries; the 
 mode, not the posterior mean); the uniform-prior identity that MAP equals MLE for every count; that the MAP always lies
 in $[0,1]$; that the MAP approaches the MLE as the data grow; the trial, count and prior validation errors, including fractional
 and boolean counts; and that both estimates are Python floats.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

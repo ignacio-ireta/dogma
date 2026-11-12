@@ -67,3 +67,6 @@ Passing means the examples match and the draw counts follow the contract. Hidden
 - a single-token vocabulary and tiny probabilities that stay finite;
 - an empirical output distribution over seeded draws that equals `p`;
 - inputs left unchanged, and the Python `int` return type.
+
+The hidden tests draw their bulk inputs from the real datasets `gutenberg_pride_prejudice` and
+`gutenberg_walden` (see `docs/DATASETS.md`).

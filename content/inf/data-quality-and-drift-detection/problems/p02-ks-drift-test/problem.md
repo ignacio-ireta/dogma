@@ -57,3 +57,6 @@ distinguish the effective size n * m / (n + m) from n alone. They check that ide
 1 and no drift, that a shift is detected in either direction, that disjoint samples give D = 1, that tied values are
 counted as blocks, and that the drift flag follows p < alpha. The tests also cover an invalid alpha, an empty or
 non-finite input, a two-dimensional input, integer input, and inputs that must not be mutated.
+
+The hidden tests draw their bulk inputs from the real dataset `california_housing` (see
+`docs/DATASETS.md`).

@@ -49,3 +49,6 @@ each sum to 1, and $P(X=i)\,P(Y=j \mid X=i)$ rebuilds the joint. The families al
 independent tables, zero-probability rows, very small but positive marginals, single-row and
 single-column tables, integer tables, sums off by more than the tolerance, negative and NaN entries,
 empty and one-dimensional input, and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `adult` and `breast_cancer` (see
+`docs/DATASETS.md`).

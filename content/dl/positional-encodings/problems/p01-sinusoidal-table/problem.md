@@ -58,3 +58,5 @@ frequency base and the `2i/d_model` exponent, checked at the smallest and larges
 sine/cosine pair having unit norm; the first row being `[0, 1, 0, 1, ...]`; the empty table; the
 `ValueError` rules (negative length, zero width, odd width); float64 output dtype and shape; and
 long tables (a few thousand positions) staying finite and bounded in `[-1, 1]`.
+
+Some hidden tests take their inputs from the real dataset `gsm8k` (see `docs/DATASETS.md`).

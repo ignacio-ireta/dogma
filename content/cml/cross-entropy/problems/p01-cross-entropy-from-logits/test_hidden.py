@@ -7,6 +7,30 @@ from hypothesis import strategies as st
 from scipy.special import logsumexp
 from submission import cross_entropy_from_logits
 
+from dogma_data import rng, sample_rows
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
 
 def _call(logits, targets):
     """Call the function with NumPy warnings turned into errors.
@@ -68,10 +92,28 @@ def _finite_difference_gradient(logits, targets, h=1e-6):
     return grad
 
 
+def _real_logits(key, n, k, sharpness=1.0):
+    """Logits of a real classifier on real images, with the real labels.
+
+    The rows are digits images of the classes ``0..k-1``. The classifier is nearest centroid: the
+    logit of class ``c`` is minus the squared distance to the mean image of ``c`` among the drawn
+    rows, divided by 100 (pixels run from 0 to 16). Most rows are classified correctly and with
+    confidence, a few are not, as with a trained model.
+    """
+    gen = rng(key)
+    while True:
+        X, y = sample_rows("digits", gen, 400)
+        keep = y < k
+        X, y = X[keep], y[keep].astype(np.int64)
+        if len(y) >= n and np.unique(y).size == k:
+            break
+    centroids = np.stack([X[y == c].mean(axis=0) for c in range(k)])
+    logits = -sharpness * ((X[:n, None, :] - centroids[None, :, :]) ** 2).sum(axis=2) / 100.0
+    return logits, y[:n]
+
+
 def test_loss_matches_a_log_sum_exp_reference_on_random_data():
-    rng = np.random.default_rng(0)
-    logits = rng.normal(scale=2.0, size=(20, 5))
-    targets = rng.integers(0, 5, size=20)
+    logits, targets = _real_logits("cross-entropy-p01:reference", 20, 5)
     ref = _reference_loss(logits, targets)
     loss, _ = _call(logits, targets)
     assert abs(loss - ref) <= 1e-12, (
@@ -81,9 +123,7 @@ def test_loss_matches_a_log_sum_exp_reference_on_random_data():
 
 
 def test_gradient_matches_central_differences_of_the_loss():
-    rng = np.random.default_rng(1)
-    logits = rng.normal(size=(4, 3))
-    targets = rng.integers(0, 3, size=4)
+    logits, targets = _real_logits("cross-entropy-p01:finite-differences", 4, 3, sharpness=0.2)
     fd = _finite_difference_gradient(logits, targets)
     _, grad = _call(logits, targets)
     np.testing.assert_allclose(
@@ -115,9 +155,7 @@ def test_extreme_logits_match_reference_without_warnings(logits, targets):
 
 
 def test_each_gradient_row_sums_to_zero():
-    rng = np.random.default_rng(2)
-    logits = rng.normal(scale=5.0, size=(7, 4))
-    targets = rng.integers(0, 4, size=7)
+    logits, targets = _real_logits("cross-entropy-p01:row-sums", 7, 4, sharpness=2.0)
     _, grad = _call(logits, targets)
     np.testing.assert_allclose(
         grad.sum(axis=1), 0.0, atol=1e-12, err_msg="each row of the gradient must sum to zero"
@@ -156,10 +194,9 @@ def test_integer_logits_are_accepted_and_return_float_results():
 @settings(max_examples=40, deadline=None, report_multiple_bugs=False)
 @given(st.integers(min_value=0, max_value=10_000))
 def test_gradient_agrees_with_finite_differences_on_random_small_problems(seed):
-    rng = np.random.default_rng(seed)
-    n, k = int(rng.integers(1, 4)), int(rng.integers(2, 5))
-    logits = rng.normal(size=(n, k))
-    targets = rng.integers(0, k, size=n)
+    sizes = np.random.default_rng(seed)
+    n, k = int(sizes.integers(1, 4)), int(sizes.integers(2, 5))
+    logits, targets = _real_logits(f"cross-entropy-p01:small:{seed}", n, k, sharpness=0.2)
     fd = _finite_difference_gradient(logits, targets)
     _, grad = _call(logits, targets)
     np.testing.assert_allclose(
@@ -330,7 +367,7 @@ def test_list_logits_are_accepted_as_array_like():
 def test_class_indices_above_127_are_not_wrapped_by_a_narrow_integer():
     # The Contract allows any integer dtype with entries in [0, k), and k is not bounded.
     rng = np.random.default_rng(1)
-    logits = rng.normal(size=(4, 200))
+    logits = _real_normal(rng, (4, 200))
     targets = np.array([150, 3, 199, 128], dtype=np.int64)
     ref = _reference_loss(logits, targets)
     loss, _ = _call(logits, targets)

@@ -40,3 +40,6 @@ In the second example the neighbours are at distances $0.2$ and $0.8$, so the we
 
 ## Done looks like
 All public tests pass, then **Submit** runs the hidden tests. They check: agreement with scikit-learn's KNN regressor for both weightings on continuous data; agreement with a brute-force reference that includes exact duplicates; the zero-distance rule, and that it applies only to `"distance"`; $k = 1$ and $k = n$; rejection of an unknown `weights` value, bad `k`, shapes, non-finite values and length mismatches; an empty query; the output being a float64 array with no warnings; a translation of all points by a large constant leaving the predictions unchanged; predictions lying between the smallest and largest neighbour target; and that the inputs are left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `california_housing` (see
+`docs/DATASETS.md`).

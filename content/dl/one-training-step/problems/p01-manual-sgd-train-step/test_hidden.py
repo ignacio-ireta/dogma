@@ -6,6 +6,8 @@ import pytest
 import torch
 from submission import train_step
 
+from dogma_data import rng, sample_rows
+
 ATOL = 1e-9  # matches meta.yaml tolerance
 RTOL = 1e-9  # matches meta.yaml tolerance
 
@@ -55,9 +57,12 @@ def reference_run(model, x, y, lr, steps):
 
 
 def batch(seed: int):
-    gen = torch.Generator().manual_seed(seed)
-    x = torch.randn(5, 3, generator=gen, dtype=torch.float64)
-    y = torch.randn(5, 1, generator=gen, dtype=torch.float64)
+    """Five diabetes patients: three standardised features and the real, scaled target."""
+    rows, target = sample_rows(
+        "diabetes", rng(f"train-step-p01:batch:{seed}"), 5, 3, standardize=True
+    )
+    x = torch.tensor(rows, dtype=torch.float64)
+    y = torch.tensor((target - 150.0) / 75.0, dtype=torch.float64).reshape(-1, 1)
     return x, y
 
 

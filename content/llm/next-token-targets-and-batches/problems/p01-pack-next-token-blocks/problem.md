@@ -63,3 +63,6 @@ the stream, that the remainder is dropped (a block count one below the padded co
 blocks larger than the stream give `(0, T)`, that empty documents and an empty list are handled, that ids
 above $2^{24}$ survive exactly, that outputs are `int64`, that invalid arguments raise `ValueError`, and
 that inputs are not mutated.
+
+The hidden tests draw their bulk inputs from the real datasets `gutenberg_frankenstein`,
+`gutenberg_pride_prejudice` and `gutenberg_walden` (see `docs/DATASETS.md`).

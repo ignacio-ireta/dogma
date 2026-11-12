@@ -47,3 +47,6 @@ millions give the same rates as counts in the tens.
 ## Done looks like
 
 All public tests pass, then **Submit** passes the hidden tests. Those check agreement with scikit-learn on count tuples rebuilt into label vectors, with the zero-division convention applied. They check that specificity is the true negative rate and not the negative predictive value, that accuracy is not balanced accuracy, and that every zero-denominator case returns `0.0` and never NaN. They check MCC on very large counts against exact integer arithmetic, the exact key set, that swapping the two classes leaves accuracy and MCC unchanged, that F1 is the harmonic mean of precision and recall, that NumPy integers are accepted, and that invalid counts raise `ValueError`. Realism families covered: rare positives, predictive rounded ties, and large NumPy integer counts.
+
+The hidden tests draw their bulk inputs from the real datasets `adult` and `breast_cancer` (see
+`docs/DATASETS.md`).

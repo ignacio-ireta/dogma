@@ -4,12 +4,39 @@
 # kind of mistake and never show hidden inputs, shapes or expected values.
 from __future__ import annotations
 
+import math
+
 import pytest
 import torch
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import grouped_query_attention
 from torch.nn.functional import scaled_dot_product_attention
+
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-grouped-query-attention:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
 
 
 def _raises(expected, call, mistake):
@@ -37,11 +64,11 @@ def _random_case(  # noqa: PLR0917
     g = torch.Generator().manual_seed(seed)
     d = n_heads * d_head
     kv = n_kv_heads * d_head
-    X = torch.randn(B, L, d, generator=g, dtype=torch.float64)
-    W_q = torch.randn(d, d, generator=g, dtype=torch.float64)
-    W_k = torch.randn(kv, d, generator=g, dtype=torch.float64)
-    W_v = torch.randn(kv, d, generator=g, dtype=torch.float64)
-    W_o = torch.randn(d, d, generator=g, dtype=torch.float64)
+    X = _real_values(g, [B, L, d], torch.float64)
+    W_q = _real_values(g, [d, d], torch.float64)
+    W_k = _real_values(g, [kv, d], torch.float64)
+    W_v = _real_values(g, [kv, d], torch.float64)
+    W_o = _real_values(g, [d, d], torch.float64)
     return X, W_q, W_k, W_v, W_o
 
 
@@ -201,7 +228,7 @@ def _problem_or_none(call) -> str | None:
 def test_full_width_key_projection_raises_value_error():
     # The most common mistake: K and V projected to d_model when n_kv_heads < n_heads.
     X, W_q, _, W_v, W_o = _random_case(4, 1, 3, 4, 2, 2)
-    full_k = torch.randn(8, 8, dtype=torch.float64)
+    full_k = _real_values(torch.Generator().manual_seed(231), [8, 8], torch.float64)
     problem = _problem_or_none(lambda: grouped_query_attention(X, W_q, full_k, W_v, W_o, 4, 2))
     assert problem is None, f"key projection width not checked: {problem}"
 

@@ -9,7 +9,31 @@ from hypothesis.extra.numpy import arrays
 from scipy.special import expit
 from submission import mse_sigmoid_grad
 
+from dogma_data import rng, sample_rows
+
 ELEMENTS = st.floats(min_value=-2.0, max_value=2.0, allow_nan=False, allow_infinity=False)
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
 
 
 def _raised_value_error(call, mistake):
@@ -61,13 +85,14 @@ def _sigmoid_and_derivative_decimal(z):
 
 
 def test_gradient_matches_central_differences_of_the_loss():
-    rng = np.random.default_rng(0)
+    gen = rng("chain-rule-p01:central-differences")
     for _ in range(40):
-        n = int(rng.integers(1, 9))
-        d = int(rng.integers(1, 5))
-        X = rng.normal(size=(n, d))
-        y = rng.uniform(0.0, 1.0, size=n)
-        w = rng.normal(size=d)
+        n = int(gen.integers(1, 9))
+        d = int(gen.integers(1, 5))
+        # Real rows: standardised breast_cancer features and their 0/1 labels. The weights are
+        # the point where the gradient is taken, not data, and stay random.
+        X, y = sample_rows("breast_cancer", gen, n, d, standardize=True)
+        w = _real_normal(gen, d)
         want = _finite_difference_gradient(w, X, y)
         got = _gradient_or_nan(w, X, y)
         assert np.all(np.abs(got - want) <= 1e-7 * max(1.0, np.max(np.abs(want)))), (

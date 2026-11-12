@@ -94,3 +94,6 @@ by its size; the run reproduces from a seed and ignores the global random state;
 eval mode; the best epoch is restored even when validation rises later; tied validation losses keep the
 earlier epoch; a batch size larger than `n` works; invalid arguments raise `ValueError`; and the inputs
 are unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `diabetes` (see
+`docs/DATASETS.md`).

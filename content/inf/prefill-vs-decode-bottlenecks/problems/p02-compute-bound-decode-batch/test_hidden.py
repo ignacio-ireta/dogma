@@ -8,11 +8,14 @@ Failure messages name the kind of mistake. They never print hidden inputs or exp
 from __future__ import annotations
 
 import copy
+import functools
 import random
 from typing import Any
 
 import pytest
 from submission import compute_bound_decode_batch
+
+from dogma_data import load_text
 
 PEAK = 312_000_000_000_000
 BW = 2_000_000_000_000
@@ -64,6 +67,24 @@ def _expect_error(exc_type: type[Exception], call: Any, mistake: str) -> None:
     pytest.fail(mistake)
 
 
+@functools.cache
+def _passage_lengths() -> tuple[int, ...]:
+    """Lengths, in words, of real passages: the first k lines of a novel, for every k.
+
+    A sequence length in the seeded test is the length of one such passage from Frankenstein,
+    Pride and Prejudice or Walden, a word standing for a token. Lengths from 0 to 8192 words
+    are kept.
+    """
+    lengths = set()
+    for name in ("gutenberg_frankenstein", "gutenberg_pride_prejudice", "gutenberg_walden"):
+        total = 0
+        for line in load_text(name).splitlines():
+            total += len(line.split())
+            lengths.add(total)
+    lengths.add(0)
+    return tuple(sorted(length for length in lengths if 0 <= length <= 8192))
+
+
 def test_seeded_random_models_match_an_independent_search_over_batches() -> None:
     rng = random.Random(2026)  # noqa: S311 -- seeded synthetic models, not security
     for _ in range(300):
@@ -73,7 +94,7 @@ def test_seeded_random_models_match_an_independent_search_over_batches() -> None
             "num_kv_heads": rng.randint(1, 64),
             "head_dim": rng.choice([64, 128, 256]),
         }
-        context = rng.randint(0, 8192)
+        context = rng.choice(_passage_lengths())
         width = rng.choice([1, 2, 4])
         peak = rng.randint(10**12, 10**15)
         bw = rng.randint(10**10, 10**13)

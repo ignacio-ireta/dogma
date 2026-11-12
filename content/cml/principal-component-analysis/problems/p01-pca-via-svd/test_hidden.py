@@ -5,24 +5,45 @@ from hypothesis import strategies as st
 from sklearn.decomposition import PCA
 from submission import pca
 
-from dogma_data import load, rng
-from dogma_data.synth import correlated_mixed_scale
+from dogma_data import load, rng, sample_rows
 
 SEEDS = st.integers(min_value=0, max_value=10**6)
 ROWS = st.integers(min_value=3, max_value=12)
 COLS = st.integers(min_value=2, max_value=5)
 
 
-def _data(seed, n, d):
-    """Correlated columns on scales from 0.03 to 30, as real measurements have.
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
 
-    Three decades of scale, not five: an eigh-based solution squares the condition number and
-    cannot meet the 1e-9 comparisons on data spanning 1e10 in variance (measured: 7 of 12 draws
-    fail), while the SVD route and every route the Constraints allow pass on this range.
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
     """
-    return correlated_mixed_scale(
-        rng(f"pca-p01:data:{seed}:{n}:{d}"), n, d, scale_range=(0.03, 30.0)
-    )
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _data(seed, n, d):
+    """n patients and d columns of raw diabetes: correlated measurements on real scales.
+
+    The column spreads run from about 0.5 (sex, coded 1 and 2) to about 35 (a serum level),
+    under two decades of scale. Raw wine spans more than three: an eigh-based solution squares
+    the condition number and cannot meet the 1e-9 comparisons on data spanning 1e10 in
+    variance, while the SVD route and every route the Constraints allow pass on this range.
+    """
+    X, _ = sample_rows("diabetes", rng(f"pca-p01:data:{seed}:{n}:{d}"), n, d)
+    return X
 
 
 def _call(X, k, mistake):
@@ -170,7 +191,7 @@ def test_transformed_scores_are_centred_data_times_components(seed, n, d, data):
 def test_adding_a_constant_to_each_column_changes_nothing(seed, n, d, data):
     X = _data(seed, n, d)
     k = data.draw(st.integers(min_value=1, max_value=min(n, d)))
-    offset = np.random.default_rng(seed + 1).normal(scale=50.0, size=d)
+    offset = _real_normal(np.random.default_rng(seed + 1), d, scale=50.0)
     base = _call(X, k, "pca failed on a valid random matrix")
     shifted = _call(X + offset, k, "pca failed on a valid shifted matrix")
     m = _determined_axes(n, d, k)
@@ -218,7 +239,7 @@ def test_keeping_every_axis_preserves_distances_from_the_mean(n, d):
 
 def test_rank_one_data_puts_all_variance_on_the_first_axis():
     rng = np.random.default_rng(5)
-    X = rng.normal(size=(6, 1)) @ rng.normal(size=(1, 3))
+    X = _real_normal(rng, (6, 1)) @ _real_normal(rng, (1, 3))
     result = _call(X, 2, "pca failed on rank-one data")
     variance = _field(result, "explained_variance")
     ratio = _field(result, "explained_variance_ratio")

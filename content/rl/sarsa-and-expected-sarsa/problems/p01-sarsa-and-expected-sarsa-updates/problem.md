@@ -67,3 +67,6 @@ expected Sarsa reduces to the Q-learning max target at `epsilon = 0` and to the 
 ties, and check terminal next states, boundary values of `alpha` and `epsilon`, the convex
 combination property of the update, the rejection of invalid indices and parameters, and inputs
 that are left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `digits` (see
+`docs/DATASETS.md`).

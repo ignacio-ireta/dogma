@@ -7,8 +7,33 @@ import pytest
 import torch
 from submission import fit
 
+from dogma_data import rng, sample_rows
+from dogma_data import rng as data_rng
+
 ATOL = 1e-9  # matches meta.yaml tolerance
 RTOL = 1e-9  # matches meta.yaml tolerance
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-fit-with-seeded-batches:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
 
 
 def checked_fit(model, X, y, Xv, yv, **kw):
@@ -40,12 +65,16 @@ def mlp(seed: int) -> torch.nn.Module:
 
 
 def dataset(seed: int, n: int, m: int):
-    gen = torch.Generator().manual_seed(seed)
-    X = torch.randn(n, 2, generator=gen, dtype=torch.float64)
-    y = torch.sin(X[:, :1]) + 0.3 * X[:, 1:]
-    Xv = torch.randn(m, 2, generator=gen, dtype=torch.float64)
-    yv = torch.sin(Xv[:, :1]) + 0.3 * Xv[:, 1:]
-    return X, y, Xv, yv
+    """n training and m validation patients of diabetes: two real features, the real target.
+
+    The features are body-mass index and a serum measurement, standardised. The target is the
+    disease progression, centred and scaled by round numbers near its mean and spread, so the
+    relation is noisy, as real targets are.
+    """
+    rows, target = sample_rows("diabetes", rng(f"fit-p01:dataset:{seed}"), n + m, standardize=True)
+    features = torch.tensor(rows[:, [2, 8]], dtype=torch.float64)
+    values = torch.tensor((target - 150.0) / 75.0, dtype=torch.float64).reshape(-1, 1)
+    return features[:n], values[:n], features[n:], values[n:]
 
 
 def reference_fit(model, X, y, Xv, yv, *, epochs, batch_size, lr, seed):
@@ -317,8 +346,8 @@ def test_training_loss_averages_over_every_target_column():
     torch.manual_seed(5)
     base = torch.nn.Linear(2, 2).double()
     gen = torch.Generator().manual_seed(5)
-    X = torch.randn(6, 2, generator=gen, dtype=torch.float64)
-    y = torch.randn(6, 2, generator=gen, dtype=torch.float64)
+    X = _real_values(gen, [6, 2], torch.float64)
+    y = _real_values(gen, [6, 2], torch.float64)
     with torch.no_grad():
         full = torch.nn.functional.mse_loss(base(X), y).item()
     train, _ = checked_fit(copy.deepcopy(base), X, y, X, y, epochs=1, batch_size=6, lr=0.1, seed=0)

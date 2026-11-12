@@ -17,7 +17,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import customer_order_features
 
-from dogma_data import load_frame
+from dogma_data import retail_invoices
 
 COLUMNS = [
     "order_id",
@@ -189,20 +189,19 @@ def _check(rows: Sequence[Row], as_strings: bool = False) -> None:
 
 @pytest.fixture(scope="module")
 def interview_orders() -> list[Row]:
-    source = load_frame("orders")
-    known_amounts = source.loc[
-        source["amount"].notna(), ["order_id", "customer_id", "order_date", "amount"]
-    ]
+    """Real orders: every invoice of 60 customers of an online retailer over two years.
+
+    The rows come from online_retail, one per invoice. The order id is the invoice number, the
+    date is the invoice date and the amount is the invoice total. A cancellation is a real
+    refund with a negative amount. Half the customers ordered four times or fewer and one
+    ordered 91 times, and many customers have several orders on one day.
+    """
+    invoices = retail_invoices()
     return [
-        (
-            int(order_id[1:]),
-            int(customer_id[1:]),
-            pd.Timestamp(order_date).date(),
-            float(amount),
-        )
-        for order_id, customer_id, order_date, amount in known_amounts.itertuples(
-            index=False, name=None
-        )
+        (int(invoice.lstrip("C")), int(customer_id), pd.Timestamp(moment).date(), float(amount))
+        for invoice, customer_id, moment, amount in invoices[
+            ["invoice", "customer_id", "invoice_ts", "amount"]
+        ].itertuples(index=False, name=None)
     ]
 
 

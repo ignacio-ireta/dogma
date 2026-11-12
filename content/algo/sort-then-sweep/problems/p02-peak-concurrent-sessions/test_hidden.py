@@ -10,6 +10,7 @@ limit. Each failure line names the likely mistake first.
 
 from __future__ import annotations
 
+import functools
 import signal
 import subprocess
 import sys
@@ -24,6 +25,8 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import max_concurrent
+
+from dogma_data import retail_events
 
 LARGE_N = 200_000
 TIME_LIMIT_S = 5.0
@@ -121,17 +124,40 @@ def _verify(sessions: list[tuple[int, int]]) -> None:
         _fail(problem)
 
 
+@functools.cache
+def _real_spans() -> tuple[tuple[tuple[int, int], ...], tuple[tuple[int, int], ...]]:
+    """Real intervals from the invoices of an online retailer (online_retail).
+
+    The first set holds one interval per trading day: the hours from the day's first invoice to
+    its last, counted from noon, so mornings are negative. The second holds one interval per
+    customer and week: the hours of the week from that customer's first invoice to the last.
+    Both are whole numbers, many intervals are a single point, and many share an endpoint.
+    """
+    events = retail_events()
+    hours = events["ts"].dt.hour
+    days = hours.groupby(events["ts"].dt.date).agg(["min", "max"])
+    week_hour = events["ts"].dt.dayofweek * 24 + hours
+    weeks = week_hour.groupby([events["user_id"], events["ts"].dt.strftime("%G-%V")]).agg(
+        ["min", "max"]
+    )
+    return (
+        tuple((int(a) - 12, int(b) - 12) for a, b in zip(days["min"], days["max"], strict=True)),
+        tuple((int(a), int(b)) for a, b in zip(weeks["min"], weeks["max"], strict=True)),
+    )
+
+
 def _random_sessions(
     rng: np.random.Generator, n: int, low: int, high: int
 ) -> list[tuple[int, int]]:
-    sessions: list[tuple[int, int]] = []
-    for _ in range(n):
-        start = int(rng.integers(low, high))
-        length = int(rng.integers(1, 7))
-        sessions.append(
-            (start, start + length)
-        )  # lengths of at least 1, so endpoints often coincide
-    return sessions
+    """n real sessions: daily trading windows for a small draw, customer weeks for a larger one.
+
+    A session ends one hour after its last invoice, so every session has a length of at least
+    1 and endpoints often coincide. The bounds are not used.
+    """
+    by_day, by_week = _real_spans()
+    pool = by_day if n < 40 else by_week
+    picked = [pool[int(i)] for i in rng.integers(0, len(pool), size=n)]
+    return [(start, end + 1) for start, end in picked]
 
 
 @settings(max_examples=100, deadline=None, report_multiple_bugs=False)

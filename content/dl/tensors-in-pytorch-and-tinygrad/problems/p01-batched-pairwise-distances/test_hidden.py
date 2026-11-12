@@ -3,8 +3,22 @@ from __future__ import annotations
 import torch
 from submission import batched_sq_distances
 
+from dogma_data import rng, sample_rows
+
 ATOL = 1e-6  # matches meta.yaml tolerance
 RTOL = 1e-5  # matches meta.yaml tolerance (justified there)
+
+
+def _point_sets(key, batch, n, d, dtype=torch.float64):
+    """batch sets of n real points with d standardised breast_cancer features each."""
+    rows, _ = sample_rows("breast_cancer", rng(key), batch * n, d, standardize=True)
+    return torch.tensor(rows.reshape(batch, n, d), dtype=dtype)
+
+
+def _two_point_sets(key, batch, n, m, d, *, dtype=torch.float64):
+    """Two groups of real point sets that share their d features: n and m points per set."""
+    both = _point_sets(key, batch, n + m, d, dtype)
+    return both[:, :n].clone(), both[:, n:].clone()
 
 
 def exact_sq_distances(X: torch.Tensor, Y: torch.Tensor) -> torch.Tensor:
@@ -51,11 +65,9 @@ def rejects(call) -> None:
 
 
 def test_random_float64_inputs_match_independent_reference():
-    gen = torch.Generator().manual_seed(0)
     for trial in range(4):
         B, N, M, D = 2 + trial % 2, 1 + trial, 2 + trial, 1 + trial
-        X = torch.randn(B, N, D, generator=gen, dtype=torch.float64)
-        Y = torch.randn(B, M, D, generator=gen, dtype=torch.float64)
+        X, Y = _two_point_sets(f"batched-sq-distances-p01:reference:{trial}", B, N, M, D)
         out = checked(lambda X=X, Y=Y: batched_sq_distances(X, Y), torch.float64)
         same_shape(out, exact_sq_distances(X, Y))
         assert torch.allclose(out, exact_sq_distances(X, Y), atol=ATOL, rtol=RTOL), (
@@ -79,8 +91,7 @@ def test_zero_sized_batch_query_reference_and_feature_dimensions():
 
 
 def test_identical_points_have_nonnegative_distances_with_zero_diagonal():
-    gen = torch.Generator().manual_seed(1)
-    X = torch.randn(3, 16, 5, generator=gen, dtype=torch.float32)
+    X = _point_sets("batched-sq-distances-p01:self-distance", 3, 16, 5, torch.float32)
     out = checked(lambda: batched_sq_distances(X, X), torch.float32)
     assert bool((out >= 0).all()), "squared distances must never be negative, not even by rounding"
     # Rounding in the self-distance scales with the point's squared norm, so the allowance does too.
@@ -94,9 +105,9 @@ def test_identical_points_have_nonnegative_distances_with_zero_diagonal():
 def test_large_common_offset_keeps_small_distances_accurate_in_float32():
     # Every coordinate sits near 1000 with spread 0.01. The true squared distances are about 1e-4,
     # far below the float32 rounding of the squared norms (about 3e6), so the naive expansion fails.
-    gen = torch.Generator().manual_seed(2)
-    X = (1000.0 + 0.01 * torch.randn(2, 6, 3, generator=gen)).float()
-    Y = (1000.0 + 0.01 * torch.randn(2, 5, 3, generator=gen)).float()
+    near, far = _two_point_sets("batched-sq-distances-p01:offset", 2, 6, 5, 3)
+    X = (1000.0 + 0.01 * near).float()
+    Y = (1000.0 + 0.01 * far).float()
     out = checked(lambda: batched_sq_distances(X, Y), torch.float32)
     same_shape(out, exact_sq_distances(X, Y))
     assert torch.allclose(out.double(), exact_sq_distances(X, Y), atol=ATOL, rtol=RTOL), (
@@ -105,9 +116,7 @@ def test_large_common_offset_keeps_small_distances_accurate_in_float32():
 
 
 def test_small_magnitudes_scale_quadratically():
-    gen = torch.Generator().manual_seed(3)
-    X = torch.randn(2, 4, 3, generator=gen, dtype=torch.float64)
-    Y = torch.randn(2, 3, 3, generator=gen, dtype=torch.float64)
+    X, Y = _two_point_sets("batched-sq-distances-p01:scale", 2, 4, 3, 3)
     scale = 1e-4
     unit = checked(lambda: batched_sq_distances(X, Y), torch.float64)
     tiny = checked(lambda: batched_sq_distances(X * scale, Y * scale), torch.float64)
@@ -117,9 +126,8 @@ def test_small_magnitudes_scale_quadratically():
 
 
 def test_float32_with_float64_promotes_to_float64():
-    gen = torch.Generator().manual_seed(4)
-    X = torch.randn(2, 3, 2, generator=gen, dtype=torch.float32)
-    Y = torch.randn(2, 4, 2, generator=gen, dtype=torch.float64)
+    X, Y = _two_point_sets("batched-sq-distances-p01:mixed-dtypes", 2, 3, 4, 2)
+    X = X.float()
     out = checked(lambda: batched_sq_distances(X, Y), torch.float64)
     same_shape(out, exact_sq_distances(X, Y))
     assert torch.allclose(out, exact_sq_distances(X, Y), atol=ATOL, rtol=RTOL), (
@@ -128,9 +136,7 @@ def test_float32_with_float64_promotes_to_float64():
 
 
 def test_float32_in_float32_out_and_float64_in_float64_out():
-    gen = torch.Generator().manual_seed(5)
-    X32 = torch.randn(1, 2, 2, generator=gen, dtype=torch.float32)
-    Y32 = torch.randn(1, 3, 2, generator=gen, dtype=torch.float32)
+    X32, Y32 = _two_point_sets("batched-sq-distances-p01:dtype", 1, 2, 3, 2, dtype=torch.float32)
     checked(lambda: batched_sq_distances(X32, Y32), torch.float32)
     checked(lambda: batched_sq_distances(X32.double(), Y32.double()), torch.float64)
 
@@ -159,9 +165,7 @@ def test_mismatched_batch_or_feature_sizes_are_rejected_as_value_error():
 
 
 def test_inputs_are_not_mutated():
-    gen = torch.Generator().manual_seed(6)
-    X = torch.randn(2, 3, 2, generator=gen, dtype=torch.float64)
-    Y = torch.randn(2, 4, 2, generator=gen, dtype=torch.float64)
+    X, Y = _two_point_sets("batched-sq-distances-p01:not-mutated", 2, 3, 4, 2)
     X_before, Y_before = X.clone(), Y.clone()
     checked(lambda: batched_sq_distances(X, Y))
     assert torch.equal(X, X_before), "the query argument was modified: do not write into inputs"

@@ -54,3 +54,6 @@ is exactly one, that shifting or scaling the series leaves the result unchanged,
 of `nlags` work. They also cover integer-valued real data (the Nile series) and float32 storage of a real cyclic series (sunspots). They also cover invalid `nlags`, a series too short to have lags, a constant series including
 one whose mean is not exactly representable, non-finite input, integer input, and inputs that must not be
 mutated.
+
+The hidden tests draw their bulk inputs from the real datasets `elnino`, `nile` and `sunspots` (see
+`docs/DATASETS.md`).

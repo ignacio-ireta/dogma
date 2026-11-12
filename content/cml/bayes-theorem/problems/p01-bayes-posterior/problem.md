@@ -52,3 +52,6 @@ batch update, invariance to the order of observations, and exact zeros for zero-
 zero-likelihood hypotheses. Error cases cover impossible evidence, a negative or out-of-range index,
 a non-integer index, and shape, sum and sign violations. The families also include the empty
 sequence, NaN probabilities, normalised output, and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer`,
+`california_housing`, `iris` and `wine` (see `docs/DATASETS.md`).

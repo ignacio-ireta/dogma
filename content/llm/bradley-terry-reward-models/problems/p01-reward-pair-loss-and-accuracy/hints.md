@@ -8,7 +8,9 @@ between the two rewards is used.
 
 With margin $d = r_c - r_r$, the per-pair loss is $-\log \sigma(d) = \operatorname{softplus}(-d)$.
 Use the split form $\max(x, 0) + \log(1 + e^{-|x|})$ with $x = -d$ so the exponential never sees a
-large positive argument. The accuracy is the mean of the indicator $d > 0$, cast to the input dtype.
+large positive argument. Write the positive part as $(x + |x|) / 2$, not with `clamp`: both have the
+same values, but `clamp` has a kink at 0 and gives a tied pair no gradient, where the loss has slope
+1/2. The accuracy is the mean of the indicator $d > 0$, cast to the input dtype.
 
 ## Hint 3 — code shape
 

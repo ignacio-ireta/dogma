@@ -54,3 +54,6 @@ ties, both a symmetric case and the worked example; a large common offset that a
 gets wrong; constant data; threshold, shape and boolean errors; integer input; and inputs left unchanged.
 The realism families are mixed-scale real data (raw `wine`, where one column holds nearly all the variance) and
 the same data scaled by a power of two, whose total variance is tiny but positive.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `wine` (see
+`docs/DATASETS.md`).

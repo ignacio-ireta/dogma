@@ -6,6 +6,7 @@ Failure messages name the kind of mistake. They never print hidden timestamps or
 from __future__ import annotations
 
 import copy
+import functools
 import math
 import random
 from fractions import Fraction
@@ -13,6 +14,8 @@ from typing import Any
 
 import pytest
 from submission import serving_rates
+
+from dogma_data import retail_invoices
 
 
 def _pair(got: Any, want: tuple[float, float], hint: str = "") -> None:
@@ -53,14 +56,44 @@ def _oracle(requests: list[dict[str, Any]], ttft_slo: float, itl_slo: float) -> 
     return float(Fraction(tokens) / window), float(Fraction(meeting) / window)
 
 
+@functools.cache
+def _invoices() -> tuple[tuple[float, int], ...]:
+    """(arrival, size) of every real invoice of the Online Retail II sample.
+
+    The arrival is the time since the first invoice, in hours, and stands for the arrival
+    time of a request in seconds: invoices come in bursts, several share a timestamp, and
+    quiet stretches separate them. The size is the number of lines of the invoice, capped at
+    15, and stands for the number of tokens of the reply. Token timings within a request
+    come from `_waits`.
+    """
+    table = retail_invoices()
+    hours = (table["invoice_ts"] - table["invoice_ts"].min()).dt.total_seconds() / 3600.0
+    sizes = table["n_lines"].clip(upper=15)
+    return tuple(zip(hours.tolist(), sizes.tolist(), strict=True))
+
+
+@functools.cache
+def _waits() -> tuple[float, ...]:
+    """Real waiting times: the minutes between consecutive invoices, zero waits left out.
+
+    They stand for the time to the first token and for the gaps between tokens, rescaled to
+    seconds by the caller. No dataset here records per-token times, so these are a stand-in;
+    what they bring is the shape of real waits: most are short, a few are very long.
+    """
+    stamps = retail_invoices()["invoice_ts"].sort_values()
+    minutes = stamps.diff().dt.total_seconds().dropna() / 60.0
+    return tuple(minutes[minutes > 0].tolist())
+
+
 def _random_requests(rng: random.Random, count: int) -> list[dict[str, Any]]:
+    """Real arrivals and sizes. The first-token delay is a real wait over 1,000 and a token
+    gap is a real wait over 10,000, which puts both around the limits the tests draw."""
     requests = []
     for _ in range(count):
-        arrival = rng.uniform(0.0, 20.0)
-        n = rng.choice([1, 2, 3, 6, 15])
-        times = [arrival + rng.uniform(0.0, 3.0)]
+        arrival, n = rng.choice(_invoices())
+        times = [arrival + rng.choice(_waits()) / 1000.0]
         for _ in range(n - 1):
-            times.append(times[-1] + rng.uniform(0.001, 0.5))
+            times.append(times[-1] + rng.choice(_waits()) / 10000.0)
         requests.append({"arrival": arrival, "token_times": times})
     return requests
 

@@ -61,3 +61,6 @@ stay in the outer bins instead of being dropped. They check the eps floor for an
 constant reference, invariance under a common shift and rescaling, and that the result is never negative. The tests
 also cover invalid `bins` and `eps`, an empty or non-finite input, a two-dimensional input, integer input, and inputs
 that must not be mutated.
+
+The hidden tests draw their bulk inputs from the real dataset `california_housing` (see
+`docs/DATASETS.md`).

@@ -51,3 +51,6 @@ swapped); nats rather than bits; stability for logits near one thousand and for 
 probabilities underflow; the relation KL = cross-entropy minus entropy; a non-negative result for
 every row; the shape `(n,)` and float64 dtype; each row computed independently of the others;
 every `ValueError` rule; and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

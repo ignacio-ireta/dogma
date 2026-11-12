@@ -10,6 +10,30 @@ from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays
 from submission import expected_sarsa_update, sarsa_update
 
+from dogma_data import sample_rows
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
 
 def _close(actual, desired, *, err_msg, **tolerance):
     """assert_allclose whose failure shows err_msg as the first line, without the values."""
@@ -187,11 +211,14 @@ def test_random_tables_match_explicit_policy_oracle():
     for _ in range(80):
         n_states = int(rng.integers(1, 5))
         n_actions = int(rng.integers(1, 5))
-        Q = rng.integers(-2, 3, size=(n_states, n_actions)).astype(np.float64)  # integers make ties
+        # Real values that tie: pixel intensities of handwritten digits, whole numbers from 0
+        # to 16 with many zeros, centred on 8.
+        Q, _ = sample_rows("digits", rng, n_states, n_actions)
+        Q -= 8.0
         s = int(rng.integers(n_states))
         a = int(rng.integers(n_actions))
         s_next = None if rng.random() < 0.2 else int(rng.integers(n_states))
-        r = float(rng.normal())
+        r = float(_real_normal(rng))
         alpha, gamma, epsilon = (float(rng.random()) for _ in range(3))
         target = _expected_target(Q, r, s_next, gamma, epsilon)
         expected = Q.copy()

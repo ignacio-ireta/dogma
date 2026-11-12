@@ -1,14 +1,41 @@
 from __future__ import annotations
 
+import math
+
 import pytest
 import torch
 import torch.nn.functional as ref_f  # oracle only: the submission may not use torch.nn
 from submission import reinforce_loss
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 ATOL = 1e-9
 RTOL = 1e-9
 FD_STEP = 1e-6
 FD_TOL = 1e-6
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-reinforce-loss:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
 
 
 def _call(*args, **kwargs):
@@ -66,9 +93,9 @@ def _reference_loss(logits, actions, rewards, gamma, baseline):
 
 def _random_batch(seed, batch, steps, n_actions, dtype=torch.float64, scale=1.0):  # noqa: PLR0917 (the contract fixes these arguments)
     g = torch.Generator().manual_seed(seed)
-    logits = torch.randn(batch, steps, n_actions, generator=g, dtype=dtype) * scale
+    logits = _real_values(g, [batch, steps, n_actions], dtype) * scale
     actions = torch.randint(0, n_actions, (batch, steps), generator=g)
-    rewards = torch.randn(batch, steps, generator=g, dtype=dtype)
+    rewards = _real_values(g, [batch, steps], dtype)
     return logits, actions, rewards
 
 
@@ -139,7 +166,7 @@ def test_logit_gradient_matches_finite_differences_in_float64():
 def test_constant_returns_with_baseline_give_zero_loss_and_gradient():
     steps, batch, n_actions = 3, 4, 3
     g = torch.Generator().manual_seed(5)
-    logits = torch.randn(batch, steps, n_actions, generator=g, dtype=torch.float64)
+    logits = _real_values(g, [batch, steps, n_actions], torch.float64)
     actions = torch.randint(0, n_actions, (batch, steps), generator=g)
     rewards = torch.ones(batch, steps, dtype=torch.float64)  # identical episodes, identical returns
     z = logits.clone().requires_grad_(True)
@@ -205,9 +232,11 @@ def test_float64_rewards_with_float32_logits_still_return_float32():
 
 
 def test_single_action_gives_zero_loss_and_gradient():
-    logits = torch.randn(2, 3, 1, dtype=torch.float64, requires_grad=True)
+    logits = _real_values(
+        torch.Generator().manual_seed(235), [2, 3, 1], torch.float64
+    ).requires_grad_(True)
     actions = torch.zeros(2, 3, dtype=torch.long)
-    rewards = torch.randn(2, 3, dtype=torch.float64)
+    rewards = _real_values(torch.Generator().manual_seed(237), [2, 3], torch.float64)
     loss = _call(logits, actions, rewards, 0.9, True)
     assert abs(float(loss)) < ATOL, "with one action log pi = 0 everywhere, so the loss is zero"
     grad = _gradient(loss, logits)

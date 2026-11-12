@@ -4,17 +4,79 @@ import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from scipy.special import ndtr
 from sklearn.linear_model import ElasticNet
 from submission import elastic_net_cd
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
+
 
 def _data(seed, n, d, sparsity=0.5):
-    """Centred data with unequal column scales, a sparse truth and mild noise."""
-    rng = np.random.default_rng(seed)
-    X = rng.normal(size=(n, d)) * rng.uniform(0.3, 3.0, size=d)
+    """Semi-synthetic: real features, a known sparse truth and mild noise.
+
+    The columns are standardised real measurements, some strongly correlated: diabetes, or
+    breast_cancer when more than ten columns are asked for. They are rescaled to unequal
+    scales and centred on the drawn rows. The target is built from a known sparse coefficient
+    vector so the tests can reason about which coefficients must vanish.
+    """
+    rng = data_rng(f"elastic-net-cd-p02:data:{seed}:{n}:{d}")
+    name = "diabetes" if d <= 10 else "breast_cancer"
+    X, _ = sample_rows(name, rng, n, d, standardize=True)
+    X = X * (0.3 + (3.0 - 0.3) * _real_unit(rng, d))
     X = X - X.mean(axis=0)
-    beta = np.where(rng.random(d) < sparsity, 2.0 * rng.normal(size=d), 0.0)
-    y = X @ beta + 0.5 * rng.normal(size=n)
+    beta = np.where(_real_unit(rng, d) < sparsity, 2.0 * _real_normal(rng, d), 0.0)
+    y = X @ beta + 0.5 * _real_normal(rng, n)
     return X, y - y.mean()
 
 
@@ -130,9 +192,9 @@ def test_ridge_limit_matches_the_closed_form(alpha):
 
 def test_duplicate_columns_share_their_weight_evenly():
     rng = np.random.default_rng(9)
-    x = rng.normal(size=50)
+    x = _real_normal(rng, 50)
     x = x - x.mean()
-    y = 2.0 * x + 0.1 * rng.normal(size=50)
+    y = 2.0 * x + 0.1 * _real_normal(rng, 50)
     y = y - y.mean()
     X = np.column_stack([x, x])
     w = _checked(X, y, 0.1, 0.5, tol=1e-12, max_iter=5_000)
@@ -149,10 +211,10 @@ def test_duplicate_columns_share_their_weight_evenly():
 
 def test_nearly_duplicate_columns_share_their_weight():
     rng = np.random.default_rng(10)
-    x = rng.normal(size=60)
-    X = np.column_stack([x, x + 1e-3 * rng.normal(size=60)])
+    x = _real_normal(rng, 60)
+    X = np.column_stack([x, x + 1e-3 * _real_normal(rng, 60)])
     X = X - X.mean(axis=0)
-    y = 2.0 * x + 0.1 * rng.normal(size=60)
+    y = 2.0 * x + 0.1 * _real_normal(rng, 60)
     y = y - y.mean()
     w = _checked(X, y, 0.1, 0.5, tol=1e-12, max_iter=5_000)
     assert abs(w[0] - w[1]) < 1e-3 * max(1.0, abs(w).max()), (
@@ -336,8 +398,8 @@ def test_mismatched_target_length_raises_when_every_column_is_zero_and_pure_lass
 
 def test_zero_penalty_is_accepted_and_gives_least_squares():
     rng = np.random.default_rng(41)
-    X = rng.normal(size=(20, 3))
-    y = rng.normal(size=20)
+    X = _real_normal(rng, (20, 3))
+    y = _real_normal(rng, 20)
     w = _checked(X, y, 0.0, 0.5, tol=1e-12, max_iter=5_000)
     np.testing.assert_allclose(
         w,

@@ -4,8 +4,73 @@ import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
-from scipy.special import expit
+from scipy.special import expit, ndtr
 from submission import logloss_grad_hess
+
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
+
+
+def _tumour_margins(key, n, scale):
+    """Real labels and real margins: n breast_cancer tumours scored by a linear model.
+
+    The margin is the projection of six standardised features on the direction from the
+    malignant mean to the benign mean of the drawn rows, times ``scale``. Most margins agree
+    with the label and a few do not.
+    """
+    X, y = sample_rows("breast_cancer", data_rng(key), n, 6, standardize=True)
+    direction = X[y == 1.0].mean(axis=0) - X[y == 0.0].mean(axis=0)
+    return y, scale * (X @ direction)
 
 
 def _call(y, margin):
@@ -71,9 +136,7 @@ def test_gradient_and_hessian_match_central_differences_of_the_loss():
 
 
 def test_matches_closed_form_on_random_moderate_margins():
-    rng = np.random.default_rng(11)
-    margin = rng.normal(scale=5.0, size=200)
-    y = (rng.uniform(size=200) < 0.5).astype(float)
+    y, margin = _tumour_margins("logloss-grad-hess-p02:closed-form", 200, 1.0)
     grad, hess = _call(y, margin)
     p = expit(margin)
     np.testing.assert_allclose(
@@ -118,8 +181,8 @@ def test_zero_margin_has_gradient_half_minus_label_and_hessian_quarter():
 
 def test_bounds_hold_for_any_finite_margin():
     rng = np.random.default_rng(12)
-    margin = rng.uniform(-1e4, 1e4, size=500)
-    y = (rng.uniform(size=500) < 0.5).astype(float)
+    margin = -1e4 + (1e4 - -1e4) * _real_unit(rng, 500)
+    y = (_real_unit(rng, 500) < 0.5).astype(float)
     grad, hess = _call(y, margin)
     assert np.all(np.abs(grad) <= 1.0 + 1e-12), (
         "gradient magnitude exceeds one: sigmoid minus label is in [-1, 1]"
@@ -180,9 +243,7 @@ def test_invalid_inputs_raise_value_error(y, margin):
 
 
 def test_inputs_are_not_mutated():
-    rng = np.random.default_rng(13)
-    margin = rng.normal(scale=3.0, size=20)
-    y = (rng.uniform(size=20) < 0.5).astype(float)
+    y, margin = _tumour_margins("logloss-grad-hess-p02:not-mutated", 20, 0.5)
     margin_before, y_before = margin.copy(), y.copy()
     _call(y, margin)
     np.testing.assert_array_equal(margin, margin_before, err_msg="margin was modified in place")

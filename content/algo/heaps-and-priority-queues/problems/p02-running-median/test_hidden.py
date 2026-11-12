@@ -20,12 +20,37 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import running_median
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows, sample_window
+
 LARGE_N = 60_000
 LARGE_TIME_LIMIT_S = 6.0
 MEDIAN_MISTAKE = (
     "a running median differs from the reference: the median of each prefix is the middle value "
     "for an odd count and the mean of the two middle values for an even count"
 )
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
 
 
 class _TooSlow(BaseException):
@@ -99,16 +124,19 @@ def _matches(got: Sequence[float], want: Sequence[float]) -> bool:
 
 @pytest.mark.parametrize("seed", range(30), ids=[f"ints-{s}" for s in range(30)])
 def test_matches_statistics_median_on_random_integers(seed: int) -> None:
-    rng = np.random.default_rng(seed)
-    values = [int(v) for v in rng.integers(-20, 21, size=int(rng.integers(1, 41)))]
+    rng = data_rng(f"running-median-p02:integers:{seed}")
+    # Real yearly sunspot numbers as whole numbers, 60 subtracted: repeats and both signs.
+    window = sample_window("sunspots", rng, int(rng.integers(1, 41)))
+    values = [int(v) for v in np.round(window) - 60]
     want = _reference(values)  # computed before the learner runs
     assert _matches(_solve(values), want), MEDIAN_MISTAKE
 
 
 @pytest.mark.parametrize("seed", range(10), ids=[f"floats-{s}" for s in range(10)])
 def test_matches_statistics_median_on_random_floats(seed: int) -> None:
-    rng = np.random.default_rng(100 + seed)
-    values = [float(v) for v in rng.normal(scale=10.0, size=int(rng.integers(1, 41)))]
+    rng = data_rng(f"running-median-p02:floats:{seed}")
+    # Real monthly sea-surface temperatures around 24 degrees, to two decimals.
+    values = [float(v) for v in sample_window("elnino", rng, int(rng.integers(1, 41))) - 24.0]
     want = _reference(values)
     assert _matches(_solve(values), want), MEDIAN_MISTAKE
 
@@ -202,7 +230,7 @@ def test_each_median_lies_between_the_smallest_and_largest_value_so_far(values: 
 
 def test_long_input_finishes_within_the_time_limit_and_matches_the_reference() -> None:
     rng = np.random.default_rng(8)
-    values = [float(v) for v in rng.normal(size=LARGE_N)]
+    values = [float(v) for v in _real_normal(rng, LARGE_N)]
     checkpoints = [*range(999, LARGE_N, 6_000), LARGE_N - 1]
     want = {i: float(np.median(values[: i + 1])) for i in checkpoints}
     start = time.perf_counter()

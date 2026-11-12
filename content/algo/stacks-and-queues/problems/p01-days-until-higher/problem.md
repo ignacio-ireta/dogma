@@ -48,3 +48,5 @@ scan on small and medium random lists, which contain ties and negative readings.
 input, a single reading, runs of equal readings, a run that falls with no higher reading after it, a long run
 that a single higher reading resolves at once, negative readings compared by value, an input that must not
 change, entries that must be plain `int`, and a list of 200,000 readings that must finish within the time limit.
+
+The hidden tests draw their bulk inputs from the real dataset `elnino` (see `docs/DATASETS.md`).

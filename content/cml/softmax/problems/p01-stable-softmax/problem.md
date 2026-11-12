@@ -42,3 +42,6 @@ rows with very different scales, which must not affect each other; shift invaria
 sum to 1; temperature scaling against the reference, with its limits; the two-class case, which must
 equal the logistic function; integer input; empty and scalar inputs, NaN and infinity, and an invalid axis;
 and that the input is left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

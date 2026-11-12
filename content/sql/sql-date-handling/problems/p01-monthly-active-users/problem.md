@@ -52,8 +52,8 @@ month       active_users
 2024-02-01  1
 ```
 
-A generated event log has many events from a small set of heavy users. It is still one active
-user per month, no matter how many events that user produced.
+A real activity log (the invoice lines of `online_retail`) has many events from a small set of
+heavy users. It is still one active user per month, no matter how many events that user produced.
 
 ## Constraints
 
@@ -66,6 +66,10 @@ user per month, no matter how many events that user produced.
 All public tests pass, then **Submit** runs the hidden tests. They build their own `events` tables, so a
 query tuned to the fixture fails. The hidden tests cover these families: an empty month in the middle, an
 empty last month, an events table with no rows, month-boundary timestamps, a leap-day event, several
-events by one user in one month (counted once), Zipf-skewed user activity, naive timestamps, a user
+events by one user in one month (counted once), skewed user activity, naive timestamps, a user
 active in every month, events before and after the range, the month column type, the row order, and
-generated event-log tables checked against an independent pandas computation.
+a real retail activity log, moved forward in time to cover the range, checked against an independent
+pandas computation.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

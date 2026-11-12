@@ -76,3 +76,6 @@ the width; the factor `n_layers`; the `d_in + d_out` sum (not the product); the 
 larger and smaller than `d_model`; a configuration of realistic size, where the count must stay exact;
 `fraction` close to `trainable / base_params`; the order of `targets` not mattering; duplicate and unknown
 target names; `bool` and non-integer arguments; a missing `d_ff`; `targets` left unchanged.
+
+Some hidden tests take their inputs from the real datasets `breast_cancer`, `diabetes`, `digits`,
+`iris` and `wine` (see `docs/DATASETS.md`).

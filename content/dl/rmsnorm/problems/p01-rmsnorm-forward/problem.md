@@ -46,3 +46,6 @@ rms_norm(x, [1.0, 1.0], eps=1e-6)
 ## Done looks like
 
 The examples, the zero-input case and the single-feature case pass. The hidden tests compare outputs with PyTorch's RMSNorm over random inputs with 1 to 4 leading dimensions, and check that the mean is not subtracted (an additive offset must change the output), that eps sits inside the square root (small magnitudes expose outside placement), that the output has unit mean square before the gain, that the statistic runs over the last axis, that examples are independent, that very large and very small magnitudes are handled, and that float32, empty leading dimensions, invalid arguments and in-place mutation are covered.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

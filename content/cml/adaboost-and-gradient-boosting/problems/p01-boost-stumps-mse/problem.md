@@ -48,3 +48,6 @@ The first round starts at $\bar y=0.5$, and the best stump splits at $t=2.5$, th
 ## Done looks like
 
 All public tests pass, then **Submit** runs the hidden tests. They check: agreement with a brute-force implementation of the same procedure on random data, at training points and at new points; agreement with scikit-learn's gradient boosting with depth-one trees on tie-free data; that `predict` reproduces the returned training predictions; constant features; ties broken by feature index and by threshold; the effect of the learning rate; a training error that does not increase with more rounds; a single row; invalid inputs and arguments; and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `diabetes` (see
+`docs/DATASETS.md`).

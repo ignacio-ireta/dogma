@@ -56,3 +56,6 @@ samples, which pin the sigmoid-derivative factor and the $2/n$ mean; a deep-satu
 against a high-precision reference; large positive and negative logits that must neither overflow
 nor produce NaN; a set of shape mistakes, including a column vector `y`; NaN and infinite inputs;
 integer inputs; and that the inputs are left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

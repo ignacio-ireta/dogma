@@ -9,6 +9,8 @@ import numpy as np
 import pytest
 from submission import diagonal_gaussian_kl
 
+from dogma_data import load
+
 ATOL = 1e-10  # closed-form values agree with the formula to round-off, about 1e-15 here
 RTOL = 1e-10
 
@@ -77,6 +79,16 @@ def _variants(mp, sp, mq, sq):
     ]
 
 
+def _species(label, columns):
+    """Mean and standard deviation of real iris measurements (cm) for one species.
+
+    The diagonal Gaussian fitted to a species: label 0 is setosa, 1 versicolor, 2 virginica.
+    """
+    data = load("iris")
+    rows = data.X[data.y == label][:, list(columns)]
+    return rows.mean(axis=0), rows.std(axis=0, ddof=1)
+
+
 def _mc_logpdf(x, mean, sd):
     return np.sum(-0.5 * np.log(2 * np.pi * sd * sd) - (x - mean) ** 2 / (2 * sd * sd), axis=-1)
 
@@ -98,8 +110,10 @@ def test_analytic_one_dimensional_and_coordinate_cases(mp, sp, mq, sq, expected)
 
 
 def test_monte_carlo_estimate_agrees_within_five_standard_errors():
-    mp, sp = np.array([0.5, -1.0, 0.0]), np.array([1.0, 0.5, 2.0])
-    mq, sq = np.array([0.0, 0.0, 1.0]), np.array([1.5, 1.0, 1.0])
+    # P is the Gaussian fitted to versicolor, Q the one fitted to virginica, over three
+    # measurements. The samples are drawn from P, which is what the estimate needs.
+    mp, sp = _species(1, (0, 1, 2))
+    mq, sq = _species(2, (0, 1, 2))
     gen = np.random.default_rng(20260101)
     n = 400_000
     x = mp + sp * gen.standard_normal((n, 3))
@@ -117,8 +131,9 @@ def test_monte_carlo_estimate_agrees_within_five_standard_errors():
 
 
 def test_forward_and_reverse_divergence_are_distinct_on_asymmetric_parameters():
-    mp, sp = [0.0, 0.0], [0.4, 3.0]
-    mq, sq = [1.0, -1.0], [1.0, 0.5]
+    # Setosa against virginica over petal length and petal width: narrow against wide.
+    mp, sp = _species(0, (2, 3))
+    mq, sq = _species(2, (2, 3))
     forward = _closed(mp, sp, mq, sq)
     reverse = _closed(mq, sq, mp, sp)
     if abs(forward - reverse) < 0.5:

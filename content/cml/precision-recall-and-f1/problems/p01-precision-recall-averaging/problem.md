@@ -47,3 +47,6 @@ Implement `precision_recall_f1(y_true, y_pred, *, average="binary", pos_label=1)
 ## Done looks like
 
 All public tests pass, then **Submit** passes the hidden tests. They check agreement with a reference implementation on random multi-class labels for each averaging mode, and binary scoring with string labels and a non-default positive class. They check two identities: micro scores equal accuracy, and weighted recall equals accuracy. They check that macro F1 is the mean of the per-class F1 values on a case where the other combination gives a different number. They check that predicted-only classes are averaged, that zero denominators give 0.0 and never NaN, that binary averaging rejects more than two labels, that scores do not depend on label names, and that unknown modes, empty input, mismatched lengths and mutated inputs are handled.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `digits` (see
+`docs/DATASETS.md`).

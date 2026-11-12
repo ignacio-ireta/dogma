@@ -9,6 +9,9 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import discounted_returns
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_window
+
 
 def _close(
     actual, desired, *, err_msg="values differ from the expected result", atol=0.0, rtol=1e-7
@@ -64,7 +67,8 @@ def _forward_reference(rewards, gamma):
     st.integers(0, 10_000),
 )
 def test_random_episodes_match_forward_definition(length, gamma, seed):
-    rewards = np.random.default_rng(seed).normal(size=length)
+    # Real rewards: month-to-month changes of El Niño sea-surface temperature, in degrees.
+    rewards = np.diff(sample_window("elnino", np.random.default_rng(seed), length + 1))
     got = _call(rewards, gamma)
     want = _forward_reference(rewards, gamma)
     _expect(
@@ -82,11 +86,13 @@ def test_random_episodes_match_forward_definition(length, gamma, seed):
 
 def test_dyadic_discount_matches_exact_rational_arithmetic():
     # gamma = 1/2 and integer rewards keep every intermediate value exactly representable in
-    # float64 (at most 40 fractional bits for 40 steps), so an exact result is required.
-    rng = np.random.default_rng(7)
+    # float64 (at most 40 fractional bits for 40 steps, and under 11 integer bits), so an
+    # exact result is required. The rewards are real whole numbers: year-to-year changes of
+    # the annual flow of the Nile.
+    rng = data_rng("p01-discounted-returns:dyadic")
     for _ in range(20):
         length = int(rng.integers(0, 41))
-        rewards = rng.integers(-100, 101, size=length)
+        rewards = np.diff(sample_window("nile", rng, length + 1)).astype(np.int64)
         exact = []
         for t in range(length):
             total = Fraction(0)
@@ -105,7 +111,7 @@ def test_gamma_zero_returns_the_rewards_themselves():
 
 
 def test_gamma_one_matches_reversed_cumulative_sum():
-    rewards = np.random.default_rng(11).integers(-50, 50, size=25).astype(np.float64)
+    rewards = np.diff(sample_window("nile", data_rng("p01-discounted-returns:suffix"), 26))
     got = _call(rewards, 1.0)
     _equal(
         got,

@@ -51,3 +51,6 @@ added once per output unit to every row; every `ValueError` rule (non-2-D `X` or
 column-shaped bias, feature mismatch in the PyTorch layout); the empty batch and zero-width features;
 integer input returning `float64`; large and small magnitudes with float64 precision; each row's
 output depending only on that row; and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `digits` (see
+`docs/DATASETS.md`).

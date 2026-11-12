@@ -35,3 +35,5 @@ Implement `balanced_class_weights(y)`. It returns one weight per class such that
 ## Done looks like
 
 All public tests pass, then **Submit** passes the hidden tests. They compare with scikit-learn's `compute_class_weight("balanced")` on random labels. They check the two identities of the rule: each class contributes n / k to the weighted count, and the total weighted count is n. They check that weights are floats even when the division is exact, that the minority class gets the larger weight, that the weights follow each label and not the order in which labels first appear, string labels, the single-class case, empty and two-dimensional input raising `ValueError`, and that the input is left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `adult` (see `docs/DATASETS.md`).

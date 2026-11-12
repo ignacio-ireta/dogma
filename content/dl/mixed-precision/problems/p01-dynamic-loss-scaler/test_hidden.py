@@ -12,6 +12,8 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import DynamicLossScaler
 
+from dogma_data import retail_invoices
+
 
 def _torch_run(flags, init_scale, growth, backoff, interval):
     """Run torch's CPU GradScaler on a sequence of found_inf flags. Return [(applied, scale)]."""
@@ -41,9 +43,15 @@ def test_scale_and_steps_match_torch_grad_scaler():
         (65536.0, 4.0, 0.25, 5),
         (1024.0, 2.0, 0.5, 1),
     ]
+    # A real sequence of events stands for the overflow flags: forty consecutive invoices of
+    # the Online Retail II sample, and a step overflows where the invoice was a cancellation.
+    # Real cancellations come in runs and leave long clean stretches, which is what moves the
+    # scale both ways.
+    cancelled = retail_invoices().sort_values("invoice_ts")["cancelled"].tolist()
     rng = random.Random(7)  # noqa: S311 (seeded test data, not security)
     for init_scale, growth, backoff, interval in configs:
-        flags = [rng.random() < 0.3 for _ in range(40)]
+        start = rng.randrange(len(cancelled) - 40)
+        flags = cancelled[start : start + 40]
         reference = _torch_run(flags, init_scale, growth, backoff, interval)
         ours = DynamicLossScaler(
             init_scale=init_scale,

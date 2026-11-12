@@ -64,3 +64,6 @@ reference on seeded configurations. They cover the 4-bit rounding, where the bit
 eight; a zero adapter; a zero base; the adam term being fp32 whatever the adapter dtype; the gradient term
 equal to the weight term; the total as the exact sum; a realistic configuration, where every term must stay an
 exact integer; the key order; and every `ValueError` rule, including the allowed sets and `bool` arguments.
+
+Some hidden tests take their inputs from the real datasets `breast_cancer`, `diabetes`, `digits`,
+`iris` and `wine` (see `docs/DATASETS.md`).

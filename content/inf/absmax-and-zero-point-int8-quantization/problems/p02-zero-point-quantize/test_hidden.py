@@ -1,10 +1,79 @@
 from __future__ import annotations
 
+import math
+
 import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from scipy.special import ndtr
 from submission import zero_point_quantize
+
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
+
+
+def _real_tensor(gen, shape):
+    """A real tensor of the given shape: standardised breast_cancer features.
+
+    The last axis holds the features and the leading axes hold the tumours drawn. Real
+    features are skewed, so a few entries are several times larger than the rest: the case
+    that decides the scale of a quantizer.
+    """
+    shape = tuple(shape)
+    rows = math.prod(shape[:-1])
+    drawn, _ = sample_rows("breast_cancer", gen, rows, shape[-1], standardize=True)
+    return drawn.reshape(shape)
 
 
 def checked(call):
@@ -54,8 +123,8 @@ def reference(values: list[float]):
 @settings(max_examples=60, deadline=None, derandomize=True, report_multiple_bugs=False)
 @given(st.integers(0, 10_000), st.sampled_from([-3.0, -0.5, 0.0, 0.5, 2.0, 7.0]))
 def test_random_inputs_match_the_affine_model(seed, shift):
-    rng = np.random.default_rng(seed)
-    x = rng.normal(size=(2, 5)) + shift
+    rng = data_rng(f"zero-point-p02:reference:{seed}")
+    x = _real_tensor(rng, (2, 5)) + shift
     q, scale, zero_point = checked(lambda: zero_point_quantize(x))
     want_codes, want_scale, want_zp = reference(x.ravel().tolist())
     if zero_point != want_zp:
@@ -72,9 +141,9 @@ def test_random_inputs_match_the_affine_model(seed, shift):
 @settings(max_examples=60, deadline=None, derandomize=True, report_multiple_bugs=False)
 @given(st.integers(0, 10_000), st.integers(1, 4))
 def test_error_is_within_half_a_step_for_every_element(seed, ndim):
-    rng = np.random.default_rng(seed)
+    rng = data_rng(f"zero-point-p02:error-bound:{seed}")
     shape = (3,) * ndim
-    x = rng.uniform(-5.0, 9.0, size=shape)
+    x = 2.0 + 3.0 * _real_tensor(rng, shape)
     q, scale, zero_point = checked(lambda: zero_point_quantize(x))
     x_hat = scale * (q.astype(np.float64) - zero_point)
     if np.any(np.abs(x - x_hat) > scale / 2 * (1 + 1e-9)):
@@ -88,7 +157,7 @@ def test_error_is_within_half_a_step_for_every_element(seed, ndim):
 @given(st.integers(0, 10_000))
 def test_zero_is_exact_inside_any_range(seed):
     rng = np.random.default_rng(seed)
-    x = np.concatenate([[0.0], rng.uniform(0.1, 4.0, size=5)])
+    x = np.concatenate([[0.0], (0.1 + (4.0 - 0.1) * _real_unit(rng, 5))])
     q, scale, zero_point = checked(lambda: zero_point_quantize(x))
     if (int(q[0]) - zero_point) * scale != 0.0:
         pytest.fail(
@@ -118,8 +187,8 @@ def test_single_positive_value_uses_the_top_code():
 @settings(max_examples=30, deadline=None, derandomize=True, report_multiple_bugs=False)
 @given(st.integers(0, 10_000), st.sampled_from([1e-30, 1e-6, 1e6, 1e30]))
 def test_small_and_large_magnitudes_are_stable(seed, magnitude):
-    rng = np.random.default_rng(seed)
-    x = rng.uniform(-1.0, 1.0, size=6) * magnitude
+    rng = data_rng(f"zero-point-p02:magnitude:{seed}")
+    x = _real_tensor(rng, (6,)) * magnitude
     q, scale, zero_point = checked(lambda: zero_point_quantize(x))
     if not np.isfinite(scale) or scale <= 0:
         pytest.fail(

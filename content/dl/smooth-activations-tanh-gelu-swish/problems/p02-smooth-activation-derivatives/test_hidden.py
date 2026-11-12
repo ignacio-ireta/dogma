@@ -7,6 +7,9 @@ from hypothesis import strategies as st
 from scipy.special import expit, ndtr
 from submission import smooth_derivatives as _learner
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 
 def smooth_derivatives(*args):
     try:
@@ -50,7 +53,16 @@ def _oracle(x):
 
 
 def test_seeded_library_oracle():
-    x = np.random.default_rng(19).uniform(-8, 8, (5, 7))
+    # Real pre-activations: standardised tumour measurements, doubled so the tails of the
+    # activations are reached as well as the bend near zero.
+    x, _ = sample_rows(
+        "breast_cancer",
+        data_rng("p02-smooth-activation-derivatives:oracle"),
+        5,
+        7,
+        standardize=True,
+    )
+    x = 2.0 * x
     for got, want in zip(smooth_derivatives(x), _oracle(x), strict=True):
         _close(got, want, "activation formula disagrees with independent special-function oracle")
 
@@ -94,7 +106,9 @@ def test_elementwise_batch_consistency(value):
 
 
 def test_finite_difference_of_independent_forward_functions():
-    x = np.random.default_rng(3).uniform(-4, 4, (4, 5))
+    x, _ = sample_rows(
+        "breast_cancer", data_rng("p02-smooth-activation-derivatives:slope"), 4, 5, standardize=True
+    )
     step = 1e-5
 
     def forward(v):

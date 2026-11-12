@@ -10,6 +10,8 @@ from hypothesis import strategies as st
 from submission import cosine_annealing_lr
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
+from dogma_data import load
+
 REL = 1e-9
 ABS = 1e-12
 
@@ -42,10 +44,25 @@ def _rejects(call, message):
     pytest.fail(message, pytrace=False)
 
 
+def _steps_per_epoch():
+    """Updates in one epoch over a real dataset: its rows over a batch size, rounded up.
+
+    Five datasets (iris 150 rows, wine 178, diabetes 442, breast_cancer 569, digits 1,797) at
+    batch sizes 16, 32 and 64 give fifteen run lengths from 3 to 113 updates.
+    """
+    steps = []
+    for name in ("iris", "wine", "diabetes", "breast_cancer", "digits"):
+        rows = load(name).X.shape[0]
+        steps.extend(math.ceil(rows / batch) for batch in (16, 32, 64))
+    return steps
+
+
 def test_full_run_matches_cosine_annealing_scheduler_on_seeded_settings():
+    # The schedule lasts one epoch over a real dataset; the two rates are drawn.
+    steps = _steps_per_epoch()
     rng = torch.Generator().manual_seed(2026)
     for _ in range(40):
-        t_max = int(torch.randint(1, 60, (1,), generator=rng))
+        t_max = steps[int(torch.randint(0, len(steps), (1,), generator=rng))]
         base_lr = float(torch.rand((), generator=rng) * 2 + 1e-3)
         eta_min = float(torch.rand((), generator=rng) * base_lr)
         expected = _scheduler_run(base_lr, t_max, eta_min)

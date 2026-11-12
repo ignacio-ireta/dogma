@@ -37,3 +37,5 @@ The public tests check the examples. **Submit** adds hidden tests that compare y
 seeded random grids, and they cover: all open; all walls; diagonal neighbours that must stay apart; single row and column
 grids; a snake-shaped island deeper than the default recursion limit; islands touching the grid border; the return type;
 the validation rules; and a large grid of many small islands, which must finish within the time limit.
+
+The hidden tests draw their bulk inputs from the real dataset `digits` (see `docs/DATASETS.md`).

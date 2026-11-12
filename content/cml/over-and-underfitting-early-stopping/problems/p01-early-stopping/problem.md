@@ -49,3 +49,6 @@ the wait counter resets after an improvement, that the best checkpoint is the ea
 `min_delta` is zero, and that a triggered stop comes exactly `patience` epochs after the best checkpoint; without a trigger,
 `stop_epoch` is the final available epoch. The hidden tests
 also reject invalid arguments and check that inputs are left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

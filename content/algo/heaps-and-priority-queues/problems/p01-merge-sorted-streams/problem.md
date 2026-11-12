@@ -59,3 +59,6 @@ infinite streams merge correctly, and that each stream is read at most one pair 
 took, through a read counter on every stream. They check empty and single streams, generator inputs, and a
 large merge of 5,000 streams that must finish within a time limit. A linear scan over the stream heads
 passes the answers but fails that time limit, and an eager merge fails the read budget.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

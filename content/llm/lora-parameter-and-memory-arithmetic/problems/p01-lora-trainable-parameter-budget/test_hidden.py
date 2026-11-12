@@ -2,11 +2,14 @@
 # and never print hidden inputs, shapes or expected values.
 from __future__ import annotations
 
+import functools
 import math
 import random
 
 import pytest
 from submission import lora_budget as _learner
+
+from dogma_data import load
 
 ALL = ("q", "k", "v", "o", "gate", "up", "down")
 ATTN = ("q", "k", "v", "o")
@@ -51,12 +54,23 @@ def _expect_value_error(kwargs, message):
     pytest.fail(error or message, pytrace=False)
 
 
+@functools.cache
+def _dataset_ends() -> tuple[tuple[int, int], ...]:
+    """(features, outputs) of five real datasets: iris 4 and 3, wine 13 and 3, breast_cancer 30
+    and 2, digits 64 and 10, diabetes 10 and 1 (a regression target)."""
+    outputs = {"iris": 3, "wine": 3, "breast_cancer": 2, "digits": 10, "diabetes": 1}
+    return tuple((int(load(name).X.shape[1]), classes) for name, classes in outputs.items())
+
+
 def test_random_configurations_match_the_per_matrix_reference():
     rng = random.Random(2024)  # noqa: S311 -- seeded synthetic configurations, not security
-    for _ in range(200):
+    for trial in range(200):
         n_layers = rng.randint(1, 40)
         d_model = rng.randint(1, 64)
         d_ff = rng.randint(1, 128)
+        if trial % 2:
+            # Every other model is as wide as a real dataset: one unit per feature.
+            d_model = rng.choice(_dataset_ends())[0]
         rank = rng.randint(1, 16)
         targets = tuple(rng.sample(ALL, rng.randint(1, len(ALL))))
         trainable, fraction = _call(

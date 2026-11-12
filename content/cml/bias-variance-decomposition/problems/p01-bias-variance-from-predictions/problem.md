@@ -49,3 +49,6 @@ direct formula, check the identity `expected_mse = bias2 + variance + noise_var`
 edge cases. They run a fixed, seeded simulation of polynomial fits and check the expected trend for that particular
 setup; this is not a guarantee that every learner has monotone bias or variance as capacity rises. The hidden tests also check the shape and value rules, the scaling behaviour when
 predictions, truth and noise are scaled together, the return types, and that the inputs are left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `diabetes` (see
+`docs/DATASETS.md`).

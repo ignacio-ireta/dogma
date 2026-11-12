@@ -74,3 +74,5 @@ only the updated entry changes. They compare the full run with an independent lo
 same draw order, check the analytic optimum for this deterministic gridworld after a long run, check
 that a one-step cap only touches the start state, check reproducibility from a fixed seed, and cover
 invalid arguments.
+
+The hidden tests draw their bulk inputs from the real dataset `wine` (see `docs/DATASETS.md`).

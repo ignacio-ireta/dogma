@@ -6,6 +6,40 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import dense_backward
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_rows(gen, n, d):
+    """n real rows with d standardised features: breast_cancer, or digits when d is above 30.
+
+    The features are correlated and skewed, and many values repeat, as measured data does.
+    """
+    name = "breast_cancer" if d <= 30 else "digits"
+    return sample_rows(name, gen, n, d, standardize=True)[0]
+
 
 def checked(call):
     try:
@@ -41,8 +75,8 @@ def close(actual, expected):
 @settings(max_examples=25, deadline=None, report_multiple_bugs=False)
 @given(st.integers(1, 5), st.integers(1, 4), st.integers(1, 4), st.integers(0, 999))
 def test_random_scalar_loop_oracle(n, d, k, seed):
-    rng = np.random.default_rng(seed)
-    X, W, G = rng.normal(size=(n, d)), rng.normal(size=(d, k)), rng.normal(size=(n, k))
+    rng = data_rng(f"dense-backward-p01:loop-oracle:{seed}")
+    X, W, G = _real_rows(rng, n, d), _real_normal(rng, (d, k)), _real_normal(rng, (n, k))
     dx = np.zeros_like(X)
     dw = np.zeros_like(W)
     db = np.zeros(k)
@@ -60,8 +94,8 @@ def test_random_scalar_loop_oracle(n, d, k, seed):
 
 
 def test_every_gradient_matches_finite_difference():
-    rng = np.random.default_rng(83)
-    X, W, G = rng.normal(size=(2, 3)), rng.normal(size=(3, 2)), rng.normal(size=(2, 2))
+    rng = data_rng("dense-backward-p01:finite-differences")
+    X, W, G = _real_rows(rng, 2, 3), _real_normal(rng, (3, 2)), _real_normal(rng, (2, 2))
     b = np.array([0.2, -0.4])
     for mode, scale in [("sum", 1), ("mean", 2)]:
         grads = checked(lambda mode=mode: dense_backward(X, W, G, mode))

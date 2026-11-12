@@ -61,3 +61,6 @@ up path (swapping the roles changes the output); the SiLU itself rather than ReL
 independently; a zero input giving a zero output; the empty gate (`d_ff = 0`); large and small
 magnitudes; the `ValueError` rules (scalar input, mismatched gate and up shapes, wrong down shape,
 feature mismatch); float64 dtype and shape; and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

@@ -13,12 +13,53 @@ from hypothesis import strategies as st
 from sklearn.metrics import roc_auc_score
 from submission import roc_auc
 
-from dogma_data import load, rng, synth
+from dogma_data import load, rng, sample_rows, synth
 
 VALUE_MISTAKE = (
     "AUC differs from the reference: it is the share of positive-negative pairs ordered "
     "correctly, with a tie counted as one half"
 )
+
+
+WEAK_FEATURES = (9, 11, 14, 18)  # fractal dimension; texture, smoothness and symmetry errors
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _scored_tumours(gen, n, tied):
+    """Real diagnoses of n breast_cancer tumours and one real feature as the score.
+
+    With ``tied`` the score is a weak predictor rounded to whole standardised units, so many
+    tumours share a score and tied tumours differ in diagnosis. Otherwise it is a randomly
+    chosen feature as measured. A draw with a single class is skipped.
+    """
+    while True:
+        features, target = sample_rows("breast_cancer", gen, n, standardize=True)
+        if 0.0 < target.mean() < 1.0:
+            break
+    if tied:
+        return target.astype(np.int64), np.round(features[:, int(gen.choice(WEAK_FEATURES))])
+    return target.astype(np.int64), features[:, int(gen.integers(features.shape[1]))]
 
 
 def _expect_value_error(call, mistake):
@@ -60,22 +101,18 @@ def _pair_count(y_true, scores):
     "seed", range(6), ids=[f"tied-{s}" for s in range(3)] + [f"continuous-{s}" for s in range(3)]
 )
 def test_matches_scikit_learn_on_tied_and_continuous_scores(seed):
-    rng = np.random.default_rng(seed)
-    n = int(rng.integers(20, 300))
-    y = rng.integers(0, 2, size=n)
-    y[0], y[1] = 0, 1
-    scores = rng.integers(0, 6, size=n) / 5.0 if seed < 3 else rng.normal(size=n)
+    gen = rng(f"roc-auc-p01:scikit-learn:{seed}")
+    n = int(gen.integers(20, 300))
+    y, scores = _scored_tumours(gen, n, tied=seed < 3)
     expected = roc_auc_score(y, scores)
     assert math.isclose(_solve(y, scores), expected, rel_tol=1e-9, abs_tol=1e-12), VALUE_MISTAKE
 
 
 @pytest.mark.parametrize("seed", range(4), ids=[f"pairs-{s}" for s in range(4)])
 def test_matches_direct_pair_count(seed):
-    rng = np.random.default_rng(50 + seed)
-    n = int(rng.integers(4, 40))
-    y = rng.integers(0, 2, size=n)
-    y[0], y[1] = 0, 1
-    scores = rng.integers(0, 4, size=n) / 3.0
+    gen = rng(f"roc-auc-p01:pair-count:{seed}")
+    n = int(gen.integers(4, 40))
+    y, scores = _scored_tumours(gen, n, tied=True)
     expected = _pair_count(y, scores)
     assert math.isclose(_solve(y, scores), expected, rel_tol=1e-12, abs_tol=1e-12), VALUE_MISTAKE
 
@@ -171,8 +208,10 @@ def test_invalid_input_raises_value_error(y_true, scores, mistake):
 def test_large_input_is_ranked_quickly_and_matches_scikit_learn():
     rng = np.random.default_rng(9)
     n = 300_000
-    y = rng.integers(0, 2, size=n)
-    scores = rng.normal(size=n)
+    # Real diagnoses and real measurements of the 569 tumours, repeated to the length asked
+    # for: the values tie in thousands, which is what a large real batch looks like.
+    y = np.resize(load("breast_cancer").y.astype(np.int64), n)
+    scores = _real_normal(rng, n)
     expected = roc_auc_score(y, scores)
     start = time.perf_counter()
     got = _solve(y, scores)

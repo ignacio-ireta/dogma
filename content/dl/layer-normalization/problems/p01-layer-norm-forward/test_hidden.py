@@ -3,18 +3,60 @@
 # Messages name the kind of mistake and never show hidden inputs or expected values.
 from __future__ import annotations
 
+import math
+
 import pytest
 import torch
 import torch.nn.functional as ref_f  # oracle only
 from submission import layer_norm
 
+from dogma_data import rng, sample_rows
+from dogma_data import rng as data_rng
+
 ATOL = 1e-9
 RTOL = 1e-9
 
 
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-layer-norm-forward:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
+
+
+def _features(shape, seed, scale=1.0, offset=0.0, dtype=torch.float64):
+    """Real inputs of the given shape: standardised breast_cancer features, scaled and shifted.
+
+    The last axis holds the features and the leading axes hold the rows drawn. The columns
+    are correlated and skewed, and a small batch can repeat a value, as measured data does.
+    Weights, gains, biases and running statistics are parameters and stay random.
+    """
+    shape = tuple(shape)
+    rows = math.prod(shape[:-1])
+    drawn, _ = sample_rows(
+        "breast_cancer", rng(f"layer-norm-p01:features:{seed}"), rows, shape[-1], standardize=True
+    )
+    return torch.tensor(drawn.reshape(shape), dtype=torch.float64).to(dtype) * scale + offset
+
+
 def _randn(shape, seed, scale=1.0, offset=0.0, dtype=torch.float64):
     g = torch.Generator().manual_seed(seed)
-    return torch.randn(shape, generator=g, dtype=dtype) * scale + offset
+    return _real_values(g, [shape], dtype) * scale + offset
 
 
 def _call(x, weight, bias, eps=1e-5):
@@ -55,7 +97,7 @@ SHAPES = [(3,), (2, 4), (2, 3, 5), (1, 2, 3, 4), (4, 1), (6, 2)]
 def test_matches_reference_over_random_leading_shapes():
     for seed, shape in enumerate(SHAPES):
         d = shape[-1]
-        x = _randn(shape, seed, scale=2.0, offset=0.5)
+        x = _features(shape, seed, scale=2.0, offset=0.5)
         weight, bias = _randn((d,), seed + 10), _randn((d,), seed + 20)
         y = _call(x, weight, bias, eps=1e-5)
         _close(
@@ -68,7 +110,7 @@ def test_matches_reference_over_random_leading_shapes():
 
 
 def test_each_example_is_normalized_independently_of_the_others():
-    x = _randn((5, 4), 31, scale=3.0, offset=-1.0)
+    x = _features((5, 4), 31, scale=3.0, offset=-1.0)
     weight, bias = _randn((4,), 32), _randn((4,), 33)
     together = _call(x, weight, bias)
     for i in range(x.shape[0]):
@@ -82,7 +124,7 @@ def test_each_example_is_normalized_independently_of_the_others():
 
 def test_statistics_run_over_the_last_axis_not_the_batch():
     # Rows and features differ, so reducing over the batch cannot match by accident.
-    x = _randn((3, 5), 41, scale=2.0, offset=1.0)
+    x = _features((3, 5), 41, scale=2.0, offset=1.0)
     weight = torch.ones(5, dtype=torch.float64)
     bias = torch.zeros(5, dtype=torch.float64)
     y = _call(x, weight, bias, eps=1e-12)
@@ -94,7 +136,7 @@ def test_statistics_run_over_the_last_axis_not_the_batch():
 
 
 def test_rows_are_centred_before_scaling():
-    x = _randn((4, 6), 51, scale=5.0, offset=3.0)
+    x = _features((4, 6), 51, scale=5.0, offset=3.0)
     weight = torch.ones(6, dtype=torch.float64)
     bias = torch.zeros(6, dtype=torch.float64)
     y = _call(x, weight, bias)
@@ -118,7 +160,7 @@ def test_eps_is_added_inside_the_square_root():
 
 
 def test_variance_is_biased_divide_by_feature_count():
-    x = _randn((4, 3), 61)
+    x = _features((4, 3), 61)
     weight = torch.ones(3, dtype=torch.float64)
     bias = torch.zeros(3, dtype=torch.float64)
     y = _call(x, weight, bias, eps=1e-12)
@@ -134,7 +176,7 @@ def test_variance_is_biased_divide_by_feature_count():
 def test_large_common_offset_keeps_statistics_accurate():
     # E[x^2] - mean^2 loses most of its digits when every feature sits near 1e6.
     for seed, offset in enumerate((1e6, 1e8)):
-        x = _randn((3, 4), 71 + seed, scale=1.0, offset=offset)
+        x = _features((3, 4), 71 + seed, scale=1.0, offset=offset)
         weight, bias = _randn((4,), 73), _randn((4,), 74)
         y = _call(x, weight, bias)
         _close(
@@ -147,7 +189,7 @@ def test_large_common_offset_keeps_statistics_accurate():
 
 
 def test_tiny_magnitudes_match_reference():
-    x = _randn((4, 3), 81, scale=1e-8)
+    x = _features((4, 3), 81, scale=1e-8)
     weight, bias = _randn((3,), 82), _randn((3,), 83)
     y = _call(x, weight, bias, eps=1e-12)
     _close(
@@ -166,14 +208,14 @@ def test_constant_example_returns_bias():
 
 
 def test_single_feature_returns_bias():
-    x = _randn((3, 1), 101)
+    x = _features((3, 1), 101)
     weight, bias = _randn((1,), 102), _randn((1,), 103)
     y = _call(x, weight, bias)
     _close(y, bias.expand(3, 1), "a single feature must return the bias")
 
 
 def test_float32_inputs_return_float32():
-    x = _randn((3, 5), 111, dtype=torch.float32)
+    x = _features((3, 5), 111, dtype=torch.float32)
     weight = torch.ones(5, dtype=torch.float32)
     bias = torch.zeros(5, dtype=torch.float32)
     y = _call(x, weight, bias)
@@ -197,7 +239,7 @@ def test_empty_leading_dimension_returns_empty_output():
 def test_invalid_arguments_raise_value_error():
     good_w = torch.ones(3, dtype=torch.float64)
     good_b = torch.zeros(3, dtype=torch.float64)
-    x = _randn((2, 3), 121)
+    x = _features((2, 3), 121)
     cases = {
         "a 0-dimensional x must raise ValueError": lambda: layer_norm(
             torch.tensor(1.0), good_w, good_b
@@ -233,7 +275,7 @@ def test_invalid_arguments_raise_value_error():
 def test_one_dimensional_single_feature_keeps_shape():
     # A length-one vector is constant, so its centred value is zero and the output is the bias.
     # The output must keep the input's shape (1,), not collapse to a scalar.
-    x = _randn((1,), 111)
+    x = _features((1,), 111)
     weight, bias = _randn((1,), 112), _randn((1,), 113)
     y = _call(x, weight, bias)
     _close(y, bias, "a one-dimensional input must return a tensor of the same shape")
@@ -241,7 +283,7 @@ def test_one_dimensional_single_feature_keeps_shape():
 
 def test_non_contiguous_three_dimensional_input_is_normalized():
     # A transposed tensor is a valid float input of shape (2, 3, 5) with non-contiguous memory.
-    base = _randn((5, 3, 2), 121)
+    base = _features((5, 3, 2), 121)
     x = base.transpose(0, 2)
     weight, bias = _randn((5,), 122), _randn((5,), 123)
     y = _call(x, weight, bias)

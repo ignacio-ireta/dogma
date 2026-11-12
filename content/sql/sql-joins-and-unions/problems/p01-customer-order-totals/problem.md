@@ -75,3 +75,6 @@ current name, and no order counted twice), orders for customers that do not exis
 totals with the tie-break, an empty orders table, no customers at all, and random tables checked
 against an independent pandas computation, and cent amounts summed to large totals, held to the same
 tolerance (no narrower type).
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

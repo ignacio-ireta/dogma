@@ -54,3 +54,5 @@ of standard errors; that the forward and reverse divergences are not confused; t
 used rather than standard deviations; the sign of the log-scale term; invariance when all means and
 standard deviations are scaled by a common factor across forty orders of magnitude; exact zero for
 identical distributions; every `ValueError` rule; a Python `float` return; and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `iris` (see `docs/DATASETS.md`).

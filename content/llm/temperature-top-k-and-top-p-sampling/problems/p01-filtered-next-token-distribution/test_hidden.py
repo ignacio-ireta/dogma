@@ -8,6 +8,31 @@ import pytest
 import torch
 from submission import filtered_distribution as _learner
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-filtered-next-token-distribution:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
+
 
 def _call(*args, **kwargs):
     """Call the learner; an exception on a valid input is reported as a named contract failure."""
@@ -68,7 +93,7 @@ def test_random_logits_match_reference_across_filter_combinations():
         (1.0, 100, 0.95),
     ]
     for trial in range(10):
-        logits = torch.randn(8, generator=gen, dtype=torch.float64) * 2.0
+        logits = _real_values(gen, [8], torch.float64) * 2.0
         for temperature, top_k, top_p in combos:
             got = _call(logits, temperature, top_k=top_k, top_p=top_p)
             want = torch.tensor(
@@ -140,7 +165,7 @@ def test_wide_tie_block_keeps_the_lowest_indices_for_top_p():
 
 def test_tiny_top_p_still_keeps_the_best_token():
     gen = torch.Generator().manual_seed(9)
-    logits = torch.randn(6, generator=gen, dtype=torch.float64)
+    logits = _real_values(gen, [6], torch.float64)
     out = _call(logits, 1.0, top_p=1e-12)
     best = int(torch.argmax(logits).item())
     assert out.argmax().item() == best and out[best].item() == pytest.approx(1.0), (
@@ -158,7 +183,7 @@ def test_top_p_one_leaves_every_token_in_play():
 
 def test_top_k_at_least_vocabulary_size_is_a_no_op():
     gen = torch.Generator().manual_seed(5)
-    logits = torch.randn(5, generator=gen, dtype=torch.float64)
+    logits = _real_values(gen, [5], torch.float64)
     plain = _call(logits, 1.0)
     for k in (5, 6, 1000):
         torch.testing.assert_close(
@@ -172,7 +197,7 @@ def test_top_k_at_least_vocabulary_size_is_a_no_op():
 
 def test_top_k_one_is_a_one_hot_at_the_argmax():
     gen = torch.Generator().manual_seed(6)
-    logits = torch.randn(7, generator=gen, dtype=torch.float64)
+    logits = _real_values(gen, [7], torch.float64)
     out = _call(logits, 0.9, top_k=1)
     expected = torch.zeros(7, dtype=torch.float64)
     expected[int(torch.argmax(logits).item())] = 1.0
@@ -183,7 +208,7 @@ def test_top_k_one_is_a_one_hot_at_the_argmax():
 
 def test_temperature_one_is_the_plain_softmax():
     gen = torch.Generator().manual_seed(8)
-    logits = torch.randn(6, generator=gen, dtype=torch.float64)
+    logits = _real_values(gen, [6], torch.float64)
     want = torch.tensor(_reference(logits.tolist(), 1.0), dtype=torch.float64)
     torch.testing.assert_close(
         _call(logits, 1.0),
@@ -207,7 +232,7 @@ def test_small_temperature_sharpens_without_overflow():
 
 def test_large_logit_magnitudes_stay_finite_and_normalised():
     gen = torch.Generator().manual_seed(12)
-    logits = torch.randn(9, generator=gen, dtype=torch.float64) * 1000.0
+    logits = _real_values(gen, [9], torch.float64) * 1000.0
     out = _call(logits, 1.0, top_p=0.9)
     assert torch.isfinite(out).all().item(), (
         "large logits produced non-finite probabilities: stabilise the softmax"
@@ -223,7 +248,7 @@ def test_single_entry_vocabulary_returns_probability_one():
 def test_output_is_float64_non_negative_and_sums_to_one():
     gen = torch.Generator().manual_seed(21)
     for _ in range(5):
-        logits = torch.randn(10, generator=gen, dtype=torch.float64)
+        logits = _real_values(gen, [10], torch.float64)
         out = _call(logits, 1.1, top_k=4, top_p=0.85)
         assert out.dtype == torch.float64, "output must be float64"
         assert (out >= 0).all().item(), "probabilities must be non-negative"
@@ -277,7 +302,7 @@ def test_top_p_just_below_one_still_returns_a_distribution():
     # distribution that sums to one, never raise.
     gen = torch.Generator().manual_seed(31)
     for _ in range(40):
-        logits = torch.randn(12, generator=gen, dtype=torch.float64) * 3.0
+        logits = _real_values(gen, [12], torch.float64) * 3.0
         for top_p in (1 - 2.0**-53, 1 - 2.0**-52, 1 - 2.0**-51, 1 - 2.0**-50):
             out = _call(logits, 1.0, top_p=top_p)
             if abs(out.sum().item() - 1.0) > 1e-12 or (out < 0).any().item():

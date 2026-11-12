@@ -15,6 +15,8 @@ from hypothesis import strategies as st
 from scipy import stats
 from submission import sample_exponential
 
+from dogma_data import retail_invoices
+
 
 class _Uniforms:
     """A stand-in generator that hands out the given uniforms in order.
@@ -122,7 +124,9 @@ def test_draws_come_from_one_call_to_random_with_n():
 
 
 def test_ks_goodness_of_fit_against_the_exponential_at_a_fixed_seed():
-    rate = 2.5
+    # A real rate: invoices per trading day in the Online Retail II sample.
+    invoices = retail_invoices()
+    rate = float(invoices.shape[0] / invoices["invoice_ts"].dt.normalize().nunique())
     draws = _run(
         lambda: sample_exponential(rate, 20_000, np.random.default_rng(7)),
         "valid inputs must not raise: sample_exponential raised",

@@ -46,8 +46,9 @@ A
 B
 ```
 
-In a generated event log, category labels can include casing and spacing noise. If those labels
-are warehouse codes, each stored spelling is still its own code.
+Real labels are typed by people and carry capitals, leading spaces and doubled spaces (the
+product descriptions of the `online_retail` data do). If those labels are warehouse codes, each
+stored spelling is still its own code.
 
 ## Constraints
 
@@ -61,5 +62,8 @@ are warehouse codes, each stored spelling is still its own code.
 All public tests pass, then **Submit** runs the hidden tests. They build their own `shipments` and
 `returns` tables. The hidden tests cover these families: codes that appear in only one table, codes
 that appear in both, NULL codes, case and whitespace variants kept as separate keys, sorted output
-with rows inserted out of order, one empty table, both tables empty, and dirty event-log categories
+with rows inserted out of order, one empty table, both tables empty, and real hand-typed labels
 checked against a pandas union oracle.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

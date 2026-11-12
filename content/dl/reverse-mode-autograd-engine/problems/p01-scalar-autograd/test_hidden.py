@@ -4,6 +4,9 @@ import numpy as np
 import pytest
 from submission import Value
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 
 def checked(call, *, allow_none=False):
     try:
@@ -54,8 +57,9 @@ def test_shared_node_and_duplicate_edge_accumulation():
 
 
 def test_finite_difference_random_composition():
-    rng = np.random.default_rng(46)
-    for a, b in rng.uniform(-2, 2, size=(20, 2)):
+    # Twenty pairs of real numbers: two standardised measurements of twenty wines.
+    pairs, _ = sample_rows("wine", data_rng("p01-scalar-autograd:pairs"), 20, 2, standardize=True)
+    for a, b in pairs:
         x, z = checked(lambda a=a, b=b: (Value(float(a)), Value(float(b))))
         y = checked(lambda x=x, z=z: (x * z + x * x).tanh() + x * z)
         checked(y.backward, allow_none=True)

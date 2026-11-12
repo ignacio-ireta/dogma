@@ -6,8 +6,9 @@ mistake it guards against in its first failure line. No message carries a hidden
 
 from __future__ import annotations
 
+import functools
 from collections.abc import Sequence
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +16,9 @@ import duckdb
 import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 import pytest
+
+from dogma_data import retail_events
+from dogma_data import rng as data_rng
 
 COLUMNS = ["user_id", "days_to_second"]
 EVENTS_DDL = "CREATE TABLE events (user_id BIGINT, event_ts TIMESTAMP)"
@@ -72,11 +76,22 @@ def _columns_or_fail(columns: list[str]) -> None:
         )
 
 
+@functools.cache
+def _real_moments() -> tuple[datetime, ...]:
+    """Every distinct invoice minute of an online retailer over two years (online_retail)."""
+    stamps = retail_events()["ts"].drop_duplicates()
+    return tuple(stamp.to_pydatetime() for stamp in stamps)
+
+
 def _random_events(rng: np.random.Generator) -> list[tuple[int, datetime]]:
+    """A small table of events at real moments: invoice times, which cluster in office hours
+    and on busy days, so two events of a user often fall on one day. One event in five is
+    moved to midnight of its day."""
+    moments = _real_moments()
     events: list[tuple[int, datetime]] = []
     for _ in range(int(rng.integers(0, 31))):
         user = USER_IDS[int(rng.integers(0, len(USER_IDS)))]
-        stamp = datetime(2024, 1, 1) + timedelta(seconds=int(rng.integers(0, 200 * 86_400)))
+        stamp = moments[int(rng.integers(0, len(moments)))]
         if rng.random() < 0.2:
             stamp = stamp.replace(
                 hour=0, minute=0, second=0
@@ -88,7 +103,7 @@ def _random_events(rng: np.random.Generator) -> list[tuple[int, datetime]]:
 def test_random_tables_match_the_pandas_oracle() -> None:
     # Fixed seeds. The first mismatch fails the test, with a message that names the kind of mistake.
     for seed in range(60):
-        events = _random_events(np.random.default_rng(seed))
+        events = _random_events(data_rng(f"days-to-second-p02:random-tables:{seed}"))
         want = _oracle(events)
         columns, rows = _run_learner_query(_connect(events))
         _columns_or_fail(columns)

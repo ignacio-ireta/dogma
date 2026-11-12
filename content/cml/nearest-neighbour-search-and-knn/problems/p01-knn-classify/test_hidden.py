@@ -5,8 +5,71 @@ import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from scipy.special import ndtr
 from sklearn.neighbors import KNeighborsClassifier
 from submission import knn_classify
+
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+RATIO_COLUMNS = (2, 3, 5)  # rooms, bedrooms and occupants per household
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _houses(gen, n, d):
+    """n real california_housing block groups: d standardised averages and the house value.
+
+    The features are ratios of counts, so no two distances tie exactly, and they are
+    heavy-tailed. The value is the median house value in units of 100,000 dollars.
+    """
+    X, value = sample_rows("california_housing", gen, n, standardize=True)
+    return X[:, RATIO_COLUMNS[:d]], value
+
+
+def _value_band(value, lowest=0):
+    """House-value band as an integer label: four bands split at 1.2, 1.8 and 2.6."""
+    return np.digitize(value, [1.2, 1.8, 2.6]) + lowest
 
 
 def _call(X, y, Q, k):
@@ -53,30 +116,53 @@ def _reference(X, y, Q, k):
     return np.array(out, dtype=np.int64)
 
 
+def _ties_are_exact(X, q):
+    """True when every pair of rows at the same distance from q has the same differences.
+
+    Rows whose differences from the query agree in absolute value, coordinate by coordinate,
+    are at exactly the same distance whatever the arithmetic. Rows at the same distance on
+    paper with different differences, such as (1, 3, 3) and (3, 3, 1), can be separated by
+    rounding, and the Contract accepts either order, so a query with such a pair is not
+    compared.
+    """
+    seen = {}
+    for row in X:
+        gaps = tuple(abs(int(a) - int(b)) for a, b in zip(row, q, strict=True))
+        if seen.setdefault(sum(gap * gap for gap in gaps), gaps) != gaps:
+            return False
+    return True
+
+
 def test_matches_brute_force_reference_on_random_small_integer_data():
-    for seed in range(30):
+    # A grid of real values: the band, from -3 to 3, that a real measurement falls in. Whole
+    # numbers on a small grid give many equal distances and many vote ties.
+    compared = 0
+    for seed in range(120):
         rng = np.random.default_rng(seed)
         n = int(rng.integers(3, 25))
         d = int(rng.integers(1, 4))
-        X = rng.integers(-3, 4, size=(n, d))
-        y = rng.integers(0, 4, size=n)
-        Q = rng.integers(-3, 4, size=(10, d))
+        X = _real_ints(rng, -3, 4, (n, d))
+        y = _real_ints(rng, 0, 4, n)
+        Q = _real_ints(rng, -3, 4, (10, d))
         k = int(rng.integers(1, n + 1))
+        keep = [index for index, q in enumerate(Q.tolist()) if _ties_are_exact(X.tolist(), q)]
+        compared += len(keep)
         np.testing.assert_array_equal(
-            _call(X, y, Q, k),
-            _reference(X.tolist(), y.tolist(), Q.tolist(), k),
+            _call(X, y, Q, k)[keep],
+            _reference(X.tolist(), y.tolist(), Q[keep].tolist(), k),
             err_msg="predictions differ from the brute-force vote: check the neighbour order "
             "(distance, then index) and the k neighbours used in the vote",
         )
+    assert compared >= 300, "the grid cases left too few queries to compare: check the fixture"
 
 
 def test_matches_brute_force_reference_on_random_float_data():
     for seed in range(20):
-        rng = np.random.default_rng(100 + seed)
+        rng = data_rng(f"knn-classify-p01:float:{seed}")
         n = int(rng.integers(5, 40))
-        X = rng.normal(size=(n, 3))
-        y = rng.integers(-2, 3, size=n)
-        Q = rng.normal(size=(15, 3))
+        points, value = _houses(rng, n + 15, 3)
+        X, Q = points[:n], points[n:]
+        y = _value_band(value[:n], lowest=-2)
         k = int(rng.integers(1, n + 1))
         np.testing.assert_array_equal(
             _call(X, y, Q, k),
@@ -86,10 +172,9 @@ def test_matches_brute_force_reference_on_random_float_data():
 
 
 def test_matches_scikit_learn_brute_force_on_tie_free_binary_data():
-    rng = np.random.default_rng(7)
-    X = rng.normal(size=(120, 4))
-    y = (X[:, 0] + 0.5 * X[:, 1] + rng.normal(scale=0.5, size=120) > 0).astype(int)
-    Q = rng.normal(size=(60, 4))
+    points, value = _houses(data_rng("knn-classify-p01:scikit-learn"), 180, 3)
+    X, Q = points[:120], points[120:]
+    y = (value[:120] > 1.8).astype(int)  # above or below 1.8, near the median value
     for k in (1, 3, 5, 11):
         ref = KNeighborsClassifier(n_neighbors=k, algorithm="brute").fit(X, y).predict(Q)
         np.testing.assert_array_equal(
@@ -103,7 +188,7 @@ def test_equal_distances_on_a_grid_are_ordered_by_training_index():
     xs, ys = np.meshgrid(np.arange(-3, 4), np.arange(-3, 4))
     X = np.column_stack([xs.ravel(), ys.ravel()])
     rng = np.random.default_rng(21)
-    y = rng.integers(0, 3, size=len(X))
+    y = _real_ints(rng, 0, 3, len(X))
     Q = np.array([[0, 0], [1, 1], [-2, 1], [3, -3]])
     for k in (1, 2, 4, 7, 12):
         np.testing.assert_array_equal(
@@ -184,10 +269,9 @@ def test_empty_query_returns_empty_integer_array():
 
 
 def test_translating_every_point_does_not_change_any_prediction():
-    rng = np.random.default_rng(31)
-    X = rng.normal(size=(60, 3))
-    y = rng.integers(0, 3, size=60)
-    Q = rng.normal(size=(40, 3))
+    points, value = _houses(data_rng("knn-classify-p01:translation"), 100, 3)
+    X, Q = points[:60], points[60:]
+    y = _value_band(value[:60])
     base = _call(X, y, Q, 5)
     shifted = _call(X + 1e8, y, Q + 1e8, 5)
     np.testing.assert_array_equal(
@@ -201,21 +285,20 @@ def test_translating_every_point_does_not_change_any_prediction():
 @settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(st.integers(min_value=0, max_value=10_000))
 def test_prediction_is_always_a_training_label(seed):
-    rng = np.random.default_rng(seed)
+    rng = data_rng(f"knn-classify-p01:training-label:{seed}")
     n = int(rng.integers(1, 12))
-    X = rng.normal(size=(n, 2))
-    y = rng.integers(-5, 6, size=n)
-    Q = rng.normal(size=(5, 2))
+    points, value = _houses(rng, n + 5, 2)
+    X, Q = points[:n], points[n:]
+    y = _value_band(value[:n], lowest=-5) * 3
     k = int(rng.integers(1, n + 1))
     out = _call(X, y, Q, k)
     assert set(out.tolist()) <= set(y.tolist()), "a prediction must be one of the training labels"
 
 
 def test_inputs_are_not_mutated():
-    rng = np.random.default_rng(41)
-    X = rng.normal(size=(20, 2))
-    y = rng.integers(0, 3, size=20)
-    Q = rng.normal(size=(5, 2))
+    points, value = _houses(data_rng("knn-classify-p01:not-mutated"), 25, 2)
+    X, Q = points[:20], points[20:]
+    y = _value_band(value[:20])
     X0, y0, Q0 = X.copy(), y.copy(), Q.copy()
     _call(X, y, Q, 3)
     np.testing.assert_array_equal(X, X0, err_msg="X_train was modified in place")

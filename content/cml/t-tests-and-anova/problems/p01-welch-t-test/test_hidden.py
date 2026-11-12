@@ -3,7 +3,8 @@ import pytest
 from scipy import stats
 from submission import welch_t_test
 
-from dogma_data import load
+from dogma_data import load, sample_rows
+from dogma_data import rng as data_rng
 
 # (seed, n_a, n_b, spread_a, spread_b, shift_b): unequal sizes and unequal spreads throughout.
 ORACLE_CASES = [
@@ -18,10 +19,40 @@ ORACLE_CASES = [
 ]
 
 
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
 def _seeded_pair(seed, n_a, n_b, *, spread_a, spread_b, shift_b):
-    rng = np.random.default_rng(seed)
-    a = rng.normal(0.0, spread_a, size=n_a)
-    b = rng.normal(shift_b, spread_b, size=n_b)
+    """Two real groups: one standardised breast_cancer feature in benign and malignant tumours.
+
+    a holds n_a benign tumours and b holds n_b malignant ones; the malignant group is the more
+    spread out for most features. The spreads and the shift then rescale and move the two real
+    samples, so each case still controls how unequal the groups are.
+    """
+    gen = data_rng(f"welch-p01:pair:{seed}")
+    features, target = sample_rows("breast_cancer", gen, 569, standardize=True)
+    column = features[:, int(gen.integers(features.shape[1]))]
+    a = spread_a * column[target == 1.0][:n_a]
+    b = spread_b * column[target == 0.0][:n_b] + shift_b
     return a, b
 
 
@@ -57,8 +88,8 @@ def test_matches_scipy_welch_on_seeded_samples(case):
 
 def test_equal_sizes_and_spreads_give_welch_df_of_two_n_minus_one():
     rng = np.random.default_rng(20)
-    a = rng.normal(0.0, 1.0, size=9)
-    b = rng.normal(0.0, 1.0, size=9)
+    a = _real_normal(rng, 9, loc=0.0, scale=1.0)
+    b = _real_normal(rng, 9, loc=0.0, scale=1.0)
     b = (b - b.mean()) / b.std(ddof=1) * a.std(ddof=1) + 0.7  # same spread, shifted mean
     t_stat, df, _ = welch_t_test(a, b)
     pooled_t = (a.mean() - b.mean()) / np.sqrt(
@@ -98,8 +129,8 @@ def test_tiny_two_sided_p_value_is_not_rounded_to_zero():
     # A large separation gives |t| near 30, so the two-sided p-value is far below double precision
     # relative to 1. 1 minus the CDF rounds it to exactly zero.
     rng = np.random.default_rng(50)
-    a = rng.normal(0.0, 1.0, size=30)
-    b = rng.normal(10.0, 1.0, size=30)
+    a = _real_normal(rng, 30, loc=0.0, scale=1.0)
+    b = _real_normal(rng, 30, loc=10.0, scale=1.0)
     _, _, p_value = welch_t_test(a, b)
     _, _, ref_p = _reference(a, b)
     assert p_value > 0.0, (
@@ -169,8 +200,8 @@ def test_extreme_magnitudes_do_not_underflow_or_overflow(magnitude):
 
 def test_large_common_offset_keeps_the_spread():
     rng = np.random.default_rng(33)
-    a = 1e8 + rng.normal(0.0, 1.0, size=8)
-    b = 1e8 + rng.normal(0.5, 2.0, size=10)
+    a = 1e8 + _real_normal(rng, 8, loc=0.0, scale=1.0)
+    b = 1e8 + _real_normal(rng, 10, loc=0.5, scale=2.0)
     np.testing.assert_allclose(
         welch_t_test(a, b),
         _reference(a, b),

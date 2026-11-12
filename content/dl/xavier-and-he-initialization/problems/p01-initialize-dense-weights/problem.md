@@ -41,3 +41,6 @@ Not allowed: torch, jax, scipy, sklearn. Implement the formulas from scratch.
 
 The examples and edge cases pass. Hidden tests cover a seeded independent oracle, degenerate
 inputs, output types, invalid arguments, scale extremes within the contract and input preservation.
+
+Some hidden tests take their inputs from the real datasets `breast_cancer`, `diabetes`, `digits`,
+`iris` and `wine` (see `docs/DATASETS.md`).

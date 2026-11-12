@@ -2,19 +2,81 @@ import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from scipy.special import ndtr
 from sklearn.linear_model import Lasso
 from submission import lasso_cd
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
+
 
 def _data(seed, n, d, sparsity=0.5, kind="independent"):
-    """Centred data with unequal column scales, a sparse truth and mild noise."""
-    rng = np.random.default_rng(seed)
-    X = rng.normal(size=(n, d)) * rng.uniform(0.3, 3.0, size=d)
+    """Semi-synthetic: real features, a known sparse truth and mild noise.
+
+    The columns are standardised real measurements, some strongly correlated: diabetes, or
+    breast_cancer when more than ten columns are asked for. They are rescaled to unequal
+    scales and centred on the drawn rows. The target is built from a known sparse coefficient
+    vector so the tests can reason about which coefficients must vanish.
+    """
+    rng = data_rng(f"lasso-cd-p01:data:{seed}:{n}:{d}")
+    name = "diabetes" if d <= 10 else "breast_cancer"
+    X, _ = sample_rows(name, rng, n, d, standardize=True)
+    X = X * (0.3 + (3.0 - 0.3) * _real_unit(rng, d))
     if kind == "correlated":
-        X[:, 1] = X[:, 0] + 0.1 * rng.normal(size=n)
+        X[:, 1] = X[:, 0] + 0.1 * _real_normal(rng, n)
     X = X - X.mean(axis=0)
-    beta = np.where(rng.random(d) < sparsity, 2.0 * rng.normal(size=d), 0.0)
-    y = X @ beta + 0.5 * rng.normal(size=n)
+    beta = np.where(_real_unit(rng, d) < sparsity, 2.0 * _real_normal(rng, d), 0.0)
+    y = X @ beta + 0.5 * _real_normal(rng, n)
     y = y - y.mean()
     return X, y
 
@@ -156,10 +218,10 @@ def test_tiny_alpha_recovers_least_squares_on_full_rank_data():
 
 def test_nearly_duplicate_columns_match_scikit_learn():
     rng = np.random.default_rng(31)
-    x = rng.normal(size=60)
-    X = np.column_stack([x, x + 0.01 * rng.normal(size=60), rng.normal(size=60)])
+    x = _real_normal(rng, 60)
+    X = np.column_stack([x, x + 0.01 * _real_normal(rng, 60), _real_normal(rng, 60)])
     X = X - X.mean(axis=0)
-    y = 2.0 * x + 0.3 * rng.normal(size=60)
+    y = 2.0 * x + 0.3 * _real_normal(rng, 60)
     y = y - y.mean()
     alpha = 0.05 * _alpha_max(X, y)
     ref = Lasso(alpha=alpha, fit_intercept=False, tol=1e-14, max_iter=10**6).fit(X, y).coef_
@@ -267,14 +329,14 @@ def test_integer_inputs_give_the_same_solution_as_floats():
     ("X", "y", "alpha", "kwargs"),
     [
         (np.array([1.0, 2.0, 3.0]), np.array([1.0, 2.0, 3.0]), 0.1, {}),
-        (np.random.default_rng(20).normal(size=(5, 2)), np.ones(4), 0.1, {}),
+        (_real_normal(np.random.default_rng(20), (5, 2)), np.ones(4), 0.1, {}),
         (np.array([[1.0, np.nan], [2.0, 1.0], [3.0, 0.0]]), np.ones(3), 0.1, {}),
-        (np.random.default_rng(21).normal(size=(5, 2)), np.ones(5), -0.1, {}),
-        (np.random.default_rng(22).normal(size=(5, 2)), np.ones(5), np.nan, {}),
-        (np.random.default_rng(23).normal(size=(5, 2)), np.ones(5), 0.1, {"max_iter": 0}),
-        (np.random.default_rng(24).normal(size=(5, 2)), np.ones(5), 0.1, {"tol": 0.0}),
-        (np.random.default_rng(25).normal(size=(3, 2)), np.ones((3, 1)), 0.1, {}),
-        (np.random.default_rng(26).normal(size=(5, 2)), np.ones(5), 0.1, {"tol": np.nan}),
+        (_real_normal(np.random.default_rng(21), (5, 2)), np.ones(5), -0.1, {}),
+        (_real_normal(np.random.default_rng(22), (5, 2)), np.ones(5), np.nan, {}),
+        (_real_normal(np.random.default_rng(23), (5, 2)), np.ones(5), 0.1, {"max_iter": 0}),
+        (_real_normal(np.random.default_rng(24), (5, 2)), np.ones(5), 0.1, {"tol": 0.0}),
+        (_real_normal(np.random.default_rng(25), (3, 2)), np.ones((3, 1)), 0.1, {}),
+        (_real_normal(np.random.default_rng(26), (5, 2)), np.ones(5), 0.1, {"tol": np.nan}),
     ],
     ids=[
         "1-D-X",
@@ -360,8 +422,8 @@ def test_mismatched_target_length_raises_even_when_every_column_is_zero():
 
 def test_zero_penalty_is_accepted_and_gives_least_squares():
     rng = np.random.default_rng(40)
-    X = rng.normal(size=(20, 3))
-    y = rng.normal(size=20)
+    X = _real_normal(rng, (20, 3))
+    y = _real_normal(rng, 20)
     w = _checked(X, y, 0.0, tol=1e-12, max_iter=5_000)
     np.testing.assert_allclose(
         w,

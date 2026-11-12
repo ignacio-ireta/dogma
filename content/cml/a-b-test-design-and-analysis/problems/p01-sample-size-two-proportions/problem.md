@@ -57,3 +57,6 @@ chosen so that rounding up and rounding to nearest give different answers. They 
 returned size reaches the target power, that more power, a smaller effect or a smaller `alpha` needs more users,
 that the return value is an integer, that a very small effect returns a large integer, and that every invalid
 argument raises `ValueError`.
+
+Some hidden tests take their inputs from the real datasets `breast_cancer`, `online_retail` and
+`spector` (see `docs/DATASETS.md`).

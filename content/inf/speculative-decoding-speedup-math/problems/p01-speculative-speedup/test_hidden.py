@@ -2,14 +2,19 @@
 # The oracles are exact: Fraction for the rational value, and Decimal at 60 digits for
 # the near-1 case. A float result within 1e-12 of the exact value is therefore a real
 # precision requirement, not a loose check.
+import collections
+import functools
 import itertools
 import math
 import random
+import re
 from decimal import Decimal, localcontext
 from fractions import Fraction
 
 import pytest
 from submission import speculative_speedup
+
+from dogma_data import load_text
 
 RTOL = 1e-12
 
@@ -53,10 +58,38 @@ def exact_tokens(alpha, gamma):
     return sum((a**k for k in range(gamma + 1)), Fraction(0))
 
 
+@functools.cache
+def _acceptance_rates() -> tuple[float, ...]:
+    """Real acceptance rates of a draft model against a target model.
+
+    The target is the next-word distribution of Pride and Prejudice and the draft is that of
+    Walden. For each word that both books follow up at least twenty times, the acceptance rate
+    is the overlap of the two next-word distributions, the sum over words of min(p, q), which
+    is the probability that speculative sampling keeps a drafted token.
+    """
+    follow = []
+    for name in ("gutenberg_pride_prejudice", "gutenberg_walden"):
+        words = re.findall(r"[a-z]+", load_text(name).lower())
+        table: dict[str, collections.Counter[str]] = collections.defaultdict(collections.Counter)
+        for previous, current in itertools.pairwise(words):
+            table[previous][current] += 1
+        follow.append(table)
+    target, draft = follow
+    rates = []
+    for word in sorted(set(target) & set(draft)):
+        p_total, q_total = sum(target[word].values()), sum(draft[word].values())
+        if min(p_total, q_total) >= 20:
+            shared = set(target[word]) & set(draft[word])
+            rates.append(
+                sum(min(target[word][w] / p_total, draft[word][w] / q_total) for w in shared)
+            )
+    return tuple(rates)
+
+
 def test_random_inputs_match_exact_rational_geometric_sum():
     rng = random.Random(20260)  # noqa: S311 - seeded oracle inputs, not security
     for _ in range(200):
-        alpha = rng.random()
+        alpha = rng.choice(_acceptance_rates())
         gamma = rng.randint(0, 40)
         c = rng.uniform(0.0, 2.0)
         tokens, speedup = call(alpha, gamma, c)
@@ -155,7 +188,7 @@ def test_speedup_does_not_fall_as_acceptance_rises():
 def test_tokens_per_round_lies_between_one_and_gamma_plus_one():
     rng = random.Random(7)  # noqa: S311 - seeded oracle inputs, not security
     for _ in range(100):
-        alpha = rng.random()
+        alpha = rng.choice(_acceptance_rates())
         gamma = rng.randint(0, 60)
         tokens, _ = call(alpha, gamma, rng.uniform(0.0, 1.0))
         assert 1.0 <= tokens <= gamma + 1 + 1e-12, (

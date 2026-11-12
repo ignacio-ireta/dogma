@@ -45,3 +45,5 @@ fixed-mask finite differences, eval identity and independent copies, repeated
 seeds, strided and integer arrays, large and tiny entries, all-dropped samples,
 input/global-RNG preservation, and invalid inputs. Reproducibility means an
 explicit local generator; it does not mean resetting global random state.
+
+The hidden tests draw their bulk inputs from the real dataset `wine` (see `docs/DATASETS.md`).

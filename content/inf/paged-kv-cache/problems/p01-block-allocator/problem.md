@@ -93,3 +93,5 @@ reuse, exact block counts, the atomic failure on exhaustion, and the copy return
 `block_table`). They also check the error class for each misuse, the offset arithmetic for tokens
 that start a new block, and that every sequence's last block holds fewer than `block_size` wasted
 slots. Invalid constructor arguments raise `ValueError`.
+
+Some hidden tests take their inputs from the real dataset `gsm8k` (see `docs/DATASETS.md`).

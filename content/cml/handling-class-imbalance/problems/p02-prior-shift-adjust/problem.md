@@ -42,3 +42,6 @@ array([0. , 0.5, 1. ])  # equal priors: r = 1, nothing changes
 ## Done looks like
 
 All public tests pass, then **Submit** passes the hidden tests. They compare the output with an independent route: the likelihood ratio is recovered from each training probability, and the deployment posterior is computed by Bayes' rule with the deployment prior. They check a seeded simulation of two Gaussian classes, where the mean of the corrected probabilities matches the deployment base rate and the corrected values match the true deployment posterior. They check that equal priors are the identity, that 0 and 1 stay exactly 0 and 1, that outputs stay in [0, 1] and are non-decreasing in the input, that the correction is undone by swapping the priors, and that invalid probabilities and priors raise `ValueError`. They also check that the caller's array is unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

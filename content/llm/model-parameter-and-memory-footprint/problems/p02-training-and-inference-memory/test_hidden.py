@@ -6,6 +6,8 @@ from __future__ import annotations
 import pytest
 from submission import estimate_memory
 
+from dogma_data import load
+
 TERMS = ("weights", "gradients", "master_weights", "optimizer_states", "activations", "total")
 
 # (mode, dtype, optimizer, master) -> bytes per parameter, worked by hand:
@@ -120,10 +122,14 @@ def test_seven_billion_parameter_examples_are_exact():
 
 
 def test_activation_term_is_added_as_given():
-    got = _call(**_kwargs("training", "fp16", "momentum", True, activations=12_345))
-    if got["activations"] != 12_345:
+    # A real activation size: one batch holding every image of the digits dataset as fp16,
+    # two bytes for each of its 1,797 by 64 pixel values.
+    rows, pixels = load("digits").X.shape
+    held = 2 * int(rows) * int(pixels)
+    got = _call(**_kwargs("training", "fp16", "momentum", True, activations=held))
+    if got["activations"] != held:
         pytest.fail("the activation term must be the given number, unscaled")
-    if got["total"] != 12 * N + 12_345:
+    if got["total"] != 12 * N + held:
         pytest.fail("the total must include the activation term exactly once")
 
 

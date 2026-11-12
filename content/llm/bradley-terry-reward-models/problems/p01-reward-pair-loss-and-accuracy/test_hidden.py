@@ -3,10 +3,15 @@
 # Messages name the kind of mistake and never show hidden inputs or expected values.
 from __future__ import annotations
 
+import math
+
 import pytest
 import torch
 import torch.nn.functional as ref_f  # oracle only
 from submission import bradley_terry_loss_and_accuracy
+
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
 
 ATOL = 1e-9  # float64 agreement; far below any real mistake in this problem
 RTOL = 1e-9
@@ -15,12 +20,34 @@ FLOAT32_ATOL = (
 )
 
 
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-reward-pair-loss-and-accuracy:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
+
+
 def _gen(seed: int) -> torch.Generator:
     return torch.Generator().manual_seed(seed)
 
 
 def _randn(shape, seed, scale=1.0, offset=0.0, dtype=torch.float64):
-    return (torch.randn(shape, generator=_gen(seed), dtype=dtype) * scale + offset).clone()
+    return (_real_values(_gen(seed), [shape], dtype) * scale + offset).clone()
 
 
 def _call(chosen, rejected):
@@ -198,6 +225,7 @@ def test_float32_inputs_keep_dtype_and_match_reference():
 
 
 def test_gradient_matches_the_analytic_form_in_float64():
+    # Real rewards repeat, so a draw can hold an exact tie. The form below covers it too.
     chosen = _randn((12,), 21, scale=1.0).requires_grad_(True)
     rejected = _randn((12,), 22, scale=1.0).requires_grad_(True)
     loss, _ = bradley_terry_loss_and_accuracy(chosen, rejected)
@@ -376,4 +404,30 @@ def test_half_precision_rewards_are_accepted_and_keep_float16():
     )
     assert acc.item() == 0.5, (
         "half precision accuracy is wrong: count pairs with r_c > r_r and divide by B"
+    )
+
+
+def test_tied_pairs_receive_the_gradient_of_the_smooth_loss():
+    # Real rewards repeat, and a reward head that starts at zero ties every pair. Here every
+    # other pair is an exact tie: its chosen reward must receive -1/(2B), not 0.
+    chosen = _randn((8,), 41, scale=1.0)
+    rejected = _randn((8,), 42, scale=1.0)
+    rejected[::2] = chosen[::2]
+    chosen.requires_grad_(True)
+    rejected.requires_grad_(True)
+    loss, _ = bradley_terry_loss_and_accuracy(chosen, rejected)
+    loss.backward()
+    margin = (chosen - rejected).detach()
+    coeff = -(1.0 - torch.sigmoid(margin)) / margin.numel()
+    _close(
+        chosen.grad,
+        coeff,
+        "a tied pair must receive gradient -1/(2B) on the chosen reward: clamp and where have a "
+        "kink at 0 and give it none, write the positive part as (x + abs(x)) / 2",
+    )
+    _close(
+        rejected.grad,
+        -coeff,
+        "a tied pair must receive gradient +1/(2B) on the rejected reward: clamp and where have "
+        "a kink at 0 and give it none, write the positive part as (x + abs(x)) / 2",
     )

@@ -6,11 +6,14 @@ Failure messages name the kind of mistake. They never print hidden configs or ex
 from __future__ import annotations
 
 import copy
+import functools
 import random
 from typing import Any
 
 import pytest
 from submission import max_batch_size
+
+from dogma_data import load_text
 
 BYTES = {"fp32": 4, "fp16": 2, "bf16": 2, "fp8": 1}
 
@@ -62,6 +65,24 @@ def _expect_error(exc_type: type[Exception], call: Any, mistake: str) -> None:
 
 MHA = {"num_layers": 32, "num_kv_heads": 32, "head_dim": 128}
 GQA = {"num_layers": 32, "num_kv_heads": 8, "head_dim": 128, "sliding_window": 4096}
+
+
+@functools.cache
+def _passage_lengths() -> tuple[int, ...]:
+    """Lengths, in words, of real passages: one line of a novel, or its first k lines.
+
+    A sequence length in the seeded test is the length of one such passage from Frankenstein,
+    Pride and Prejudice or Walden, a word standing for a token. Lengths from 1 to 400 words
+    are kept; the shortest real line is a single word.
+    """
+    lengths = set()
+    for name in ("gutenberg_frankenstein", "gutenberg_pride_prejudice", "gutenberg_walden"):
+        total = 0
+        for line in load_text(name).splitlines():
+            lengths.add(len(line.split()))
+            total += len(line.split())
+            lengths.add(total)
+    return tuple(sorted(length for length in lengths if 1 <= length <= 400))
 
 
 def test_budget_that_fits_exactly_counts_the_last_sequence() -> None:
@@ -167,7 +188,7 @@ def test_seeded_random_budgets_match_an_independent_search() -> None:
         }
         if rng.random() < 0.5:
             config["sliding_window"] = rng.randint(1, 300)
-        seq_len = rng.randint(1, 400)
+        seq_len = rng.choice(_passage_lengths())
         dtype = rng.choice(dtypes)
         weights = rng.randint(0, 5_000)
         reserve = rng.randint(0, 500)

@@ -62,3 +62,6 @@ kept; that `drop_last` removes only a short final batch and changes nothing when
 evenly; the single full batch case; that batches keep permutation order; seed reproducibility and
 seed dependence; zero epochs; integer index dtype; and invalid `n`, `batch_size`, `epochs` and
 types.
+
+Some hidden tests take their inputs from the real datasets `iris` and `wine` (see
+`docs/DATASETS.md`).

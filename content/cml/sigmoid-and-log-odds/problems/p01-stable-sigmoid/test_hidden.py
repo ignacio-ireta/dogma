@@ -8,7 +8,20 @@ from hypothesis import strategies as st
 from scipy.special import expit
 from submission import sigmoid
 
+from dogma_data import rng, sample_rows
+
 FINITE = st.floats(min_value=-1e4, max_value=1e4, allow_nan=False, allow_infinity=False)
+
+
+def _real_margins(key, n):
+    """Real margins of a linear classifier: n breast_cancer tumours scored on six features.
+
+    The score is the projection on the direction from the malignant mean to the benign mean of
+    the drawn rows, tripled. Most margins are large and of the right sign; a few are near zero
+    or on the wrong side.
+    """
+    X, y = sample_rows("breast_cancer", rng(key), n, 6, standardize=True)
+    return 3.0 * (X @ (X[y == 1.0].mean(axis=0) - X[y == 0.0].mean(axis=0)))
 
 
 def _evaluate(z):
@@ -43,8 +56,7 @@ def _sigmoid_decimal(z):
 
 
 def test_random_inputs_match_an_independent_stable_reference():
-    rng = np.random.default_rng(0)
-    z = rng.uniform(-50.0, 50.0, size=200)
+    z = _real_margins("sigmoid-p01:reference", 200)
     expected = expit(z)
     np.testing.assert_allclose(
         _evaluate(z),

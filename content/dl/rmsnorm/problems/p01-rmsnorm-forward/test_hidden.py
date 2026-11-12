@@ -3,18 +3,60 @@
 # Messages name the kind of mistake and never show hidden inputs or expected values.
 from __future__ import annotations
 
+import math
+
 import pytest
 import torch
 import torch.nn.functional as ref_f  # oracle only
 from submission import rms_norm
 
+from dogma_data import rng, sample_rows
+from dogma_data import rng as data_rng
+
 ATOL = 1e-9
 RTOL = 1e-9
 
 
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-rmsnorm-forward:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
+
+
+def _features(shape, seed, scale=1.0, offset=0.0, dtype=torch.float64):
+    """Real inputs of the given shape: standardised breast_cancer features, scaled and shifted.
+
+    The last axis holds the features and the leading axes hold the rows drawn. The columns
+    are correlated and skewed, and a small batch can repeat a value, as measured data does.
+    Weights, gains, biases and running statistics are parameters and stay random.
+    """
+    shape = tuple(shape)
+    rows = math.prod(shape[:-1])
+    drawn, _ = sample_rows(
+        "breast_cancer", rng(f"rmsnorm-p01:features:{seed}"), rows, shape[-1], standardize=True
+    )
+    return torch.tensor(drawn.reshape(shape), dtype=torch.float64).to(dtype) * scale + offset
+
+
 def _randn(shape, seed, scale=1.0, offset=0.0, dtype=torch.float64):
     g = torch.Generator().manual_seed(seed)
-    return torch.randn(shape, generator=g, dtype=dtype) * scale + offset
+    return _real_values(g, [shape], dtype) * scale + offset
 
 
 def _call(x, gain, eps=1e-6):
@@ -53,7 +95,7 @@ SHAPES = [(3,), (2, 4), (2, 3, 5), (1, 2, 3, 4), (4, 1), (6, 2)]
 def test_matches_reference_over_random_leading_shapes():
     for seed, shape in enumerate(SHAPES):
         d = shape[-1]
-        x = _randn(shape, seed, scale=2.0, offset=0.5)
+        x = _features(shape, seed, scale=2.0, offset=0.5)
         gain = _randn((d,), seed + 10)
         eps = [1e-6, 1e-3, 1e-8][seed % 3]
         _close(
@@ -77,7 +119,7 @@ def test_mean_is_not_subtracted():
 
 
 def test_offset_example_is_not_invariant_to_a_constant_shift():
-    x = _randn((3, 4), 21, scale=1.0)
+    x = _features((3, 4), 21, scale=1.0)
     gain = torch.ones(4, dtype=torch.float64)
     shifted = _call(x + 5.0, gain, eps=1e-12)
     original = _call(x, gain, eps=1e-12)
@@ -105,7 +147,7 @@ def test_eps_is_added_inside_the_square_root():
 
 
 def test_unit_mean_square_before_gain():
-    x = _randn((5, 6), 31, scale=4.0)
+    x = _features((5, 6), 31, scale=4.0)
     gain = torch.ones(6, dtype=torch.float64)
     y = _call(x, gain, eps=1e-12)
     mean_square = (y * y).mean(dim=-1)
@@ -118,7 +160,7 @@ def test_unit_mean_square_before_gain():
 
 
 def test_statistic_runs_over_the_last_axis():
-    x = _randn((3, 5), 41, scale=2.0)
+    x = _features((3, 5), 41, scale=2.0)
     gain = _randn((5,), 42)
     _close(
         _call(x, gain, eps=1e-12),
@@ -129,7 +171,7 @@ def test_statistic_runs_over_the_last_axis():
 
 
 def test_each_example_is_normalized_independently():
-    x = _randn((4, 3), 51, scale=3.0)
+    x = _features((4, 3), 51, scale=3.0)
     gain = _randn((3,), 52)
     together = _call(x, gain)
     for i in range(x.shape[0]):
@@ -141,7 +183,7 @@ def test_each_example_is_normalized_independently():
 
 
 def test_large_magnitudes_match_reference():
-    x = _randn((3, 4), 61, scale=1e100)
+    x = _features((3, 4), 61, scale=1e100)
     gain = _randn((4,), 62)
     y = _call(x, gain, eps=1e-6)
     _close(
@@ -150,7 +192,7 @@ def test_large_magnitudes_match_reference():
 
 
 def test_tiny_magnitudes_match_reference():
-    x = _randn((3, 4), 71, scale=1e-15)
+    x = _features((3, 4), 71, scale=1e-15)
     gain = _randn((4,), 72)
     y = _call(x, gain, eps=1e-30)
     _close(
@@ -169,7 +211,7 @@ def test_zero_rows_give_zero_output():
 
 
 def test_float32_inputs_return_float32():
-    x = _randn((3, 5), 81, dtype=torch.float32)
+    x = _features((3, 5), 81, dtype=torch.float32)
     gain = torch.ones(5, dtype=torch.float32)
     y = _call(x, gain, eps=1e-6)
     assert y.dtype == torch.float32, "output dtype must follow the input dtype"
@@ -190,7 +232,7 @@ def test_empty_leading_dimension_returns_empty_output():
 
 def test_invalid_arguments_raise_value_error():
     gain = torch.ones(3, dtype=torch.float64)
-    x = _randn((2, 3), 91)
+    x = _features((2, 3), 91)
     cases = {
         "a 0-dimensional x must raise ValueError": lambda: rms_norm(torch.tensor(1.0), gain),
         "an integer x must raise ValueError": lambda: rms_norm(
@@ -217,6 +259,6 @@ def test_invalid_arguments_raise_value_error():
 
 
 def test_inputs_are_not_mutated():
-    x = _randn((3, 4), 101)
+    x = _features((3, 4), 101)
     gain = _randn((4,), 102)
     _call(x, gain)  # _call compares the arguments before and after the call

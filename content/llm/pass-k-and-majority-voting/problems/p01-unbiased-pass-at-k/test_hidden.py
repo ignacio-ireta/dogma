@@ -9,6 +9,9 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import pass_at_k
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 
 def checked(call):
     try:
@@ -40,10 +43,36 @@ def close(got: float, want: float, *, rel: float = 1e-9, abs_: float = 1e-12, de
         pytest.fail(detail, pytrace=False)
 
 
+def _correct_attempts(n: int, draw: int) -> int:
+    """Real graded attempts: how many of n real wines a simple rule names correctly.
+
+    The n wines and two of their measurements are drawn from the wine dataset. Each wine is
+    given the cultivar whose mean, over the drawn wines, is nearest, and an attempt is correct
+    when that is the wine's cultivar. The count stands for the c correct samples out of n.
+    """
+    values, target = sample_rows(
+        "wine", data_rng(f"p01-unbiased-pass-at-k:attempts:{draw}"), n, 2, standardize=True
+    )
+    rows, labels = values.tolist(), [int(label) for label in target.tolist()]
+    centres = {}
+    for label in set(labels):
+        members = [row for row, own in zip(rows, labels, strict=True) if own == label]
+        centres[label] = [sum(column) / len(members) for column in zip(*members, strict=True)]
+    correct = 0
+    for row, own in zip(rows, labels, strict=True):
+        nearest = min(centres, key=lambda label: math.dist(row, centres[label]))
+        correct += nearest == own
+    return correct
+
+
 @settings(max_examples=100, deadline=None, derandomize=True, report_multiple_bugs=False)
 @given(st.integers(1, 60), st.data())
 def test_small_inputs_match_the_exact_binomial_ratio(n, data):
-    c = data.draw(st.integers(0, n))
+    # Half the examples take c from real graded attempts; half take any c from 0 to n.
+    if data.draw(st.booleans(), label="real attempts"):
+        c = _correct_attempts(n, data.draw(st.integers(0, 10_000), label="draw"))
+    else:
+        c = data.draw(st.integers(0, n))
     k = data.draw(st.integers(1, n))
     got = checked(lambda: pass_at_k(n, c, k))
     close(

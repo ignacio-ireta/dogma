@@ -70,3 +70,6 @@ that a real token equal to the pad id stays unmasked, that an empty row is all p
 that an empty batch gives shape `(0, max_length)`, that ids above $2^{24}$ survive exactly, that outputs
 are `int64`, that invalid arguments raise `ValueError` (including `bool` sizes and out-of-range ids), and
 that inputs are not mutated. A property test checks the mask row sums on random inputs.
+
+The hidden tests draw their bulk inputs from the real datasets `gutenberg_frankenstein`,
+`gutenberg_pride_prejudice` and `gutenberg_walden` (see `docs/DATASETS.md`).

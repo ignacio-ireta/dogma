@@ -45,3 +45,6 @@ also check the zero-variance rule, the mean predictor (R² = 0), perfect predict
 changes under scaling and under a common shift of both vectors. They check the rejected inputs (shape,
 length, empty, non-finite, constant truth), that integer input gives the same scores as float input,
 that inputs are left unchanged, and that every score is a scalar.
+
+The hidden tests draw their bulk inputs from the real dataset `california_housing` (see
+`docs/DATASETS.md`).

@@ -6,6 +6,7 @@ Failure messages name the kind of mistake. They never print hidden shapes or exp
 
 from __future__ import annotations
 
+import functools
 import math
 import random
 from fractions import Fraction
@@ -13,6 +14,8 @@ from typing import Any
 
 import pytest
 from submission import matmul_roofline
+
+from dogma_data import load, load_frame
 
 PEAK = 312_000_000_000_000
 BW = 2_000_000_000_000
@@ -62,10 +65,24 @@ def _expect_error(exc_type: type[Exception], call: Any, mistake: str) -> None:
     pytest.fail(mistake)
 
 
+@functools.cache
+def _design_shapes() -> tuple[tuple[int, int], ...]:
+    """(rows, features) of six real design matrices, from iris (150 by 4) to digits (1,797 by
+    64) and the California housing sample (6,000 by 8)."""
+    shapes = [
+        (int(load(name).X.shape[0]), int(load(name).X.shape[1]))
+        for name in ("iris", "wine", "diabetes", "breast_cancer", "digits")
+    ]
+    housing = load_frame("california_housing")
+    shapes.append((int(housing.shape[0]), int(housing.shape[1]) - 1))
+    return tuple(shapes)
+
+
 def test_random_shapes_and_devices_match_exact_rational_roofline() -> None:
     rng = random.Random(2026)  # noqa: S311 -- seeded synthetic shapes, not security
     for _ in range(300):
-        m, n, k = rng.randint(1, 4096), rng.randint(1, 4096), rng.randint(1, 4096)
+        # A real design matrix (m rows by k features) times a weight matrix to n outputs.
+        (m, k), n = rng.choice(_design_shapes()), rng.randint(1, 4096)
         b = rng.choice([1, 2, 4])
         peak = rng.randint(10**9, 10**15)
         bw = rng.randint(10**9, 10**13)

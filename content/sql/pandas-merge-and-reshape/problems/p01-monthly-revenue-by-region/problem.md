@@ -68,9 +68,10 @@ North   100.0
 An unknown amount does not create a region with a zero total, and it does not create the 2024-03
 column.
 
-The interview-prep orders and customers datasets provide order amounts, dates, and city labels, and
-about one customer in twenty has no city. Use each customer's city as this problem's region label.
-A customer with no city is in `customers`, so its orders go to `"unknown"`, as the second rule says.
+The real `online_retail` invoices provide order amounts and dates, and each customer's country is
+this problem's region label. The customer table is incomplete, as real ones are: some customers
+who ordered are not in it, and about one customer in ten has no region. A customer with no region
+is in `customers`, so its orders go to `"unknown"`, as the second rule says.
 
 ## Constraints
 
@@ -84,5 +85,8 @@ All public tests pass, then **Submit** runs the hidden tests. They build their o
 customer ids (must raise, not double the revenue), NaN amounts (dropped, not filled), regions with
 only unknown amounts, missing cells that must be `0.0`, integer amounts giving float cells, `datetime64`
 and string dates giving the same months, months sorted across a year boundary, an empty result with
-its names, inputs left unchanged, customers with a missing region (interview-prep, NaN city), lognormal
-amounts with missing values, and interview-prep rows checked against a pandas merge and groupby oracle.
+its names, inputs left unchanged, customers with a missing region, heavy-tailed amounts with refunds,
+and the real `online_retail` invoices checked against a pandas merge and groupby oracle.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

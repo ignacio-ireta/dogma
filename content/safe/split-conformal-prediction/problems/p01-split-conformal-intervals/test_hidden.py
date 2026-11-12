@@ -9,6 +9,23 @@ import numpy as np
 import pytest
 from submission import split_conformal_interval
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+
+def house_predictions(gen, n, m):
+    """Real predictions and real house values for calibration, and m more predictions.
+
+    The model is least squares on median income, house age and latitude (standardised), fitted
+    to sixty other california_housing block groups. Its residuals are real: mostly small, a
+    few large, and several exactly equal where the value is capped.
+    """
+    X, value = sample_rows("california_housing", gen, n + m + 60, standardize=True)
+    design = np.column_stack([np.ones(len(X)), X[:, [0, 1, 6]]])
+    beta = np.linalg.lstsq(design[n + m :], value[n + m :], rcond=None)[0]
+    pred = design @ beta
+    return pred[:n], value[:n], pred[n : n + m]
+
 
 def exact_rank(n, alpha):
     with localcontext() as context:
@@ -51,14 +68,12 @@ def same(actual, expected, mistake):
 
 
 def test_random_calibration_matches_sorted_index_oracle():
-    rng = np.random.default_rng(2024)
+    rng = data_rng("conformal-intervals-p01:oracle")
     alphas = [0.01, 0.05, 0.1, 0.2, 0.25, 0.3, 0.5, 0.9]
     for _ in range(60):
         n = int(rng.integers(1, 31))
         alpha = alphas[int(rng.integers(len(alphas)))]
-        cal_pred = rng.normal(size=n)
-        cal_true = cal_pred + rng.standard_t(3, size=n)
-        test_pred = rng.normal(size=5)
+        cal_pred, cal_true, test_pred = house_predictions(rng, n, 5)
         lower, upper = call(cal_pred, cal_true, test_pred, alpha)
         want_lower, want_upper = oracle(cal_pred, cal_true, test_pred, alpha)
         same(
@@ -111,10 +126,9 @@ def test_tied_residuals_return_the_common_value():
 
 
 def test_large_magnitudes_scale_the_bounds_without_overflow():
-    rng = np.random.default_rng(5)
-    cal_pred = rng.normal(size=20)
-    cal_true = cal_pred + rng.normal(size=20)
-    test_pred = rng.normal(size=3)
+    cal_pred, cal_true, test_pred = house_predictions(
+        data_rng("conformal-intervals-p01:large-magnitudes"), 20, 3
+    )
     base_lower, base_upper = call(cal_pred, cal_true, test_pred, 0.2)
     scale = 1e200
     lower, upper = call(cal_pred * scale, cal_true * scale, test_pred * scale, 0.2)
@@ -123,10 +137,9 @@ def test_large_magnitudes_scale_the_bounds_without_overflow():
 
 
 def test_small_magnitudes_keep_nonzero_width():
-    rng = np.random.default_rng(6)
-    cal_pred = rng.normal(size=20)
-    cal_true = cal_pred + rng.normal(size=20)
-    test_pred = rng.normal(size=3)
+    cal_pred, cal_true, test_pred = house_predictions(
+        data_rng("conformal-intervals-p01:small-magnitudes"), 20, 3
+    )
     base_lower, base_upper = call(cal_pred, cal_true, test_pred, 0.2)
     scale = 1e-200
     lower, upper = call(cal_pred * scale, cal_true * scale, test_pred * scale, 0.2)
@@ -139,10 +152,8 @@ def test_small_magnitudes_keep_nonzero_width():
 
 
 def test_permuting_calibration_points_does_not_change_the_bounds():
-    rng = np.random.default_rng(8)
-    cal_pred = rng.normal(size=15)
-    cal_true = cal_pred + rng.normal(size=15)
-    test_pred = rng.normal(size=4)
+    rng = data_rng("conformal-intervals-p01:permutation")
+    cal_pred, cal_true, test_pred = house_predictions(rng, 15, 4)
     order = rng.permutation(15)
     lower, upper = call(cal_pred, cal_true, test_pred, 0.3)
     lower2, upper2 = call(cal_pred[order], cal_true[order], test_pred, 0.3)

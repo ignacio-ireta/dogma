@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import math
 
 import numpy as np
@@ -7,6 +8,8 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import action_value_estimates
+
+from dogma_data import retail_events
 
 
 def _close(
@@ -72,6 +75,29 @@ def _closed_form_constant(actions, rewards, n_actions, alpha, initial_value):
     return out
 
 
+@functools.cache
+def _pulls():
+    """Real pulls: the weekday and the amount of every invoice line of Online Retail II.
+
+    A pull is one real order line. The arm is the weekday the order was placed, counted
+    modulo the number of arms, and the reward is what the line paid. Amounts are skewed,
+    repeat often, and are negative for refunds; busy weekdays are pulled more often.
+    """
+    lines = retail_events()
+    weekdays = lines["ts"].dt.day_of_week.to_numpy(dtype=np.int64)
+    amounts = lines["amount"].to_numpy(dtype=np.float64)
+    weekdays.setflags(write=False)
+    amounts.setflags(write=False)
+    return weekdays, amounts
+
+
+def _episode(rng, n_actions, length):
+    """``length`` real pulls picked by ``rng``: (actions, rewards)."""
+    weekdays, amounts = _pulls()
+    picked = rng.integers(0, amounts.shape[0], size=length)
+    return weekdays[picked] % n_actions, amounts[picked].copy()
+
+
 @settings(max_examples=60, deadline=None, derandomize=True, report_multiple_bugs=False)
 @given(
     st.integers(1, 5),
@@ -81,8 +107,7 @@ def _closed_form_constant(actions, rewards, n_actions, alpha, initial_value):
 )
 def test_sample_average_equals_batch_mean(n_actions, length, seed, initial_value):
     rng = np.random.default_rng(seed)
-    actions = rng.integers(0, n_actions, size=length)
-    rewards = rng.normal(size=length) * 100.0
+    actions, rewards = _episode(rng, n_actions, length)
     got = _call(actions, rewards, n_actions, None, initial_value)
     want = _batch_means(actions, rewards, n_actions, initial_value)
     _close(
@@ -100,8 +125,8 @@ def test_constant_step_size_matches_exponential_weights():
         rng = np.random.default_rng(seed)
         n_actions = int(rng.integers(1, 4))
         length = int(rng.integers(1, 40))
-        actions = rng.integers(0, n_actions, size=length)
-        rewards = rng.normal(size=length)
+        actions, rewards = _episode(rng, n_actions, length)
+        rewards = rewards / 100.0
         alpha = float(rng.uniform(0.05, 1.0))
         got = _call(actions, rewards, n_actions, alpha, 0.7)
         want = _closed_form_constant(actions, rewards, n_actions, alpha, 0.7)

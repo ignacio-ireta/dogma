@@ -43,3 +43,6 @@ invariance to shifting and the $s^2$ scaling rule; a large common offset (about 
 shortcut $\mathbb{E}[xy]-\mathbb{E}[x]\,\mathbb{E}[y]$ loses all precision; the single-variable shape;
 the `ddof` errors (negative and fractional) and size errors; NaN, infinite, non-2-D, empty and
 zero-variable input; integer input; and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `wine` (see
+`docs/DATASETS.md`).

@@ -61,3 +61,6 @@ dot products, checked on repeated vectors at shifted positions; leading batch ax
 independently; an empty sequence; large sequence positions and small input magnitudes; the dtype
 and shape contract; the `ValueError` rules (too few dimensions, odd width, zero width); and the input
 left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

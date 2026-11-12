@@ -3,6 +3,25 @@ from __future__ import annotations
 import torch
 from submission import patchify
 
+from dogma_data import rng, sample_rows
+
+
+def _digit_images(key, n, c, h, w):
+    """Real images: n examples with c channels of h by w pixels, cut from the digits set.
+
+    Every channel is a different handwritten digit. A digit is 8 by 8 pixels; larger sizes
+    tile several digits, and the result is cropped around its centre, where the ink is. Pixels
+    run from 0 to 16 and are normalised with the mean (4.9) and the spread (6.0) of the whole
+    set, as image pipelines do, so the background is a negative constant.
+    """
+    tiles_h, tiles_w = -(-h // 8), -(-w // 8)
+    pixels, _ = sample_rows("digits", rng(key), n * c * tiles_h * tiles_w)
+    canvas = pixels.reshape(n, c, tiles_h, tiles_w, 8, 8).transpose(0, 1, 2, 4, 3, 5)
+    canvas = canvas.reshape(n, c, tiles_h * 8, tiles_w * 8)
+    top, left = (canvas.shape[2] - h) // 2, (canvas.shape[3] - w) // 2
+    crop = canvas[:, :, top : top + h, left : left + w]
+    return torch.tensor((crop - 4.9) / 6.0, dtype=torch.float64)
+
 
 def checked(call) -> torch.Tensor:
     try:
@@ -48,10 +67,13 @@ def reference(images: torch.Tensor, patch: int) -> torch.Tensor:
 
 
 def test_matches_slicing_reference_on_random_images_with_several_patch_sizes():
-    gen = torch.Generator().manual_seed(0)
     for patch, grid_h, grid_w, channels in [(1, 2, 3, 2), (2, 2, 3, 3), (3, 3, 1, 1), (2, 1, 1, 4)]:
-        images = torch.randn(
-            2, channels, patch * grid_h, patch * grid_w, generator=gen, dtype=torch.float64
+        images = _digit_images(
+            f"patchify-p02:reference:{patch}:{grid_h}:{grid_w}",
+            2,
+            channels,
+            patch * grid_h,
+            patch * grid_w,
         )
         out = checked(lambda images=images, patch=patch: patchify(images, patch))
         assert out.shape == reference(images, patch).shape, "output shape must be (B, N, C*p*p)"
@@ -72,8 +94,7 @@ def test_grid_is_numbered_row_major_not_column_major():
 
 
 def test_single_patch_covering_the_whole_image_is_its_flattened_pixels():
-    gen = torch.Generator().manual_seed(1)
-    images = torch.randn(3, 2, 4, 4, generator=gen, dtype=torch.float64)
+    images = _digit_images("patchify-p02:single-patch", 3, 2, 4, 4)
     out = checked(lambda: patchify(images, 4))
     assert out.shape == (3, 1, 32), "one patch must give N = 1 token of C*p*p features"
     assert torch.equal(out[:, 0, :], images.reshape(3, -1)), (
@@ -82,8 +103,7 @@ def test_single_patch_covering_the_whole_image_is_its_flattened_pixels():
 
 
 def test_single_pixel_patches_give_one_token_per_pixel():
-    gen = torch.Generator().manual_seed(2)
-    images = torch.randn(2, 3, 2, 5, generator=gen, dtype=torch.float64)
+    images = _digit_images("patchify-p02:single-pixel", 2, 3, 2, 5)
     out = checked(lambda: patchify(images, 1))
     assert out.shape == (2, 10, 3), "patch 1 must give H*W tokens with C features each"
     assert torch.equal(out, images.permute(0, 2, 3, 1).reshape(2, 10, 3)), (
@@ -154,8 +174,7 @@ def test_non_divisible_height_or_width_is_rejected_as_value_error():
 
 
 def test_input_tensor_is_not_mutated():
-    gen = torch.Generator().manual_seed(3)
-    images = torch.randn(2, 2, 4, 6, generator=gen, dtype=torch.float64)
+    images = _digit_images("patchify-p02:not-mutated", 2, 2, 4, 6)
     before = images.clone()
     checked(lambda: patchify(images, 2))
     assert torch.equal(images, before), "the input was modified: do not write into images"

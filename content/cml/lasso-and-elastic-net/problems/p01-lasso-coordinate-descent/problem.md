@@ -49,3 +49,6 @@ exactly one nonzero just below it. They check that the ℓ₁ norm does not grow
 least squares. They cover uncentred data (no hidden intercept), zero columns, exactly zero correlations (which
 must give exact zeros, not NaN), wide designs, scaling
 of y with α, invalid inputs, integer input, and unchanged inputs.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `diabetes` (see
+`docs/DATASETS.md`).

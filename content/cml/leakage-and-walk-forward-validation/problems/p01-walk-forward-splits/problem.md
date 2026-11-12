@@ -53,3 +53,5 @@ windows never overlap, and no test window runs past the last row. They also chec
 exactly `step`, that no further split would fit, the window lengths, and that the output matches
 scikit-learn's `TimeSeriesSplit` for one matching configuration. The hidden tests also reject invalid
 parameters and check that index arrays are integer-typed and ascending.
+
+Some hidden tests take their inputs from the real dataset `nile` (see `docs/DATASETS.md`).

@@ -18,8 +18,9 @@ import pandas as pd  # type: ignore[import-untyped]
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from scipy.special import ndtr
 
-from dogma_data import rng, synth
+from dogma_data import retail_invoices, rng, sample_rows
 
 COLUMNS = ["customer_id", "completed_orders", "total_amount"]
 ALL_COLUMNS = ["order_id", "customer_id", "order_date", "status", "amount"]
@@ -30,6 +31,56 @@ TABLE_DDL = (
 INSERT = "INSERT INTO orders VALUES (?, ?, ?, ?, ?)"
 DAY = date(2024, 1, 1)
 STATUSES = ["completed", "completed", "completed", "pending", "cancelled", "refunded"]
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
 
 
 def _connect(rows: Sequence[tuple[object, ...]]) -> duckdb.DuckDBPyConnection:
@@ -141,34 +192,36 @@ def _check_same_result(got: pd.DataFrame, want: pd.DataFrame) -> None:
 
 @pytest.fixture(scope="module")
 def event_log_orders() -> list[tuple[object, ...]]:
-    generated = synth.event_log(
-        rng("sql/sql-group-by-and-having/p01-customers-with-three-completed-orders:event-log:0"),
-        3_000,
-        n_users=100,
-        categories=tuple(STATUSES),
-        start="2024-01-01",
-        days=90,
-        amount_median=30.0,
-        amount_sigma=1.0,
-        dirty_rate=0.15,
-    )
-    return [
-        (
-            int(order_id),
-            int(customer_id),
-            pd.Timestamp(stamp).date(),
-            str(status),
-            float(amount),
+    """Real orders: the 568 invoices of 60 customers of an online retailer (online_retail).
+
+    The order id is the invoice number, the amount is the invoice total and the status is read
+    off the invoice: a cancellation is ``cancelled`` with a negative amount, every other invoice
+    is ``completed``. Half the customers have four invoices or fewer and one has 91. The source
+    has no hand-typed status and the contract has a rule for one, so one invoice in seven gets
+    its status the way a person types it: with a capital, or with a space around it.
+    """
+    gen = rng("sql/sql-group-by-and-having/p01-customers-with-three-completed-orders:event-log:0")
+    invoices = retail_invoices()
+    typed = _real_unit(gen, len(invoices)) < 1.0 / 7.0
+    styles = _real_ints(gen, 0, 3, len(invoices))
+    rows: list[tuple[object, ...]] = []
+    for invoice, customer_id, moment, cancelled, amount, by_hand, style in zip(
+        invoices["invoice"],
+        invoices["customer_id"],
+        invoices["invoice_ts"],
+        invoices["cancelled"],
+        invoices["amount"],
+        typed,
+        styles,
+        strict=True,
+    ):
+        status = "cancelled" if cancelled else "completed"
+        if by_hand:
+            status = (status.capitalize(), f" {status}", f"{status} ")[int(style)]
+        rows.append(
+            (int(invoice.lstrip("C")), int(customer_id), moment.date(), status, float(amount))
         )
-        for order_id, customer_id, stamp, status, amount in zip(
-            generated["event_id"],
-            generated["user_id"],
-            generated["ts"],
-            generated["category"],
-            generated["amount"],
-            strict=True,
-        )
-    ]
+    return rows
 
 
 def _random_rows(rng: np.random.Generator, n: int) -> list[tuple[object, ...]]:

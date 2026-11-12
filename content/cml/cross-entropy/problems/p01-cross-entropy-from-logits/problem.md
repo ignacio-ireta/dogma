@@ -49,3 +49,6 @@ magnitude $10^4$, with no warning, and with the correct and the wrong class at t
 sum, so that repeating a row leaves the loss unchanged; rows of the gradient summing to zero; two-class
 problems; integer logits; every rejection family (shapes, $k < 2$, empty batches, NaN and infinite logits,
 float and boolean targets, out-of-range targets); and that the inputs are left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `digits` (see
+`docs/DATASETS.md`).

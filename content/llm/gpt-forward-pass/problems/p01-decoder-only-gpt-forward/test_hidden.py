@@ -3,13 +3,19 @@
 # learner may not import.
 from __future__ import annotations
 
+import collections
 import copy
+import functools
 import math
+import re
 
 import pytest
 import torch
 import torch.nn.functional as F  # noqa: N812 - conventional alias for the oracle
 from submission import gpt_forward
+
+from dogma_data import load_text, sample_rows
+from dogma_data import rng as data_rng
 
 EPS = 1e-5
 ATOL = 1e-10
@@ -20,9 +26,65 @@ BLOCK_KEYS = (
 )  # fmt: skip
 
 
+BOOKS = ("gutenberg_frankenstein", "gutenberg_pride_prejudice", "gutenberg_walden")
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-decoder-only-gpt-forward:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
+
+
+@functools.cache
+def _token_lines(vocab: int) -> tuple[tuple[int, ...], ...]:
+    """The lines of three vendored novels as word ids below ``vocab``.
+
+    A word's id is its frequency rank over the three books; ranks at or above ``vocab - 1``
+    share the last id, as an unknown-word id does.
+    """
+    lines = [
+        re.findall(r"[a-z]+", line.lower())
+        for name in BOOKS
+        for line in load_text(name).splitlines()
+    ]
+    ranked = collections.Counter(word for line in lines for word in line).most_common()
+    rank = {word: index for index, (word, _) in enumerate(ranked)}
+    return tuple(tuple(min(rank[word], vocab - 1) for word in line) for line in lines if line)
+
+
+def _real_ids(gen: torch.Generator, batch: int, tokens: int, vocab: int) -> torch.Tensor:
+    """Token ids of real text: the first ``tokens`` words of ``batch`` lines of a novel.
+
+    Real ids are uneven: a few small ids recur in every row and the last id stands for every
+    rare word. The weights of the model are parameters and stay random.
+    """
+    long_enough = [line for line in _token_lines(vocab) if len(line) >= tokens]
+    rows = [
+        long_enough[int(torch.randint(0, len(long_enough), (1,), generator=gen))][:tokens]
+        for _ in range(batch)
+    ]
+    return torch.tensor(rows, dtype=torch.int64)
+
+
 def _random_block(d, ff, gen):
     def rnd(*shape):
-        return torch.randn(*shape, generator=gen, dtype=torch.float64)
+        return _real_values(gen, [*shape], torch.float64)
 
     return {
         "ln1_gamma": 1 + 0.2 * rnd(d), "ln1_beta": 0.1 * rnd(d),
@@ -38,7 +100,7 @@ def _random_block(d, ff, gen):
 
 def _random_params(vocab, d, ctx, n_blocks, ff, gen, *, tied):  # noqa: PLR0917
     def rnd(*shape):
-        return torch.randn(*shape, generator=gen, dtype=torch.float64)
+        return _real_values(gen, [*shape], torch.float64)
 
     p = {
         "tok_emb": 0.5 * rnd(vocab, d),
@@ -176,14 +238,14 @@ def test_matches_gpt_reference_on_seeded_batches(shape):
     batch, tokens, vocab, width, ctx, n_blocks, heads, ff, tied = shape
     gen = torch.Generator().manual_seed(batch * 100 + tokens + n_blocks)
     p = _random_params(vocab, width, ctx, n_blocks, ff, gen, tied=tied)
-    idx = torch.randint(0, vocab, (batch, tokens), generator=gen)
+    idx = _real_ids(gen, batch, tokens, vocab)
     _assert_matches(_run(idx, p, heads), idx, p, heads)
 
 
 def test_tied_head_shares_the_token_table_with_an_explicit_transpose():
     gen = torch.Generator().manual_seed(29)
     p = _random_params(6, 4, 5, 1, 7, gen, tied=True)
-    idx = torch.randint(0, 6, (2, 3), generator=gen)
+    idx = _real_ids(gen, 2, 3, 6)
     tied_out = _run(idx, p, 2)
     untied = dict(p)
     untied["lm_head"] = p["tok_emb"].T.clone()
@@ -212,7 +274,7 @@ def test_tied_head_logits_move_when_the_token_table_moves():
 def test_future_tokens_do_not_change_earlier_logits():
     gen = torch.Generator().manual_seed(37)
     p = _random_params(9, 6, 6, 2, 8, gen, tied=True)
-    idx = torch.randint(0, 9, (2, 5), generator=gen)
+    idx = _real_ids(gen, 2, 5, 9)
     before = _run(idx, p, 2)
     changed = idx.clone()
     changed[:, -1] = (changed[:, -1] + 1) % 9
@@ -237,7 +299,7 @@ def test_position_table_is_added_per_position_not_per_row():
 def test_batch_rows_are_processed_independently():
     gen = torch.Generator().manual_seed(43)
     p = _random_params(7, 6, 5, 2, 8, gen, tied=False)
-    idx = torch.randint(0, 7, (3, 4), generator=gen)
+    idx = _real_ids(gen, 3, 4, 7)
     together = _run(idx, p, 3)
     for row in range(idx.shape[0]):
         alone = _run(idx[row : row + 1], p, 3)
@@ -248,7 +310,7 @@ def test_batch_rows_are_processed_independently():
 def test_context_length_boundary_is_accepted():
     gen = torch.Generator().manual_seed(47)
     p = _random_params(5, 4, 3, 1, 6, gen, tied=True)
-    idx = torch.randint(0, 5, (1, 3), generator=gen)
+    idx = _real_ids(gen, 1, 3, 5)
     _assert_matches(_run(idx, p, 2), idx, p, 2)
 
 
@@ -265,14 +327,14 @@ def test_extreme_embedding_scales_match_the_reference(scale):
     p = _random_params(6, 4, 4, 1, 6, gen, tied=False)
     p["tok_emb"] = scale * p["tok_emb"]
     p["pos_emb"] = scale * p["pos_emb"]
-    idx = torch.randint(0, 6, (2, 3), generator=gen)
+    idx = _real_ids(gen, 2, 3, 6)
     _assert_matches(_run(idx, p, 2), idx, p, 2)
 
 
 def test_float32_parameters_return_float32_close_to_reference():
     gen = torch.Generator().manual_seed(61)
     p64 = _random_params(6, 8, 5, 1, 12, gen, tied=True)
-    idx = torch.randint(0, 6, (2, 4), generator=gen)
+    idx = _real_ids(gen, 2, 4, 6)
     p32 = {
         key: (
             [{k: v.float() for k, v in b.items()} for b in value]
@@ -291,7 +353,7 @@ def test_float32_parameters_return_float32_close_to_reference():
 def test_inputs_and_parameters_are_not_mutated():
     gen = torch.Generator().manual_seed(67)
     p = _random_params(6, 4, 4, 1, 6, gen, tied=False)
-    idx = torch.randint(0, 6, (2, 3), generator=gen)
+    idx = _real_ids(gen, 2, 3, 6)
     idx_before, p_before = idx.clone(), copy.deepcopy(p)
     _run(idx, p, 2, pass_through=True)
     if not torch.equal(idx, idx_before):

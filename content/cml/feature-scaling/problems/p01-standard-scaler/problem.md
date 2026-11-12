@@ -46,3 +46,5 @@ Your scaler matches an independent implementation on randomized matrices,
 preserves shapes and inputs, handles constant and tiny-scale columns, and uses
 training statistics even when held-out data has a very different distribution.
 Invalid-input families are ranks, dimensions, feature counts, range and finiteness.
+
+The hidden tests draw their bulk inputs from the real dataset `wine` (see `docs/DATASETS.md`).

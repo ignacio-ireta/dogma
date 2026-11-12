@@ -48,3 +48,6 @@ Your forward matches round-half-to-even quantization. Your backward is the ident
 entry, including entries outside a clipping range. The hidden tests check the identity gradient
 through a chain of operations, a float64 finite-difference check over one full step, tie handling,
 dtype and shape, invalid steps and inputs, and that `x` is not mutated.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

@@ -7,7 +7,7 @@ from hypothesis import strategies as st
 from statsmodels.tsa.stattools import acf as sm_acf
 from submission import acf
 
-from dogma_data import load_series
+from dogma_data import load_series, rng, sample_window
 
 
 def _require(ok, mistake):
@@ -62,7 +62,8 @@ def _loop_reference(values, nlags):
     ids=["short", "medium", "long", "large-mean", "all-lags"],
 )
 def test_matches_statsmodels_biased_acf(n, nlags, seed, offset):
-    values = np.random.default_rng(seed).normal(size=n) + offset
+    # A real run of monthly sea-surface temperatures: a yearly season and slow swings.
+    values = sample_window("elnino", rng(f"acf-p02:statsmodels:{seed}"), n) + offset
     reference = sm_acf(values, nlags=nlags, adjusted=False, fft=False)
     result = _run(lambda: acf(values, nlags), "acf raised on a valid series")
     _require(result.shape == (nlags + 1,), "acf must return one entry per lag from 0 to nlags")
@@ -90,15 +91,20 @@ def test_alternating_series_matches_closed_form():
 
 
 def test_lag_zero_is_exactly_one_on_random_series():
-    values = np.random.default_rng(7).normal(size=80)
-    result = _run(lambda: acf(values, 15), "acf raised on a valid series")
-    _require(
-        result[0] == 1.0, "lag 0 must be exactly one: the numerator and denominator must match"
-    )
+    # Twelve real windows from three series: sums added in two different ways agree on some
+    # windows and differ in the last digit on others.
+    gen = rng("acf-p02:lag-zero")
+    for name in ("sunspots", "nile", "elnino") * 4:
+        values = sample_window(name, gen, 80)
+        result = _run(lambda values=values: acf(values, 15), "acf raised on a valid series")
+        _require(
+            result[0] == 1.0,
+            "lag 0 must be exactly one: the numerator and denominator must match",
+        )
 
 
 def test_shift_and_scale_leave_the_autocorrelation_unchanged():
-    values = np.random.default_rng(8).normal(size=60)
+    values = sample_window("nile", rng("acf-p02:shift-and-scale"), 60)
     base = _run(lambda: acf(values, 12), "acf raised on a valid series")
     shifted = _run(lambda: acf(values + 250.0, 12), "acf raised on a shifted series")
     scaled = _run(lambda: acf(values * 0.001, 12), "acf raised on a scaled series")
@@ -112,7 +118,7 @@ def test_nlags_zero_returns_only_lag_zero():
 
 
 def test_nlags_at_the_maximum_returns_every_lag():
-    values = np.random.default_rng(9).normal(size=12)
+    values = sample_window("elnino", rng("acf-p02:all-lags"), 12)
     reference = sm_acf(values, nlags=11, adjusted=False, fft=False)
     result = _run(lambda: acf(values, 11), "acf raised for nlags = n - 1")
     _require(result.shape == (12,), "nlags = n - 1 must return n entries")

@@ -3,12 +3,18 @@
 # show hidden inputs, shapes or expected values.
 from __future__ import annotations
 
+import collections
+import functools
 import math
+import re
 
 import numpy as np
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import decode_float_bits
+
+from dogma_data import load_frame, load_text, sample_rows, sample_window
+from dogma_data import rng as data_rng
 
 
 def _decode_or_report(bits: int, e: int, m: int, b: int) -> tuple[float | None, str | None]:
@@ -54,16 +60,63 @@ def test_every_fp16_pattern_matches_ieee_half_precision():
     )
 
 
-def test_seeded_random_fp32_patterns_match_ieee_single_precision():
-    rng = np.random.default_rng(20240)
-    patterns = rng.integers(0, 2**32, size=3000, dtype=np.uint64).astype(np.uint32)
-    # Add the edge words explicitly: both zeros, the smallest subnormal, the largest finite
-    # value, infinities and a quiet NaN.
-    edge = np.array(
-        [0x0, 0x80000000, 0x1, 0x7FFFFF, 0x7F7FFFFF, 0x7F800000, 0xFF800000, 0x7FC00000],
-        dtype=np.uint32,
+@functools.cache
+def _real_numbers() -> np.ndarray:
+    """Real numbers across forty orders of magnitude, with both signs, as float64.
+
+    Measurements: every value of 150 California districts (fractions of a room, populations in
+    the thousands, negative longitudes). Census weights of 300 people (tens of thousands to a
+    million) and the differences between neighbours. Probabilities of real phrases: the first
+    1 to 12 words of 100 lines of Walden under the word frequencies of the book, from about
+    1e-2 down to 1e-45, with the differences between neighbours, their logarithms and their
+    reciprocals ("one in N"). No value is generated.
+    """
+    housing, _ = sample_rows(
+        "california_housing", data_rng("p01-decode-a-bit-pattern:housing"), 150
     )
-    patterns = np.concatenate([edge, patterns])
+    weights = load_frame("adult")["fnlwgt"].to_numpy(dtype=np.float64)[:300]
+    lines = [
+        re.findall(r"[a-z]+", line.lower()) for line in load_text("gutenberg_walden").splitlines()
+    ]
+    counts = collections.Counter(word for line in lines for word in line)
+    total = sum(counts.values())
+    phrases = []
+    for line in [line for line in lines if line][:100]:
+        probability = 1.0
+        for word in line[:12]:
+            probability *= counts[word] / total
+            phrases.append(probability)
+    odds = np.array(phrases, dtype=np.float64)
+    parts = [
+        housing.ravel(),
+        weights,
+        np.diff(weights),
+        odds,
+        np.diff(odds),
+        np.log(odds),
+        1.0 / odds,
+    ]
+    return np.concatenate(parts)
+
+
+def test_seeded_random_fp32_patterns_match_ieee_single_precision():
+    # The words of real numbers stored as float32. Phrase probabilities below 1e-38 are
+    # subnormal in float32 and those below 1e-45 are zero; reciprocals above 3e38 are infinite;
+    # the missing weeks of the Mauna Loa CO2 record are NaN.
+    with np.errstate(over="ignore", under="ignore"):
+        real_words = _real_numbers().astype(np.float32).view(np.uint32)
+    readings = sample_window("co2", data_rng("p01-decode-a-bit-pattern:co2"), 400, keep_nan=True)
+    missing = readings[np.isnan(readings)].astype(np.float32).view(np.uint32)
+    # Edge words typed by hand: both zeros, the smallest and largest subnormal with either
+    # sign, the largest finite value, both infinities, and NaNs with a payload and a sign bit.
+    edge = np.array(
+        [
+            0x0, 0x80000000, 0x1, 0x80000001, 0x7FFFFF, 0x807FFFFF, 0x7F7FFFFF, 0xFF7FFFFF,
+            0x7F800000, 0xFF800000, 0x7FC00000, 0xFFC00000, 0x7F800001, 0xFFFFFFFF,
+        ],
+        dtype=np.uint32,
+    )  # fmt: skip
+    patterns = np.concatenate([edge, real_words, missing])
     decoded = [_decode_or_report(int(p), 8, 23, 127) for p in patterns]
     _no_errors([err for _, err in decoded], "fp32 decode raised")
     want = patterns.view(np.float32)

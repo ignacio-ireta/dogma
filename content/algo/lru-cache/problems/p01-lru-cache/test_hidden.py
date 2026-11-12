@@ -6,6 +6,7 @@ Every failure names the kind of mistake. No failure message carries a hidden key
 
 from __future__ import annotations
 
+import functools
 import random
 import signal
 import threading
@@ -18,6 +19,8 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import LRUCache
+
+from dogma_data import retail_events
 
 LARGE_OPERATIONS = 100_000
 LARGE_CAPACITY = 100_000
@@ -133,10 +136,31 @@ def _run_sequence(capacity: int, operations: list[tuple[Any, ...]]) -> None:
             pytest.fail(mistake)
 
 
+@functools.cache
+def _product_ids() -> tuple[int, ...]:
+    """Each invoice line's product as a number: the order in which the product first appears."""
+    seen: dict[str, int] = {}
+    return tuple(seen.setdefault(str(code), len(seen)) for code in retail_events()["code"])
+
+
 def _random_operations(rng: random.Random, count: int, keyspace: int) -> list[tuple[Any, ...]]:
+    """A real access pattern: the keys follow the products on consecutive invoice lines.
+
+    The key of a step is the product on the next line of an online retailer's log, folded into
+    `keyspace` keys. Popular products come back again and again and an invoice revisits its
+    own products, as lookups do. A sequence longer than the log starts over at its first line.
+    Whether a step reads or writes is drawn. The log holds about 2,200 products, so a keyspace
+    larger than that (the timing case) draws its keys instead.
+    """
+    products = _product_ids()
+    drawn_keys = keyspace > max(products) + 1
+    first = rng.randrange(len(products))
     operations: list[tuple[Any, ...]] = []
     for step in range(count):
-        key = rng.randrange(keyspace)
+        if drawn_keys:
+            key = rng.randrange(keyspace)
+        else:
+            key = products[(first + step) % len(products)] % keyspace
         if rng.random() < 0.5:
             operations.append(("get", key))
         else:

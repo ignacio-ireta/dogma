@@ -13,6 +13,9 @@ from hypothesis import strategies as st
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from submission import precision_recall_f1
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 AVERAGES = ("macro", "micro", "weighted")
 PART_NAMES = ("precision", "recall", "f1")
 PART_MISTAKES = {
@@ -23,6 +26,29 @@ PART_MISTAKES = {
     "f1": "F1 differs from the reference: per class it is 2 TP / (2 TP + FP + FN), and macro F1 "
     "is the mean of the per-class F1 values",
 }
+
+
+def _digit_predictions(gen, n, k):
+    """Real labels and a real classifier's predictions for n digits images of classes 0..k-1.
+
+    The classifier is nearest centroid on eight randomly chosen pixels, with centroids for the
+    classes 0..k. Class k never occurs among the true labels, so when the classifier mistakes
+    an image for it, that class is only predicted. Eight pixels are too few to be right every
+    time, so every kind of error turns up.
+    """
+    X, label = sample_rows("digits", gen, 500)
+    pixels = gen.choice(X.shape[1], size=8, replace=False)
+    X, label = X[:, pixels], label.astype(np.int64)
+    centroids = np.stack([X[label == c].mean(axis=0) for c in range(k + 1)])
+    keep = np.flatnonzero(label < k)[:n]
+    distances = ((X[keep, None, :] - centroids[None, :, :]) ** 2).sum(axis=2)
+    return label[keep], distances.argmin(axis=1)
+
+
+def _stump_predictions(gen, n):
+    """Real diagnoses of n breast_cancer tumours and a one-feature stump's predictions."""
+    X, target = sample_rows("breast_cancer", gen, n, 1)
+    return target.astype(np.int64), (X[:, 0] <= np.median(X[:, 0])).astype(np.int64)
 
 
 def _expect_value_error(call, mistake):
@@ -79,22 +105,19 @@ def _label_pairs(draw, max_label=3):
     ids=[f"{a}-{s}" for a in AVERAGES for s in range(4)],
 )
 def test_multiclass_modes_match_scikit_learn(average, seed):
-    rng = np.random.default_rng(seed)
+    rng = data_rng(f"precision-recall-p01:multiclass:{seed}")
     k = int(rng.integers(2, 6))
     n = int(rng.integers(8, 70))
-    weights = rng.random(k) ** 2 + 0.05
-    y_true = rng.choice(k, size=n, p=weights / weights.sum())
-    y_pred = rng.integers(0, k + 1, size=n)  # one extra label: a class that is only predicted
+    y_true, y_pred = _digit_predictions(rng, n, k)  # class k can only be predicted
     expected = _reference(y_true, y_pred, average)
     _check(_solve(y_true, y_pred, average=average), expected)
 
 
 @pytest.mark.parametrize("seed", range(4), ids=[f"binary-{s}" for s in range(4)])
 def test_binary_matches_scikit_learn_for_either_positive_label(seed):
-    rng = np.random.default_rng(100 + seed)
+    rng = data_rng(f"precision-recall-p01:binary:{seed}")
     n = int(rng.integers(6, 60))
-    y_true = rng.integers(0, 2, size=n)
-    y_pred = rng.integers(0, 2, size=n)
+    y_true, y_pred = _stump_predictions(rng, n)
     y_true[0], y_true[1] = 0, 1  # both labels present, so the reference is well defined
     for pos in (0, 1):
         expected = _reference(y_true, y_pred, "binary", pos_label=pos)

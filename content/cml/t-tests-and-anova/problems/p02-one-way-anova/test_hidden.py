@@ -3,7 +3,8 @@ import pytest
 from scipy import stats
 from submission import one_way_anova
 
-from dogma_data import load
+from dogma_data import load, sample_rows
+from dogma_data import rng as data_rng
 
 # Three groups whose F is about 225: the upper-tail p-value is about 1e-27, far below where 1 - cdf
 # still carries any information.
@@ -90,8 +91,14 @@ ORACLE_CASES = [
 
 
 def _seeded_groups(seed, sizes):
-    rng = np.random.default_rng(seed)
-    return [rng.normal(float(i), 1.0 + 0.5 * i, size=size) for i, size in enumerate(sizes)]
+    """Real groups: the mean pixel intensity of digits images, one group per digit.
+
+    Group i holds sizes[i] images of the digit i. The digits differ in how much ink they use
+    and in how much that varies, so the groups have unequal means and spreads.
+    """
+    X, digit = sample_rows("digits", data_rng(f"anova-p02:groups:{seed}"), 1797)
+    ink = X.mean(axis=1)
+    return [ink[digit == float(i)][:size] for i, size in enumerate(sizes)]
 
 
 def _reference(groups):
@@ -125,9 +132,7 @@ def test_matches_scipy_one_way_anova_on_seeded_groups(case):
 
 
 def test_two_groups_give_f_equal_to_the_square_of_the_pooled_t():
-    rng = np.random.default_rng(40)
-    a = rng.normal(0.0, 1.0, size=7)
-    b = rng.normal(0.8, 1.0, size=11)
+    a, b = _seeded_groups(40, (7, 11))
     na, nb = a.size, b.size
     sp2 = ((na - 1) * a.var(ddof=1) + (nb - 1) * b.var(ddof=1)) / (na + nb - 2)
     t_pooled = (a.mean() - b.mean()) / np.sqrt(sp2 * (1 / na + 1 / nb))

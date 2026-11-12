@@ -4,13 +4,39 @@
 from __future__ import annotations
 
 import copy
+import math
 
 import pytest
 import torch
 from submission import apply_rope_qk
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 ATOL = 1e-10
 RTOL = 1e-10
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-half-split-rope-with-offset:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
 
 
 def _angles(tokens, d, offset, dtype=torch.float64):
@@ -90,8 +116,8 @@ KEY_HINT = "keys need the same offset and frequencies as queries; values are not
 )  # fmt: skip
 def test_matches_complex_reference_on_seeded_tensors(shape, offset):
     gen = torch.Generator().manual_seed(sum(shape) + offset)
-    q = torch.randn(*shape, generator=gen, dtype=torch.float64)
-    k = torch.randn(*shape, generator=gen, dtype=torch.float64)
+    q = _real_values(gen, [*shape], torch.float64)
+    k = _real_values(gen, [*shape], torch.float64)
     q_rot, k_rot = _run(q, k, offset)
     _assert_close(q_rot, _ref_half_split(q, offset), "rotated queries", QUERY_HINT)
     _assert_close(k_rot, _ref_half_split(k, offset), "rotated keys", KEY_HINT)
@@ -99,8 +125,8 @@ def test_matches_complex_reference_on_seeded_tensors(shape, offset):
 
 def test_half_split_is_not_the_adjacent_pair_layout():
     gen = torch.Generator().manual_seed(2)
-    q = torch.randn(2, 2, 3, 6, generator=gen, dtype=torch.float64)
-    k = torch.randn(2, 2, 3, 6, generator=gen, dtype=torch.float64)
+    q = _real_values(gen, [2, 2, 3, 6], torch.float64)
+    k = _real_values(gen, [2, 2, 3, 6], torch.float64)
     # perm puts the even features first, then the odd ones: then pair i of the half-split layout
     # is exactly the adjacent pair (2i, 2i+1) of the original tensor.
     perm = torch.cat([torch.arange(0, 6, 2), torch.arange(1, 6, 2)])
@@ -114,8 +140,8 @@ def test_half_split_is_not_the_adjacent_pair_layout():
 
 def test_query_key_scores_depend_only_on_relative_offset():
     gen = torch.Generator().manual_seed(5)
-    q = torch.randn(1, 2, 6, 8, generator=gen, dtype=torch.float64)
-    k = torch.randn(1, 2, 6, 8, generator=gen, dtype=torch.float64)
+    q = _real_values(gen, [1, 2, 6, 8], torch.float64)
+    k = _real_values(gen, [1, 2, 6, 8], torch.float64)
     q0, k0 = _run(q, k, 0)
     q7, k7 = _run(q, k, 7)
     s0 = q0 @ k0.transpose(-1, -2)
@@ -128,8 +154,8 @@ def test_query_key_scores_depend_only_on_relative_offset():
 
 def test_offset_applied_to_only_one_side_is_detected():
     gen = torch.Generator().manual_seed(6)
-    q = torch.randn(1, 1, 4, 4, generator=gen, dtype=torch.float64)
-    k = torch.randn(1, 1, 4, 4, generator=gen, dtype=torch.float64)
+    q = _real_values(gen, [1, 1, 4, 4], torch.float64)
+    k = _real_values(gen, [1, 1, 4, 4], torch.float64)
     q_rot, k_rot = _run(q, k, 5)
     k_wrong = _run(q, k, 0)[1]  # keys at position 0 while queries sit at offset 5
     if torch.allclose(q_rot @ k_rot.transpose(-1, -2), q_rot @ k_wrong.transpose(-1, -2)):
@@ -138,8 +164,8 @@ def test_offset_applied_to_only_one_side_is_detected():
 
 def test_cached_decoding_new_token_matches_full_sequence():
     gen = torch.Generator().manual_seed(7)
-    full_q = torch.randn(2, 2, 5, 8, generator=gen, dtype=torch.float64)
-    full_k = torch.randn(2, 2, 5, 8, generator=gen, dtype=torch.float64)
+    full_q = _real_values(gen, [2, 2, 5, 8], torch.float64)
+    full_k = _real_values(gen, [2, 2, 5, 8], torch.float64)
     q_all, k_all = _run(full_q, full_k, 0)
     past = 4
     # The last token alone, with positions starting at past_len: this is one decoding step.
@@ -156,7 +182,7 @@ def test_cached_decoding_new_token_matches_full_sequence():
 
 def test_position_zero_is_identity_for_every_row_when_offset_is_zero():
     gen = torch.Generator().manual_seed(8)
-    x = torch.randn(1, 1, 1, 6, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [1, 1, 1, 6], torch.float64)
     q_rot, k_rot = _run(x, x, 0)
     if not torch.allclose(q_rot, x, atol=ATOL) or not torch.allclose(k_rot, x, atol=ATOL):
         pytest.fail("position 0 must be the identity: check the angle at t = 0 and the offset")
@@ -164,7 +190,7 @@ def test_position_zero_is_identity_for_every_row_when_offset_is_zero():
 
 def test_rows_keep_their_euclidean_norm():
     gen = torch.Generator().manual_seed(9)
-    q = torch.randn(2, 3, 5, 8, generator=gen, dtype=torch.float64)
+    q = _real_values(gen, [2, 3, 5, 8], torch.float64)
     q_rot, _ = _run(q, q, 9)
     if not torch.allclose(q_rot.norm(dim=-1), q.norm(dim=-1), atol=ATOL, rtol=RTOL):
         pytest.fail("a rotation must preserve each row's norm: check cos^2 + sin^2 in each pair")
@@ -172,7 +198,7 @@ def test_rows_keep_their_euclidean_norm():
 
 def test_leading_batch_and_head_axes_are_independent():
     gen = torch.Generator().manual_seed(10)
-    q = torch.randn(2, 3, 4, 6, generator=gen, dtype=torch.float64)
+    q = _real_values(gen, [2, 3, 4, 6], torch.float64)
     together, _ = _run(q, q, 2)
     for b in range(2):
         for h in range(3):
@@ -191,8 +217,8 @@ def test_empty_sequence_returns_empty_tensors():
 @pytest.mark.parametrize("offset", [10**6, 123456], ids=["one-million", "six-digit"])
 def test_large_offsets_match_the_reference(offset):
     gen = torch.Generator().manual_seed(offset % 97)
-    q = torch.randn(1, 2, 3, 8, generator=gen, dtype=torch.float64)
-    k = torch.randn(1, 2, 3, 8, generator=gen, dtype=torch.float64)
+    q = _real_values(gen, [1, 2, 3, 8], torch.float64)
+    k = _real_values(gen, [1, 2, 3, 8], torch.float64)
     q_rot, k_rot = _run(q, k, offset)
     # Angles near 1e6 radians carry float64 round-off of about 1e-10, so atol is 1e-8 here.
     _assert_close(q_rot, _ref_half_split(q, offset), "rotated queries", QUERY_HINT, 1e-8)
@@ -202,8 +228,8 @@ def test_large_offsets_match_the_reference(offset):
 @pytest.mark.parametrize("scale", [1e6, 1e-6], ids=["large-magnitude", "small-magnitude"])
 def test_extreme_input_scales_match_the_reference(scale):
     gen = torch.Generator().manual_seed(12)
-    q = scale * torch.randn(1, 1, 4, 6, generator=gen, dtype=torch.float64)
-    k = scale * torch.randn(1, 1, 4, 6, generator=gen, dtype=torch.float64)
+    q = scale * _real_values(gen, [1, 1, 4, 6], torch.float64)
+    k = scale * _real_values(gen, [1, 1, 4, 6], torch.float64)
     q_rot, k_rot = _run(q, k, 1)
     _assert_close(q_rot, _ref_half_split(q, 1), "rotated queries", QUERY_HINT)
     _assert_close(k_rot, _ref_half_split(k, 1), "rotated keys", KEY_HINT)
@@ -211,7 +237,7 @@ def test_extreme_input_scales_match_the_reference(scale):
 
 def test_float32_inputs_return_float32_close_to_reference():
     gen = torch.Generator().manual_seed(14)
-    q64 = torch.randn(2, 2, 4, 8, generator=gen, dtype=torch.float64)
+    q64 = _real_values(gen, [2, 2, 4, 8], torch.float64)
     q_rot, k_rot = _run(q64.float(), q64.float(), 6)
     if q_rot.dtype != torch.float32 or k_rot.dtype != torch.float32:
         pytest.fail("float32 inputs must return float32 tensors")
@@ -221,8 +247,8 @@ def test_float32_inputs_return_float32_close_to_reference():
 
 def test_inputs_are_not_mutated():
     gen = torch.Generator().manual_seed(15)
-    q = torch.randn(1, 2, 3, 4, generator=gen, dtype=torch.float64)
-    k = torch.randn(1, 2, 3, 4, generator=gen, dtype=torch.float64)
+    q = _real_values(gen, [1, 2, 3, 4], torch.float64)
+    k = _real_values(gen, [1, 2, 3, 4], torch.float64)
     q_before, k_before = copy.deepcopy(q), copy.deepcopy(k)
     _run(q, k, 2, pass_through=True)
     if not torch.equal(q, q_before) or not torch.equal(k, k_before):
@@ -292,8 +318,8 @@ def test_offsets_beyond_float32_precision_keep_exact_positions():
     # 2**24 + 1 is not representable in float32, so a position computed in float32 is off by one.
     offset = 2**24 + 1
     gen = torch.Generator().manual_seed(41)
-    q = torch.randn(1, 1, 2, 4, generator=gen, dtype=torch.float64)
-    k = torch.randn(1, 1, 2, 4, generator=gen, dtype=torch.float64)
+    q = _real_values(gen, [1, 1, 2, 4], torch.float64)
+    k = _real_values(gen, [1, 1, 2, 4], torch.float64)
     q_rot, k_rot = _run(q, k, offset)
     # The tolerance is loose on purpose: one wrong position moves the angle by about one radian.
     _assert_close(q_rot, _ref_half_split(q, offset), "rotated queries", QUERY_HINT, 1e-6)

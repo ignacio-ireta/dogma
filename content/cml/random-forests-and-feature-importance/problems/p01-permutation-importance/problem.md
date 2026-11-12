@@ -43,3 +43,6 @@ array([0., 0.])
 ## Done looks like
 
 All public tests pass, then **Submit** runs the hidden tests. They check: exact agreement with an independent loop that follows the protocol, including the order in which draws are made and the population standard deviation; a feature the model ignores has exactly zero mean and standard deviation; a single repeat has zero spread; a feature the model uses has a positive drop; the same seed gives the same result and a different seed gives a different one; invalid `n_repeats`, `seed`, shapes, lengths and a wrong-length prediction raise `ValueError`; and `X` and `y` are left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

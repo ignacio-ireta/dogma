@@ -7,7 +7,7 @@ computation over the same rows. Each test name says what behaviour it checks.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 
 import duckdb
@@ -17,6 +17,9 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
+from dogma_data import retail_events
+from dogma_data import rng as data_rng
+
 COLUMNS = ["order_id", "customer_id", "order_date", "amount"]
 ALL_COLUMNS = ["order_id", "customer_id", "order_date", "status", "amount"]
 TABLE_DDL = (
@@ -25,6 +28,7 @@ TABLE_DDL = (
 )
 INSERT = "INSERT INTO orders VALUES (?, ?, ?, ?, ?)"
 STATUSES = ["completed", "completed", "pending", "cancelled", "refunded"]
+OTHER_STATUSES = ["pending", "refunded", "Completed", "COMPLETED"]
 BOUNDARY_DATES = [date(2023, 12, 31), date(2024, 1, 1), date(2024, 12, 31), date(2025, 1, 1)]
 
 
@@ -96,25 +100,44 @@ def _check_same_result(got: pd.DataFrame, want: pd.DataFrame) -> None:
 
 
 def _random_rows(rng: np.random.Generator, n: int) -> list[tuple[object, ...]]:
+    """n real orders: invoice lines of an online retailer (online_retail), in shuffled order.
+
+    The order id is the line's number, the customer is the real customer and the amount is the
+    line total: a product sells at a few price points, so equal amounts are common, which
+    exercises the order_id tie-break. A sold line is ``completed`` and a line of a cancellation
+    is ``cancelled``, with a negative amount. The real dates run from December 2009 to December
+    2011 and are moved forward by 14 years, so that 2010 becomes 2024. Three things the source
+    lacks and the contract has rules for are placed by the draw: one date in five is moved to a
+    year boundary, one amount in seven is removed, and one status in seven is replaced by
+    another status or another capitalisation.
+    """
+    events = retail_events()
+    picked = events.iloc[rng.permutation(len(events))[:n]]
     rows: list[tuple[object, ...]] = []
-    for order_id in range(1, n + 1):
+    for order_id, customer_id, moment, cancelled, value in zip(
+        picked["event_id"],
+        picked["user_id"],
+        picked["ts"],
+        picked["cancelled"],
+        picked["amount"],
+        strict=True,
+    ):
         if rng.random() < 0.2:
             order_date = BOUNDARY_DATES[int(rng.integers(0, len(BOUNDARY_DATES)))]
         else:
-            order_date = date(2023, 6, 1) + timedelta(days=int(rng.integers(0, 800)))
-        status = STATUSES[int(rng.integers(0, len(STATUSES)))]
-        # Multiples of 25 make many ties, which exercises the order_id tie-break.
-        amount = None if rng.random() < 0.15 else float(rng.integers(0, 12) * 25)
-        customer_id = int(rng.integers(100, 130))
-        rows.append((order_id, customer_id, order_date, status, amount))
-    shuffled = rng.permutation(len(rows))  # insertion order must not matter
-    return [rows[int(i)] for i in shuffled]
+            order_date = date(moment.year + 14, moment.month, moment.day)
+        status = "cancelled" if cancelled else "completed"
+        if rng.random() < 1.0 / 7.0:
+            status = OTHER_STATUSES[int(rng.integers(0, len(OTHER_STATUSES)))]
+        amount = None if rng.random() < 1.0 / 7.0 else float(value)
+        rows.append((int(order_id), int(customer_id), order_date, status, amount))
+    return rows
 
 
 @settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(seed=st.integers(min_value=0, max_value=10_000))
 def test_random_tables_match_the_independent_pandas_oracle(seed: int) -> None:
-    rows = _random_rows(np.random.default_rng(seed), 120)
+    rows = _random_rows(data_rng(f"top-five-completed-p01:random-tables:{seed}"), 120)
     _check_same_result(_run_learner_query(_connect(rows)), _oracle(rows))
 
 

@@ -83,3 +83,6 @@ computed by hand. They also cover response tokens equal to `pad_id`, prompt-only
 never be targets, the first response token right after the prompt, a single pair with no padding, a
 batch of many lengths, very large token ids that must stay exact in `int64`, the output dtype and
 shape, the empty batch, every `ValueError` rule, and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `gsm8k` (see
+`docs/DATASETS.md`).

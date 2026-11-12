@@ -7,6 +7,9 @@ from hypothesis import strategies as st
 from scipy.special import expit, ndtr
 from submission import smooth_activations as _learner
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 
 def smooth_activations(*args):
     try:
@@ -45,7 +48,12 @@ def _oracle(x):
 
 
 def test_seeded_library_oracle():
-    x = np.random.default_rng(19).uniform(-8, 8, (5, 7))
+    # Real pre-activations: standardised tumour measurements, doubled so the tails of the
+    # activations are reached as well as the bend near zero.
+    x, _ = sample_rows(
+        "breast_cancer", data_rng("p01-gelu-and-swish:oracle"), 5, 7, standardize=True
+    )
+    x = 2.0 * x
     for got, want in zip(smooth_activations(x), _oracle(x), strict=True):
         _close(got, want, "activation formula disagrees with independent special-function oracle")
 

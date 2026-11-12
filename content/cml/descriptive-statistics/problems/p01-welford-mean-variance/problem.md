@@ -41,3 +41,6 @@ offset (values near 10⁹ with a spread of about 1), where the naive sum-of-squa
 generator input read once; a streamed input of 300,000 values that must not be stored; constant data
 with exactly zero variance; the single-value case; integer input giving float results; scaling
 behaviour of the variance; and the empty-input error.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer`,
+`california_housing`, `nile` and `sunspots` (see `docs/DATASETS.md`).

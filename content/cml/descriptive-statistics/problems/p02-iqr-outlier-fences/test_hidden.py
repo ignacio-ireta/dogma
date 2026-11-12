@@ -4,6 +4,8 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import iqr_fences
 
+from dogma_data import rng, sample_rows, sample_window
+
 
 def _reference(values, k):
     """Fences from NumPy's linear quantiles, the reference for the formula."""
@@ -26,7 +28,8 @@ def _expect_value_error(call, mistake):
 @pytest.mark.parametrize("n", [1, 2, 3, 4, 5, 10, 50, 201], ids=list("abcdefgh"))
 @pytest.mark.parametrize("k", [0.0, 1.5, 3.0], ids=["zero-k", "fractional-k", "large-k"])
 def test_matches_numpy_linear_quantiles(n, k):
-    values = np.random.default_rng(n).normal(loc=2.0, scale=3.0, size=n)
+    # Real household incomes from engel: right-skewed, with a few very large values.
+    values = sample_rows("engel", rng(f"iqr-fences-p02:numpy:{n}"), n)[0][:, 0]
     lower, upper = iqr_fences(values, k=k)
     ref_lower, ref_upper = _reference(values, k)
     np.testing.assert_allclose(
@@ -91,14 +94,14 @@ def test_duplicates_are_handled_by_the_interpolation():
 
 
 def test_wider_k_gives_wider_fences():
-    values = np.random.default_rng(3).normal(size=40)
+    values = sample_rows("engel", rng("iqr-fences-p02:widen"), 40)[0][:, 0]
     lo1, up1 = iqr_fences(values, k=1.0)
     lo2, up2 = iqr_fences(values, k=2.5)
     assert lo2 <= lo1 and up2 >= up1, "a larger k must widen both fences, never narrow them"
 
 
 def test_shifting_and_scaling_the_data_moves_and_scales_the_fences():
-    values = np.random.default_rng(4).normal(size=25)
+    values = sample_window("nile", rng("iqr-fences-p02:shift"), 25)  # real annual river flow
     lo, up = iqr_fences(values)
     lo_shift, up_shift = iqr_fences(values + 10.0)
     assert lo_shift == pytest.approx(lo + 10.0, rel=1e-12), (

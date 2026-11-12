@@ -5,6 +5,8 @@ from hypothesis import strategies as st
 from scipy import stats
 from submission import binomial_pmf
 
+from dogma_data import retail_invoices
+
 RTOL = 1e-7  # matches meta.yaml: lgamma(10^6) is about 1.3e7, so the pmf carries about 2e-9 error
 ATOL = 1e-14
 ORACLE_HINT = (
@@ -88,12 +90,26 @@ def test_pmf_sums_to_one_over_the_support_at_one_million_trials():
     )
 
 
+def _cancelled_invoices():
+    """Real trials and a real rate: the invoices of the Online Retail II sample, and the share
+    of them that were cancelled."""
+    cancelled = retail_invoices()["cancelled"]
+    return int(cancelled.shape[0]), float(cancelled.mean())
+
+
 @pytest.mark.parametrize(
     ("n", "p"),
-    [(200, 0.37), (1000, 0.02), (7, 0.9)],
-    ids=["medium-trials", "many-trials-rare-success", "few-trials-likely-success"],
+    [(200, 0.37), (1000, 0.02), (7, 0.9), (None, None)],
+    ids=[
+        "medium-trials",
+        "many-trials-rare-success",
+        "few-trials-likely-success",
+        "real-cancelled-invoices",
+    ],
 )
 def test_mean_and_variance_match_np_and_np_one_minus_p(n, p):
+    if n is None:
+        n, p = _cancelled_invoices()
     k = np.arange(n + 1)
     pmf = _pmf(k, n, p, MOMENT_HINT)
     mean = float((k * pmf).sum())

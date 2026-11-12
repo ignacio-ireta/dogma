@@ -74,3 +74,6 @@ renormalisation of the gates, counts over every slot, a large-magnitude case whe
 overflows, a case where probabilities underflow and only the logits can order the experts, `T = 0`,
 `k = E`, the range and type rules for `k`, the dtype and rank rules for `logits`, non-finite
 values, the output dtypes and shapes, and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

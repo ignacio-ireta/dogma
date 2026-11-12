@@ -40,3 +40,6 @@ The first example has $\varepsilon=0.25$. The one mistaken sample is multiplied 
 ## Done looks like
 
 All public tests pass, then **Submit** runs the hidden tests. They check: agreement with a reference that computes the mistake factors explicitly, on random weights and predictions; the rejected round at and above one half, with unchanged weights; the error of zero raising `ValueError`; the classic property that after the update the same predictions have weighted error exactly one half; invariance to rescaling the weights; normalised, positive output; rejection of bad labels, predictions, weights, lengths and empty input; and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

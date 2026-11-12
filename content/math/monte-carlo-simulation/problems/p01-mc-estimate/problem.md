@@ -49,3 +49,6 @@ called once, with the right sizes, from a generator seeded by `seed`; determinis
 coverage of the interval across many seeds; a closed-form expectation, E[exp(Z)] = e^(1/2); the
 standard error falling like 1/sqrt(n); numerical stability at a large offset; a zero-variance
 integrand; validation of `n` and `confidence`; the sample array left unchanged in value and order; and the shape of the return value.
+
+The hidden tests draw their bulk inputs from the real datasets `california_housing`, `iris` and
+`wine` (see `docs/DATASETS.md`).

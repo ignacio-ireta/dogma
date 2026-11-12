@@ -47,3 +47,6 @@ check the partition property (each position is tested exactly once and the train
 complement) on random sizes, verify the remainder rule for fold sizes, cover leave-one-out (`k = n`),
 reject invalid `k` and a missing seed, confirm that the same seed reproduces the folds and that
 `seed` is ignored without shuffling, and check that every index array is sorted and integer-typed.
+
+Some hidden tests take their inputs from the real datasets `breast_cancer`, `diabetes`, `iris` and
+`wine` (see `docs/DATASETS.md`).

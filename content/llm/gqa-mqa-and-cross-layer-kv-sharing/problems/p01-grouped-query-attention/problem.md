@@ -79,3 +79,6 @@ error; the `1/sqrt(d_head)` scale, checked where it differs from `1/sqrt(d_model
 non-symmetric weights; the shape and `ValueError` rules, including a full-width key projection and a head
 count that does not divide; batch independence; large and small input magnitudes; dtype and shape; and
 inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

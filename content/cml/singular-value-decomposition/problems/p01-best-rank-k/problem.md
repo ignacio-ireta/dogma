@@ -51,3 +51,6 @@ random rank-`k` matrix does better; the rank of `A_k`; the boundary values `k = 
 the zero matrix; a rank-one input, where the error must vanish; repeated singular values (invariants
 only); wide, tall and square shapes; large and small magnitudes; integer input; invalid input; and inputs
 left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `wine` (see
+`docs/DATASETS.md`).

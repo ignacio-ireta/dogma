@@ -66,3 +66,6 @@ put of an existing key that must refresh recency and must not evict; a removed e
 come back with its old value; invalid capacities; the `None` value rule; the size bound; and a
 100,000-operation sequence (100,000 fills, then 100,000 mixed operations) that must finish
 within 5 seconds. A correct linked-list cache does this in well under a second.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

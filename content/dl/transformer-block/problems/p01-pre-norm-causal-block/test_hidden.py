@@ -11,14 +11,39 @@ import torch
 import torch.nn.functional as F  # noqa: N812 - conventional alias for the oracle
 from submission import pre_norm_block
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 EPS = 1e-5
 ATOL = 1e-10  # float64 round-off through two sub-layers is far below this
 RTOL = 1e-10
 
 
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-pre-norm-causal-block:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
+
+
 def _random_params(d, ff, gen):
     def rnd(*shape):
-        return torch.randn(*shape, generator=gen, dtype=torch.float64)
+        return _real_values(gen, [*shape], torch.float64)
 
     return {
         "ln1_gamma": 1 + 0.2 * rnd(d), "ln1_beta": 0.1 * rnd(d),
@@ -202,7 +227,7 @@ def _expect_value_error(call, mistake):
 )
 def test_matches_pre_norm_reference_on_seeded_batches(batch, tokens, width, heads, ff):
     gen = torch.Generator().manual_seed(batch * 100 + tokens)
-    x = torch.randn(batch, tokens, width, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [batch, tokens, width], torch.float64)
     p = _random_params(width, ff, gen)
     _assert_matches(_run(x, p, heads), x, p, heads)
 
@@ -210,7 +235,7 @@ def test_matches_pre_norm_reference_on_seeded_batches(batch, tokens, width, head
 def test_matches_torch_transformer_encoder_layer_with_same_weights():
     gen = torch.Generator().manual_seed(7)
     batch, tokens, width, heads, ff = 2, 4, 8, 2, 16
-    x = torch.randn(batch, tokens, width, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [batch, tokens, width], torch.float64)
     p = _random_params(width, ff, gen)
     layer = torch.nn.TransformerEncoderLayer(
         width, heads, ff, dropout=0.0, activation="gelu", layer_norm_eps=EPS,
@@ -236,7 +261,7 @@ def test_matches_torch_transformer_encoder_layer_with_same_weights():
 
 def test_future_tokens_do_not_change_earlier_outputs():
     gen = torch.Generator().manual_seed(11)
-    x = torch.randn(2, 5, 6, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [2, 5, 6], torch.float64)
     p = _random_params(6, 10, gen)
     before = _run(x, p, 2)
     changed = x.clone()
@@ -250,7 +275,7 @@ def test_future_tokens_do_not_change_earlier_outputs():
 
 def test_zero_sublayer_weights_leave_the_residual_stream_unchanged():
     gen = torch.Generator().manual_seed(3)
-    x = torch.randn(2, 3, 4, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [2, 3, 4], torch.float64)
     p = _random_params(4, 6, gen)
     for key in ("W_o", "b_o", "W_2", "b_2"):
         p[key] = torch.zeros_like(p[key])
@@ -263,7 +288,7 @@ def test_zero_sublayer_weights_leave_the_residual_stream_unchanged():
 
 def test_batch_rows_are_processed_independently():
     gen = torch.Generator().manual_seed(5)
-    x = torch.randn(3, 4, 6, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [3, 4, 6], torch.float64)
     p = _random_params(6, 8, gen)
     together = _run(x, p, 3)
     for row in range(x.shape[0]):
@@ -275,14 +300,14 @@ def test_batch_rows_are_processed_independently():
 @pytest.mark.parametrize("scale", [1e4, 1e-4], ids=["large-magnitude", "small-magnitude"])
 def test_extreme_input_scales_match_the_reference(scale):
     gen = torch.Generator().manual_seed(13)
-    x = scale * torch.randn(2, 4, 6, generator=gen, dtype=torch.float64)
+    x = scale * _real_values(gen, [2, 4, 6], torch.float64)
     p = _random_params(6, 9, gen)
     _assert_matches(_run(x, p, 2), x, p, 2)
 
 
 def test_float32_inputs_return_float32_close_to_float64_reference():
     gen = torch.Generator().manual_seed(17)
-    x64 = torch.randn(2, 4, 8, generator=gen, dtype=torch.float64)
+    x64 = _real_values(gen, [2, 4, 8], torch.float64)
     p64 = _random_params(8, 12, gen)
     x32 = x64.float()
     p32 = {k: v.float() for k, v in p64.items()}
@@ -296,7 +321,7 @@ def test_float32_inputs_return_float32_close_to_float64_reference():
 
 def test_inputs_and_parameters_are_not_mutated():
     gen = torch.Generator().manual_seed(19)
-    x = torch.randn(2, 3, 4, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [2, 3, 4], torch.float64)
     p = _random_params(4, 5, gen)
     x_before, p_before = x.clone(), copy.deepcopy(p)
     _run(x, p, 2, pass_through=True)

@@ -4,13 +4,23 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import gauss_jordan_inverse
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 SEEDS = st.integers(min_value=0, max_value=10**6)
 
 
 def _well_conditioned(seed, n):
-    """Random normal matrix shifted by n*I: nonsingular, condition number of order 1 to 10."""
-    rng = np.random.default_rng(seed)
-    return rng.normal(size=(n, n)) + n * np.eye(n)
+    """A square block of real data shifted by n*I: nonsingular, with a determinant far from zero.
+
+    The block is n rows by n standardised measurements (correlated real columns): wine, or
+    breast_cancer when more than 13 columns are asked for. The shift keeps the condition
+    number small, as it did for the random matrices this replaces.
+    """
+    name = "wine" if n <= 13 else "breast_cancer"
+    gen = data_rng(f"gauss-jordan-p01:block:{seed}:{n}")
+    block, _ = sample_rows(name, gen, n, n, standardize=True)
+    return block + n * np.eye(n)
 
 
 def _must_raise_value_error(call, mistake, match=None):

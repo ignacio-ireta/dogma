@@ -3,14 +3,40 @@
 from __future__ import annotations
 
 import copy
+import math
 
 import pytest
 import torch
 from submission import apply_rope_scaled
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 ATOL = 1e-10
 RTOL = 1e-10
 QUERY_HINT = "check the scaled position (offset + t) / scale and theta_i = 10000 ** (-2 i / d)"
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p02-linear-position-interpolation:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
 
 
 def _phi(tokens, d, offset, scale):
@@ -63,8 +89,8 @@ def _run(q, k, offset, scale, *, pass_through=False):
 )  # fmt: skip
 def test_matches_complex_reference_for_several_scales(shape, offset, scale):
     gen = torch.Generator().manual_seed(sum(shape) + offset)
-    q = torch.randn(*shape, generator=gen, dtype=torch.float64)
-    k = torch.randn(*shape, generator=gen, dtype=torch.float64)
+    q = _real_values(gen, [*shape], torch.float64)
+    k = _real_values(gen, [*shape], torch.float64)
     q_rot, k_rot = _run(q, k, offset, scale)
     if not torch.allclose(q_rot, _ref(q, offset, scale), atol=ATOL, rtol=RTOL):
         pytest.fail(f"rotated queries differ from the reference: {QUERY_HINT}")
@@ -74,8 +100,8 @@ def test_matches_complex_reference_for_several_scales(shape, offset, scale):
 
 def test_scale_one_matches_the_unscaled_rotation():
     gen = torch.Generator().manual_seed(21)
-    q = torch.randn(2, 2, 4, 6, generator=gen, dtype=torch.float64)
-    k = torch.randn(2, 2, 4, 6, generator=gen, dtype=torch.float64)
+    q = _real_values(gen, [2, 2, 4, 6], torch.float64)
+    k = _real_values(gen, [2, 2, 4, 6], torch.float64)
     q_rot, _ = _run(q, k, 5, 1)
     if not torch.allclose(q_rot, _ref(q, 5, 1), atol=ATOL, rtol=RTOL):
         pytest.fail("scale 1 must reproduce the unscaled rotation: check the division by scale")
@@ -107,8 +133,8 @@ def test_base_is_not_changed_by_interpolation():
 
 def test_query_key_scores_depend_only_on_the_scaled_difference():
     gen = torch.Generator().manual_seed(23)
-    q = torch.randn(1, 2, 5, 8, generator=gen, dtype=torch.float64)
-    k = torch.randn(1, 2, 5, 8, generator=gen, dtype=torch.float64)
+    q = _real_values(gen, [1, 2, 5, 8], torch.float64)
+    k = _real_values(gen, [1, 2, 5, 8], torch.float64)
     q0, k0 = _run(q, k, 0, 3)
     q9, k9 = _run(q, k, 9, 3)
     if not torch.allclose(
@@ -121,8 +147,8 @@ def test_large_offset_and_stretched_positions_match_the_reference():
     # Angles near 1e6 radians carry float64 round-off of about 1e-10 from the frequency table,
     # so this one check uses atol 1e-8. That is still far below any real-model error.
     gen = torch.Generator().manual_seed(25)
-    q = torch.randn(1, 2, 3, 8, generator=gen, dtype=torch.float64)
-    k = torch.randn(1, 2, 3, 8, generator=gen, dtype=torch.float64)
+    q = _real_values(gen, [1, 2, 3, 8], torch.float64)
+    k = _real_values(gen, [1, 2, 3, 8], torch.float64)
     q_rot, k_rot = _run(q, k, 10**6, 0.5)
     if not torch.allclose(q_rot, _ref(q, 10**6, 0.5), atol=1e-8, rtol=1e-8):
         pytest.fail(f"rotated queries differ at a large offset: {QUERY_HINT}")
@@ -133,7 +159,7 @@ def test_large_offset_and_stretched_positions_match_the_reference():
 @pytest.mark.parametrize("magnitude", [1e6, 1e-6], ids=["large-magnitude", "small-magnitude"])
 def test_extreme_input_magnitudes_match_the_reference(magnitude):
     gen = torch.Generator().manual_seed(27)
-    q = magnitude * torch.randn(1, 1, 4, 6, generator=gen, dtype=torch.float64)
+    q = magnitude * _real_values(gen, [1, 1, 4, 6], torch.float64)
     q_rot, _ = _run(q, q, 2, 2.0)
     if not torch.allclose(q_rot, _ref(q, 2, 2.0), atol=ATOL, rtol=RTOL):
         pytest.fail(f"rotated queries differ at this magnitude: {QUERY_HINT}")
@@ -141,7 +167,7 @@ def test_extreme_input_magnitudes_match_the_reference(magnitude):
 
 def test_float32_inputs_return_float32_close_to_reference():
     gen = torch.Generator().manual_seed(29)
-    q64 = torch.randn(2, 2, 4, 8, generator=gen, dtype=torch.float64)
+    q64 = _real_values(gen, [2, 2, 4, 8], torch.float64)
     q_rot, k_rot = _run(q64.float(), q64.float(), 6, 2.0)
     if q_rot.dtype != torch.float32 or k_rot.dtype != torch.float32:
         pytest.fail("float32 inputs must return float32 tensors")
@@ -151,8 +177,8 @@ def test_float32_inputs_return_float32_close_to_reference():
 
 def test_inputs_and_scale_are_not_mutated():
     gen = torch.Generator().manual_seed(31)
-    q = torch.randn(1, 2, 3, 4, generator=gen, dtype=torch.float64)
-    k = torch.randn(1, 2, 3, 4, generator=gen, dtype=torch.float64)
+    q = _real_values(gen, [1, 2, 3, 4], torch.float64)
+    k = _real_values(gen, [1, 2, 3, 4], torch.float64)
     q_before, k_before = copy.deepcopy(q), copy.deepcopy(k)
     _run(q, k, 2, 2.0, pass_through=True)
     if not torch.equal(q, q_before) or not torch.equal(k, k_before):

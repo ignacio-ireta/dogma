@@ -1,18 +1,42 @@
+import functools
+
 import numpy as np
 import pytest
-from hypothesis import given, settings
+from hypothesis import assume, given, settings
 from hypothesis import strategies as st
-from hypothesis.extra.numpy import arrays
 from submission import vector_projection
 
-FINITE = st.floats(min_value=-1e6, max_value=1e6, allow_nan=False, allow_infinity=False)
+
+@functools.cache
+def _tables():
+    """Three real tables to take vectors from.
+
+    The 178 wines in their own units (all positive, from hundredths to thousands). The same
+    wines standardised (both signs, comparable scales). And 200 handwritten digits as the
+    shortfall of each pixel from full ink, intensity minus 16: whole numbers from -16 to 0,
+    with an exact 0 wherever a pixel is fully inked.
+    """
+    # Imported here: this topic is also checked as a copy outside the repository, where the
+    # import order of a first-party package differs.
+    from dogma_data import rng as data_rng  # noqa: PLC0415
+    from dogma_data import sample_rows  # noqa: PLC0415
+
+    raw, _ = sample_rows("wine", data_rng("p01-vector-projection:wines"), 178)
+    scaled, _ = sample_rows("wine", data_rng("p01-vector-projection:wines"), 178, standardize=True)
+    pixels, _ = sample_rows("digits", data_rng("p01-vector-projection:digits"), 200)
+    return raw, scaled, pixels - 16.0
 
 
 @st.composite
 def vector_pairs(draw):
+    """Two real rows of one table over the same run of one to eight columns."""
     n = draw(st.integers(min_value=1, max_value=8))
-    a = draw(arrays(np.float64, n, elements=FINITE))
-    b = draw(arrays(np.float64, n, elements=FINITE).filter(lambda v: float(v @ v) > 1e-6))
+    table = _tables()[draw(st.integers(min_value=0, max_value=2))]
+    first = draw(st.integers(min_value=0, max_value=table.shape[1] - n))
+    rows = draw(st.lists(st.integers(0, table.shape[0] - 1), min_size=2, max_size=2, unique=True))
+    a = table[rows[0], first : first + n].copy()
+    b = table[rows[1], first : first + n].copy()
+    assume(float(b @ b) > 1e-6)
     return a, b
 
 

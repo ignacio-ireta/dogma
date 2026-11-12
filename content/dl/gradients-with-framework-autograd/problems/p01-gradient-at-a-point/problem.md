@@ -45,3 +45,6 @@ Your function returns the analytic gradient for smooth functions, agrees with ce
 differences in float64, and leaves the caller's tensor state unchanged. The hidden tests check
 accumulated and preexisting `.grad` fields, `no_grad` contexts, constant and unused-input functions,
 float32 dtype, large and small magnitudes, and invalid shapes, dtypes and output ranks.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

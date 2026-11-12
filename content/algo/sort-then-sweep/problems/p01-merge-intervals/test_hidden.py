@@ -13,6 +13,7 @@ first.
 
 from __future__ import annotations
 
+import functools
 import signal
 import subprocess
 import sys
@@ -28,6 +29,8 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import merge_intervals
+
+from dogma_data import retail_events
 
 LARGE_N = 200_000
 TIME_LIMIT_S = 5.0
@@ -168,15 +171,38 @@ def _verify(intervals: list[tuple[int, int]]) -> None:
         _fail(problem)
 
 
+@functools.cache
+def _real_spans() -> tuple[tuple[tuple[int, int], ...], tuple[tuple[int, int], ...]]:
+    """Real intervals from the invoices of an online retailer (online_retail).
+
+    The first set holds one interval per trading day: the hours from the day's first invoice to
+    its last, counted from noon, so mornings are negative. The second holds one interval per
+    customer and week: the hours of the week from that customer's first invoice to the last.
+    Both are whole numbers, many intervals are a single point, and many share an endpoint.
+    """
+    events = retail_events()
+    hours = events["ts"].dt.hour
+    days = hours.groupby(events["ts"].dt.date).agg(["min", "max"])
+    week_hour = events["ts"].dt.dayofweek * 24 + hours
+    weeks = week_hour.groupby([events["user_id"], events["ts"].dt.strftime("%G-%V")]).agg(
+        ["min", "max"]
+    )
+    return (
+        tuple((int(a) - 12, int(b) - 12) for a, b in zip(days["min"], days["max"], strict=True)),
+        tuple((int(a), int(b)) for a, b in zip(weeks["min"], weeks["max"], strict=True)),
+    )
+
+
 def _random_intervals(
     rng: np.random.Generator, n: int, low: int, high: int
 ) -> list[tuple[int, int]]:
-    intervals: list[tuple[int, int]] = []
-    for _ in range(n):
-        start = int(rng.integers(low, high))
-        length = int(rng.integers(0, 6))
-        intervals.append((start, start + length))
-    return intervals
+    """n real intervals: daily trading windows for a small draw, customer weeks for a larger one.
+
+    The bounds are not used: the windows run from about -5 to 8 and the weeks from 0 to 167.
+    """
+    by_day, by_week = _real_spans()
+    pool = by_day if n < 40 else by_week
+    return [pool[int(i)] for i in rng.integers(0, len(pool), size=n)]
 
 
 @settings(max_examples=100, deadline=None, report_multiple_bugs=False)

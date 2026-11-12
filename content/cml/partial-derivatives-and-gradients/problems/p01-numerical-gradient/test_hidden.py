@@ -5,7 +5,18 @@ from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays
 from submission import numerical_gradient
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 COORDS = st.floats(min_value=-3.0, max_value=3.0, allow_nan=False, allow_infinity=False)
+
+
+def _real_point(gen, lo, hi, n):
+    """A point of n real coordinates: standardised wine measurements inside [lo, hi]."""
+    values, _ = sample_rows("wine", gen, 8, standardize=True)
+    inside = values.ravel()
+    inside = inside[(inside >= lo) & (inside <= hi)]
+    return inside[:n].copy()
 
 
 def _raised_value_error(call, mistake):
@@ -64,11 +75,11 @@ def _complex_step_gradient(f, x, h=1e-20):
 
 
 def test_quadratic_form_gradient_matches_a_plus_a_transpose_times_x():
-    rng = np.random.default_rng(0)
+    rng = data_rng("p01-numerical-gradient:quadratic")
     for _ in range(40):
         n = int(rng.integers(1, 6))
-        a = rng.normal(size=(n, n))
-        x = rng.uniform(-3.0, 3.0, size=n)
+        a, _ = sample_rows("wine", rng, n, n, standardize=True)
+        x = _real_point(rng, -3.0, 3.0, n)
         want = (a + a.T) @ x
         got = _gradient_or_nan(lambda v, a=a: float(v @ a @ v), x)
         assert np.all(np.abs(got - want) <= 1e-9 * max(1.0, np.max(np.abs(want)))), (
@@ -79,10 +90,10 @@ def test_quadratic_form_gradient_matches_a_plus_a_transpose_times_x():
 
 
 def test_log_sum_exp_gradient_is_the_softmax():
-    rng = np.random.default_rng(1)
+    rng = data_rng("p01-numerical-gradient:log-sum-exp")
     for _ in range(40):
         n = int(rng.integers(1, 7))
-        x = rng.uniform(-5.0, 5.0, size=n)
+        x = _real_point(rng, -5.0, 5.0, n)
         want = _softmax(x)
         got = _gradient_or_nan(_log_sum_exp, x)
         assert np.all(np.abs(got - want) <= 1e-7 * max(1.0, np.max(np.abs(want)))), (
@@ -92,10 +103,10 @@ def test_log_sum_exp_gradient_is_the_softmax():
 
 
 def test_rosenbrock_gradient_matches_closed_form():
-    rng = np.random.default_rng(2)
+    rng = data_rng("p01-numerical-gradient:rosenbrock")
     for _ in range(40):
         n = int(rng.integers(2, 5))
-        x = rng.uniform(-1.5, 1.5, size=n)
+        x = _real_point(rng, -1.5, 1.5, n)
         want = _closed_form_rosenbrock_gradient(x)
         got = _gradient_or_nan(_rosenbrock, x)
         assert np.all(np.abs(got - want) <= 1e-7 * max(1.0, np.max(np.abs(want)))), (
@@ -108,10 +119,10 @@ def test_every_partial_matches_complex_step_reference_on_composite_function():
     def f(v):
         return np.sum(np.exp(v / 3.0) * np.sin(v)) + v[0] * v[-1]
 
-    rng = np.random.default_rng(3)
+    rng = data_rng("p01-numerical-gradient:composite")
     for _ in range(30):
         n = int(rng.integers(2, 6))
-        x = rng.uniform(-2.0, 2.0, size=n)
+        x = _real_point(rng, -2.0, 2.0, n)
         want = _complex_step_gradient(f, x)
         got = _gradient_or_nan(lambda v: float(np.real(f(v))), x)
         assert np.all(np.abs(got - want) <= 1e-8 * max(1.0, np.max(np.abs(want)))), (

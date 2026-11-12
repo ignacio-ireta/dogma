@@ -4,15 +4,48 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import matrix_rank
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 SEEDS = st.integers(min_value=0, max_value=10**6)
 
 
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
 def _with_rank(seed, m, n, r):
-    """An m x n matrix of rank exactly r (a product of random m x r and r x n factors)."""
-    rng = np.random.default_rng(seed)
+    """An m x n matrix of rank exactly r: r real columns and n combinations of them.
+
+    The m x r factor is a block of standardised wine measurements; a draw whose block is not
+    of rank r is skipped. The r x n factor holds random mixing weights, so every column of the
+    result is an exact linear combination of r real columns.
+    """
+    rng = data_rng(f"matrix-rank-p02:with-rank:{seed}:{m}:{n}:{r}")
     if r == 0:
         return np.zeros((m, n))
-    return rng.normal(size=(m, r)) @ rng.normal(size=(r, n))
+    while True:
+        block, _ = sample_rows("wine", rng, m, r, standardize=True)
+        if np.linalg.matrix_rank(block) == r:
+            return block @ _real_normal(rng, (r, n))
 
 
 def _must_raise_value_error(call, mistake):
@@ -49,7 +82,13 @@ def test_matches_numpy_rank_on_matrices_of_known_rank(m, n, r, seed):
 @settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, st.integers(min_value=1, max_value=8), st.integers(min_value=1, max_value=8))
 def test_full_rank_random_rectangular_matrix_has_rank_min_m_n(seed, m, n):
-    A = np.random.default_rng(seed).normal(size=(m, n))
+    # A block of real measurements: m wines by n standardised columns, redrawn if a tie or a
+    # repeated wine leaves it short of full rank.
+    gen = data_rng(f"matrix-rank-p02:full-rank:{seed}:{m}:{n}")
+    while True:
+        A, _ = sample_rows("wine", gen, m, n, standardize=True)
+        if np.linalg.matrix_rank(A) == min(m, n):
+            break
     assert matrix_rank(A) == min(m, n), (
         f"a random {m}x{n} matrix has full rank {min(m, n)}: check the pivot skipping"
     )
@@ -75,7 +114,7 @@ def test_row_permutation_and_nonzero_row_scaling_keep_the_rank(seed, m, n):
     )
 
 
-@settings(max_examples=60, deadline=None, report_multiple_bugs=False)
+@settings(max_examples=100, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, st.integers(min_value=2, max_value=7), st.integers(min_value=1, max_value=7))
 def test_adding_a_combination_of_rows_does_not_increase_the_rank(seed, m, n):
     rng = np.random.default_rng(seed)
@@ -85,13 +124,23 @@ def test_adding_a_combination_of_rows_does_not_increase_the_rank(seed, m, n):
     assert matrix_rank(stacked) == matrix_rank(A), (
         "a row that is a combination of existing rows must not raise the rank"
     )
+    # The dependent row can sit anywhere and the signs can be flipped: the rank is the same.
+    # These put the dependent row early and make the large entries negative, where a pivot
+    # rule is tested.
+    for position in range(m + 1):
+        moved = np.insert(A, position, combo, axis=0)
+        for variant in (moved, -moved):
+            assert matrix_rank(variant) == matrix_rank(A), (
+                "a row that is a combination of existing rows must not change the rank, "
+                "wherever it sits and whatever the signs of the entries"
+            )
 
 
 @pytest.mark.parametrize(("m", "n", "seed"), [(3, 3, 11), (4, 2, 12), (2, 5, 13)], ids=list("abc"))
 def test_outer_product_has_rank_one(m, n, seed):
     rng = np.random.default_rng(seed)
-    u = rng.normal(size=m)
-    v = rng.normal(size=n)
+    u = _real_normal(rng, m)
+    v = _real_normal(rng, n)
     assert matrix_rank(np.outer(u, v)) == 1, "an outer product of nonzero vectors has rank 1"
 
 

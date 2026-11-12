@@ -69,3 +69,6 @@ random batches with and without the baseline, check the logit gradient against t
 function and against finite differences in float64, check that a constant-return batch gives zero
 baseline loss and zero gradient, cover gamma 0 and 1, extreme logits, float32 inputs, a single
 action, invalid arguments, and input mutation.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

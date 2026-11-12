@@ -95,3 +95,6 @@ tying, bias, learned positions and the gated MLP; zero layers; large configs wit
 results; the type and range rules; the `ValueError` cases; and the config left unchanged. A wrong
 variant gets a named message, for example counting the head when it is tied, or counting two
 matrices for a gated MLP.
+
+Some hidden tests take their inputs from the real dataset `gutenberg_frankenstein` (see
+`docs/DATASETS.md`).

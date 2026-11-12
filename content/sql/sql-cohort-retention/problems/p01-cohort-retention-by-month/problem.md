@@ -103,11 +103,14 @@ user_id  event_at
 ## Done looks like
 
 The result matches an independent oracle that works in calendar-month indices, on seeded random
-activity with many repeated events per user and month, on a 1,000-day log with a heavy user and
-retried duplicate rows (a Zipf-skewed synthetic log), and on a fixture. Hidden cases cover: a
+activity with many repeated events per user and month, on two years of real invoice lines
+(`online_retail`) with a few heavy customers and exact duplicate rows, and on a fixture. Hidden cases cover: a
 cohort whose only period is 0; users who return after a gap; a cohort month with no new users; a
 user whose events fall on the last day and first day of two months; many events by one user in one
 month; a grid that extends to the latest month for an early cohort; empty input; exact output types
 and ordering; a rate that is not 1.0 or 0.0; and a retried duplicate row of a first event, which
 counts once in the cohort size. A query that counts events, uses the previous
 period as denominator, or drops empty periods fails with the mistake named.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

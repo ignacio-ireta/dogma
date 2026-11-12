@@ -47,3 +47,6 @@ matrices; a badly scaled but nonsingular matrix (the threshold is relative, so i
 rejected); singular and nearly singular input raising `ValueError`, with the threshold checked on
 both sides (a pivot far above it must still be accepted); non-square, 1-D, empty and non-finite
 input raising `ValueError`; integer input returning `float64`; and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `wine` (see
+`docs/DATASETS.md`).

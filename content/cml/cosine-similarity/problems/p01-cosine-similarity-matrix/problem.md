@@ -40,3 +40,6 @@ self-similarity; invariance to positive row scaling; that the result is a transp
 arguments are swapped; values staying in `[-1, 1]`; exact values for opposite, parallel and
 orthogonal pairs; shape and dtype for integer input; the error cases in the contract; huge and tiny
 entries that overflow or underflow a naive norm; and that inputs are left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `digits` (see
+`docs/DATASETS.md`).

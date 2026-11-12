@@ -3,6 +3,7 @@
 Each failure message names the kind of mistake. No message contains a hidden input or answer.
 """
 
+import functools
 import math
 
 import numpy as np
@@ -12,9 +13,17 @@ from hypothesis import strategies as st
 from sklearn.utils.class_weight import compute_class_weight
 from submission import balanced_class_weights
 
+from dogma_data import load_frame, rng
+
 WEIGHT_MISTAKE = (
     "weight differs from the balanced rule: n / (k * count), with k the number of distinct labels"
 )
+
+
+@functools.cache
+def _education_years():
+    """Years of education of 6000 adults: 16 integer classes, from 8 people to almost 2000."""
+    return load_frame("adult")["education.num"].to_numpy()
 
 
 def _expect_value_error(call, mistake):
@@ -39,10 +48,9 @@ def _solve(y):
 
 @pytest.mark.parametrize("seed", range(5), ids=[f"case-{s}" for s in range(5)])
 def test_matches_scikit_learn_balanced_weights(seed):
-    rng = np.random.default_rng(seed)
-    n = int(rng.integers(5, 80))
-    k = int(rng.integers(2, 6))
-    y = rng.choice(np.arange(k) * 3 + 1, size=n, p=np.arange(1, k + 1) / np.arange(1, k + 1).sum())
+    gen = rng(f"balanced-class-weights-p01:sklearn:{seed}")
+    n = int(gen.integers(5, 80))
+    y = gen.choice(_education_years(), size=n, replace=False)
     classes = np.unique(y)
     expected = compute_class_weight("balanced", classes=classes, y=y)
     got = _solve(y)

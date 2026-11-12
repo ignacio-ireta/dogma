@@ -86,3 +86,6 @@ also cover: the exact tie at the ridge; a ridge a hair above the intensity, whic
 product; the smallest 1 x 1 x 1 product; large dimensions whose counts exceed float precision; the factor 2 in the
 FLOP count; the output bytes in the traffic count; the time floor taken as the larger of the two times; the attainable
 rate in both regimes; the exact key set and value types; and each validation rule.
+
+Some hidden tests take their inputs from the real datasets `breast_cancer`, `california_housing`,
+`diabetes`, `digits`, `iris` and `wine` (see `docs/DATASETS.md`).

@@ -58,3 +58,6 @@ your trajectory with `torch.optim.SGD(nesterov=True)` on seeded random tensors. 
 check where decay enters the update, the zero-decay case, the buffer convention, input
 immutability, invalid arguments, scale extremes and dtype. A failing test names the kind of
 mistake, such as decay added after momentum or a classical update in place of the look-ahead.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

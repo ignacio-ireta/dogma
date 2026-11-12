@@ -1,6 +1,7 @@
 # Hidden tests: the oracle is a pandas sort, groupby-shift, gap test and cumulative sum over the
 # same rows. Messages name the kind of mistake and never reveal hidden inputs or expected values.
 import csv
+import functools
 import random
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -10,7 +11,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from dogma_data import rng
+from dogma_data import retail_events, rng
 
 COLUMNS = ["visitor_id", "view_id", "viewed_at", "session_number", "starts_session"]
 TYPES = ["BIGINT", "BIGINT", "TIMESTAMP", "BIGINT", "BOOLEAN"]
@@ -68,23 +69,40 @@ def _oracle(rows):
     ]
 
 
+@functools.cache
+def _real_clocks():
+    """The real timestamps of each customer of an online retailer, in order (online_retail).
+
+    A view is one invoice line. The lines of an invoice share a minute, two invoices of one
+    visit are minutes apart, and the next visit is days or weeks later.
+    """
+    events = retail_events()
+    return {
+        int(customer): [moment.to_pydatetime() for moment in frame["ts"].sort_values()]
+        for customer, frame in events.groupby("user_id")
+    }
+
+
 def _seeded_rows(seed):
-    rng = random.Random(seed)  # noqa: S311 -- seeded synthetic fixtures, not security.
+    """Views on real clocks, with the boundary gaps placed.
+
+    Each visitor is a real customer and each step is the real gap to that customer's next
+    line: zero inside an invoice, minutes between invoices, days between visits. Real logs
+    almost never land on the boundary, so two steps in six are replaced by a gap of exactly
+    thirty minutes or thirty minutes and one second.
+    """
+    rng = random.Random(seed)  # noqa: S311 -- seeded choice of real rows, not security.
+    clocks = _real_clocks()
     rows = []
     view_id = 1
-    for visitor in rng.sample(range(1, 30), rng.randrange(1, 6)):
-        clock = datetime(2026, 4, 1, 8, 0)
-        for _ in range(rng.randrange(1, 20)):
-            clock += rng.choice(
-                [
-                    timedelta(0),
-                    timedelta(minutes=5),
-                    GAP,
-                    GAP + timedelta(seconds=1),
-                    timedelta(minutes=45),
-                    timedelta(hours=7),
-                ]
-            )
+    for visitor in rng.sample(sorted(clocks), rng.randrange(1, 6)):
+        moments = clocks[visitor]
+        first = rng.randrange(len(moments))
+        run = moments[first : first + rng.randrange(1, 20)]
+        clock = run[0]
+        for previous, current in zip([run[0], *run], run, strict=False):
+            step = rng.choice([None, None, None, None, GAP, GAP + timedelta(seconds=1)])
+            clock += current - previous if step is None else step
             rows.append((visitor, view_id, clock))
             view_id += 1
     rng.shuffle(rows)
@@ -162,16 +180,23 @@ def test_empty_input_returns_declared_schema_with_no_rows():
 
 
 def _millisecond_visitor_views(key: str) -> list[tuple[int, int, datetime]]:
-    """Visitors with Zipf-skewed view counts and microsecond clocks, with gaps near 30 minutes.
+    """Real visitors and real waits on microsecond clocks, with gaps placed near 30 minutes.
 
-    Most gaps are short. About one gap in seven sits at 30 minutes plus or minus a few microseconds,
-    a second, or a fraction of a second, so the boundary is tested at the resolution that app
-    logs keep. Rows come back shuffled.
+    The visitors are the forty busiest real customers of the retail sample, each with one
+    view per seven of its invoice lines, so a few visitors have hundreds of views and most
+    have a handful. A step between two views is a real wait between consecutive invoices,
+    read in seconds where the source has minutes: two thirds are under half an hour and some
+    are hours. About one gap in six is placed at 30 minutes plus or minus a few microseconds,
+    a second, or a fraction of a second: the source keeps whole minutes, so the boundary at
+    the resolution of app logs has to be placed. Rows come back shuffled.
     """
     gen = rng(key)
-    visitors = 40
-    weights = 1.0 / np.arange(1, visitors + 1, dtype=np.float64) ** 1.2
-    sizes = gen.multinomial(1200, weights / weights.sum())
+    lines = retail_events()
+    per_customer = lines.groupby("user_id").size().sort_values(ascending=False, kind="stable")
+    sizes = np.ceil(per_customer.to_numpy()[:40] / 7).astype(np.int64)
+    stamps = np.sort(lines["ts"].drop_duplicates().to_numpy())
+    waits = np.diff(stamps).astype("timedelta64[s]").astype(np.int64) / 60.0
+    waits = waits[waits > 0]
     around = np.array([-1, 0, 1, 1_000, 500_000, 999_999, 1_000_000, 1_000_001], dtype=np.int64)
     rows: list[tuple[int, int, datetime]] = []
     view_id = 1
@@ -179,13 +204,10 @@ def _millisecond_visitor_views(key: str) -> list[tuple[int, int, datetime]]:
         start_us = int(gen.integers(0, 3 * 86_400 * 1_000_000))
         clock = datetime(2026, 4, 1) + timedelta(microseconds=start_us)
         for _ in range(int(size)):
-            roll = gen.random()
-            if roll < 1 / 6:
+            if gen.random() < 1 / 6:
                 step = GAP + timedelta(microseconds=int(gen.choice(around)))
-            elif roll < 0.9:
-                step = timedelta(microseconds=int(gen.exponential(4 * 60 * 1_000_000)))
             else:
-                step = timedelta(hours=float(gen.uniform(1, 9)))
+                step = timedelta(seconds=float(waits[int(gen.integers(0, waits.size))]))
             clock += step
             rows.append((visitor, view_id, clock))
             view_id += 1

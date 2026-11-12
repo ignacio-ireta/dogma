@@ -88,3 +88,6 @@ model on seeded random workloads (FCFS order, budget and batch limits, arrivals 
 step). They also check the invariants `finish - first == output - 1`, the batch limit at every step,
 the first-token step never earlier than arrival, and a known static case where freed slots stay idle
 until the longest request finishes. They check the `ValueError` rules and that inputs are not mutated.
+
+The hidden tests draw their bulk inputs from the real datasets `gsm8k` and `online_retail` (see
+`docs/DATASETS.md`).

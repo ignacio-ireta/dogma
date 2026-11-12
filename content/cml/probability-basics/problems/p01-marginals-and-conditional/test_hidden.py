@@ -1,9 +1,14 @@
+import functools
+
 import numpy as np
 import pandas as pd
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from scipy.special import ndtr
 from submission import marginals_and_conditional
+
+from dogma_data import load_frame, rng, sample_rows
 
 SEEDS = st.integers(min_value=0, max_value=10**6)
 SHAPES = st.tuples(st.integers(min_value=1, max_value=4), st.integers(min_value=1, max_value=4))
@@ -14,11 +19,78 @@ ORACLE_HINT = (
 )
 
 
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
+
+
+@functools.cache
+def _adult():
+    return load_frame("adult")
+
+
+CATEGORICAL = ("workclass", "education", "marital.status", "occupation", "relationship", "race")
+
+
 def _random_table(seed, m, k):
-    """Random joint table. About a quarter of the rows are zeroed, so some rows have zero mass."""
-    rng = np.random.default_rng(seed)
-    raw = rng.random((m, k)) ** 2
-    raw[rng.random(m) < 0.25] = 0.0
+    """A real joint table: two adult census columns cross-tabulated over a small draw of people.
+
+    m levels of one column and k of another are picked at random, common and rare alike. A
+    level nobody in the draw holds gives a row or a column with zero mass.
+    """
+    gen = rng(f"marginals-p01:table:{seed}")
+    first, second = gen.choice(len(CATEGORICAL), size=2, replace=False)
+    adult = _adult()
+    rows = adult.iloc[gen.choice(len(adult), size=int(gen.integers(5, 120)), replace=False)]
+    x, y = rows[CATEGORICAL[first]], rows[CATEGORICAL[second]]
+    x_levels = gen.choice(sorted(adult[CATEGORICAL[first]].unique()), size=m, replace=False)
+    y_levels = gen.choice(sorted(adult[CATEGORICAL[second]].unique()), size=k, replace=False)
+    raw = np.array([[float(((x == a) & (y == b)).sum()) for b in y_levels] for a in x_levels])
     if raw.sum() == 0.0:
         raw[0, 0] = 1.0
     return raw / raw.sum()
@@ -156,9 +228,9 @@ def test_marginal_times_conditional_rebuilds_the_joint(seed, shape):
 @pytest.mark.parametrize(("m", "k", "seed"), [(2, 3, 11), (3, 2, 12), (4, 4, 13)], ids=list("abc"))
 def test_independent_table_has_conditional_equal_to_marginal(m, k, seed):
     rng = np.random.default_rng(seed)
-    px = rng.random(m)
+    px = _real_unit(rng, m)
     px /= px.sum()
-    py = rng.random(k)
+    py = _real_unit(rng, k)
     py /= py.sum()
     p_x, p_y, cond = _solve(np.outer(px, py), "independent table: outputs must be computed")
     np.testing.assert_allclose(p_x, px, rtol=1e-9, err_msg="p_x wrong for an outer-product table")

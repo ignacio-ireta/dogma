@@ -1,11 +1,37 @@
 # Hidden tests: exhaustive small-shape oracle (tril with offset), independent padding AND, decode
 # alignment, torch SDPA agreement on square masks, fully masked rows, dtype, sizes and mutation.
 import functools
+import math
 
 import pytest
 import torch
 import torch.nn.functional as F  # noqa: N812 - oracle only
 from submission import causal_padding_mask
+
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-causal-padding-mask:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
 
 
 def checked(call):
@@ -51,7 +77,7 @@ def test_causal_part_matches_tril_oracle_for_every_small_shape():
 def test_padding_is_anded_along_keys_with_causal_rule(seed):
     g = torch.Generator().manual_seed(seed)
     L, S, N = (int(x) for x in torch.randint(1, 7, (3,), generator=g))
-    key_valid = torch.rand(N, S, generator=g) > 0.35
+    key_valid = torch.special.ndtr(_real_values(g, [N, S])) > 0.35
     got = checked(functools.partial(causal_padding_mask, L, S, key_valid))
     expected = oracle_causal(L, S).unsqueeze(0) & key_valid.unsqueeze(1)
     if tuple(got.shape) != (N, L, S):
@@ -84,9 +110,9 @@ def test_cached_queries_are_not_top_left_aligned():
 
 def test_square_mask_reproduces_torch_is_causal_attention():
     g = torch.Generator().manual_seed(7)
-    q = torch.randn(4, 3, generator=g, dtype=torch.float64)
-    k = torch.randn(4, 3, generator=g, dtype=torch.float64)
-    v = torch.randn(4, 2, generator=g, dtype=torch.float64)
+    q = _real_values(g, [4, 3], torch.float64)
+    k = _real_values(g, [4, 3], torch.float64)
+    v = _real_values(g, [4, 2], torch.float64)
     mask = checked(functools.partial(causal_padding_mask, 4, 4))
     via_mask = F.scaled_dot_product_attention(q, k, v, attn_mask=mask)
     via_flag = F.scaled_dot_product_attention(q, k, v, is_causal=True)

@@ -48,3 +48,6 @@ overflows, where the log-density must still be correct; the change-of-variables 
 invertible linear map; the error cases in the contract (shape, symmetry, positive definiteness,
 non-finite input, and zero observations); a covariance that is symmetric only up to rounding, which must be
 accepted; a single observation keeping its shape; integer input; and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `wine` (see
+`docs/DATASETS.md`).

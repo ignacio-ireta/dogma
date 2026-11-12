@@ -82,3 +82,5 @@ computation over seeded random prices, shapes and utilizations, to the cent and 
 of exactly half a cent rounding up; a break-even volume that is not a whole number; the break-even volume staying the
 same as utilization changes; a free GPU costing 0.00 with a break-even of 0; the cost falling as utilization rises;
 very large throughputs and prices staying exact; the exact key set and the types of the values; and each validation rule.
+
+Some hidden tests take their inputs from the real dataset `online_retail` (see `docs/DATASETS.md`).

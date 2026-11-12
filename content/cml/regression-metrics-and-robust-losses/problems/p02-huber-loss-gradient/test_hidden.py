@@ -5,12 +5,31 @@ from hypothesis import strategies as st
 from scipy.special import huber
 from submission import huber_loss_and_grad
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+
+def _house_values_and_predictions(gen, n):
+    """Real house values and the predictions of a real linear model for n block groups.
+
+    The model is least squares on median income, house age and latitude (standardised), fitted
+    to sixty other california_housing block groups. Its errors are what a real model makes:
+    mostly small, a few large, and largest where the value is capped at 5.
+    """
+    X, value = sample_rows("california_housing", gen, n + 60, standardize=True)
+    design = np.column_stack([np.ones(n + 60), X[:, [0, 1, 6]]])
+    beta = np.linalg.lstsq(design[n:], value[n:], rcond=None)[0]
+    return value[:n], design[:n] @ beta
+
 
 def _residuals(seed, n, scale=1.0):
-    """Random residuals with a few large values, so both branches of the loss are exercised."""
-    rng = np.random.default_rng(seed)
-    r = scale * rng.standard_t(df=3, size=n)
-    return r
+    """Residuals of a real model on real house values: mostly small, a few large.
+
+    Both branches of the loss are exercised, as they are for any real fit.
+    """
+    gen = data_rng(f"huber-p02:residuals:{seed}:{n}")
+    y_true, y_pred = _house_values_and_predictions(gen, n)
+    return scale * (y_true - y_pred)
 
 
 def _call(residuals, delta):

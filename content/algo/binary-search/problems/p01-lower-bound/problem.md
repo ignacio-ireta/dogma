@@ -47,3 +47,6 @@ the first index of a run of equal values, a target below every element, a target
 the empty list, negative and float values (including a float target that must not be truncated), an
 integer result within bounds, inputs that must not change, and a large list where a scan reads far
 too many elements.
+
+The hidden tests draw their bulk inputs from the real datasets `digits` and `iris` (see
+`docs/DATASETS.md`).

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import math
 import signal
 from collections import Counter
@@ -8,10 +9,81 @@ import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from scipy.special import ndtr
 from sklearn.metrics import mutual_info_score
 from submission import mutual_information
 
+from dogma_data import load_frame, rng, sample_rows
+
 TIME_BUDGET_S = 10.0
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
+
+
+@functools.cache
+def _adult():
+    """The adult census table, read once: real categorical columns with very uneven shares."""
+    return load_frame("adult")
+
+
+CATEGORICAL = ("workclass", "education", "marital.status", "occupation", "relationship", "race")
+
+
+def _real_labels(key, n):
+    """Two different categorical columns of n people drawn from adult, as pandas Series."""
+    gen = rng(key)
+    table = _adult()
+    first, second = gen.choice(len(CATEGORICAL), size=2, replace=False)
+    rows = gen.choice(len(table), size=n, replace=False)
+    return table[CATEGORICAL[first]].iloc[rows], table[CATEGORICAL[second]].iloc[rows]
 
 
 def _call(x, y):
@@ -73,18 +145,14 @@ def _entropy_nats(labels):
 
 def test_matches_sklearn_mutual_info_on_random_labels():
     for seed in range(12):
-        rng = np.random.default_rng(seed)
-        n = int(rng.integers(20, 150))
-        kx = int(rng.integers(2, 6))
-        ky = int(rng.integers(2, 6))
-        x = rng.integers(0, kx, size=n)
-        y = (x + rng.integers(0, ky, size=n)) % ky
-        if seed % 2:
-            x_labels = [f"c{v}" for v in x]
-            y_labels = [f"r{v}" for v in y]
-        else:
+        n = int(np.random.default_rng(seed).integers(20, 150))
+        x, y = _real_labels(f"mutual-information-p02:sklearn:{seed}", n)
+        if seed % 2:  # the category names as they are in the table
             x_labels = x.tolist()
             y_labels = y.tolist()
+        else:  # the same labels as integer codes
+            x_labels = x.astype("category").cat.codes.tolist()
+            y_labels = y.astype("category").cat.codes.tolist()
         np.testing.assert_allclose(
             _call(x_labels, y_labels),
             mutual_info_score(x_labels, y_labels),
@@ -96,9 +164,7 @@ def test_matches_sklearn_mutual_info_on_random_labels():
 
 
 def test_is_symmetric_in_its_two_arguments():
-    rng = np.random.default_rng(3)
-    x = rng.integers(0, 4, size=60).tolist()
-    y = rng.integers(0, 3, size=60).tolist()
+    x, y = (labels.tolist() for labels in _real_labels("mutual-information-p02:symmetry", 60))
     np.testing.assert_allclose(
         _call(x, y),
         _call(y, x),
@@ -110,8 +176,8 @@ def test_is_symmetric_in_its_two_arguments():
 
 def test_is_invariant_to_renaming_the_labels():
     rng = np.random.default_rng(4)
-    x = rng.integers(0, 3, size=50).tolist()
-    y = rng.integers(0, 4, size=50).tolist()
+    x = _real_ints(rng, 0, 3, 50).tolist()
+    y = _real_ints(rng, 0, 4, 50).tolist()
     rename_x = {0: 7, 1: 3, 2: 9}
     rename_y = {0: "d", 1: "a", 2: "c", 3: "b"}
     np.testing.assert_allclose(
@@ -144,8 +210,7 @@ def test_independent_balanced_table_gives_zero():
 
 
 def test_constant_labels_carry_no_information():
-    rng = np.random.default_rng(5)
-    x = rng.integers(0, 5, size=40).tolist()
+    x = _real_labels("mutual-information-p02:constant", 40)[0].tolist()
     assert abs(_call(["only"] * 40, x)) <= 1e-12, (
         "a constant label carries no information about the other label"
     )
@@ -193,8 +258,8 @@ def test_inputs_are_not_mutated():
 def test_large_input_is_counted_in_one_pass_within_the_time_budget():
     rng = np.random.default_rng(11)
     n = 200_000
-    x = rng.integers(0, 6, size=n)
-    y = (x + rng.integers(0, 4, size=n)) % 6
+    x = _real_ints(rng, 0, 6, n)
+    y = (x + _real_ints(rng, 0, 4, n)) % 6
     np.testing.assert_allclose(
         _timed_call(x.tolist(), y.tolist()),
         mutual_info_score(x, y),
@@ -211,7 +276,7 @@ def test_large_input_is_counted_in_one_pass_within_the_time_budget():
 )
 def test_lies_between_zero_and_the_smaller_entropy(x, seed):
     rng = np.random.default_rng(seed)
-    y = rng.integers(0, 3, size=len(x)).tolist()
+    y = _real_ints(rng, 0, 3, len(x)).tolist()
     value = _call(x, y)
     bound = min(_entropy_nats(x), _entropy_nats(y))
     assert -1e-12 <= value <= bound + 1e-12, (

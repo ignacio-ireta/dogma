@@ -9,12 +9,15 @@ tests do not use graphlib or any solution file.
 
 from __future__ import annotations
 
+import functools
 import itertools
 import random
 from itertools import pairwise
 
 import pytest
 from submission import smallest_topological_order
+
+from dogma_data import retail_events
 
 
 def _raises(expected, call, mistake):
@@ -106,10 +109,33 @@ def _expect_cycle_free(nodes, edges):
         )
 
 
-def _random_dag(rng, names, density):
-    """Edges that follow a hidden ranking, so the graph is acyclic by construction."""
-    ranking = names[:]
-    rng.shuffle(ranking)
+@functools.cache
+def _purchase_orders():
+    """For each customer of an online retailer, its products in order of first purchase."""
+    events = retail_events()
+    return tuple(
+        tuple(dict.fromkeys(str(code) for code in frame["code"]))
+        for _, frame in events.groupby("user_id")
+    )
+
+
+def _real_products(rng, count):
+    """`count` real product codes of one customer, in the order the customer first bought them."""
+    histories = [h for h in _purchase_orders() if len(h) >= count]
+    history = rng.choice(histories)
+    first = rng.randrange(len(history) - count + 1)
+    return list(history[first : first + count])
+
+
+def _random_dag(rng, names, density, ranking=None):
+    """Edges that follow a hidden ranking, so the graph is acyclic by construction.
+
+    With `ranking` the hidden order is given (a real order of purchase); otherwise it is a
+    shuffle of the names.
+    """
+    if ranking is None:
+        ranking = names[:]
+        rng.shuffle(ranking)
     edges = []
     for i, a in enumerate(ranking):
         for b in ranking[i + 1 :]:
@@ -122,10 +148,12 @@ def _random_dag(rng, names, density):
 def test_matches_brute_force_on_seeded_small_dags():
     rng = random.Random(2026)  # noqa: S311 -- seeded synthetic graphs, not security.
     for _ in range(200):
-        names = [f"n{i}" for i in range(rng.randrange(0, 8))]
+        # Real names and a real order: product codes of one customer, in order of first
+        # purchase. An edge says "bought before"; which pairs are listed is drawn.
+        names = _real_products(rng, rng.randrange(0, 8))
         nodes = names[:]
         rng.shuffle(nodes)
-        edges = _random_dag(rng, names, rng.random())
+        edges = _random_dag(rng, names, rng.random(), ranking=names)
         expected = _brute(nodes, edges)
         got = _order(nodes, edges)
         if got != expected:

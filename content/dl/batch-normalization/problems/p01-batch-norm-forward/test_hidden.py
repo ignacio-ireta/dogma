@@ -3,22 +3,68 @@
 # Messages name the kind of mistake and never show hidden inputs or expected values.
 from __future__ import annotations
 
+import math
+
 import pytest
 import torch
 import torch.nn.functional as ref_f  # oracle only
 from submission import batch_norm_forward
 
+from dogma_data import rng, sample_rows
+from dogma_data import rng as data_rng
+
 ATOL = 1e-9  # float64 agreement; far below any real mistake in this problem
 RTOL = 1e-9
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-batch-norm-forward:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
 
 
 def _gen(seed: int) -> torch.Generator:
     return torch.Generator().manual_seed(seed)
 
 
+def _features(shape, seed, scale=1.0, offset=0.0, dtype=torch.float64):
+    """Real inputs of the given shape: standardised breast_cancer features, scaled and shifted.
+
+    The last axis holds the features and the leading axes hold the rows drawn. The columns
+    are correlated and skewed, and a small batch can repeat a value, as measured data does.
+    Weights, gains, biases and running statistics are parameters and stay random.
+    """
+    shape = tuple(shape)
+    rows = math.prod(shape[:-1])
+    drawn, _ = sample_rows(
+        "breast_cancer",
+        rng(f"batch-norm-forward-p01:features:{seed}"),
+        rows,
+        shape[-1],
+        standardize=True,
+    )
+    return torch.tensor(drawn.reshape(shape), dtype=torch.float64).to(dtype) * scale + offset
+
+
 def _randn(shape, seed, scale=1.0, offset=0.0, dtype=torch.float64):
     g = _gen(seed)
-    return (torch.randn(shape, generator=g, dtype=dtype) * scale + offset).clone()
+    return (_real_values(g, [shape], dtype) * scale + offset).clone()
 
 
 def _call(*args, **kwargs):
@@ -95,7 +141,7 @@ SHAPES = [(2, 2), (3, 5), (5, 3), (4, 1), (8, 4), (16, 6)]
 
 def test_training_output_matches_reference_on_random_batches():
     for seed, (n, c) in enumerate(SHAPES):
-        x = _randn((n, c), seed, scale=2.0, offset=0.5)
+        x = _features((n, c), seed, scale=2.0, offset=0.5)
         gamma, beta = _randn((c,), seed + 100), _randn((c,), seed + 200)
         rm, rv = _randn((c,), seed + 300), _randn((c,), seed + 400).abs() + 0.5
         y, new_rm, new_rv = _result(
@@ -127,7 +173,7 @@ def test_training_output_matches_reference_on_random_batches():
 
 def test_eval_output_matches_reference_on_random_inputs():
     for seed, (n, c) in enumerate(SHAPES):
-        x = _randn((n, c), seed + 7)
+        x = _features((n, c), seed + 7)
         gamma, beta = _randn((c,), seed + 11), _randn((c,), seed + 13)
         rm, rv = _randn((c,), seed + 17), _randn((c,), seed + 19).abs() + 0.2
         y, new_rm, new_rv = _result(
@@ -146,7 +192,7 @@ def test_eval_output_matches_reference_on_random_inputs():
 
 
 def test_running_variance_uses_unbiased_estimate():
-    x = _randn((4, 3), 31)  # N=4: divide-by-N and divide-by-(N-1) differ by 33%
+    x = _features((4, 3), 31)  # N=4: divide-by-N and divide-by-(N-1) differ by 33%
     gamma, beta = torch.ones(3, dtype=torch.float64), torch.zeros(3, dtype=torch.float64)
     rm, rv = torch.zeros(3, dtype=torch.float64), torch.ones(3, dtype=torch.float64)
     _, _, new_rv = _result(
@@ -165,7 +211,7 @@ def test_running_variance_uses_unbiased_estimate():
 
 
 def test_normalization_uses_biased_variance():
-    x = _randn((3, 2), 41)
+    x = _features((3, 2), 41)
     gamma, beta = torch.ones(2, dtype=torch.float64), torch.zeros(2, dtype=torch.float64)
     rm, rv = torch.zeros(2, dtype=torch.float64), torch.ones(2, dtype=torch.float64)
     y, _, _ = _result(_call(x, gamma, beta, rm, rv, training=True, eps=1e-12), 3, 2)
@@ -179,7 +225,7 @@ def test_normalization_uses_biased_variance():
 
 
 def test_momentum_weights_the_new_batch_statistic():
-    x = _randn((5, 3), 51)
+    x = _features((5, 3), 51)
     gamma, beta = torch.ones(3, dtype=torch.float64), torch.zeros(3, dtype=torch.float64)
     rm = _randn((3,), 52)
     rv = _randn((3,), 53).abs() + 0.5
@@ -203,7 +249,7 @@ def test_momentum_weights_the_new_batch_statistic():
 
 def test_normalizes_per_feature_over_the_batch_axis():
     # N != C so a reduction over the wrong axis cannot match the reference by accident.
-    x = _randn((3, 5), 61, scale=3.0, offset=-1.0)
+    x = _features((3, 5), 61, scale=3.0, offset=-1.0)
     gamma, beta = torch.ones(5, dtype=torch.float64), torch.zeros(5, dtype=torch.float64)
     rm, rv = torch.zeros(5, dtype=torch.float64), torch.ones(5, dtype=torch.float64)
     y, _, _ = _result(_call(x, gamma, beta, rm, rv, training=True, eps=1e-12), 3, 5)
@@ -215,7 +261,7 @@ def test_normalizes_per_feature_over_the_batch_axis():
 
 
 def test_eps_is_added_inside_the_square_root():
-    x = _randn((4, 2), 71)
+    x = _features((4, 2), 71)
     gamma, beta = torch.ones(2, dtype=torch.float64), torch.zeros(2, dtype=torch.float64)
     rm = torch.zeros(2, dtype=torch.float64)
     rv = torch.zeros(2, dtype=torch.float64)  # zero variance makes eps the only denominator term
@@ -239,7 +285,7 @@ def test_eps_is_added_inside_the_square_root():
 
 
 def test_eval_mode_does_not_update_running_statistics_in_place_or_returned():
-    x = _randn((4, 3), 81)
+    x = _features((4, 3), 81)
     rm, rv = _randn((3,), 82), _randn((3,), 83).abs() + 0.5
     rm0, rv0 = rm.clone(), rv.clone()
     _, new_rm, new_rv = _result(
@@ -264,7 +310,7 @@ def test_eval_mode_does_not_update_running_statistics_in_place_or_returned():
 
 
 def test_inputs_and_running_buffers_are_not_mutated():
-    x = _randn((4, 3), 91)
+    x = _features((4, 3), 91)
     gamma, beta = _randn((3,), 92), _randn((3,), 93)
     rm, rv = _randn((3,), 94), _randn((3,), 95).abs() + 0.5
     originals = [t.clone() for t in (x, gamma, beta, rm, rv)]
@@ -280,7 +326,7 @@ def test_inputs_and_running_buffers_are_not_mutated():
 
 def test_large_common_offset_keeps_variance_accurate():
     # The naive E[x^2] - E[x]^2 formula loses most of its digits when the mean is large.
-    x = _randn((6, 3), 101, scale=1.0, offset=1e6)
+    x = _features((6, 3), 101, scale=1.0, offset=1e6)
     gamma, beta = torch.ones(3, dtype=torch.float64), torch.zeros(3, dtype=torch.float64)
     rm, rv = torch.zeros(3, dtype=torch.float64), torch.ones(3, dtype=torch.float64)
     y, _, new_rv = _result(
@@ -300,7 +346,7 @@ def test_large_common_offset_keeps_variance_accurate():
 
 
 def test_small_magnitude_inputs_match_reference():
-    x = _randn((5, 2), 111, scale=1e-6)  # variance near 1e-12, comparable to eps
+    x = _features((5, 2), 111, scale=1e-6)  # variance near 1e-12, comparable to eps
     gamma, beta = torch.ones(2, dtype=torch.float64), torch.zeros(2, dtype=torch.float64)
     rm, rv = torch.zeros(2, dtype=torch.float64), torch.ones(2, dtype=torch.float64)
     y, new_rm, new_rv = _result(_call(x, gamma, beta, rm, rv, training=True, eps=1e-12), 5, 2)
@@ -313,7 +359,7 @@ def test_small_magnitude_inputs_match_reference():
 
 
 def test_float32_inputs_return_float32():
-    x = _randn((4, 3), 121, dtype=torch.float32)
+    x = _features((4, 3), 121, dtype=torch.float32)
     gamma = torch.ones(3, dtype=torch.float32)
     beta = torch.zeros(3, dtype=torch.float32)
     rm, rv = torch.zeros(3, dtype=torch.float32), torch.ones(3, dtype=torch.float32)
@@ -327,7 +373,7 @@ def test_float32_inputs_return_float32():
 
 
 def test_single_row_training_is_rejected_with_value_error():
-    x = _randn((1, 3), 129)
+    x = _features((1, 3), 129)
     ones, zeros = torch.ones(3, dtype=torch.float64), torch.zeros(3, dtype=torch.float64)
     _expect_value_error(
         lambda: batch_norm_forward(x, ones, zeros, zeros, ones, training=True),
@@ -336,7 +382,7 @@ def test_single_row_training_is_rejected_with_value_error():
 
 
 def test_single_row_inference_is_allowed():
-    x = _randn((1, 3), 131)
+    x = _features((1, 3), 131)
     gamma, beta = _randn((3,), 132), _randn((3,), 133)
     rm, rv = _randn((3,), 134), _randn((3,), 135).abs() + 0.5
     y, _, _ = _result(_call(x, gamma, beta, rm, rv, training=False, eps=1e-5), 1, 3)
@@ -351,7 +397,7 @@ def test_invalid_arguments_raise_value_error():
         "running_mean": torch.zeros(3, dtype=torch.float64),
         "running_var": torch.ones(3, dtype=torch.float64),
     }
-    x = _randn((4, 3), 141)
+    x = _features((4, 3), 141)
     cases = {
         "a one-dimensional input must raise ValueError": lambda: batch_norm_forward(
             x[0], training=False, **good
@@ -384,7 +430,7 @@ def test_invalid_arguments_raise_value_error():
 @pytest.mark.parametrize("seed", [0, 1, 2], ids=["low-momentum", "half-momentum", "high-momentum"])
 def test_random_momentum_and_eps_match_reference(seed):
     n, c = 7, 4
-    x = _randn((n, c), 150 + seed, scale=4.0, offset=2.0)
+    x = _features((n, c), 150 + seed, scale=4.0, offset=2.0)
     gamma, beta = _randn((c,), 160 + seed), _randn((c,), 170 + seed)
     rm, rv = _randn((c,), 180 + seed), _randn((c,), 190 + seed).abs() + 0.1
     momentum = [0.05, 0.5, 0.95][seed]
@@ -416,7 +462,7 @@ def test_random_momentum_and_eps_match_reference(seed):
 
 
 def test_zero_momentum_is_accepted_and_keeps_running_statistics():
-    x = _randn((4, 3), 301)
+    x = _features((4, 3), 301)
     gamma, beta = torch.ones(3, dtype=torch.float64), torch.zeros(3, dtype=torch.float64)
     rm, rv = _randn((3,), 302), _randn((3,), 303).abs() + 0.5
     out = _call(x, gamma, beta, rm, rv, training=True, momentum=0.0, eps=1e-5)
@@ -427,7 +473,7 @@ def test_zero_momentum_is_accepted_and_keeps_running_statistics():
 
 def test_default_momentum_and_eps_match_the_signature():
     # Small variance (about 1e-5) so that a different default eps changes the output clearly.
-    x = _randn((6, 3), 201, scale=3e-3)
+    x = _features((6, 3), 201, scale=3e-3)
     gamma, beta = torch.ones(3, dtype=torch.float64), torch.zeros(3, dtype=torch.float64)
     rm, rv = torch.zeros(3, dtype=torch.float64), torch.ones(3, dtype=torch.float64)
     y, new_rm, new_rv = _result(_call(x, gamma, beta, rm, rv, training=True), 6, 3)
@@ -444,7 +490,7 @@ def test_default_momentum_and_eps_match_the_signature():
 
 
 def test_eval_returned_running_statistics_are_new_tensors():
-    x = _randn((4, 3), 311)
+    x = _features((4, 3), 311)
     gamma, beta = torch.ones(3, dtype=torch.float64), torch.zeros(3, dtype=torch.float64)
     rm, rv = _randn((3,), 312), _randn((3,), 313).abs() + 0.5
     rm0, rv0 = rm.clone(), rv.clone()
@@ -464,7 +510,7 @@ def test_eval_returned_running_statistics_are_new_tensors():
 def test_running_statistics_keep_the_dtype_of_the_running_buffers():
     # float32 batch with float64 running buffers: the returned running statistics
     # must keep the buffers' dtype, not the dtype of x.
-    x = _randn((4, 3), 131, dtype=torch.float32)
+    x = _features((4, 3), 131, dtype=torch.float32)
     gamma = torch.ones(3, dtype=torch.float32)
     beta = torch.zeros(3, dtype=torch.float32)
     rm = torch.zeros(3, dtype=torch.float64)

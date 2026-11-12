@@ -43,3 +43,6 @@ robustness property (replacing the largest value by an extreme one leaves the fe
 the mean moves a lot); a single value, constant data and duplicates; `k` = 0 and a wider `k`; monotonicity
 in `k`; shift and scale equivariance; invalid input (empty, 2-D, NaN or infinity, negative `k`); integer
 input giving floats; and the caller's array left unchanged and unsorted.
+
+The hidden tests draw their bulk inputs from the real datasets `engel` and `nile` (see
+`docs/DATASETS.md`).

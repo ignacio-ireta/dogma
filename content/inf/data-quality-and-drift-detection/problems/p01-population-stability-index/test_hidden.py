@@ -6,6 +6,18 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import population_stability_index
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+
+def _incomes(gen, n):
+    """Median income of n real california_housing block groups, standardised.
+
+    The feature is right-skewed, with a long upper tail and a cap. A drifted sample is a
+    second draw of real values, shifted and rescaled by the amount the case states.
+    """
+    return sample_rows("california_housing", gen, n, standardize=True)[0][:, 0]
+
 
 def _require(ok, mistake):
     """Fail with the mistake's name only. Hypothesis and the grader show this first line."""
@@ -105,9 +117,9 @@ def _check_psi(psi, correct, expected, actual, bins, eps, mistake):  # noqa: PLR
 def test_matches_loop_reference_on_seeded_samples(  # noqa: PLR0917
     seed, n_expected, n_actual, bins, shift, spread
 ):
-    rng = np.random.default_rng(seed)
-    expected = rng.normal(size=n_expected)
-    actual = rng.normal(loc=shift, scale=spread, size=n_actual)
+    rng = data_rng(f"psi-p01:reference:{seed}")
+    expected = _incomes(rng, n_expected)
+    actual = _incomes(rng, n_actual) * spread + shift
     correct = _reference(expected, actual, bins, 1e-6)
     psi = _run(
         lambda: population_stability_index(expected, actual, bins=bins),
@@ -138,9 +150,9 @@ def test_value_exactly_on_an_edge_belongs_to_the_lower_bin():
 
 
 def test_actual_values_outside_the_expected_range_are_kept_in_the_outer_bins():
-    rng = np.random.default_rng(11)
-    expected = rng.normal(size=400)
-    actual = np.concatenate([rng.normal(size=300), rng.normal(size=100) + 10.0])
+    rng = data_rng("psi-p01:beyond-range")
+    expected = _incomes(rng, 400)
+    actual = np.concatenate([_incomes(rng, 300), _incomes(rng, 100) + 10.0])
     correct = _reference(expected, actual, 10, 1e-6)
     psi = _run(
         lambda: population_stability_index(expected, actual, bins=10),
@@ -158,9 +170,9 @@ def test_actual_values_outside_the_expected_range_are_kept_in_the_outer_bins():
 
 
 def test_bins_come_from_the_expected_sample_not_the_actual_one():
-    rng = np.random.default_rng(12)
-    expected = rng.normal(size=600)
-    actual = rng.normal(loc=2.0, size=600)
+    rng = data_rng("psi-p01:shifted")
+    expected = _incomes(rng, 600)
+    actual = _incomes(rng, 600) + 2.0
     correct = _reference(expected, actual, 10, 1e-6)
     psi = _run(
         lambda: population_stability_index(expected, actual, bins=10),
@@ -221,9 +233,9 @@ def test_constant_reference_and_a_moved_actual_sample_are_handled():
 
 
 def test_shifting_and_rescaling_both_samples_leaves_psi_unchanged():
-    rng = np.random.default_rng(13)
-    expected = rng.normal(size=300)
-    actual = rng.normal(loc=0.4, size=200)
+    rng = data_rng("psi-p01:shift-and-scale")
+    expected = _incomes(rng, 300)
+    actual = _incomes(rng, 200) + 0.4
     base = _run(lambda: population_stability_index(expected, actual, bins=8), "call raised")
     shifted = _run(
         lambda: population_stability_index(expected + 7.0, actual + 7.0, bins=8),
@@ -244,7 +256,7 @@ def test_shifting_and_rescaling_both_samples_leaves_psi_unchanged():
 
 
 def test_identical_samples_have_exactly_zero_psi():
-    values = np.random.default_rng(14).normal(size=150)
+    values = _incomes(data_rng("psi-p01:identical"), 150)
     psi = _run(lambda: population_stability_index(values, values.copy(), bins=7), "call raised")
     _require(psi == 0.0, "identical samples must give exactly zero PSI")
 
@@ -340,9 +352,9 @@ def test_property_matches_reference_and_is_never_negative(expected, actual, bins
 
 
 def test_default_number_of_bins_is_ten():
-    rng = np.random.default_rng(21)
-    expected = rng.normal(size=400)
-    actual = rng.normal(loc=0.5, size=300)
+    rng = data_rng("psi-p01:default-bins")
+    expected = _incomes(rng, 400)
+    actual = _incomes(rng, 300) + 0.5
     default = population_stability_index(expected, actual)
     explicit = population_stability_index(expected, actual, bins=10)
     _require(default == explicit, "the default for bins must be 10, as the signature states")

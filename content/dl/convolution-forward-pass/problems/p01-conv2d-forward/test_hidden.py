@@ -11,8 +11,50 @@ import torch
 import torch.nn.functional as F  # noqa: N812 - conventional alias for the oracle
 from submission import conv2d_forward
 
+from dogma_data import rng, sample_rows
+from dogma_data import rng as data_rng
+
 ATOL = 1e-10  # float64 sums of at most a few hundred terms of order one
 RTOL = 1e-10
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-conv2d-forward:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
+
+
+def _digit_images(key, n, c, h, w):
+    """Real images: n examples with c channels of h by w pixels, cut from the digits set.
+
+    Every channel is a different handwritten digit. A digit is 8 by 8 pixels; larger sizes
+    tile several digits, and the result is cropped around its centre, where the ink is. Pixels
+    run from 0 to 16 and are normalised with the mean (4.9) and the spread (6.0) of the whole
+    set, as image pipelines do, so the background is a negative constant.
+    """
+    tiles_h, tiles_w = -(-h // 8), -(-w // 8)
+    pixels, _ = sample_rows("digits", rng(key), n * c * tiles_h * tiles_w)
+    canvas = pixels.reshape(n, c, tiles_h, tiles_w, 8, 8).transpose(0, 1, 2, 4, 3, 5)
+    canvas = canvas.reshape(n, c, tiles_h * 8, tiles_w * 8)
+    top, left = (canvas.shape[2] - h) // 2, (canvas.shape[3] - w) // 2
+    crop = canvas[:, :, top : top + h, left : left + w]
+    return torch.tensor((crop - 4.9) / 6.0, dtype=torch.float64)
 
 
 def _same(a, b, atol=ATOL, rtol=RTOL):
@@ -100,9 +142,9 @@ def test_matches_torch_conv2d_on_seeded_configurations(  # noqa: PLR0917
     n, c, h, w_, o, kh, kw, s, p
 ):
     gen = torch.Generator().manual_seed(100 * n + h)
-    x = torch.randn(n, c, h, w_, generator=gen, dtype=torch.float64)
-    w = torch.randn(o, c, kh, kw, generator=gen, dtype=torch.float64)
-    b = torch.randn(o, generator=gen, dtype=torch.float64)
+    x = _digit_images(f"conv2d-p01:configurations:{n}:{h}", n, c, h, w_)
+    w = _real_values(gen, [o, c, kh, kw], torch.float64)
+    b = _real_values(gen, [o], torch.float64)
     _assert_conv(_call(x, w, b, s, p), x, w, b, s, p)
 
 
@@ -113,8 +155,8 @@ def test_matches_torch_conv2d_on_seeded_configurations(  # noqa: PLR0917
 )
 def test_output_size_rounds_down_when_the_last_window_is_partial(h, k, s, p):
     gen = torch.Generator().manual_seed(h)
-    x = torch.randn(1, 1, h, h, generator=gen, dtype=torch.float64)
-    w = torch.randn(1, 1, k, k, generator=gen, dtype=torch.float64)
+    x = _digit_images(f"conv2d-p01:floor:{h}", 1, 1, h, h)
+    w = _real_values(gen, [1, 1, k, k], torch.float64)
     out = _call(x, w, None, s, p)
     expected_side = math.floor((h + 2 * p - k) / s) + 1
     if out.shape[2:] != (expected_side, expected_side):
@@ -124,8 +166,8 @@ def test_output_size_rounds_down_when_the_last_window_is_partial(h, k, s, p):
 
 def test_kernel_is_not_flipped_on_an_asymmetric_kernel():
     gen = torch.Generator().manual_seed(21)
-    x = torch.randn(2, 1, 4, 5, generator=gen, dtype=torch.float64)
-    w = torch.randn(1, 1, 3, 2, generator=gen, dtype=torch.float64)
+    x = _digit_images("conv2d-p01:asymmetric-kernel", 2, 1, 4, 5)
+    w = _real_values(gen, [1, 1, 3, 2], torch.float64)
     _assert_conv(_call(x, w, None, 1, 0), x, w, None, 1, 0)
 
 
@@ -153,8 +195,8 @@ def test_bias_is_added_once_per_output_channel():
 
 def test_batch_examples_are_computed_independently():
     gen = torch.Generator().manual_seed(7)
-    x = torch.randn(3, 2, 5, 5, generator=gen, dtype=torch.float64)
-    w = torch.randn(2, 2, 3, 3, generator=gen, dtype=torch.float64)
+    x = _digit_images("conv2d-p01:batch-independence", 3, 2, 5, 5)
+    w = _real_values(gen, [2, 2, 3, 3], torch.float64)
     together = _call(x, w, None, 1, 1)
     for row in range(x.shape[0]):
         alone = _call(x[row : row + 1], w, None, 1, 1)
@@ -164,7 +206,7 @@ def test_batch_examples_are_computed_independently():
 
 def test_zero_input_returns_the_bias_everywhere():
     x = torch.zeros(2, 1, 4, 4, dtype=torch.float64)
-    w = torch.randn(2, 1, 3, 3, generator=torch.Generator().manual_seed(4), dtype=torch.float64)
+    w = _real_values(torch.Generator().manual_seed(4), [2, 1, 3, 3], torch.float64)
     b = torch.tensor([0.25, -1.5], dtype=torch.float64)
     out = _call(x, w, b, 1, 1)
     if not torch.allclose(out, b.reshape(1, 2, 1, 1).expand_as(out), atol=ATOL):
@@ -173,17 +215,17 @@ def test_zero_input_returns_the_bias_everywhere():
 
 def test_large_magnitude_values_match_the_reference():
     gen = torch.Generator().manual_seed(9)
-    x = 1e6 * torch.randn(2, 2, 6, 6, generator=gen, dtype=torch.float64)
-    w = torch.randn(3, 2, 3, 3, generator=gen, dtype=torch.float64)
+    x = 1e6 * _digit_images("conv2d-p01:large-magnitude", 2, 2, 6, 6)
+    w = _real_values(gen, [3, 2, 3, 3], torch.float64)
     # Relative error stays near 1e-16 here. The absolute slack covers values near 1e6 magnitude.
     _assert_conv(_call(x, w, None, 1, 1), x, w, None, 1, 1, atol=1e-6, rtol=1e-10)
 
 
 def test_float32_inputs_return_float32_close_to_the_reference():
     gen = torch.Generator().manual_seed(15)
-    x64 = torch.randn(2, 3, 6, 6, generator=gen, dtype=torch.float64)
-    w64 = torch.randn(4, 3, 3, 3, generator=gen, dtype=torch.float64)
-    b64 = torch.randn(4, generator=gen, dtype=torch.float64)
+    x64 = _digit_images("conv2d-p01:float32", 2, 3, 6, 6)
+    w64 = _real_values(gen, [4, 3, 3, 3], torch.float64)
+    b64 = _real_values(gen, [4], torch.float64)
     out = _call(x64.float(), w64.float(), b64.float(), 1, 1)
     if out.dtype != torch.float32:
         pytest.fail("float32 input must return a float32 output")
@@ -194,9 +236,9 @@ def test_float32_inputs_return_float32_close_to_the_reference():
 
 def test_inputs_and_kernel_are_not_mutated():
     gen = torch.Generator().manual_seed(12)
-    x = torch.randn(1, 2, 4, 4, generator=gen, dtype=torch.float64)
-    w = torch.randn(2, 2, 3, 3, generator=gen, dtype=torch.float64)
-    b = torch.randn(2, generator=gen, dtype=torch.float64)
+    x = _digit_images("conv2d-p01:not-mutated", 1, 2, 4, 4)
+    w = _real_values(gen, [2, 2, 3, 3], torch.float64)
+    b = _real_values(gen, [2], torch.float64)
     before = copy.deepcopy((x, w, b))
     conv2d_forward(x, w, b, 1, 1)
     for now, then, name in zip((x, w, b), before, ("x", "weight", "bias"), strict=True):
@@ -206,8 +248,8 @@ def test_inputs_and_kernel_are_not_mutated():
 
 def _pair(c_in=2, c_out=3, h=4, w=5, kh=2, kw=2):  # noqa: PLR0917
     gen = torch.Generator().manual_seed(33)
-    x = torch.randn(1, c_in, h, w, generator=gen, dtype=torch.float64)
-    weight = torch.randn(c_out, c_in, kh, kw, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [1, c_in, h, w], torch.float64)
+    weight = _real_values(gen, [c_out, c_in, kh, kw], torch.float64)
     return x, weight
 
 
@@ -218,14 +260,26 @@ def _invalid_cases():
     return {
         "x-is-3d": (x[0], weight, bias, 1, 0),
         "weight-is-3d": (x, weight[0], bias, 1, 0),
-        "channel-mismatch": (x, torch.randn(3, 5, 2, 2, dtype=torch.float64), bias, 1, 0),
+        "channel-mismatch": (
+            x,
+            _real_values(torch.Generator().manual_seed(240), [3, 5, 2, 2], torch.float64),
+            bias,
+            1,
+            0,
+        ),
         "bias-wrong-length": (x, weight, torch.zeros(4, dtype=torch.float64), 1, 0),
         "bias-dtype": (x, weight, bias.float(), 1, 0),
         "stride-zero": (x, weight, bias, 0, 0),
         "stride-bool": (x, weight, bias, True, 0),
         "padding-negative": (x, weight, bias, 1, -1),
         "padding-float": (x, weight, bias, 1, 1.0),
-        "kernel-too-big": (x, torch.randn(3, 2, 6, 6, dtype=torch.float64), bias, 1, 0),
+        "kernel-too-big": (
+            x,
+            _real_values(torch.Generator().manual_seed(247), [3, 2, 6, 6], torch.float64),
+            bias,
+            1,
+            0,
+        ),
         "integer-x": (torch.ones(1, 2, 4, 5, dtype=torch.int64), weight, bias, 1, 0),
         "weight-dtype": (x, weight.float(), bias, 1, 0),
         "zero-channels-in-x": (torch.ones(1, 0, 4, 5, dtype=torch.float64), weight, bias, 1, 0),
@@ -290,7 +344,7 @@ def test_integer_input_with_integer_weight_raises_value_error():
 
 def test_zero_size_batch_raises_value_error():
     x = torch.zeros(0, 2, 4, 4, dtype=torch.float64)
-    w = torch.randn(3, 2, 3, 3, generator=torch.Generator().manual_seed(5), dtype=torch.float64)
+    w = _real_values(torch.Generator().manual_seed(5), [3, 2, 3, 3], torch.float64)
     _must_reject_conv(x, w, case="an input with a zero-size batch axis")
 
 

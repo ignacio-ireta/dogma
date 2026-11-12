@@ -5,7 +5,9 @@ Each failure message names the kind of mistake. No message contains a hidden inp
 
 from __future__ import annotations
 
+import functools
 import math
+import re
 import time
 from collections.abc import Callable
 from itertools import pairwise
@@ -17,6 +19,9 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import bm25_scores
 
+from dogma_data import load_text
+from dogma_data import rng as data_rng
+
 VOCAB = ["cat", "dog", "sat", "mat", "bird", "fish", "the"]
 LARGE_DOCS = 5_000
 LARGE_TIME_LIMIT_S = 5.0
@@ -24,6 +29,19 @@ SCORE_MISTAKE = (
     "a score differs from the reference: idf = ln(1 + (N - n + 0.5) / (n + 0.5)), avgdl averages "
     "every document, and the term part is f * (k1 + 1) / (f + k1 * (1 - b + b * |D| / avgdl))"
 )
+
+
+BOOKS = ("gutenberg_frankenstein", "gutenberg_pride_prejudice", "gutenberg_walden")
+
+
+@functools.cache
+def _book_lines() -> tuple[str, ...]:
+    """Every non-blank line of the three vendored novels: real English prose, about 120 KB."""
+    return tuple(line for name in BOOKS for line in load_text(name).splitlines() if line.strip())
+
+
+def _tokens(line: str) -> list[str]:
+    return re.findall(r"[a-z]+", line.lower())
 
 
 def _fail(why: str) -> None:
@@ -83,12 +101,24 @@ def _oracle(query: list[str], docs: list[list[str]], k1: float, b: float) -> np.
 
 
 def _random_collection(rng: np.random.Generator) -> tuple[list[str], list[list[str]], float, float]:
+    """A real collection: each document is the words of one line of a novel, or empty.
+
+    The query words are drawn from the words of the collection, so common words (in every
+    document) and rare ones both turn up. Half the queries repeat their first word, and one in
+    four starts with a word no document holds.
+    """
+    lines = _book_lines()
     n_docs = int(rng.integers(1, 9))
     docs = [
-        [VOCAB[int(rng.integers(0, len(VOCAB)))] for _ in range(int(rng.integers(0, 13)))]
+        [] if rng.random() < 0.1 else _tokens(lines[int(rng.integers(0, len(lines)))])
         for _ in range(n_docs)
     ]
-    query = [VOCAB[int(rng.integers(0, len(VOCAB)))] for _ in range(int(rng.integers(0, 5)))]
+    words = [word for doc in docs for word in doc] or ["cat"]
+    query = [words[int(rng.integers(0, len(words)))] for _ in range(int(rng.integers(0, 5)))]
+    if query and rng.random() < 0.5:
+        query.append(query[0])
+    if rng.random() < 0.25:
+        query.insert(0, "zebra")
     k1 = float(rng.uniform(0.0, 3.0))
     b = float(rng.uniform(0.0, 1.0))
     return query, docs, k1, b
@@ -96,7 +126,7 @@ def _random_collection(rng: np.random.Generator) -> tuple[list[str], list[list[s
 
 @pytest.mark.parametrize("seed", range(20), ids=[f"random-{s}" for s in range(20)])
 def test_matches_the_numpy_reference_on_random_collections(seed: int) -> None:
-    rng = np.random.default_rng(seed)
+    rng = data_rng(f"bm25-p02:collection:{seed}")
     query, docs, k1, b = _random_collection(rng)
     want = _oracle(query, docs, k1, b)  # computed before the learner runs
     got = _solve(query, docs, k1=k1, b=b)
@@ -187,7 +217,7 @@ def test_collection_of_empty_documents_gives_zeros() -> None:
 
 
 def test_reordering_the_documents_reorders_the_scores() -> None:
-    rng = np.random.default_rng(11)
+    rng = data_rng("bm25-p02:document-order")
     query, docs, k1, b = _random_collection(rng)
     docs = [*docs, ["cat", "dog", "cat"]]
     order = list(range(len(docs)))[::-1]
@@ -240,12 +270,10 @@ def test_inputs_are_not_mutated() -> None:
 
 
 def test_large_collection_finishes_quickly_and_matches_the_reference() -> None:
-    rng = np.random.default_rng(4)
-    docs = [
-        [VOCAB[int(i)] for i in rng.integers(0, len(VOCAB), size=int(rng.integers(0, 30)))]
-        for _ in range(LARGE_DOCS)
-    ]
-    query = ["cat", "fish", "bird"]
+    rng = data_rng("bm25-p02:large-collection")
+    lines = _book_lines()
+    docs = [_tokens(lines[int(i)]) for i in rng.integers(0, len(lines), size=LARGE_DOCS)]
+    query = ["the", "pond", "sister"]
     want = _oracle(query, docs, 1.2, 0.75)
     start = time.perf_counter()
     got = _solve(query, docs)

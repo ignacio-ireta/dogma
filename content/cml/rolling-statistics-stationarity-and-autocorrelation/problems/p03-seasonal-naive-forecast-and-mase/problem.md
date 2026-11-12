@@ -57,3 +57,6 @@ check invariance under shifting and scaling train and test together, that the fo
 data, and that the scale does not depend on the test values. The tests cover a zero-scale training series, a training
 series too short for its season, invalid `season`, an empty `test`, non-finite values, a two-dimensional input,
 integer input, and inputs that must not be mutated.
+
+The hidden tests draw their bulk inputs from the real datasets `co2`, `elnino` and `sunspots` (see
+`docs/DATASETS.md`).

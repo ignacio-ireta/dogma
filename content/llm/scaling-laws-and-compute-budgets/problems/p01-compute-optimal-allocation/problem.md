@@ -61,3 +61,6 @@ it), agreement with a binary-search oracle on large random budgets, the rule tha
 never exceeded and the next integer would exceed it, the type rules (float, bool), the range rules
 for `r` and the budget, the no-fit error, the types of the returned values, and that `D` equals
 `r * N` exactly.
+
+Some hidden tests take their inputs from the real datasets `gutenberg_frankenstein`,
+`gutenberg_pride_prejudice` and `gutenberg_walden` (see `docs/DATASETS.md`).

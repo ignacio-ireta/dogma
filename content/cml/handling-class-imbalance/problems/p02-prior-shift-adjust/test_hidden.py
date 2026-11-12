@@ -13,6 +13,8 @@ from hypothesis import strategies as st
 from scipy.stats import norm
 from submission import prior_shift_adjust
 
+from dogma_data import load, rng, sample_rows
+
 VALUE_MISTAKE = (
     "corrected probability differs from the Bayes route: multiply the prior odds by the likelihood "
     "ratio, then convert back, using the deployment prior"
@@ -53,9 +55,16 @@ def _bayes_route(probs, train_prior, deploy_prior):
 
 @pytest.mark.parametrize("seed", range(5), ids=[f"case-{s}" for s in range(5)])
 def test_matches_the_bayes_route_on_random_probabilities(seed):
-    rng = np.random.default_rng(seed)
-    probs = rng.uniform(0.001, 0.999, size=40)
-    train_prior, deploy_prior = rng.uniform(0.02, 0.98, size=2)
+    # Real classifier probabilities: forty breast_cancer tumours scored by the direction from
+    # the malignant mean to the benign mean (four standardised features), passed through a
+    # sigmoid. The training prior is the benign share of the draw; the deployment prior is the
+    # scenario and stays random.
+    gen = rng(f"prior-shift-p02:bayes-route:{seed}")
+    X, label = sample_rows("breast_cancer", gen, 40, 4, standardize=True)
+    score = X @ (X[label == 1].mean(axis=0) - X[label == 0].mean(axis=0))
+    probs = np.clip(1.0 / (1.0 + np.exp(-score)), 0.001, 0.999)
+    train_prior = float(np.clip(label.mean(), 0.02, 0.98))
+    deploy_prior = float(gen.uniform(0.02, 0.98))
     expected = _bayes_route(probs, train_prior, deploy_prior)
     got = _solve(probs, train_prior, deploy_prior)
     np.testing.assert_allclose(got, expected, rtol=1e-9, atol=1e-12, err_msg=VALUE_MISTAKE)
@@ -63,11 +72,22 @@ def test_matches_the_bayes_route_on_random_probabilities(seed):
 
 def test_simulation_at_fixed_seed_is_calibrated_to_the_deployment_base_rate():
     train_prior, deploy_prior = 0.5, 0.05
+    # Real tumours resampled at the deployment rate, one malignant in twenty. The feature is
+    # the worst symmetry of a tumour (breast_cancer), and the model is the pair of Gaussians
+    # fitted to it in each class, which follows the data closely enough to be calibrated.
+    tumours = load("breast_cancer")
+    malignant = np.sort(tumours.X[tumours.y == 0, 28])
+    benign = np.sort(tumours.X[tumours.y == 1, 28])
     rng = np.random.default_rng(12345)
     n = 200_000
     y = (rng.random(n) < deploy_prior).astype(int)
-    x = np.where(y == 1, rng.normal(2.0, 1.0, n), rng.normal(0.0, 1.0, n))
-    f1, f0 = norm.pdf(x, 2.0, 1.0), norm.pdf(x, 0.0, 1.0)
+    x = np.where(
+        y == 1,
+        malignant[rng.integers(0, malignant.size, n)],
+        benign[rng.integers(0, benign.size, n)],
+    )
+    f1 = norm.pdf(x, malignant.mean(), malignant.std())
+    f0 = norm.pdf(x, benign.mean(), benign.std())
     p_train = train_prior * f1 / (train_prior * f1 + (1 - train_prior) * f0)
     p_deploy_true = deploy_prior * f1 / (deploy_prior * f1 + (1 - deploy_prior) * f0)
     corrected = _solve(p_train, train_prior, deploy_prior)

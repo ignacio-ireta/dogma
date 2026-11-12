@@ -13,9 +13,10 @@ from datetime import date, datetime
 from pathlib import Path
 
 import duckdb
+import pandas as pd  # type: ignore[import-untyped]
 import pytest
 
-from dogma_data import rng, synth
+from dogma_data import load_frame, rng
 
 COLUMNS = ["cohort_month", "period", "active_users", "cohort_size", "retention_rate"]
 TYPES = ["DATE", "BIGINT", "BIGINT", "BIGINT", "DOUBLE"]
@@ -215,17 +216,17 @@ def test_empty_table_returns_no_rows_with_the_declared_schema():
 
 
 def test_duplicated_log_rows_count_each_user_once_in_the_cohort_size():
+    # A real activity log: every invoice line of 60 customers of an online retailer over two
+    # years (online_retail). One invoice is many lines with the same customer and minute, and
+    # 226 lines are exact duplicates, so most customers appear many times in a month. A random
+    # nine tenths of the lines is used, in shuffled order.
     gen = rng("sql/sql-cohort-retention/p01-cohort-retention-by-month:dup-log:0")
-    log = synth.event_log(
-        gen,
-        3000,
-        n_users=400,
-        zipf_a=1.1,
-        start="2023-01-01",
-        days=1000,
-        duplicate_rate=0.1,
-    )
+    lines = load_frame("online_retail")
+    keep = gen.permutation(len(lines))[: len(lines) * 9 // 10]
+    users = lines["Customer ID"].to_numpy()[keep]
+    moments = pd.to_datetime(lines["InvoiceDate"]).to_numpy()[keep]
     rows = [
-        (int(user), moment.item()) for user, moment in zip(log["user_id"], log["ts"], strict=True)
+        (int(user), pd.Timestamp(moment).to_pydatetime())
+        for user, moment in zip(users, moments, strict=True)
     ]
     _check(_run(rows), _oracle(rows))
