@@ -23,7 +23,7 @@ from sklearn.metrics import (
 )
 from submission import binary_scores
 
-from dogma_data import rng, synth
+from dogma_data import load_frame, rng, sample_rows
 
 PROBLEM = "cml/confusion-matrix-and-count-based-scores/p02-binary-count-scores"
 
@@ -146,10 +146,24 @@ def test_large_counts_match_exact_integer_arithmetic(counts):
 
 
 def test_seeded_random_counts_match_scikit_learn():
+    # Real counts: the confusion table of a one-feature stump on a small draw of breast_cancer
+    # tumours. The stump calls a tumour benign when the feature is at or below the median of
+    # the draw. A draw with no true positive is skipped.
     generator = rng(f"{PROBLEM}:small-counts:0")
     for _ in range(25):
-        counts = [int(value) for value in generator.integers(0, 30, size=4)]
-        counts[0] += 1
+        while True:
+            n = int(generator.integers(4, 120))
+            feature, benign = sample_rows("breast_cancer", generator, n, 1)
+            called = feature[:, 0] <= np.median(feature[:, 0])
+            truth = benign > 0.5
+            counts = [
+                int(np.sum(called & truth)),
+                int(np.sum(called & ~truth)),
+                int(np.sum(~called & truth)),
+                int(np.sum(~called & ~truth)),
+            ]
+            if counts[0] >= 1:
+                break
         expected = _reference(*counts)
         got = _solve(*counts)
         for key in sorted(EXPECTED_KEYS):
@@ -158,16 +172,19 @@ def test_seeded_random_counts_match_scikit_learn():
 
 
 def test_matches_scikit_learn_on_tied_scores_and_million_scale_rare_counts():
-    y_true = synth.imbalanced_labels(rng(f"{PROBLEM}:rare-labels:0"), 10_000, positive_rate=0.01)
-    scores = synth.informative_scores(
-        rng(f"{PROBLEM}:informative-scores:0"), y_true, auc=0.82, decimals=2
-    )
-    y_pred = (scores >= 0.5).astype(int)
+    # A real rare class with a real, tied score: 5,400 people drawn from the adult census. The
+    # positive class is the 3% who own an incorporated business, and the score is the hours
+    # they work in a week, which a prediction cuts at 50.
+    adult = load_frame("adult")
+    rows = rng(f"{PROBLEM}:rare-labels:0").permutation(len(adult))[: len(adult) * 9 // 10]
+    y_true = (adult["workclass"].to_numpy()[rows] == "Self-emp-inc").astype(int)
+    scores = adult["hours.per.week"].to_numpy()[rows].astype(float)
+    y_pred = (scores >= 50.0).astype(int)
     matrix = sklearn_confusion_matrix(y_true, y_pred, labels=[0, 1])
     tn, fp, fn, tp = matrix.ravel()
 
-    assert int(y_true.sum()) == 100, "the fixture must contain one positive per 100 rows"
-    assert np.unique(scores).size < scores.size, "rounded informative scores must include ties"
+    assert 0 < int(y_true.sum()) < 0.05 * y_true.size, "the positive class must be rare"
+    assert np.unique(scores).size < scores.size, "whole hours must include ties"
     scale = np.int64(1_000)
     scaled_counts = (tp * scale, fp * scale, fn * scale, tn * scale)
     assert all(isinstance(count, np.integer) for count in scaled_counts), (

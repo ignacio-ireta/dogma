@@ -11,6 +11,8 @@ from hypothesis import strategies as st
 from submission import inverse_sqrt_lr
 from torch.optim.lr_scheduler import LambdaLR
 
+from dogma_data import load
+
 REL = 1e-9
 
 
@@ -34,11 +36,26 @@ def _rejects(call, message):
     pytest.fail(message, pytrace=False)
 
 
+def _steps_per_epoch():
+    """Updates in one epoch over a real dataset: its rows over a batch size, rounded up.
+
+    Five datasets (iris 150 rows, wine 178, diabetes 442, breast_cancer 569, digits 1,797) at
+    batch sizes 16, 32 and 64 give fifteen run lengths from 3 to 113 updates.
+    """
+    steps = []
+    for name in ("iris", "wine", "diabetes", "breast_cancer", "digits"):
+        rows = load(name).X.shape[0]
+        steps.extend(math.ceil(rows / batch) for batch in (16, 32, 64))
+    return steps
+
+
 def test_full_run_matches_lambda_scheduler_with_one_based_counter():
+    # The warmup lasts one epoch over a real dataset. The model width is drawn.
+    steps = _steps_per_epoch()
     rng = torch.Generator().manual_seed(29)
     for _ in range(25):
         d_model = int(torch.randint(1, 1024, (1,), generator=rng))
-        warmup = int(torch.randint(1, 60, (1,), generator=rng))
+        warmup = steps[int(torch.randint(0, len(steps), (1,), generator=rng))]
         parameter = torch.nn.Parameter(torch.zeros(()))
         optimizer = torch.optim.SGD([parameter], lr=1.0)
         scheduler = LambdaLR(

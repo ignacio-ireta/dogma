@@ -46,3 +46,6 @@ Your results match direct nested sums on randomized small grids, preserve input
 and output ordering, handle zero padding and inclusive boundaries, keep large
 integer arithmetic exact, reject the stated invalid families, and reuse one
 prefix table for a large query batch.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `digits` (see
+`docs/DATASETS.md`).

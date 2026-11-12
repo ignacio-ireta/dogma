@@ -8,6 +8,8 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import bootstrap_oob
 
+from dogma_data import load
+
 
 def _call(n, n_trees, seed):
     """Call the function and check the answer's types and shapes. Messages never show inputs."""
@@ -48,8 +50,13 @@ def _expect_value_error(mistake, n, n_trees, seed):
     pytest.fail(f"{mistake}; the function returned samples instead")
 
 
+REAL_CASES = [("iris", 5, 3), ("wine", 4, 4)]
+
+
 def test_matches_an_independent_counter_that_follows_the_protocol():
-    for n, n_trees, seed in [(5, 3, 0), (17, 4, 1), (40, 6, 2)]:
+    # The last two sizes are the row counts of real datasets: iris (150) and wine (178).
+    real = [(int(load(name).X.shape[0]), trees, seed) for name, trees, seed in REAL_CASES]
+    for n, n_trees, seed in [(5, 3, 0), (17, 4, 1), (40, 6, 2), *real]:
         in_bag, _ = _call(n, n_trees, seed)
         np.testing.assert_array_equal(
             in_bag,
@@ -71,7 +78,8 @@ def test_every_tree_sums_to_n_and_oob_is_the_zero_count_mask():
 
 
 def test_out_of_bag_fraction_is_close_to_one_over_e_on_a_large_sample():
-    n = 2000
+    # One bootstrap sample per tree of the 1,797 handwritten digits.
+    n = int(load("digits").X.shape[0])
     _, oob = _call(n, 20, 11)
     fraction = float(oob.mean())
     assert abs(fraction - 1.0 / math.e) <= 0.01, (

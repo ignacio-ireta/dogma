@@ -4,11 +4,14 @@
 from __future__ import annotations
 
 import copy
+import functools
 import math
 import random
 
 import pytest
 from submission import count_parameters
+
+from dogma_data import load_text
 
 COMPONENTS = (
     "token_embedding", "position_embedding", "attention", "mlp", "norms", "final_norm", "lm_head",
@@ -123,18 +126,36 @@ def test_component_counts_match_the_shape_enumeration(cfg):
     _assert_counts(cfg)
 
 
+@functools.cache
+def _passages() -> tuple[tuple[int, int], ...]:
+    """(vocabulary size, context length) of real passages.
+
+    A passage is three consecutive lines of Frankenstein. Its vocabulary size is the number
+    of distinct words in it and its context length is the number of words of its longest
+    line: the two sizes a tiny model for that passage would be built with.
+    """
+    lines = [line.lower().split() for line in load_text("gutenberg_frankenstein").splitlines()]
+    lines = [line for line in lines if line]
+    sizes = []
+    for start in range(len(lines) - 2):
+        chunk = lines[start : start + 3]
+        sizes.append((len({word for line in chunk for word in line}), max(map(len, chunk))))
+    return tuple(sizes)
+
+
 def test_seeded_random_configs_match_the_shape_enumeration():
     rng = random.Random(2026)  # noqa: S311 - seeded test data, not security
     for _ in range(40):
         heads = rng.randint(1, 4)
         d = heads * rng.randint(1, 5)
+        vocab_size, context_length = rng.choice(_passages())
         cfg = _base(
-            vocab_size=rng.randint(1, 60),
+            vocab_size=vocab_size,
             d_model=d,
             n_layers=rng.randint(0, 3),
             n_heads=heads,
             d_ff=rng.randint(1, 20),
-            context_length=rng.randint(1, 30),
+            context_length=context_length,
             learned_positions=rng.random() < 0.5,
             bias=rng.random() < 0.5,
             mlp=rng.choice(["gelu", "swiglu"]),

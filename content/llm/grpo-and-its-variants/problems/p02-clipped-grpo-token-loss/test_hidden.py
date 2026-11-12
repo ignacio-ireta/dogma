@@ -10,6 +10,9 @@ import pytest
 import torch
 from submission import grpo_token_loss
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 ATOL = 1e-9
 RTOL = 1e-9
 # float32 keeps about 7 significant digits. Log-ratios of order one and a few tokens per response
@@ -17,12 +20,34 @@ RTOL = 1e-9
 FLOAT32_ATOL = 1e-5
 
 
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p02-clipped-grpo-token-loss:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
+
+
 def _gen(seed: int) -> torch.Generator:
     return torch.Generator().manual_seed(seed)
 
 
 def _randn(shape, seed, scale=1.0, dtype=torch.float64):
-    return (torch.randn(shape, generator=_gen(seed), dtype=dtype) * scale).clone()
+    return (_real_values(_gen(seed), [shape], dtype) * scale).clone()
 
 
 def _batch(seed, groups=4, length=6, spread=0.5, dtype=torch.float64):
@@ -33,7 +58,7 @@ def _batch(seed, groups=4, length=6, spread=0.5, dtype=torch.float64):
     ref = new + _randn((groups, length), seed + 2, scale=0.4, dtype=dtype)
     adv = _randn((groups,), seed + 3, scale=1.0, dtype=dtype)
     gen = _gen(seed + 4)
-    mask = torch.rand((groups, length), generator=gen) < 0.7
+    mask = torch.special.ndtr(_real_values(gen, [(groups, length)])) < 0.7
     mask[:, 0] = True  # every row keeps at least one token
     return new, old, ref, adv, mask
 

@@ -40,3 +40,5 @@ that compare the length with an independent frontier-by-level search on seeded r
 and fully walled grids; a goal sealed off by walls; a route that a depth-first search would find long before the
 shortest one; a single row and a single column; the start on the goal; boundaries of the grid; the type rules; the
 value rules; and the large open grid, which must finish within the time limit.
+
+The hidden tests draw their bulk inputs from the real dataset `digits` (see `docs/DATASETS.md`).

@@ -14,6 +14,8 @@ from hypothesis import strategies as st
 from sklearn.model_selection import train_test_split
 from submission import train_test_split_indices
 
+from dogma_data import rng, sample_rows
+
 SETTINGS = settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 
 
@@ -86,6 +88,17 @@ def _compare(n, test_size, seed, labels=None):
     )
 
 
+def _real_labels(seed, n, classes):
+    """n real class labels: the digits on n drawn images, among the digits below ``classes``.
+
+    The labels come in the order of the draw, so the classes are interleaved, their counts are
+    uneven, and in a small draw a class can have one member or none.
+    """
+    gen = rng(f"stratified-split-p01:labels:{seed}:{n}:{classes}")
+    _, digit = sample_rows("digits", gen, 400, 1)
+    return [int(label) for label in digit[digit < classes][:n]]
+
+
 @SETTINGS
 @given(n=st.integers(2, 60), tenths=st.integers(1, 99), seed=st.integers(0, 10_000))
 def test_unstratified_split_matches_loop_reference(n, tenths, seed):
@@ -95,7 +108,7 @@ def test_unstratified_split_matches_loop_reference(n, tenths, seed):
 @SETTINGS
 @given(data=st.data(), n=st.integers(2, 40), seed=st.integers(0, 10_000))
 def test_stratified_split_matches_loop_reference(data, n, seed):
-    labels = data.draw(st.lists(st.integers(0, 4), min_size=n, max_size=n))
+    labels = _real_labels(seed, n, 5)
     percent = data.draw(st.integers(1, 99))
     _compare(n, percent / 100, seed, labels)
 
@@ -104,7 +117,7 @@ def test_stratified_split_matches_loop_reference(data, n, seed):
 @given(data=st.data(), n=st.integers(2, 40), seed=st.integers(0, 10_000))
 def test_splits_partition_every_row_exactly_once(data, n, seed):
     stratified = data.draw(st.booleans())
-    labels = data.draw(st.lists(st.integers(0, 3), min_size=n, max_size=n)) if stratified else None
+    labels = _real_labels(seed, n, 4) if stratified else None
     got = _safe_split(n, data.draw(st.integers(1, 99)) / 100, seed, labels)
     assume(got is not None)
     train, test = got
@@ -119,7 +132,7 @@ def test_splits_partition_every_row_exactly_once(data, n, seed):
 @SETTINGS
 @given(data=st.data(), n=st.integers(4, 60), seed=st.integers(0, 10_000))
 def test_each_class_test_count_is_within_one_row_of_its_ideal(data, n, seed):
-    labels = data.draw(st.lists(st.integers(0, 4), min_size=n, max_size=n))
+    labels = _real_labels(seed, n, 5)
     test_size = data.draw(st.integers(1, 99)) / 100
     ideals = {label: test_size * labels.count(label) for label in set(labels)}
     got = _safe_split(n, test_size, seed, labels)

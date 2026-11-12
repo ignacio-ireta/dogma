@@ -10,7 +10,7 @@ from hypothesis import strategies as st
 from sklearn.preprocessing import RobustScaler
 from submission import robust_standardize
 
-from dogma_data import load
+from dogma_data import load, rng, sample_rows
 
 SETTINGS = settings(max_examples=40, deadline=None, report_multiple_bugs=False)
 
@@ -41,9 +41,10 @@ def _expect_value_error(call, mistake):
 @SETTINGS
 @given(st.integers(0, 10_000), st.integers(1, 30), st.integers(1, 5))
 def test_matches_sklearn_robust_scaler_on_seeded_matrices(seed, rows, columns):
-    rng = np.random.default_rng(seed)
-    train = rng.normal(size=(rows, columns)) * np.arange(1, columns + 1) + 3
-    values = rng.normal(size=(6, columns)) * 2 - 1
+    # Raw wine: columns on scales from hundredths to thousands, with repeated measurements.
+    # The scaler is fitted on `rows` wines and applied to six other wines.
+    drawn, _ = sample_rows("wine", rng(f"robust-scaler-p02:sklearn:{seed}"), rows + 6, columns)
+    train, values = drawn[:rows], drawn[rows:]
     expected = RobustScaler().fit(train)
     out, center, scale = _call(train, values)
     checks = [

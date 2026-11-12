@@ -6,6 +6,9 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import constrained_quadratic_min
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 
 def _close(actual, desired, *, err_msg, **tolerance):
     """assert_allclose whose failure shows err_msg as the first line, without the values."""
@@ -24,16 +27,21 @@ def _equal(actual, desired, *, err_msg):
 
 
 def _random_problem(seed):
-    """Random positive definite Q and random full-row-rank A with m <= n (seeded)."""
-    rng = np.random.default_rng(seed)
-    n = int(rng.integers(2, 7))
-    m = int(rng.integers(1, n + 1))
-    M = rng.normal(size=(n, n))
-    Q = M @ M.T + n * np.eye(n)
-    c = rng.normal(size=n)
-    A = rng.normal(size=(m, n))
-    b = rng.normal(size=m)
-    return Q, c, A, b
+    """A positive definite Q and a full-row-rank A with m <= n, built from real measurements.
+
+    Every number is a standardised measurement of a wine: n wines over n drawn measurements
+    give M, and Q = M M' + n I. One more wine gives c, m more give the rows of A, and the last
+    one gives b. Real measurements are correlated, so the draw is repeated until the rows of A
+    are well apart from dependent (condition number at most 1e3).
+    """
+    gen = data_rng(f"p01-constrained-quadratic-min:problem:{seed}")
+    n = int(gen.integers(2, 7))
+    m = int(gen.integers(1, n + 1))
+    while True:
+        values, _ = sample_rows("wine", gen, n + m + 2, n, standardize=True)
+        M, c, A, b = values[:n], values[n], values[n + 1 : n + 1 + m], values[n + 1 + m, :m]
+        if np.linalg.cond(A) <= 1e3:
+            return M @ M.T + n * np.eye(n), c.copy(), A.copy(), b.copy()
 
 
 def _null_space_oracle(Q, c, A, b):

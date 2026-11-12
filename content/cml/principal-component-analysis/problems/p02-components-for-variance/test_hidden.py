@@ -5,8 +5,7 @@ from hypothesis import strategies as st
 from sklearn.decomposition import PCA
 from submission import components_for_variance
 
-from dogma_data import load, rng
-from dogma_data.synth import correlated_mixed_scale
+from dogma_data import load, rng, sample_rows
 
 SEEDS = st.integers(min_value=0, max_value=10**6)
 ROWS = st.integers(min_value=3, max_value=12)
@@ -15,9 +14,32 @@ THRESHOLDS = st.sampled_from([0.25, 0.5, 0.8, 0.9, 0.95, 1.0])
 MARGIN = 1e-12  # the contract's rounding margin; mixed-scale data has ratios near 1e-10
 
 
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
 def _data(seed, n, d):
-    """Correlated columns on scales from 0.01 to 1000, as real measurements have."""
-    return correlated_mixed_scale(rng(f"components-p02:data:{seed}:{n}:{d}"), n, d)
+    """n tumours and d columns of raw breast_cancer: correlated, on scales from 0.003 to 570."""
+    X, _ = sample_rows("breast_cancer", rng(f"components-p02:data:{seed}:{n}:{d}"), n, d)
+    return X
 
 
 def _call(X, threshold, mistake):
@@ -110,7 +132,7 @@ def test_count_never_decreases_as_the_threshold_rises(seed, n, d, first, second)
 
 def test_threshold_of_one_on_rank_two_data_returns_the_rank():
     rng = np.random.default_rng(9)
-    X = rng.normal(size=(8, 2)) @ rng.normal(size=(2, 4))
+    X = _real_normal(rng, (8, 2)) @ _real_normal(rng, (2, 4))
     _check(
         _call(X, 1.0, "rank-two data was rejected or failed") == 2,
         (
@@ -148,7 +170,7 @@ def test_worked_example_tie_at_three_quarters_counts_as_reached():
 
 
 def test_large_common_offset_does_not_change_the_count():
-    X = 100.0 + np.random.default_rng(3).normal(size=(50, 3))
+    X = 100.0 + _real_normal(np.random.default_rng(3), (50, 3))
     _check(
         _call(X, 0.9, "the offset matrix was rejected or failed") == 3,
         "adding a common offset to every column must not change the variance structure: centre "

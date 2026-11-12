@@ -57,3 +57,6 @@ pure-Python model on seeded random inputs, including shifted ranges. They check 
 degenerate all-zero tensor, a single positive value, and very small and very large magnitudes.
 They also check that the zero point is an `int` in the int8 range, and that empty, nonfinite,
 bool and complex inputs raise `ValueError`, and that inputs are not mutated.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

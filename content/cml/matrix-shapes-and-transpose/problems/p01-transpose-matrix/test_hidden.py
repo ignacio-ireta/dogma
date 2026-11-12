@@ -4,6 +4,9 @@ from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 from submission import transpose
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 INTS = st.integers(min_value=-1000, max_value=1000)
 
 
@@ -26,9 +29,13 @@ def _must_raise_value_error(call, mistake):
 
 
 def test_matches_numpy_transpose_on_random_rectangular_matrices():
-    rng = np.random.default_rng(0)
+    rng = data_rng("transpose-p01:integers")
     for n_rows, n_cols in [(1, 1), (1, 5), (5, 1), (3, 4), (4, 3), (6, 6), (2, 0)]:
-        matrix = rng.integers(-50, 50, size=(n_rows, n_cols)).tolist()
+        # Real whole numbers of both signs: digit-image pixels (0 to 16) with 8 subtracted.
+        if n_cols == 0:
+            matrix = [[] for _ in range(n_rows)]
+        else:
+            matrix = (sample_rows("digits", rng, n_rows, n_cols)[0] - 8).astype(int).tolist()
         expected = np.array(matrix).T.tolist()
         assert transpose(matrix) == expected, (
             "values differ from numpy's transpose: check that result[j][i] == matrix[i][j]"
@@ -36,8 +43,7 @@ def test_matches_numpy_transpose_on_random_rectangular_matrices():
 
 
 def test_float_values_are_copied_exactly():
-    rng = np.random.default_rng(1)
-    matrix = rng.normal(size=(3, 4)).tolist()
+    matrix = sample_rows("wine", data_rng("transpose-p01:floats"), 3, 4)[0].tolist()
     assert transpose(matrix) == np.array(matrix).T.tolist(), (
         "float entries changed: copy each value as it is, without int() or a float32 cast"
     )

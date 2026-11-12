@@ -55,3 +55,6 @@ steps on seeded random tensors. They also check the first step against the bias-
 the step counter, the placement of eps, zero gradients, input immutability, malformed state and
 arguments, scale extremes and dtype. A failing test names the mistake, such as a missing bias
 correction, an eps inside the root, or a counter that starts at zero.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

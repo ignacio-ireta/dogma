@@ -6,7 +6,9 @@ answer.
 
 from __future__ import annotations
 
+import functools
 import itertools
+import re
 import tracemalloc
 from collections import Counter
 
@@ -16,6 +18,8 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from scipy import stats
 from submission import reservoir_sample
+
+from dogma_data import load_text
 
 
 class _RecordingRng:
@@ -62,11 +66,29 @@ def _reference(items, k, seed):
     return reservoir
 
 
+@functools.cache
+def _words():
+    """A real stream: the words of Frankenstein in reading order, repeats included."""
+    return re.findall(r"[A-Za-z']+", load_text("gutenberg_frankenstein"))
+
+
+@functools.cache
+def _distinct_words():
+    """The same stream with each word kept at its first appearance only."""
+    return list(dict.fromkeys(_words()))
+
+
 def _sample(n, k, seed):
-    return _run(
-        lambda: reservoir_sample(range(n), k, np.random.default_rng(seed)),
+    """Sample k of the first n distinct real words; return their positions in the stream."""
+    stream = _distinct_words()[:n]
+    kept = _run(
+        lambda: reservoir_sample(stream, k, np.random.default_rng(seed)),
         "valid inputs must not raise: reservoir_sample raised",
     )
+    position = {word: index for index, word in enumerate(stream)}
+    if any(word not in position for word in kept):
+        pytest.fail("the sample holds an item that is not in the stream")
+    return [position[word] for word in kept]
 
 
 @settings(max_examples=150, deadline=None, report_multiple_bugs=False)
@@ -76,7 +98,8 @@ def _sample(n, k, seed):
     seed=st.integers(min_value=0, max_value=10**6),
 )
 def test_matches_a_two_pass_reference_of_the_same_protocol(n, k, seed):
-    items = [f"x{i}" for i in range(n)]
+    # A real stream: the first n words of Frankenstein, repeats included.
+    items = _words()[:n]
     got = _run(
         lambda: reservoir_sample(items, k, np.random.default_rng(seed)),
         "valid inputs must not raise: a slot index must stay below k; reservoir_sample raised",
@@ -95,7 +118,7 @@ def test_matches_a_two_pass_reference_of_the_same_protocol(n, k, seed):
 def test_draws_are_one_integers_call_per_item_after_the_first_k(n, k):
     rng = _RecordingRng(0)
     _run(
-        lambda: reservoir_sample(range(n), k, rng),
+        lambda: reservoir_sample(_words()[:n], k, rng),
         "valid inputs must not raise: reservoir_sample raised",
     )
     assert rng.calls == [(0, i + 1) for i in range(k, n)], (
@@ -128,7 +151,7 @@ def test_every_subset_of_size_k_is_equally_likely():
 
 def test_generator_input_is_read_to_its_end_and_matches_the_list_result():
     def stream():
-        yield from range(25)
+        yield from _words()[:25]
 
     source = stream()
     from_generator = _run(
@@ -136,7 +159,7 @@ def test_generator_input_is_read_to_its_end_and_matches_the_list_result():
         "valid inputs must not raise: reservoir_sample raised",
     )
     from_list = _run(
-        lambda: reservoir_sample(list(range(25)), 4, np.random.default_rng(9)),
+        lambda: reservoir_sample(_words()[:25], 4, np.random.default_rng(9)),
         "valid inputs must not raise: reservoir_sample raised",
     )
     assert next(source, "end") == "end", (
@@ -161,8 +184,12 @@ def test_stream_shorter_than_k_and_empty_stream_return_what_there_is():
 
 
 def test_memory_stays_bounded_by_k_on_a_long_stream():
+    words = _words()
+
     def long_stream():
-        yield from range(100_000)
+        # Three hundred thousand real words: the book read again and again, one word at a
+        # time. A list of that many references alone is over two megabytes.
+        return (words[index % len(words)] for index in range(300_000))
 
     tracemalloc.start()
     try:

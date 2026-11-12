@@ -7,7 +7,6 @@ behaviour it checks, and each failure message names the likely mistake first.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -18,7 +17,7 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from dogma_data import rng, synth
+from dogma_data import retail_events, rng
 
 SHIPMENTS_DDL = (
     "CREATE TABLE shipments (shipment_id BIGINT, warehouse_code VARCHAR, shipped_on DATE)"
@@ -112,21 +111,28 @@ def _check_same_codes(
 
 @pytest.fixture(scope="module")
 def event_log_tables() -> tuple[list[tuple[Any, ...]], list[tuple[Any, ...]]]:
-    generated = synth.event_log(
-        rng("sql/sql-joins-and-unions/p02-warehouses-with-a-shipment-or-a-return:event-log:0"),
-        1_200,
-        n_users=300,
-        categories=tuple(CODES),
-        start="2024-01-01",
-        days=45,
-        dirty_rate=0.2,
-    )
-    shipments: list[tuple[Any, ...]] = []
-    returns: list[tuple[Any, ...]] = []
-    for i, event_id in enumerate(generated["event_id"]):
-        row = (int(event_id), str(generated["category"][i]), date(2024, 1, 1))
-        (shipments if i % 2 == 0 else returns).append(row)
-    return shipments, returns
+    """Real shipments and real returns of an online retailer (online_retail).
+
+    A shipment is an invoice line that was sold and a return is a line of a cancellation, each
+    with its real date. The code is the product description exactly as typed, so it carries
+    capitals, leading spaces and doubled spaces, and seven products appear under spellings
+    that differ only in spaces. 900 sold lines are drawn; every return line is used.
+    """
+    gen = rng("sql/sql-joins-and-unions/p02-warehouses-with-a-shipment-or-a-return:event-log:0")
+    events = retail_events()
+    sold = events[~events["cancelled"]]
+    sold = sold.iloc[gen.permutation(len(sold))[:900]]
+    back = events[events["cancelled"]]
+
+    def rows(table: pd.DataFrame) -> list[tuple[Any, ...]]:
+        return [
+            (int(event_id), str(label), moment.date())
+            for event_id, label, moment in zip(
+                table["event_id"], table["label"], table["ts"], strict=True
+            )
+        ]
+
+    return rows(sold), rows(back)
 
 
 def test_event_log_dirty_categories_match_the_pandas_union_oracle(

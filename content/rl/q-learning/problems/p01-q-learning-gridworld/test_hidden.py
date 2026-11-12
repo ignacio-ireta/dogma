@@ -6,6 +6,9 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import q_learning_update, train_q_learning
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 
 def _close(
     actual, desired, *, err_msg="values differ from the expected result", atol=0.0, rtol=1e-7
@@ -56,6 +59,13 @@ def _ref_step(state, action):
     return nxt, (1.0 if nxt == GOAL else 0.0), nxt == GOAL
 
 
+def _real_table(seed):
+    """A table of real values, one row per state: standardised measurements of nine wines."""
+    gen = data_rng(f"p01-q-learning-gridworld:table:{seed}")
+    values, _ = sample_rows("wine", gen, N_STATES, N_ACTIONS, standardize=True)
+    return values
+
+
 def _reference_run(n_episodes, seed, alpha, gamma, epsilon, max_steps=100):  # noqa: PLR0917
     """Independent reference loop with the same draw order, updating the table in place."""
     rng = np.random.default_rng(seed)
@@ -95,7 +105,7 @@ def _distance_to_goal(state):
     st.integers(0, 10_000),
 )
 def test_single_update_matches_the_formula(s, a, s2, r, done, alpha, gamma, seed):  # noqa: PLR0917
-    Q = np.random.default_rng(seed).normal(size=(N_STATES, N_ACTIONS))
+    Q = _real_table(seed)
     got = _call(q_learning_update, Q, s, a, r, s2, done, alpha, gamma)
     target = r if done else r + gamma * float(np.max(Q[s2]))
     want = Q[s, a] + alpha * (target - Q[s, a])
@@ -130,14 +140,14 @@ def test_non_terminal_update_with_the_same_values_does_bootstrap():
 
 
 def test_update_does_not_modify_the_input_table():
-    Q = np.random.default_rng(5).normal(size=(N_STATES, N_ACTIONS))
+    Q = _real_table(5)
     original = Q.copy()
     _call(q_learning_update, Q, 2, 3, 1.0, 5, False, 0.5, 0.9)
     _equal(Q, original, err_msg="the input table was modified in place")
 
 
 def test_only_the_visited_entry_changes():
-    Q = np.random.default_rng(6).normal(size=(N_STATES, N_ACTIONS))
+    Q = _real_table(6)
     out = _call(q_learning_update, Q, 4, 0, 1.0, 1, False, 0.3, 0.8)
     changed = np.argwhere(out != Q)
     assert changed.tolist() == [[4, 0]], "exactly one entry, Q[s, a], may change"

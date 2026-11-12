@@ -51,3 +51,6 @@ single session, touching sessions in both input orders, identical sessions, nest
 sessions end and many start, a staggered chain, an invalid session (`start == end` or `start > end`) anywhere in
 the list, an input that must not change, an answer that is a plain `int`, and a list of 200,000 sessions that must
 finish within the time limit.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

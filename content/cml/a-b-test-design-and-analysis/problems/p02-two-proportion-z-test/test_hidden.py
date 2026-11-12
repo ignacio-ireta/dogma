@@ -1,19 +1,43 @@
+import functools
+
 import numpy as np
 import pytest
 from statsmodels.stats.proportion import proportions_ztest
 from submission import two_proportion_z_test
 
-# (x_a, n_a, x_b, n_b): unequal arm sizes and rates on both sides of each other.
-ORACLE_CASES = [
-    (120, 1000, 90, 1000),
-    (37, 250, 58, 310),
-    (500, 4000, 620, 4100),
-    (12, 80, 30, 95),
-    (7, 60, 19, 55),
-    (2000, 20000, 2140, 19500),
-    (3, 40, 1, 35),
-    (900, 9000, 1020, 9100),
+from dogma_data import load_frame, rng
+
+# Pairs of groups of the adult census. In each pair the two arms are of unequal size and the
+# higher rate is sometimes in the first arm and sometimes in the second.
+GROUP_PAIRS = [
+    ("sex", "Male", "Female"),
+    ("race", "Black", "White"),
+    ("marital.status", "Married-civ-spouse", "Never-married"),
+    ("education", "HS-grad", "Bachelors"),
+    ("workclass", "Private", "Self-emp-not-inc"),
+    ("relationship", "Wife", "Husband"),
+    ("occupation", "Exec-managerial", "Prof-specialty"),
+    ("education", "Masters", "Doctorate"),
 ]
+
+
+@functools.cache
+def _oracle_cases():
+    """Real counts (x_a, n_a, x_b, n_b): people earning above 50K in two census groups.
+
+    Nine tenths of the 6,000 people of the adult table are drawn, and each pair of groups
+    gives the number of people and the number of high earners in each arm.
+    """
+    adult = load_frame("adult")
+    adult = adult.iloc[rng("two-proportion-z-test-p02:census").permutation(len(adult))[:5400]]
+    high = adult["income"] == ">50K"
+    cases = []
+    for column, first, second in GROUP_PAIRS:
+        in_a, in_b = adult[column] == first, adult[column] == second
+        cases.append(
+            (int(high[in_a].sum()), int(in_a.sum()), int(high[in_b].sum()), int(in_b.sum()))
+        )
+    return cases
 
 
 def _reference(x_a, n_a, x_b, n_b):
@@ -34,9 +58,10 @@ def _must_raise_value_error(call, mistake):
 
 
 @pytest.mark.parametrize(
-    "case", ORACLE_CASES, ids=[f"oracle{index}" for index in range(len(ORACLE_CASES))]
+    "case", range(len(GROUP_PAIRS)), ids=[f"oracle{index}" for index in range(len(GROUP_PAIRS))]
 )
 def test_matches_statsmodels_pooled_z_test(case):
+    case = _oracle_cases()[case]
     np.testing.assert_allclose(
         two_proportion_z_test(*case),
         _reference(*case),

@@ -68,3 +68,6 @@ an overflow); the backoff and skip; custom growth and backoff factors; the defau
 a run of 300 overflows that keeps the scale positive; a property check that the scale equals
 the initial scale times the product of the factors applied; the `ValueError` rules, including `bool`
 arguments and out-of-range factors; and the types of `scale` and `good_steps`.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

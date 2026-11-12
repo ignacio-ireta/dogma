@@ -6,6 +6,8 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import beta_bernoulli_map
 
+from dogma_data import rng, sample_rows
+
 GRID = np.linspace(1e-6, 1 - 1e-6, 200_001)
 COUNTS = st.integers(min_value=1, max_value=30)
 PRIORS = st.floats(min_value=0.05, max_value=5.0, allow_nan=False, allow_infinity=False)
@@ -37,10 +39,22 @@ def _raised_value_error(call, mistake):
 
 @pytest.mark.parametrize(
     ("k", "n", "alpha", "beta"),
-    [(3, 10, 2, 2), (7, 20, 3, 0.5), (1, 4, 1.5, 2.5), (9, 12, 2, 2), (2, 3, 3, 5), (0, 10, 2, 2)],
+    [
+        (None, 10, 2, 2),
+        (None, 20, 3, 0.5),
+        (None, 4, 1.5, 2.5),
+        (None, 12, 2, 2),
+        (None, 3, 3, 5),
+        (0, 10, 2, 2),
+    ],
     ids=["case-a", "case-b", "case-c", "case-d", "case-e", "case-f"],
 )
 def test_interior_map_matches_grid_search_of_the_log_posterior(k, n, alpha, beta):
+    if k is None:
+        # Real Bernoulli data: the number of benign tumours among n drawn from breast_cancer.
+        # The priors are parameters of the model and stay as written.
+        _, benign = sample_rows("breast_cancer", rng(f"beta-bernoulli-map-p02:trials:{n}"), n, 1)
+        k = int(benign.sum())
     _, map_estimate = _estimates(k, n, alpha, beta, "a valid interior case was rejected or failed")
     assert abs(map_estimate - _grid_mode(k, n, alpha, beta)) <= 1e-4, (
         "MAP differs from the grid maximiser of the log-posterior: check a and b"

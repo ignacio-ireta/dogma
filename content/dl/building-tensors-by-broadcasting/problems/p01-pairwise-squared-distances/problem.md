@@ -47,3 +47,6 @@ A precision family checks points far from the origin with small separations. Non
 also checked on self-distances at large coordinates. A loop check runs the function on 200 points
 and fails a solution that runs Python code once per row or per pair. Also covered: integer input
 giving a `float64` result, and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `digits` (see
+`docs/DATASETS.md`).

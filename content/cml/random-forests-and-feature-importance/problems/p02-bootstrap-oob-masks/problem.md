@@ -32,3 +32,6 @@ A random forest trains each tree on a bootstrap sample: $n$ rows drawn **with re
 ## Done looks like
 
 All public tests pass, then **Submit** runs the hidden tests. They check: exact agreement with an independent counter that follows the protocol; every row of the in-bag counts sums to `n`; the OOB mask is exactly the zero counts; the out-of-bag fraction is close to $1/e$ on a large sample, which catches sampling without replacement; different trees get different samples; a one-row training set is always in bag; the same seed reproduces the output; invalid `n`, `n_trees` and `seed` raise `ValueError`; and the dtypes are integer for counts and boolean for masks.
+
+Some hidden tests take their inputs from the real datasets `digits`, `iris` and `wine` (see
+`docs/DATASETS.md`).

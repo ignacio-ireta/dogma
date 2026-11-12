@@ -46,3 +46,5 @@ shifted by about $10^9$; the probability checks, including a sum that is 1 only 
 (accepted) and sums off by a small or a real amount (rejected); NaN, infinite, negative, mismatched, empty and
 2-D input raising `ValueError`; a single certain outcome; the shift and scale rules for $aX+b$;
 integer input; and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `iris` (see `docs/DATASETS.md`).

@@ -7,7 +7,41 @@ from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays
 from submission import dense_forward
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 FINITE = st.floats(min_value=-10.0, max_value=10.0, allow_nan=False, allow_infinity=False)
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_rows(gen, n, d):
+    """n real rows with d standardised features: breast_cancer, or digits when d is above 30.
+
+    The features are correlated and skewed, and many values repeat, as measured data does.
+    """
+    name = "breast_cancer" if d <= 30 else "digits"
+    return sample_rows(name, gen, n, d, standardize=True)[0]
 
 
 def _call(X, W, b, mistake):
@@ -64,10 +98,10 @@ def _loop_reference(X, W, b):
     ids=["single-row", "square", "wide-output", "tall-batch", "many-units"],
 )
 def test_random_batches_match_an_explicit_per_entry_reference(n, d_in, d_out):
-    rng = np.random.default_rng(0)
-    X = rng.normal(size=(n, d_in))
-    W = rng.normal(size=(d_in, d_out))
-    b = rng.normal(size=d_out)
+    rng = data_rng(f"dense-forward-p01:batches:{n}:{d_in}:{d_out}")
+    X = _real_rows(rng, n, d_in)
+    W = _real_normal(rng, (d_in, d_out))
+    b = _real_normal(rng, d_out)
     _assert_close(
         _call(X, W, b, "the batch result could not be computed"),
         _loop_reference(X, W, b),
@@ -76,9 +110,9 @@ def test_random_batches_match_an_explicit_per_entry_reference(n, d_in, d_out):
 
 
 def test_square_weights_are_applied_as_x_times_w_not_transposed():
-    rng = np.random.default_rng(1)
-    X = rng.normal(size=(5, 3))
-    W = rng.normal(size=(3, 3))
+    rng = data_rng("dense-forward-p01:square")
+    X = _real_rows(rng, 5, 3)
+    W = _real_normal(rng, (3, 3))
     b = np.zeros(3)
     _assert_close(
         _call(X, W, b, "square weights could not be applied"),
@@ -89,9 +123,9 @@ def test_square_weights_are_applied_as_x_times_w_not_transposed():
 
 def test_bias_is_added_once_per_output_unit_to_every_row():
     # n equals d_out here: a bias broadcast along the wrong axis is silent in this case.
-    rng = np.random.default_rng(2)
-    X = rng.normal(size=(3, 2))
-    W = rng.normal(size=(2, 3))
+    rng = data_rng("dense-forward-p01:bias")
+    X = _real_rows(rng, 3, 2)
+    W = _real_normal(rng, (2, 3))
     b = np.array([10.0, 20.0, 30.0])
     _assert_close(
         _call(X, W, b, "the bias case could not be computed"),
@@ -175,10 +209,10 @@ def test_integer_inputs_return_float64():
 
 
 def test_large_and_small_magnitudes_keep_float64_precision():
-    rng = np.random.default_rng(3)
-    X = rng.normal(size=(4, 3))
-    W = rng.normal(size=(3, 2))
-    b = rng.normal(size=2)
+    rng = data_rng("dense-forward-p01:large")
+    X = _real_rows(rng, 4, 3)
+    W = _real_normal(rng, (3, 2))
+    b = _real_normal(rng, 2)
     _assert_close(
         _call(X * 1e8, W, b * 1e8, "large magnitudes failed"),
         _loop_reference(X * 1e8, W, b * 1e8),

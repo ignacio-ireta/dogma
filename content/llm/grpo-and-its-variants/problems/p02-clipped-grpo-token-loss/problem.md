@@ -100,3 +100,6 @@ advantages, that a clipped token gets no policy gradient, that masked positions 
 with extreme values, the per-response averaging convention, that the KL term is zero when the policy
 equals the reference, a float64 finite-difference gradient check away from clip boundaries, float32
 dtype, and the validation and mutation rules.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

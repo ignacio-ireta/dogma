@@ -7,6 +7,8 @@ from hypothesis import strategies as st
 from sklearn.model_selection import TimeSeriesSplit
 from submission import walk_forward_splits
 
+from dogma_data import load_series
+
 # (n, initial_train, horizon, step, gap, expanding), covering both modes, gaps and boundary cases.
 CONFIGS = [
     (10, 4, 2, 2, 0, True),
@@ -173,7 +175,8 @@ def test_windows_advance_by_exactly_step_and_rolling_windows_keep_their_length(
 
 
 def test_matches_sklearn_time_series_split_for_a_matching_configuration():
-    n, horizon, splits_count, gap = 20, 3, 3, 2
+    # A real series: the 100 annual flows of the Nile, tested ten years at a time.
+    n, horizon, splits_count, gap = int(load_series("nile").shape[0]), 10, 3, 2
     initial = n - splits_count * horizon - gap
     expected = list(
         TimeSeriesSplit(n_splits=splits_count, test_size=horizon, gap=gap).split(np.arange(n))

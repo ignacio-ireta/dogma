@@ -69,3 +69,6 @@ layout (the `x @ W.T` convention, on non-symmetric weights); the mask meaning (`
 and the fully-masked-row error; the output bias added once; the `ValueError` rules (rank, weight
 and bias shape, head count that does not divide, mask dtype and shape); batch independence; large
 and small input magnitudes; the dtype and shape; and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

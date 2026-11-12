@@ -2,11 +2,38 @@
 # and never print hidden inputs, shapes or expected values.
 from __future__ import annotations
 
+import math
+
 import pytest
 import torch
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import gelu_ffn as _learner
+
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-gelu-ffn:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
 
 
 def _call(*args):
@@ -29,10 +56,10 @@ def _invalid(*args):
 
 def _params(gen, d_model, d_ff):
     return (
-        torch.randn(d_ff, d_model, generator=gen, dtype=torch.float64),
-        torch.randn(d_ff, generator=gen, dtype=torch.float64),
-        torch.randn(d_model, d_ff, generator=gen, dtype=torch.float64),
-        torch.randn(d_model, generator=gen, dtype=torch.float64),
+        _real_values(gen, [d_ff, d_model], torch.float64),
+        _real_values(gen, [d_ff], torch.float64),
+        _real_values(gen, [d_model, d_ff], torch.float64),
+        _real_values(gen, [d_model], torch.float64),
     )
 
 
@@ -46,7 +73,7 @@ def _oracle(x, W1, b1, W2, b2):
 def test_matches_pytorch_reference_on_seeded_batches():
     gen = torch.Generator().manual_seed(41)
     for shape, d_model, d_ff in [((5, 4), 4, 16), ((2, 3, 6), 6, 24), ((7,), 3, 5)]:
-        x = torch.randn(*shape, d_model, generator=gen, dtype=torch.float64)
+        x = _real_values(gen, [*shape, d_model], torch.float64)
         W1, b1, W2, b2 = _params(gen, d_model, d_ff)
         torch.testing.assert_close(
             _call(x, W1, b1, W2, b2),
@@ -80,7 +107,7 @@ def test_gelu_uses_exact_erf_form_not_tanh_approximation():
 def test_positions_are_independent():
     gen = torch.Generator().manual_seed(42)
     W1, b1, W2, b2 = _params(gen, 4, 9)
-    x = torch.randn(6, 4, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [6, 4], torch.float64)
     base = _call(x, W1, b1, W2, b2)
     changed = x.clone()
     changed[2] += 5.0
@@ -98,11 +125,11 @@ def test_positions_are_independent():
 
 def test_empty_hidden_layer_returns_output_bias():
     gen = torch.Generator().manual_seed(43)
-    x = torch.randn(3, 4, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [3, 4], torch.float64)
     W1 = torch.zeros(0, 4, dtype=torch.float64)
     b1 = torch.zeros(0, dtype=torch.float64)
     W2 = torch.zeros(4, 0, dtype=torch.float64)
-    b2 = torch.randn(4, generator=gen, dtype=torch.float64)
+    b2 = _real_values(gen, [4], torch.float64)
     got = _call(x, W1, b1, W2, b2)
     torch.testing.assert_close(
         got,
@@ -116,7 +143,7 @@ def test_empty_hidden_layer_returns_output_bias():
 def test_non_square_weights_use_nn_linear_orientation():
     gen = torch.Generator().manual_seed(44)
     d_model, d_ff = 2, 5
-    x = torch.randn(4, d_model, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [4, d_model], torch.float64)
     W1, b1, W2, b2 = _params(gen, d_model, d_ff)
     torch.testing.assert_close(
         _call(x, W1, b1, W2, b2),
@@ -132,7 +159,7 @@ def test_square_hidden_layer_uses_nn_linear_orientation():
     # unless W1 is symmetric, so this case needs non-symmetric weights.
     gen = torch.Generator().manual_seed(45)
     d_model = d_ff = 3
-    x = torch.randn(4, d_model, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [4, d_model], torch.float64)
     W1, b1, W2, b2 = _params(gen, d_model, d_ff)
     torch.testing.assert_close(
         _call(x, W1, b1, W2, b2),
@@ -148,9 +175,9 @@ def test_expansion_bias_is_added_before_the_nonlinearity():
     # value and the output is W2 @ GELU(b1) + b2.
     gen = torch.Generator().manual_seed(45)
     d_model, d_ff = 3, 4
-    x = torch.randn(2, d_model, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [2, d_model], torch.float64)
     W1 = torch.zeros(d_ff, d_model, dtype=torch.float64)
-    b1 = torch.randn(d_ff, generator=gen, dtype=torch.float64)
+    b1 = _real_values(gen, [d_ff], torch.float64)
     _, _, W2, b2 = _params(gen, d_model, d_ff)
     hidden = torch.nn.functional.gelu(b1, approximate="none")
     want = hidden @ W2.T + b2
@@ -181,7 +208,7 @@ def test_single_unit_matches_reference_across_range(value):
 def test_large_magnitudes_stay_finite_and_match_reference():
     gen = torch.Generator().manual_seed(46)
     d_model, d_ff = 3, 6
-    x = torch.randn(4, d_model, generator=gen, dtype=torch.float64) * 1e3
+    x = _real_values(gen, [4, d_model], torch.float64) * 1e3
     W1, b1, W2, b2 = _params(gen, d_model, d_ff)
     out = _call(x, W1, b1, W2, b2)
     assert torch.isfinite(out).all(), "large inputs must not produce NaN or infinity"
@@ -197,7 +224,7 @@ def test_large_magnitudes_stay_finite_and_match_reference():
 def test_small_magnitudes_match_reference():
     gen = torch.Generator().manual_seed(47)
     d_model, d_ff = 3, 6
-    x = torch.randn(4, d_model, generator=gen, dtype=torch.float64) * 1e-9
+    x = _real_values(gen, [4, d_model], torch.float64) * 1e-9
     W1, b1, W2, b2 = _params(gen, d_model, d_ff)
     W1 = W1 * 1e-9
     b1 = b1 * 1e-9
@@ -212,7 +239,7 @@ def test_small_magnitudes_match_reference():
 
 def test_output_dtype_and_shape_follow_input():
     gen = torch.Generator().manual_seed(48)
-    x = torch.randn(2, 5, 3, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [2, 5, 3], torch.float64)
     W1, b1, W2, b2 = _params(gen, 3, 7)
     out = _call(x, W1, b1, W2, b2)
     assert out.dtype == torch.float64, "output dtype must be float64"
@@ -247,7 +274,7 @@ def test_wrong_output_bias_length_raises_value_error():
 
 def test_inputs_are_not_mutated():
     gen = torch.Generator().manual_seed(53)
-    x = torch.randn(3, 2, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [3, 2], torch.float64)
     W1, b1, W2, b2 = _params(gen, 2, 4)
     before = [t.clone() for t in (x, W1, b1, W2, b2)]
     _call(x, W1, b1, W2, b2)
@@ -260,7 +287,7 @@ def test_inputs_are_not_mutated():
 def test_single_position_without_leading_axes_is_accepted():
     gen = torch.Generator().manual_seed(54)
     W1, b1, W2, b2 = _params(gen, 3, 4)
-    x = torch.randn(3, generator=gen, dtype=torch.float64)  # one position, shape (d_model,)
+    x = _real_values(gen, [3], torch.float64)  # one position, shape (d_model,)
     out = _call(x, W1, b1, W2, b2)
     assert tuple(out.shape) == (3,), "a 1-D input is one position and must return shape (d_model,)"
     torch.testing.assert_close(

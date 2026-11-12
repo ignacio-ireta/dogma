@@ -53,3 +53,6 @@ the statistics mean, median and maximum. They check that the interval is nested 
 a constant sample gives a point interval, that the same seed reproduces the result, that the statistic is called once per resample on a one-dimensional
 resample of length `n`, that the interval on repeated real measurements (iris sepal lengths, also stored as float32) follows the protocol and does not resample distinct values, that invalid
 arguments raise `ValueError` and that the input is left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `california_housing` and `iris` (see
+`docs/DATASETS.md`).

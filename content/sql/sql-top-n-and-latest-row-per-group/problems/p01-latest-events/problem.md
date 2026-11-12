@@ -55,3 +55,6 @@ The result matches an independent group-and-sort oracle on seeded records and
 fixtures. Hidden cases cover ties, NULL timestamps and payloads, filtering order,
 entities with no successes, empty input, exact BIGINT types, large identifiers
 and final ordering. All values from a selected row remain together.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

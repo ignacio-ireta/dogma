@@ -80,8 +80,12 @@ is graded by its results, not by a particular syntax. Do not hard-code visitor i
 
 ## Done looks like
 
-The result matches a pandas oracle (sort, group by visitor, shift, compare the gap, cumulative sum) on seeded random
-views with exact 30-minute gaps, ties and visitors with one view, and on a Zipf-skewed visitor log with microsecond
+The result matches a pandas oracle (sort, group by visitor, shift, compare the gap, cumulative sum) on the real clocks
+of retail customers (`online_retail`: ties inside an invoice, minutes between invoices, days between visits) with
+exact 30-minute gaps placed among them and visitors with one view, and on a Zipf-skewed visitor log with microsecond
 clocks and gaps at the boundary (a synthetic generator). Hidden cases cover the boundary on both sides, a millisecond
 past the boundary, the tie order that decides which row opens a session, session numbers restarting per visitor, the
 BIGINT type of the session count, the output order, the empty table and the input table being unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

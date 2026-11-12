@@ -78,3 +78,6 @@ The result matches a pandas `groupby(...).shift(1)` oracle on seeded random usag
 and shuffled input order. Hidden cases cover the NULL first row, skipped calendar days,
 decreases, output ordering that does not follow input order, a single-day account, large
 BIGINT values, the empty table and the exact column types.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

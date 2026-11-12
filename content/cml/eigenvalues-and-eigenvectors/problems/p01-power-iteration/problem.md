@@ -51,3 +51,6 @@ eigenvalue is chosen by magnitude rather than by value; a matrix on which a star
 component along the dominant eigenvector converges to the wrong pair; a slow but convergent gap within
 the default budget; the zero and `1 x 1` matrices; invalid input and parameters; integer input; and
 inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `wine` (see
+`docs/DATASETS.md`).

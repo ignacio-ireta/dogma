@@ -44,3 +44,6 @@ layer_norm(x, weight, bias, eps=1e-12)
 ## Done looks like
 
 The examples and the single-feature edge case pass. The hidden tests compare outputs with PyTorch's layer norm over random inputs with 1 to 4 leading dimensions, and check that each example is normalized independently of the others, that the statistics run over the last axis, that the mean is subtracted before scaling, that eps sits inside the square root, that the variance is biased, and that large common offsets and tiny magnitudes are handled. They also cover float32 dtype, empty leading dimensions, invalid arguments, and no mutation.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

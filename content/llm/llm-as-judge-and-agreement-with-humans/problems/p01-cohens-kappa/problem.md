@@ -48,3 +48,6 @@ scikit-learn's `cohen_kappa_score` on seeded random label sequences, including u
 label set, check that raw agreement alone is rejected in a skewed-label example, check symmetry in the two
 raters, check that negative kappa is possible, and check the degenerate cases and the input-validation
 families.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `iris` (see
+`docs/DATASETS.md`).

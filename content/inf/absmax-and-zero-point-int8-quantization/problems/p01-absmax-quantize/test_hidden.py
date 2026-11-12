@@ -1,10 +1,28 @@
 from __future__ import annotations
 
+import math
+
 import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import absmax_dequantize, absmax_quantize
+
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+
+def _real_tensor(gen, shape):
+    """A real tensor of the given shape: standardised breast_cancer features.
+
+    The last axis holds the features and the leading axes hold the tumours drawn. Real
+    features are skewed, so a few entries are several times larger than the rest: the case
+    that decides the scale of a quantizer.
+    """
+    shape = tuple(shape)
+    rows = math.prod(shape[:-1])
+    drawn, _ = sample_rows("breast_cancer", gen, rows, shape[-1], standardize=True)
+    return drawn.reshape(shape)
 
 
 def checked(call):
@@ -64,8 +82,8 @@ def reference(x: np.ndarray, axis: int | None):
     st.sampled_from([(4,), (3, 5), (2, 3, 4)]),
 )
 def test_random_inputs_match_scalar_model(seed, axis, shape):
-    rng = np.random.default_rng(seed)
-    x = rng.normal(scale=3.0, size=shape)
+    rng = data_rng(f"absmax-p01:reference:{seed}")
+    x = 3.0 * _real_tensor(rng, shape)
     if axis is not None and axis >= len(shape):
         return
     q, scale = checked(lambda: absmax_quantize(x, axis))
@@ -89,8 +107,8 @@ def test_random_inputs_match_scalar_model(seed, axis, shape):
 @settings(max_examples=60, deadline=None, derandomize=True, report_multiple_bugs=False)
 @given(st.integers(0, 10_000), st.sampled_from([None, 0, 1]))
 def test_round_trip_error_is_within_half_a_scale_step(seed, axis):
-    rng = np.random.default_rng(seed)
-    x = rng.normal(size=(3, 4)) * 10.0 ** rng.integers(-3, 4)
+    rng = data_rng(f"absmax-p01:round-trip:{seed}")
+    x = _real_tensor(rng, (3, 4)) * 10.0 ** rng.integers(-3, 4)
     q, scale = checked(lambda: absmax_quantize(x, axis))
     x_hat = absmax_dequantize(q, scale, axis)
     if x_hat.shape != x.shape:

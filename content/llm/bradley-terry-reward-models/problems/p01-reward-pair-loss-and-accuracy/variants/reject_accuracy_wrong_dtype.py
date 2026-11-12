@@ -33,7 +33,7 @@ def bradley_terry_loss_and_accuracy(
     _validate(reward_chosen, reward_rejected)
     margin = reward_chosen - reward_rejected
     x = -margin
-    per_pair = torch.clamp(x, min=0.0) + torch.log1p(torch.exp(-torch.abs(x)))
+    per_pair = 0.5 * (x + torch.abs(x)) + torch.log1p(torch.exp(-torch.abs(x)))
     loss = per_pair.mean()
     accuracy = (margin > 0).to(torch.float64).mean()
     return loss, accuracy

@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import math
-import random
 
+import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import forward_backward
+
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
 
 """Hidden tests for forward_backward.
 
@@ -14,6 +17,20 @@ Two independent oracles: the hand-derived closed form (dL/dz = 2r(w + e)(1 - h^2
 paths into each input) and central differences of a separate copy of the forward graph.
 Every failure message names the kind of mistake and never shows a hidden input or value.
 """
+
+
+def _real_inputs(what, count):
+    """``count`` settings of (x, w, b, t) made of real numbers.
+
+    Each setting is four standardised measurements of one wine, kept when all four lie in
+    [-2, 2]: values crowded near zero, correlated within a wine, with rounded repeats.
+    """
+    gen = data_rng(f"p01-scalar-graph-forward-backward:inputs:{what}")
+    found = []
+    while len(found) < count:
+        values, _ = sample_rows("wine", gen, 178, 4, standardize=True)
+        found.extend(row.tolist() for row in values if np.max(np.abs(row)) <= 2.0)
+    return found[:count]
 
 
 KEYS = ("x", "w", "b", "t")
@@ -74,9 +91,7 @@ def _checked(result):
 
 
 def test_loss_matches_the_stated_graph_on_seeded_random_inputs():
-    rng = random.Random(0)  # noqa: S311 — deterministic numeric test data
-    for _ in range(200):
-        args = [rng.uniform(-2.0, 2.0) for _ in range(4)]
+    for args in _real_inputs("loss", 200):
         loss, _ = _checked(_run(*args))
         assert _close(loss, _loss(*args)), (
             "loss is wrong: the forward pass must compute h = tanh(w*x + b), "
@@ -85,9 +100,7 @@ def test_loss_matches_the_stated_graph_on_seeded_random_inputs():
 
 
 def test_gradients_match_closed_form_on_seeded_random_inputs():
-    rng = random.Random(1)  # noqa: S311 — deterministic numeric test data
-    for _ in range(200):
-        args = [rng.uniform(-2.0, 2.0) for _ in range(4)]
+    for args in _real_inputs("closed-form", 200):
         _, grads = _checked(_run(*args))
         _, want = _closed_form(*args)
         for key in KEYS:
@@ -95,9 +108,7 @@ def test_gradients_match_closed_form_on_seeded_random_inputs():
 
 
 def test_gradients_match_central_differences_of_the_forward_pass():
-    rng = random.Random(2)  # noqa: S311 — deterministic numeric test data
-    for _ in range(100):
-        args = [rng.uniform(-2.0, 2.0) for _ in range(4)]
+    for args in _real_inputs("central-differences", 100):
         _, grads = _checked(_run(*args))
         for i, key in enumerate(KEYS):
             plus, minus = list(args), list(args)

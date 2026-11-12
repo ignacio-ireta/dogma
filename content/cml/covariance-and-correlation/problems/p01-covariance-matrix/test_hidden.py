@@ -2,16 +2,70 @@ import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from scipy.special import ndtr
 from submission import covariance_matrix
+
+from dogma_data import rng, sample_rows
 
 SEEDS = st.integers(min_value=0, max_value=10**6)
 ROWS = st.integers(min_value=2, max_value=12)
 COLS = st.integers(min_value=1, max_value=4)
 
 
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
+
+
 def _random_matrix(seed, n, d):
-    rng = np.random.default_rng(seed)
-    return rng.normal(size=(n, d))
+    """n rows and d columns of raw wine: real measurements on very different scales."""
+    X, _ = sample_rows("wine", rng(f"covariance-p01:data:{seed}"), n, d)
+    return X
 
 
 def _covariance(X, ddof, mistake):
@@ -62,7 +116,7 @@ def test_result_is_symmetric_and_positive_semidefinite(seed, n, d):
 @given(SEEDS, ROWS, COLS)
 def test_shifting_every_variable_leaves_covariance_unchanged(seed, n, d):
     X = _random_matrix(seed, n, d)
-    offset = np.random.default_rng(seed + 1).normal(scale=50.0, size=d)
+    offset = _real_normal(np.random.default_rng(seed + 1), d, scale=50.0)
     np.testing.assert_allclose(
         _covariance(X + offset, 1, "a valid shifted matrix was rejected or failed"),
         _covariance(X, 1, "a valid data matrix was rejected or failed"),
@@ -87,7 +141,7 @@ def test_scaling_data_scales_covariance_by_square_of_factor(seed, n, d, factor):
 
 def test_large_common_offset_does_not_destroy_precision():
     # Integer data plus 1e9 is exact in float64, so the covariance equals the one without offset.
-    base = np.random.default_rng(3).integers(0, 10, size=(20, 2)).astype(np.float64)
+    base = _real_ints(np.random.default_rng(3), 0, 10, (20, 2)).astype(np.float64)
     expected = np.cov(base, rowvar=False)
     result = _covariance(base + 1e9, 1, "a valid offset matrix was rejected or failed")
     np.testing.assert_allclose(

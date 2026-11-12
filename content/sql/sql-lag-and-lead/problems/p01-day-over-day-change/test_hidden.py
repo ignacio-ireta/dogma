@@ -1,13 +1,16 @@
 # Hidden tests: the oracle is a pandas groupby-shift over the same rows. Messages name the
 # kind of mistake and never reveal hidden inputs or expected values.
 import csv
+import functools
 import random
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 
 import duckdb
 import pandas as pd
 import pytest
+
+from dogma_data import retail_events
 
 COLUMNS = [
     "account_id",
@@ -74,15 +77,32 @@ def _oracle(rows):
     return out
 
 
+@functools.cache
+def _daily_units():
+    """Real daily usage: the units each customer of an online retailer bought on each day.
+
+    From online_retail. An account is a customer, a usage day is a day with a sale and the
+    count is the number of units sold to that customer on that day. The gaps between a
+    customer's days are real: a few are one day, most are weeks.
+    """
+    events = retail_events()
+    sold = events[events["quantity"] > 0]
+    daily = sold.groupby(["user_id", sold["ts"].dt.date])["quantity"].sum()
+    usage = {}
+    for (customer, day), units in daily.items():
+        usage.setdefault(int(customer), []).append((day, int(units)))
+    return usage
+
+
 def _seeded_rows(seed):
-    rng = random.Random(seed)  # noqa: S311 -- seeded synthetic fixtures, not security.
+    rng = random.Random(seed)  # noqa: S311 -- seeded choice of real rows, not security.
+    usage = _daily_units()
     rows = []
-    base = date(2026, 1, 1)
-    for account in rng.sample(range(1, 40), rng.randrange(1, 7)):
-        day = 0
-        for _ in range(rng.randrange(1, 15)):
-            day += rng.choice([1, 1, 1, 2, 5])
-            rows.append((account, base + timedelta(days=day), rng.randrange(1, 10_000)))
+    for account in rng.sample(sorted(usage), rng.randrange(1, 7)):
+        days = usage[account]
+        first = rng.randrange(len(days))
+        for day, units in days[first : first + rng.randrange(1, 15)]:
+            rows.append((account, day, units))
     rng.shuffle(rows)
     return rows
 

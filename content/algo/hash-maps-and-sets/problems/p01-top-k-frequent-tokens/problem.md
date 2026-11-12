@@ -45,3 +45,6 @@ independent `collections.Counter` reference on random token lists, and on a larg
 edge families are: k zero or negative, k larger than the vocabulary, empty input, case-sensitive
 tokens, the empty string as a token, ties ordered alphabetically rather than by first appearance,
 the element types of the result, and no mutation of the input.
+
+The hidden tests draw their bulk inputs from the real datasets `gutenberg_frankenstein`,
+`gutenberg_pride_prejudice` and `gutenberg_walden` (see `docs/DATASETS.md`).

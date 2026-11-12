@@ -2,9 +2,99 @@
 # and never print hidden inputs, shapes or expected values.
 from __future__ import annotations
 
+import collections
+import functools
+import itertools
+import re
+
 import pytest
 import torch
 from submission import greedy_generate as _learner
+
+from dogma_data import load_text
+
+BOOKS = ("gutenberg_frankenstein", "gutenberg_pride_prejudice", "gutenberg_walden")
+
+
+@functools.cache
+def _token_lines(vocab: int) -> tuple[tuple[int, ...], ...]:
+    """The lines of three vendored novels, reduced to their ``vocab`` most frequent words.
+
+    A word's id is its frequency rank over the three books. Every other word is dropped, so a
+    line becomes its run of the most common words (the, and, of, to, ...), and a line with
+    none of them is left out. No id stands for "any other word": such an id would follow
+    almost every word and a greedy model would emit nothing else.
+    """
+    lines = [
+        re.findall(r"[a-z]+", line.lower())
+        for name in BOOKS
+        for line in load_text(name).splitlines()
+    ]
+    ranked = collections.Counter(word for line in lines for word in line).most_common()
+    rank = {word: index for index, (word, _) in enumerate(ranked)}
+    kept = (tuple(rank[word] for word in line if rank[word] < vocab) for line in lines)
+    return tuple(line for line in kept if line)
+
+
+def _bigram_model(
+    gen: torch.Generator,
+    vocab: int,
+    rows: int,
+    width: int,
+    *,
+    eos: int = -1,
+    pad: int = -1,
+    cap: int = 0,
+):
+    """A real bigram language model and real prompts, both from a stretch of a novel.
+
+    The table is fitted to forty consecutive lines picked by the generator: entry (p, n) is the
+    log of the number of times word id n follows word id p, with a floor of one tenth of a
+    count. Forty lines are few, so every stretch gives a different model. The prompts are
+    ``width`` consecutive word ids taken from anywhere in ``rows`` lines of the same stretch.
+    When ``eos`` is given and the stretch holds that word far enough into a line, the first
+    prompt is the one that ends on it: a prompt whose last word is the end-of-sequence id.
+    Which word gets which id is drawn afresh each time, because ids are labels: in one model
+    the end-of-sequence id is a common word that every row soon reaches, in another a rare one.
+
+    ``pad_id`` may be a real word of the vocabulary. When ``pad`` and ``cap`` are given and the
+    rows that generate longest all end on the same word, that word trades ids with ``pad``, so
+    the last column of the answer holds a generated token equal to the pad id.
+    """
+    lines = _token_lines(vocab)
+    first = int(torch.randint(0, len(lines) - 40, (1,), generator=gen))
+    relabel = torch.randperm(vocab, generator=gen).tolist()
+    stretch = [tuple(relabel[word] for word in line) for line in lines[first : first + 40]]
+    counts = torch.full((vocab, vocab), 0.1, dtype=torch.float64)
+    for line in stretch:
+        for previous, current in itertools.pairwise(line):
+            counts[previous, current] += 1.0
+    long_enough = [line for line in stretch if len(line) >= width]
+    prompts = []
+    ending = [
+        line[stop - width : stop]
+        for line in long_enough
+        for stop in range(width, len(line) + 1)
+        if line[stop - 1] == eos
+    ]
+    if ending:
+        prompts.append(ending[int(torch.randint(0, len(ending), (1,), generator=gen))])
+    while len(prompts) < rows:
+        line = long_enough[int(torch.randint(0, len(long_enough), (1,), generator=gen))]
+        start = int(torch.randint(0, len(line) - width + 1, (1,), generator=gen))
+        prompts.append(line[start : start + width])
+    batch = torch.tensor(prompts, dtype=torch.int64)
+    table = torch.log(counts)
+    if pad >= 0:
+        runs = [_reference_one_row(table, row, cap, eos, pad) for row in batch.tolist()]
+        longest = max(length for _, length in runs)
+        last = {full[-1] for full, length in runs if length == longest}
+        if longest > 0 and len(last) == 1 and not last & {eos, pad}:
+            word = last.pop()
+            swap = torch.arange(vocab)
+            swap[word], swap[pad] = pad, word
+            table, batch = table[swap][:, swap], swap[batch]
+    return table, batch
 
 
 def _call(*args, **kwargs):
@@ -68,9 +158,8 @@ def test_random_bigram_batches_match_one_row_at_a_time_reference():
     gen = torch.Generator().manual_seed(11)
     for trial in range(20):
         vocab = 7
-        table = torch.randn(vocab, vocab, generator=gen, dtype=torch.float64)
-        prompts = torch.randint(0, vocab, (4, 2), generator=gen, dtype=torch.int64)
         eos, pad, cap = 5, 6, 6
+        table, prompts = _bigram_model(gen, vocab, 4, 2, eos=eos, pad=pad, cap=cap)
         got = _call(_bigram(table), prompts, cap, eos_id=eos, pad_id=pad)
         want = _padded_reference(table, prompts, cap, eos, pad)
         assert torch.equal(got, want), (
@@ -183,7 +272,7 @@ def test_prompts_are_not_mutated():
 
 def test_batch_of_one_matches_reference():
     gen = torch.Generator().manual_seed(3)
-    table = torch.randn(5, 5, generator=gen, dtype=torch.float64)
+    table, _ = _bigram_model(gen, 5, 1, 3)
     prompts = torch.tensor([[4, 0, 1]])
     got = _call(_bigram(table), prompts, 5, eos_id=2, pad_id=4)
     assert torch.equal(got, _padded_reference(table, prompts, 5, 2, 4)), "single-row batch differs"

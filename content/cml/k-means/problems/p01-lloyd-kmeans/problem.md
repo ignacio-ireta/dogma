@@ -47,3 +47,6 @@ In the first example, the first update moves both centroids by $0.5$. The second
 
 ## Done looks like
 All public tests pass, then **Submit** runs the hidden tests. They check: agreement with scikit-learn's Lloyd implementation on well-separated clusters started from the same centroids; agreement with an independent plain-loop implementation, including the iteration count, the labels and the inertia; the empty-cluster rule; the lower-index tie rule; the stopping rule, including a shift exactly equal to `tol`; `max_iter` as a cap; labels that agree with the returned centroids; inertia that never increases as iterations are added; a large common offset that must not change the clustering; the input validation rules; and that the inputs are left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `california_housing` (see
+`docs/DATASETS.md`).

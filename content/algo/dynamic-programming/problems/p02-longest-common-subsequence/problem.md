@@ -54,3 +54,6 @@ for longer ones. They check that the witness is a subsequence of both strings an
 returned length. The edge families they cover: empty strings, identical strings, disjoint alphabets,
 repeated characters, the substring trap, the return type, rejected types, and 1,200-character
 strings within the time limit.
+
+The hidden tests draw their bulk inputs from the real datasets `gutenberg_frankenstein`,
+`gutenberg_pride_prejudice` and `gutenberg_walden` (see `docs/DATASETS.md`).

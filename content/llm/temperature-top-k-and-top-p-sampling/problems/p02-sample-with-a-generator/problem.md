@@ -67,3 +67,6 @@ returning its index; a one-entry vocabulary; the same seed reproducing the same 
 different seed giving a different one; the global random state left unchanged; the result
 independent of the global seed; the input left unchanged; and the `ValueError` rules for shape,
 dtype, sign, sum, non-finite values and the generator type.
+
+The hidden tests draw their bulk inputs from the real dataset `gutenberg_frankenstein` (see
+`docs/DATASETS.md`).

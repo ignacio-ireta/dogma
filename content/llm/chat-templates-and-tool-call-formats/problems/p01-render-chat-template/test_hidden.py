@@ -2,16 +2,26 @@
 # mistake and never print hidden inputs, shapes or expected values.
 from __future__ import annotations
 
+import functools
 import random
 
 import pytest
 from submission import render_chat as _learner
+
+from dogma_data import load_frame
 
 ROLES_AFTER = {
     "user": ["assistant"],
     "assistant": ["user", "tool"],
     "tool": ["tool", "assistant"],
 }
+
+
+@functools.cache
+def _gsm8k():
+    """GSM8K questions and worked answers: real message contents, with newlines and symbols."""
+    table = load_frame("gsm8k")
+    return tuple(table["question"]), tuple(table["answer"])
 
 
 def _call(messages, gen=False):
@@ -49,15 +59,23 @@ def _reference(messages, gen):
 
 
 def _random_conversation(rng):
+    """A conversation with real contents: GSM8K questions from the user, worked answers after.
+
+    The answers hold newlines, operators and a final line that starts with ####, so the content
+    must be kept as it is. Three turns in ten also get a tab and trailing spaces appended.
+    """
+    questions, answers = _gsm8k()
     msgs = []
     if rng.random() < 0.5:
-        msgs.append(_msg("system", f"sys {rng.randrange(100)}"))
+        instruction = "Solve the problem. Give the final number after ####."
+        msgs.append(_msg("system", f"{instruction} (task {rng.randrange(100)})"))
     role = "user"
-    msgs.append(_msg("user", f"question {rng.randrange(1000)}"))
+    msgs.append(_msg("user", questions[rng.randrange(len(questions))]))
     for _ in range(rng.randrange(0, 4)):
         role = rng.choice(ROLES_AFTER[role])
-        whitespace = "\n\t " if rng.random() < 0.3 else " "
-        msgs.append(_msg(role, f"text{whitespace}{rng.randrange(1000)}"))
+        source = questions if role == "user" else answers
+        whitespace = "\n\t " if rng.random() < 0.3 else ""
+        msgs.append(_msg(role, f"{source[rng.randrange(len(source))]}{whitespace}"))
     gen = msgs[-1]["role"] in ("user", "tool") and rng.random() < 0.5
     return msgs, gen
 

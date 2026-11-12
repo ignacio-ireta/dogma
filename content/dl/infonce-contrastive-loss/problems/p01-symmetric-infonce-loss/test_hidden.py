@@ -10,6 +10,8 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import symmetric_infonce_loss
 
+from dogma_data import rng, sample_rows
+
 ATOL = 1e-9
 RTOL = 1e-9
 # float32 oracle comparison: float32 carries about 7 significant digits, and the similarity matrix
@@ -17,6 +19,22 @@ RTOL = 1e-9
 # real mistake (missing normalisation, one-directional loss, a naive exponential).
 ATOL_F32 = 1e-5
 RTOL_F32 = 1e-5
+
+
+def _views(g, n, d, dtype=torch.float64):
+    """Two real views of the same n handwritten digits, d pixels each (d up to 16).
+
+    Row i of the first view holds pixels from image columns 2 and 3 of a digits image, and row
+    i of the second holds pixels from columns 4 and 5 of the same image: two crops of one
+    digit, related the way paired embeddings are. Pixels are standardised, so the background
+    is not zero. The torch generator picks which images are drawn.
+    """
+    key = f"infonce-p01:views:{int(torch.randint(0, 2**31 - 1, (1,), generator=g))}"
+    rows, _ = sample_rows("digits", rng(key), n, standardize=True)
+    image = torch.tensor(rows, dtype=torch.float64).to(dtype).reshape(n, 8, 8)
+    left = image[:, :, 2:4].reshape(n, 16)[:, :d]
+    right = image[:, :, 4:6].reshape(n, 16)[:, :d]
+    return left.clone(), right.clone()
 
 
 def _call(a, b, temperature):
@@ -68,8 +86,7 @@ def _gen(seed: int) -> torch.Generator:
 def test_random_pairs_match_cross_entropy_oracle_at_several_temperatures():
     for seed, (n, d) in enumerate([(2, 3), (5, 4), (8, 16), (32, 8)]):
         g = _gen(seed)
-        a = torch.randn((n, d), generator=g, dtype=torch.float64)
-        b = torch.randn((n, d), generator=g, dtype=torch.float64)
+        a, b = _views(g, n, d, torch.float64)
         for tau in (0.07, 0.5, 2.0):
             got = _call(a, b, tau)
             want = _oracle(a, b, tau)
@@ -82,8 +99,7 @@ def test_random_pairs_match_cross_entropy_oracle_at_several_temperatures():
 
 def test_loss_is_symmetric_in_its_two_arguments():
     g = _gen(9)
-    a = torch.randn((6, 5), generator=g, dtype=torch.float64)
-    b = torch.randn((6, 5), generator=g, dtype=torch.float64)
+    a, b = _views(g, 6, 5, torch.float64)
     forward = _call(a, b, 0.2)
     backward = _call(b, a, 0.2)
     if not torch.allclose(forward, backward, atol=ATOL, rtol=RTOL):
@@ -102,8 +118,7 @@ def test_identical_embeddings_give_chance_level_log_n():
 
 def test_row_scaling_leaves_the_loss_unchanged():
     g = _gen(13)
-    a = torch.randn((5, 6), generator=g, dtype=torch.float64)
-    b = torch.randn((5, 6), generator=g, dtype=torch.float64)
+    a, b = _views(g, 5, 6, torch.float64)
     base = _call(a, b, 0.4)
     scale = torch.tensor([0.01, 3.0, 100.0, 1.0, 7.5], dtype=torch.float64).reshape(5, 1)
     moved = _call(a * scale, b, 0.4)
@@ -115,8 +130,7 @@ def test_row_scaling_leaves_the_loss_unchanged():
 
 def test_small_temperature_stays_finite_and_matches_oracle():
     g = _gen(17)
-    a = torch.randn((6, 8), generator=g, dtype=torch.float64)
-    b = torch.randn((6, 8), generator=g, dtype=torch.float64)
+    a, b = _views(g, 6, 8, torch.float64)
     got = _call(a, b, 1e-3)  # logits reach about 1000 in magnitude; a naive exp overflows float64
     if not bool(torch.isfinite(got)):
         raise AssertionError("a small temperature gave inf or NaN: use the row-maximum log-sum-exp")
@@ -136,8 +150,7 @@ def test_single_pair_is_exactly_zero():
 
 def test_float32_inputs_return_float32_within_declared_bound():
     g = _gen(23)
-    a = torch.randn((8, 12), generator=g, dtype=torch.float32)
-    b = torch.randn((8, 12), generator=g, dtype=torch.float32)
+    a, b = _views(g, 8, 12, torch.float32)
     got = _call(a, b, 0.07)
     if got.dtype != torch.float32:
         raise AssertionError("float32 embeddings must give a float32 loss")
@@ -209,8 +222,7 @@ def test_empty_batch_raises_value_error():
 
 def test_inputs_are_not_mutated():
     g = _gen(31)
-    a = torch.randn((4, 3), generator=g, dtype=torch.float64)
-    b = torch.randn((4, 3), generator=g, dtype=torch.float64)
+    a, b = _views(g, 4, 3, torch.float64)
     _call(a, b, 0.1)  # _call compares the inputs with snapshots after the call
 
 
@@ -223,8 +235,7 @@ def test_inputs_are_not_mutated():
 )
 def test_property_loss_is_non_negative_and_invariant_to_permuting_pairs(n, d, seed, tau):
     g = _gen(seed)
-    a = torch.randn((n, d), generator=g, dtype=torch.float64)
-    b = torch.randn((n, d), generator=g, dtype=torch.float64)
+    a, b = _views(g, n, d, torch.float64)
     base = symmetric_infonce_loss(a, b, temperature=tau)
     if float(base) < -1e-12:
         raise AssertionError("InfoNCE is a cross-entropy, so it cannot be negative")

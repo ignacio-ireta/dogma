@@ -69,3 +69,7 @@ constant to each row of logits leaves the NLL unchanged, that large common offse
 finite and match the oracle, that a float32 input returns float32 with a declared bound, that a custom
 `ignore_index` works, that a single-class vocabulary gives perplexity 1, and that invalid shapes, dtypes,
 out-of-range targets and an all-ignored batch raise `ValueError`. Inputs are not mutated.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer`,
+`gutenberg_frankenstein`, `gutenberg_pride_prejudice` and `gutenberg_walden` (see
+`docs/DATASETS.md`).

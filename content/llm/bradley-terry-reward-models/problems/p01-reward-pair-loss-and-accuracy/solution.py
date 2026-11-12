@@ -38,8 +38,12 @@ def bradley_terry_loss_and_accuracy(
     #   softplus(x) = max(x, 0) + log(1 + exp(-|x|))
     # which never exponentiates a large positive number. The naive log(sigmoid(d)) underflows to
     # log(0) = -inf for large negative margins.
+    # max(x, 0) is written as (x + |x|) / 2: the same values, and the right gradient at a tie.
+    # At x = 0 autograd gives abs a slope of 0, so this form has slope 1/2 there, which is the
+    # slope of softplus at 0. clamp(x, min=0) has a kink at 0 and gives a tied pair no gradient.
     x = -margin
-    per_pair = torch.clamp(x, min=0.0) + torch.log1p(torch.exp(-torch.abs(x)))
+    magnitude = torch.abs(x)
+    per_pair = 0.5 * (x + magnitude) + torch.log1p(torch.exp(-magnitude))
     # Step 3: the loss is the mean over pairs. Gradients flow through both reward tensors.
     loss = per_pair.mean()
     # Step 4: a pair is correct only when the chosen reward is strictly larger.

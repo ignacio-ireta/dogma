@@ -4,7 +4,73 @@ import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from scipy.special import ndtr
 from submission import kmeans_plus_plus
+
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+RATIO_COLUMNS = (2, 3, 5)  # rooms, bedrooms and occupants per household
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
+
+
+def _points(gen, n, d):
+    """n real block groups of california_housing with d per-household averages, standardised.
+
+    The averages are ratios of counts, so no two distances tie exactly, and they are
+    heavy-tailed: a few block groups sit far from everything else, as real outliers do.
+    """
+    X, _ = sample_rows("california_housing", gen, n, standardize=True)
+    return X[:, RATIO_COLUMNS[:d]]
 
 
 def _call(X, k, seed):
@@ -50,10 +116,10 @@ def _reference(X, k, seed):
 
 def test_matches_the_protocol_exactly_on_random_data():
     for seed in range(15):
-        rng = np.random.default_rng(900 + seed)
+        rng = data_rng(f"kmeans-plus-plus-p02:protocol:{seed}")
         n = int(rng.integers(4, 30))
         d = int(rng.integers(1, 4))
-        X = rng.normal(size=(n, d))
+        X = _points(rng, n, d)
         k = int(rng.integers(1, min(6, n) + 1))
         np.testing.assert_array_equal(
             _call(X, k, seed),
@@ -88,8 +154,8 @@ def _sorted_rows(a):
 
 
 def test_k_equal_to_n_selects_every_row_exactly_once():
-    rng = np.random.default_rng(910)
-    X = rng.normal(size=(7, 2))
+    rng = data_rng("kmeans-plus-plus-p02:910")
+    X = _points(rng, 7, 2)
     out = _call(X, 7, seed=5)
     np.testing.assert_array_equal(
         _sorted_rows(out),
@@ -99,8 +165,8 @@ def test_k_equal_to_n_selects_every_row_exactly_once():
 
 
 def test_centres_are_copies_of_distinct_rows():
-    rng = np.random.default_rng(920)
-    X = rng.normal(size=(25, 3))
+    rng = data_rng("kmeans-plus-plus-p02:920")
+    X = _points(rng, 25, 3)
     for seed in range(10):
         out = _call(X, 6, seed)
         for centre in out:
@@ -112,8 +178,8 @@ def test_centres_are_copies_of_distinct_rows():
 
 
 def test_same_seed_reproduces_and_different_seeds_can_differ():
-    rng = np.random.default_rng(930)
-    X = rng.normal(size=(30, 2))
+    rng = data_rng("kmeans-plus-plus-p02:930")
+    X = _points(rng, 30, 2)
     a = _call(X, 4, seed=11)
     b = _call(X, 4, seed=11)
     np.testing.assert_array_equal(a, b, err_msg="the same seed must reproduce the same centres")
@@ -122,8 +188,8 @@ def test_same_seed_reproduces_and_different_seeds_can_differ():
 
 
 def test_power_of_two_rescaling_gives_the_same_choices():
-    rng = np.random.default_rng(940)
-    X = rng.normal(size=(20, 2))
+    rng = data_rng("kmeans-plus-plus-p02:940")
+    X = _points(rng, 20, 2)
     base = _call(X, 4, seed=2)
     scaled = _call(X * 2.0**-30, 4, seed=2)
     np.testing.assert_array_equal(
@@ -139,7 +205,7 @@ def test_power_of_two_rescaling_gives_the_same_choices():
 def test_protocol_matches_reference_on_small_random_sets(seed, k):
     rng = np.random.default_rng(seed)
     n = int(rng.integers(5, 12))
-    X = rng.integers(-4, 5, size=(n, 2)).astype(float)
+    X = _real_ints(rng, -4, 5, (n, 2)).astype(float)
     if len(np.unique(X, axis=0)) < k:
         return
     np.testing.assert_array_equal(
@@ -172,8 +238,8 @@ def test_invalid_inputs_raise_value_error(X, k, seed):
 
 
 def test_inputs_are_not_mutated():
-    rng = np.random.default_rng(950)
-    X = rng.normal(size=(12, 2))
+    rng = data_rng("kmeans-plus-plus-p02:950")
+    X = _points(rng, 12, 2)
     X0 = X.copy()
     _call(X, 3, seed=4)
     np.testing.assert_array_equal(X, X0, err_msg="X was modified in place")

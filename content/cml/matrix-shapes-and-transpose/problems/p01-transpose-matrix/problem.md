@@ -43,3 +43,6 @@ They also check that the shape swaps, that transposing twice returns the input (
 at least one column), and that float values are copied exactly. Other families: the `ValueError`
 cases (ragged rows, flat input), the empty and zero-width results, the return type (lists, not
 tuples), and that the input is left unchanged and the result does not share rows with it.
+
+The hidden tests draw their bulk inputs from the real datasets `digits` and `wine` (see
+`docs/DATASETS.md`).

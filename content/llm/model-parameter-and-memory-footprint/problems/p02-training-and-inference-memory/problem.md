@@ -82,3 +82,5 @@ integer totals; the zero-state optimizers; the activation term added as given an
 rule that master copies need a lower-precision dtype; each invalid argument; and exact integers at
 large sizes. A wrong variant gets a named message, for example an optimizer state stored in the
 working dtype, a missing gradient term, or a master copy counted for fp32 weights.
+
+Some hidden tests take their inputs from the real dataset `digits` (see `docs/DATASETS.md`).

@@ -3,16 +3,70 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from scipy import stats
+from scipy.special import ndtr
 from submission import gaussian_mle
+
+from dogma_data import rng, sample_rows
 
 SEEDS = st.integers(min_value=0, max_value=10**6)
 ROWS = st.integers(min_value=1, max_value=12)
 COLS = st.integers(min_value=1, max_value=4)
 
 
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
+
+
 def _random_matrix(seed, n, d):
-    rng = np.random.default_rng(seed)
-    return rng.normal(size=(n, d))
+    """n rows and d columns of raw wine: real measurements on very different scales."""
+    X, _ = sample_rows("wine", rng(f"gaussian-mle-p01:data:{seed}"), n, d)
+    return X
 
 
 def _mle(X, mistake):
@@ -78,7 +132,7 @@ def test_mle_covariance_is_n_minus_one_over_n_times_the_unbiased_covariance(seed
 def test_returned_parameters_maximise_the_log_likelihood():
     rng = np.random.default_rng(7)
     A = np.array([[1.0, 0.3, 0.0], [0.0, 1.0, 0.4], [0.2, 0.0, 1.0]])
-    X = rng.normal(size=(20, 3)) @ A.T + np.array([1.0, -2.0, 0.5])
+    X = _real_normal(rng, (20, 3)) @ A.T + np.array([1.0, -2.0, 0.5])
     mean, cov = _mle(X.copy(), "a valid data matrix was rejected or failed")
 
     def loglik(m, S):
@@ -110,7 +164,7 @@ def test_single_observation_returns_its_point_and_zero_covariance():
 
 
 def test_large_common_offset_does_not_destroy_the_covariance():
-    base = np.random.default_rng(4).integers(0, 10, size=(20, 2)).astype(np.float64)
+    base = _real_ints(np.random.default_rng(4), 0, 10, (20, 2)).astype(np.float64)
     _, cov = _mle(base + 1e9, "a valid offset matrix was rejected or failed")
     np.testing.assert_allclose(
         cov,

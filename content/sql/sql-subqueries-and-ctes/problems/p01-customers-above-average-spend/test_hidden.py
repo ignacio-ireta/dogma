@@ -17,6 +17,9 @@ import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 import pytest
 
+from dogma_data import retail_events
+from dogma_data import rng as data_rng
+
 COLUMNS = ["customer_id", "region", "total_spend", "average_spend"]
 CUSTOMERS_DDL = "CREATE TABLE customers (customer_id BIGINT, region VARCHAR)"
 ORDERS_DDL = (
@@ -25,6 +28,7 @@ ORDERS_DDL = (
 )
 DAY = date(2024, 1, 1)
 STATUSES = ["completed", "completed", "completed", "pending", "cancelled", "refunded", "Completed"]
+OTHER_STATUSES = ["pending", "refunded", "Completed"]
 # Large, non-sequential ids: without an explicit ORDER BY the engine returns groups in an
 # arbitrary order, and these ids expose that.
 CUSTOMER_IDS = [3, 17, 42, 1_204, 17_204, 905_113_208, 6_000_000_001, 310_552_910_887]
@@ -153,37 +157,61 @@ def _check_same_result(got: pd.DataFrame, want: pd.DataFrame) -> None:
     )
 
 
+def _real_orders(rng: np.random.Generator) -> tuple[list[tuple[object, ...]], dict[int, str]]:
+    """Up to sixty real orders, and the country of each customer id that stands in them.
+
+    The orders are invoice lines of eight customers of an online retailer (online_retail), each
+    standing behind one of the test's large customer ids. A few customers hold most of the
+    lines. A sold line is ``completed`` and a line of a cancellation is ``cancelled``. The
+    amount is the size of the line total, rounded to the nearest 0.25: the contract's amounts
+    are multiples of 0.25. Three things the source lacks and the contract has rules for are
+    placed by the draw: one order in twelve has no customer, one amount in five is removed, and
+    one status in five is replaced by another status or another capitalisation.
+    """
+    events = retail_events()
+    real = rng.choice(np.sort(events["user_id"].unique()), size=len(CUSTOMER_IDS), replace=False)
+    stand_in = {int(customer): cid for customer, cid in zip(real, CUSTOMER_IDS, strict=True)}
+    lines = events[events["user_id"].isin(real)]
+    picked = lines.iloc[rng.permutation(len(lines))[: int(rng.integers(0, 61))]]
+    country = {
+        stand_in[int(customer)]: str(place)
+        for customer, place in zip(lines["user_id"], lines["country"], strict=True)
+    }
+    orders: list[tuple[object, ...]] = []
+    for order_id, (customer, cancelled, value) in enumerate(
+        zip(picked["user_id"], picked["cancelled"], picked["amount"], strict=True), start=1
+    ):
+        owner = None if rng.random() < 0.08 else stand_in[int(customer)]
+        status = "cancelled" if cancelled else "completed"
+        if rng.random() < 0.2:
+            status = OTHER_STATUSES[int(rng.integers(0, len(OTHER_STATUSES)))]
+        amount = None if rng.random() < 0.2 else round(abs(float(value)) * 4.0) / 4.0
+        orders.append((order_id, owner, DAY, status, amount))
+    return [
+        orders[int(i)] for i in rng.permutation(len(orders))
+    ], country  # insertion order is free
+
+
 def _random_tables(
     rng: np.random.Generator,
 ) -> tuple[list[tuple[object, ...]], list[tuple[object, ...]]]:
+    """Real orders, and a customer table that lists three to eight of the eight customers.
+
+    The region of a customer is its real country. An order of a customer that is not listed
+    belongs to no customer row.
+    """
+    orders, country = _real_orders(rng)
     size = int(rng.integers(3, 9))
     ids = [int(i) for i in rng.choice(CUSTOMER_IDS, size=size, replace=False)]
-    missing = [cid for cid in CUSTOMER_IDS if cid not in ids]  # ids with no row in customers
-    customers: list[tuple[object, ...]] = [
-        (cid, "north" if rng.random() < 0.5 else "south") for cid in ids
-    ]
-    orders: list[tuple[object, ...]] = []
-    for order_id in range(1, int(rng.integers(0, 61)) + 1):
-        roll = rng.random()
-        if roll < 0.08:
-            customer: int | None = None  # an order that belongs to no customer
-        elif roll < 0.16 and missing:
-            customer = missing[int(rng.integers(0, len(missing)))]  # no customer row: no customer
-        else:
-            customer = ids[int(rng.integers(0, len(ids)))]
-        status = STATUSES[int(rng.integers(0, len(STATUSES)))]
-        # Multiples of 0.25 are exact in binary floating point, so totals compare exactly.
-        amount = None if rng.random() < 0.2 else float(rng.integers(0, 801)) / 4.0
-        orders.append((order_id, customer, DAY, status, amount))
+    customers: list[tuple[object, ...]] = [(cid, country[cid]) for cid in ids]
     customers = [customers[int(i)] for i in rng.permutation(len(customers))]
-    orders = [orders[int(i)] for i in rng.permutation(len(orders))]  # insertion order is free
     return customers, orders
 
 
 def test_random_tables_match_the_pandas_oracle() -> None:
     # Fixed seeds, one mismatch reported at a time: the first failure names the mistake.
     for seed in range(60):
-        customers, orders = _random_tables(np.random.default_rng(seed))
+        customers, orders = _random_tables(data_rng(f"above-average-spend-p01:tables:{seed}"))
         got = _run_learner_query(_connect(customers, orders))
         _check_same_result(got, _oracle(customers, orders))
 

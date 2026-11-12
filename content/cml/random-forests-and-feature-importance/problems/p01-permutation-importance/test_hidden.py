@@ -6,7 +6,31 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import permutation_importance
 
+from dogma_data import rng, sample_rows
+
 WEIGHTS = np.array([2.0, -1.0, 0.0])  # the model reads columns 0 and 1; column 2 is ignored
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
 
 
 def _predict(Z):
@@ -18,9 +42,14 @@ def _accuracy(y_true, y_pred):
 
 
 def _problem(seed, n=40, d=3):
-    rng = np.random.default_rng(seed)
-    X = rng.normal(size=(n, d))
-    y = (X @ WEIGHTS[:d] + rng.normal(scale=0.5, size=n) > 0.0).astype(int)
+    """Semi-synthetic: real standardised breast_cancer columns, labels from the model's rule.
+
+    The columns are strongly correlated, as real features are. The labels follow the fixed
+    model's own rule plus noise, so the model is informative and each drop has a known cause.
+    """
+    gen = rng(f"permutation-importance-p01:problem:{seed}")
+    X, _ = sample_rows("breast_cancer", gen, n, d, standardize=True)
+    y = (X @ WEIGHTS[:d] + _real_normal(gen, n, scale=0.5) > 0.0).astype(int)
     return X, y
 
 
@@ -112,8 +141,9 @@ def test_feature_the_model_uses_has_a_positive_mean_drop():
 def test_harmful_feature_has_a_negative_drop_that_is_kept_negative():
     # The predictions are wrong everywhere, so the baseline accuracy is 0. Any shuffle can only
     # match the target more often, so the drop is negative. Taking absolute values hides this.
-    rng = np.random.default_rng(13)
-    X = rng.normal(size=(40, 2))
+    X, _ = sample_rows(
+        "breast_cancer", rng("permutation-importance-p01:13"), 40, 2, standardize=True
+    )
     y = 1 - (X[:, 0] > 0.0).astype(int)
 
     def predict_first(Z):
@@ -140,9 +170,11 @@ def test_same_seed_repeats_and_different_seed_changes_the_draws():
     X, y = _problem(7)
     first, _ = _call(X, y, n_repeats=4, seed=5)
     again, _ = _call(X, y, n_repeats=4, seed=5)
-    other, _ = _call(X, y, n_repeats=4, seed=6)
     np.testing.assert_array_equal(first, again, err_msg="the same seed must give the same result")
-    assert not np.array_equal(first, other), (
+    # Accuracy moves in steps of 1/n, and real columns are correlated, so two seeds can give the
+    # same mean drops by chance. Six other seeds all giving the same drops is not chance.
+    others = [_call(X, y, n_repeats=4, seed=seed)[0] for seed in range(6, 12)]
+    assert any(not np.array_equal(first, other) for other in others), (
         "a different seed must change the permutations, so the drops change"
     )
 
@@ -286,8 +318,9 @@ def test_single_row_table_is_accepted_and_has_no_drop():
 
 
 def test_single_feature_table_is_accepted_and_gets_one_entry():
-    rng = np.random.default_rng(21)
-    X = rng.normal(size=(30, 1))
+    X, _ = sample_rows(
+        "breast_cancer", rng("permutation-importance-p01:21"), 30, 1, standardize=True
+    )
     y = (X[:, 0] > 0.0).astype(int)
 
     def only_feature(Z):

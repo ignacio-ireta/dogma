@@ -63,3 +63,6 @@ fully collapsed router, which must score `alpha * E`; the tie rule on a case whe
 value; a single expert; large magnitudes where a naive exp overflows; the scaling in `alpha`; the
 0-dimensional float64 output; the error rules for `T`, `E`, `alpha` and the logits dtype and shape;
 and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

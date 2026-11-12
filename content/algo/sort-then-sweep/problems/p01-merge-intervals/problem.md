@@ -53,3 +53,6 @@ list, a single interval, duplicate intervals, single-point intervals, nested int
 intervals, intervals one whole number apart (which must stay apart), unsorted input, negative numbers, an invalid
 interval anywhere in the list, an input that must not change, output tuples of plain `int`, and a list of 200,000
 intervals that must finish within the time limit.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

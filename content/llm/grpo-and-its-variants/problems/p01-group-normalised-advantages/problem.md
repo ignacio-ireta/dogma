@@ -66,3 +66,6 @@ not used, check that all-equal groups return finite zeros for several magnitudes
 group's advantages sum to zero. They also check invariance to adding a constant to a group, groups
 being independent, a large common offset, float32 dtype, a float64 finite-difference gradient check,
 the invalid-input rules and no in-place mutation.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

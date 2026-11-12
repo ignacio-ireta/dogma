@@ -3,17 +3,77 @@ mutation and validation cases. Each failure names the likely mistake first."""
 
 from __future__ import annotations
 
+import functools
+
 import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from scipy.special import ndtr
 from sklearn.impute import SimpleImputer
 from submission import impute_with_indicators
 
-from dogma_data import load_frame
+from dogma_data import load_frame, rng, sample_rows
 
 SETTINGS = settings(max_examples=40, deadline=None, report_multiple_bugs=False)
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
+
+
+@functools.cache
+def _measured_penguins():
+    """The penguins with all four body measurements recorded (two of the 344 have none)."""
+    table = load_frame("penguins")
+    return table.dropna(subset=["bill_length_mm", "body_mass_g"]).reset_index(drop=True)
 
 
 def _run(df, numeric, strategy="median"):
@@ -37,15 +97,30 @@ def _expect_value_error(call, mistake):
 
 
 def _table(seed):
-    rng = np.random.default_rng(seed)
-    rows = int(rng.integers(3, 25))
+    """Real penguin measurements with about 30% of three columns removed at random.
+
+    a, b, c: bill length (mm), bill depth (mm) and body mass (kg). complete: flipper length
+    in cm. count: flipper length in whole mm. The measurements are real and repeat; only the
+    gaps are placed by the draw, because the source has too few gaps to test with.
+    """
+    gen = rng(f"impute-indicators-p01:table:{seed}")
+    rows = int(gen.integers(3, 25))
+    penguins = _measured_penguins()
+    picked = penguins.iloc[gen.choice(len(penguins), size=rows, replace=False)]
+    columns = {
+        "a": picked["bill_length_mm"],
+        "b": picked["bill_depth_mm"],
+        "c": picked["body_mass_g"] / 1000.0,
+    }
     data = {}
-    for name in ["a", "b", "c"]:
-        values = rng.normal(size=rows) * 4 + 1
-        values[rng.random(rows) < 0.3] = np.nan
+    for name, column in columns.items():
+        values = column.to_numpy(dtype=np.float64).copy()
+        values[_real_unit(gen, rows) < 0.3] = np.nan
         data[name] = values
-    data["complete"] = rng.normal(size=rows)  # never missing, so it gets no indicator
-    data["count"] = rng.integers(0, 9, size=rows)  # integer dtype, never missing
+    # never missing, so it gets no indicator
+    data["complete"] = picked["flipper_length_mm"].to_numpy(dtype=np.float64) / 10.0
+    # integer dtype, never missing
+    data["count"] = picked["flipper_length_mm"].to_numpy(dtype=np.int64)
     df = pd.DataFrame(data)
     df.loc[0, ["a", "b", "c"]] = [2.0, 3.0, 4.0]  # every named column keeps an observed value
     return df

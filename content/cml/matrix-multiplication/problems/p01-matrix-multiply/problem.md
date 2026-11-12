@@ -44,3 +44,6 @@ entries, and float inputs give floats. The error families are inner-dimension mi
 pairs whose outer dimensions match, and whose messages must name both shapes), ragged or non-matrix
 input, and zero-width input. A few tests target specific slips: an entrywise product instead of the
 matrix product, swapped operands, and mutated inputs.
+
+The hidden tests draw their bulk inputs from the real datasets `digits` and `wine` (see
+`docs/DATASETS.md`).

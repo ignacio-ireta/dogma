@@ -10,6 +10,8 @@ import pytest
 from submission import ToolCallParseError, ToolSchemaError
 from submission import parse_tool_call as _learner
 
+from dogma_data import load_frame, retail_events
+
 SCHEMA = {
     "name": "lookup",
     "parameters": {
@@ -57,15 +59,22 @@ def _expect(exc_type, text, tool=SCHEMA):
 
 
 def test_seeded_random_valid_calls_round_trip_through_json():
-    rng = random.Random(501)  # noqa: S311 -- seeded synthetic calls, not security
+    # Real argument values. The query is a GSM8K question as written (apostrophes, dollar
+    # signs, quotes, non-ASCII punctuation). The limit, the score and the flag are the
+    # quantity, the amount and the cancellation mark of a real invoice line, so refunds give
+    # negative numbers. Which optional arguments are present is drawn.
+    rng = random.Random(501)  # noqa: S311 -- seeded choice of real rows, not security
+    questions = load_frame("gsm8k")["question"].tolist()
+    lines = retail_events()
     for _ in range(200):
-        args = {"query": f"q{rng.randrange(10**6)}"}
+        line = lines.iloc[rng.randrange(len(lines))]
+        args = {"query": rng.choice(questions)}
         if rng.random() < 0.5:
-            args["limit"] = rng.randrange(-(10**12), 10**12)
+            args["limit"] = int(line["quantity"])
         if rng.random() < 0.5:
-            args["score"] = rng.uniform(-1e6, 1e6)
+            args["score"] = float(line["amount"])
         if rng.random() < 0.5:
-            args["exact"] = rng.random() < 0.5
+            args["exact"] = bool(line["cancelled"])
         pad = rng.choice(["", " ", "\n\t "])
         text = pad + _wrap("lookup", args) + pad
         want = json.loads(json.dumps({"name": "lookup", "arguments": args}))

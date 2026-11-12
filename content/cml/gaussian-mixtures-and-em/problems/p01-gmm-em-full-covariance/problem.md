@@ -63,3 +63,6 @@ the log-likelihood never decreases across iterations; the covariance floor on du
 responsibilities for far-apart points, where a naive exponential underflows; a component that
 receives no responsibility; invariance to sample order and to a large common offset; shapes and
 dtypes; invalid inputs; and that the inputs are left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `iris` and `wine` (see
+`docs/DATASETS.md`).

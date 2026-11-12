@@ -8,6 +8,8 @@ from pathlib import Path
 import duckdb
 import pytest
 
+from dogma_data import retail_events
+
 COLUMNS = [
     "account_id",
     "posting_id",
@@ -71,12 +73,24 @@ def _oracle(rows):
 
 
 def test_matches_group_sort_oracle_on_seeded_postings_with_ties():
-    rng = random.Random(2026)  # noqa: S311 -- seeded synthetic fixtures, not security.
+    # Real postings (online_retail): the invoice lines of up to five customers of an online
+    # retailer. A posting is one line, posted at the invoice minute, so the lines of an invoice
+    # tie on the timestamp; the amount is the line total in pence, negative on a return.
+    rng = random.Random(2026)  # noqa: S311 -- seeded choice of real rows, not security.
+    events = retail_events()
+    by_customer = {int(c): frame for c, frame in events.groupby("user_id")}
     for _ in range(25):
         rows = []
-        for posting in rng.sample(range(1, 500), rng.randrange(1, 60)):
-            when = BASE + timedelta(hours=rng.randrange(3))  # three timestamps: many ties
-            rows.append((rng.randrange(1, 6), posting, when, rng.randrange(-500, 501)))
+        for customer in rng.sample(sorted(by_customer), rng.randrange(1, 6)):
+            lines = by_customer[customer]
+            first = rng.randrange(len(lines))
+            picked = lines.iloc[first : first + rng.randrange(1, 13)]
+            rows += [
+                (customer, int(event_id), moment.to_pydatetime(), round(float(amount) * 100))
+                for event_id, moment, amount in zip(
+                    picked["event_id"], picked["ts"], picked["amount"], strict=True
+                )
+            ]
         rng.shuffle(rows)
         _same(
             _run(rows),

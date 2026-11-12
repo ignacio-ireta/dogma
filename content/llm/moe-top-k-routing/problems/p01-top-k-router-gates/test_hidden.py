@@ -8,6 +8,31 @@ import pytest
 import torch
 from submission import top_k_route as _learner
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-top-k-router-gates:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
+
 
 def _call(logits, k):
     """Call the learner; an exception on a valid input is reported as a contract failure."""
@@ -68,7 +93,7 @@ def _check_against_reference(logits, k):
 def test_seeded_random_routes_match_probability_reference():
     gen = torch.Generator().manual_seed(101)
     for tokens, experts, k in [(5, 4, 2), (7, 6, 3), (3, 8, 1)]:
-        logits = torch.randn(tokens, experts, generator=gen, dtype=torch.float64) * 2.0
+        logits = _real_values(gen, [tokens, experts], torch.float64) * 2.0
         _check_against_reference(logits, k)
 
 
@@ -116,7 +141,7 @@ def test_counts_include_every_slot_not_only_the_first():
 
 def test_large_logit_magnitudes_do_not_overflow():
     gen = torch.Generator().manual_seed(102)
-    logits = torch.randn(4, 5, generator=gen, dtype=torch.float64) * 400.0
+    logits = _real_values(gen, [4, 5], torch.float64) * 400.0
     _, gates, _ = _call(logits, 2)
     assert torch.isfinite(gates).all(), (
         "large logits produced non-finite gates: subtract the max before exp"
@@ -143,7 +168,7 @@ def test_selection_uses_logits_when_probabilities_underflow():
 
 def test_k_equal_to_num_experts_selects_every_expert():
     gen = torch.Generator().manual_seed(103)
-    logits = torch.randn(4, 3, generator=gen, dtype=torch.float64)
+    logits = _real_values(gen, [4, 3], torch.float64)
     idx, _gates, counts = _call(logits, 3)
     assert sorted(idx[0].tolist()) == [0, 1, 2], "with k = E every expert must be chosen once"
     _check_against_reference(logits, 3)
@@ -178,7 +203,7 @@ def test_non_finite_logit_raises_value_error(bad):
 
 def test_output_dtypes_and_shapes_follow_the_contract():
     gen = torch.Generator().manual_seed(104)
-    logits = torch.randn(6, 5, generator=gen, dtype=torch.float64)
+    logits = _real_values(gen, [6, 5], torch.float64)
     idx, gates, counts = _call(logits, 2)
     assert idx.dtype == torch.int64, "expert_indices must be int64"
     assert gates.dtype == torch.float64, "gate_weights must be float64"
@@ -190,7 +215,7 @@ def test_output_dtypes_and_shapes_follow_the_contract():
 
 def test_inputs_are_not_mutated():
     gen = torch.Generator().manual_seed(105)
-    logits = torch.randn(5, 4, generator=gen, dtype=torch.float64)
+    logits = _real_values(gen, [5, 4], torch.float64)
     before = logits.clone()
     _call(logits, 2)
     assert torch.equal(logits, before), "the logits tensor must not be modified in place"

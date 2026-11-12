@@ -5,10 +5,46 @@ from hypothesis import strategies as st
 from sklearn.model_selection import KFold
 from submission import kfold_indices
 
-UNSHUFFLED_CASES = [(10, 3), (7, 2), (12, 4), (9, 9), (25, 6)]
-UNSHUFFLED_IDS = ["remainder-first", "two-folds-odd", "even-split", "leave-one-out", "many-folds"]
-SHUFFLED_CASES = [(10, 3, 0), (6, 3, 0), (17, 5, 1), (8, 2, 7), (30, 4, 123)]
-SHUFFLED_IDS = ["remainder", "equal-blocks", "uneven-blocks", "two-folds", "wide-folds"]
+from dogma_data import load
+
+# A dataset name stands for its number of rows, read inside the test (`_rows`).
+UNSHUFFLED_CASES = [(10, 3), (7, 2), (12, 4), (9, 9), (25, 6), ("iris", 5), ("wine", 10)]
+UNSHUFFLED_IDS = [
+    "remainder-first",
+    "two-folds-odd",
+    "even-split",
+    "leave-one-out",
+    "many-folds",
+    "iris-rows",
+    "wine-rows",
+]
+SHUFFLED_CASES = [
+    (10, 3, 0),
+    (6, 3, 0),
+    (17, 5, 1),
+    (8, 2, 7),
+    (30, 4, 123),
+    ("breast_cancer", 5, 3),
+    ("diabetes", 10, 11),
+]
+SHUFFLED_IDS = [
+    "remainder",
+    "equal-blocks",
+    "uneven-blocks",
+    "two-folds",
+    "wide-folds",
+    "breast-cancer-rows",
+    "diabetes-rows",
+]
+
+
+def _rows(n):
+    """A number as it is; a dataset name as the number of rows of that real dataset.
+
+    iris has 150 rows, wine 178, breast_cancer 569 and diabetes 442: the sizes a split is
+    really made for, none of them a multiple of every fold count used here.
+    """
+    return n if isinstance(n, int) else int(load(n).X.shape[0])
 
 
 def _folds(n, k, **kwargs):
@@ -51,6 +87,7 @@ def _reference_shuffled(n, k, seed):
 
 @pytest.mark.parametrize(("n", "k"), UNSHUFFLED_CASES, ids=UNSHUFFLED_IDS)
 def test_unshuffled_folds_match_sklearn_kfold(n, k):
+    n = _rows(n)
     expected = list(KFold(n_splits=k).split(np.arange(n)))
     folds = _folds(n, k)
     for (train, test), (exp_train, exp_test) in zip(folds, expected, strict=True):
@@ -66,6 +103,7 @@ def test_unshuffled_folds_match_sklearn_kfold(n, k):
 
 @pytest.mark.parametrize(("n", "k", "seed"), SHUFFLED_CASES, ids=SHUFFLED_IDS)
 def test_shuffled_folds_follow_the_seeded_permutation_protocol(n, k, seed):
+    n = _rows(n)
     expected = _reference_shuffled(n, k, seed)
     folds = _folds(n, k, shuffle=True, seed=seed)
     for train, test in folds:

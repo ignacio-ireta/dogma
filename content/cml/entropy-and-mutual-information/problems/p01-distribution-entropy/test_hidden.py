@@ -1,13 +1,89 @@
 from __future__ import annotations
 
+import functools
 import math
 
 import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from scipy.special import ndtr
 from scipy.stats import entropy as reference_entropy
 from submission import entropy
+
+from dogma_data import load_frame, rng, sample_rows
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
+
+
+@functools.cache
+def _adult():
+    """The adult census table, read once: real categorical columns with very uneven shares."""
+    return load_frame("adult")
+
+
+CATEGORICAL = ("workclass", "education", "marital.status", "occupation", "relationship", "race")
+
+
+def _real_distribution(gen):
+    """Shares of one adult column's categories among a small draw of people.
+
+    Every category of the column is listed, so the ones nobody in the draw holds have
+    probability zero: real distributions are sparse.
+    """
+    table = _adult()
+    column = table[CATEGORICAL[int(gen.integers(len(CATEGORICAL)))]]
+    rows = gen.choice(len(table), size=int(gen.integers(5, 80)), replace=False)
+    counts = column.iloc[rows].value_counts().reindex(sorted(column.unique()), fill_value=0)
+    return counts.to_numpy(dtype=np.float64) / len(rows)
 
 
 def _call(p, **kwargs):
@@ -37,15 +113,10 @@ def _expect_value_error(p, mistake, **kwargs):
 
 
 def test_matches_reference_entropy_on_random_distributions():
-    rng = np.random.default_rng(0)
+    gen = rng("entropy-p01:reference")
     for base in (2.0, math.e, 10.0):
         for _ in range(25):
-            k = int(rng.integers(2, 9))
-            p = rng.dirichlet(np.ones(k))
-            p[rng.random(k) < 0.3] = 0.0  # sparse vectors exercise the zero-term rule
-            if p.sum() == 0.0:
-                p[0] = 1.0
-            p = p / p.sum()
+            p = _real_distribution(gen)  # unseen categories exercise the zero-term rule
             np.testing.assert_allclose(
                 _call(p, base=base),
                 reference_entropy(p, base=base),
@@ -185,7 +256,7 @@ def test_returns_a_python_float_for_a_list_input():
 @given(st.integers(min_value=0, max_value=10_000), st.integers(min_value=1, max_value=12))
 def test_entropy_lies_between_zero_and_log_of_the_number_of_outcomes(seed, k):
     rng = np.random.default_rng(seed)
-    p = rng.dirichlet(np.ones(k))
+    p = _real_shares(rng, np.ones(k))
     value = _call(p)
     assert -1e-12 <= value <= math.log2(k) + 1e-12, (
         "entropy must lie between 0 and log2 of the number of outcomes"

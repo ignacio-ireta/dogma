@@ -77,3 +77,5 @@ and trees whose longest path lies inside one subtree and not through the root. T
 result is an `int`, that values do not affect the answer, and that the tree is left unchanged. A
 diameter that stops at the root, a height that is used as the diameter, and a height of 0 for the empty
 tree each fail with the mistake named.
+
+The hidden tests draw their bulk inputs from the real dataset `wine` (see `docs/DATASETS.md`).

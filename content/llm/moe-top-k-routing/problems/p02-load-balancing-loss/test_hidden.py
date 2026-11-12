@@ -8,6 +8,31 @@ import pytest
 import torch
 from submission import load_balance_loss as _learner
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p02-load-balancing-loss:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
+
 
 def _call(logits, alpha=1.0):
     try:
@@ -48,7 +73,7 @@ def _reference(rows, alpha):
 def test_seeded_random_logits_match_pure_python_reference():
     gen = torch.Generator().manual_seed(201)
     for tokens, experts, alpha in [(1, 2, 1.0), (4, 3, 1.0), (6, 5, 0.25), (9, 4, 2.0)]:
-        logits = torch.randn(tokens, experts, generator=gen, dtype=torch.float64)
+        logits = _real_values(gen, [tokens, experts], torch.float64)
         want = _reference(logits.tolist(), alpha)
         got = _call(logits, alpha)
         torch.testing.assert_close(
@@ -133,7 +158,7 @@ def test_top_one_tie_goes_to_lower_expert_index():
 
 def test_single_expert_scores_alpha_for_any_tokens():
     gen = torch.Generator().manual_seed(202)
-    logits = torch.randn(3, 1, generator=gen, dtype=torch.float64)
+    logits = _real_values(gen, [3, 1], torch.float64)
     torch.testing.assert_close(
         _call(logits, 2.0),
         torch.tensor(2.0, dtype=torch.float64),
@@ -160,7 +185,7 @@ def test_large_logit_magnitudes_stay_finite():
 
 def test_loss_scales_linearly_with_alpha_and_zero_alpha_gives_zero():
     gen = torch.Generator().manual_seed(203)
-    logits = torch.randn(5, 4, generator=gen, dtype=torch.float64)
+    logits = _real_values(gen, [5, 4], torch.float64)
     one = _call(logits, 1.0)
     torch.testing.assert_close(
         _call(logits, 2.0),
@@ -174,7 +199,7 @@ def test_loss_scales_linearly_with_alpha_and_zero_alpha_gives_zero():
 
 def test_output_is_zero_dimensional_float64():
     gen = torch.Generator().manual_seed(204)
-    loss = _call(torch.randn(4, 3, generator=gen, dtype=torch.float64))
+    loss = _call(_real_values(gen, [4, 3], torch.float64))
     assert isinstance(loss, torch.Tensor), "the loss must be a torch tensor, not a Python float"
     assert loss.dtype == torch.float64, "the loss must be float64 for float64 logits"
     assert tuple(loss.shape) == (), "the loss must be a 0-dimensional tensor"
@@ -212,7 +237,7 @@ def test_nan_logit_raises_value_error():
 
 def test_inputs_are_not_mutated():
     gen = torch.Generator().manual_seed(205)
-    logits = torch.randn(4, 3, generator=gen, dtype=torch.float64)
+    logits = _real_values(gen, [4, 3], torch.float64)
     before = logits.clone()
     _call(logits, 1.0)
     assert torch.equal(logits, before), "the logits tensor must not be modified in place"

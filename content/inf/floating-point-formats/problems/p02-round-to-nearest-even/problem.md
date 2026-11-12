@@ -63,3 +63,6 @@ where every representable value is listed and the nearest one is chosen with tie
 overflow at and just below the midpoint; underflow to a signed zero and rounding up into the
 smallest normal number; NaN, infinities and signed zero; idempotence (rounding a rounded value does
 not change it) and the relative error bound; and the `ValueError` rules.
+
+The hidden tests draw their bulk inputs from the real datasets `adult`, `california_housing` and
+`gutenberg_walden` (see `docs/DATASETS.md`).

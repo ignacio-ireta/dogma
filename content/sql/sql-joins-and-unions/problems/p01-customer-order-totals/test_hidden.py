@@ -19,7 +19,7 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from dogma_data import rng
+from dogma_data import retail_events, rng
 
 COLUMNS = ["customer_id", "customer_name", "order_count", "total_amount"]
 CUSTOMERS_DDL = (
@@ -297,14 +297,20 @@ def test_zero_order_customer_total_is_zero_not_null_next_to_non_zero_totals() ->
 
 
 def test_cent_amounts_with_large_totals_keep_double_precision():
+    # Real customers and real amounts in pounds and pence (online_retail): the 60 customers of
+    # the snapshot and 1,500 of their sold invoice lines, with the invoice date. A few
+    # customers hold most of the lines, and one line can be worth thousands of pounds.
     gen = rng("sql/sql-joins-and-unions/p01-customer-order-totals:cents:0")
-    ids = [int(x) for x in gen.choice(np.arange(1, 5000), size=60, replace=False)]
+    events = retail_events()
+    sold = events[~events["cancelled"]]
+    sold = sold.iloc[gen.permutation(len(sold))[:1500]]
+    ids = sorted(int(cid) for cid in events["user_id"].unique())
     customers: list[tuple[Any, ...]] = [(cid, f"Shop {cid}", True) for cid in ids]
-    weights = 1.0 / np.arange(1, len(ids) + 1, dtype=np.float64) ** 1.1
-    picks = gen.choice(len(ids), size=1500, p=weights / weights.sum())
-    cents = np.round(gen.lognormal(math.log(400.0), 1.0, size=1500), 2)
     orders: list[tuple[Any, ...]] = [
-        (i + 1, ids[int(picks[i])], DAY, float(cents[i])) for i in range(1500)
+        (int(event_id), int(cid), moment.date(), float(amount))
+        for event_id, cid, moment, amount in zip(
+            sold["event_id"], sold["user_id"], sold["ts"], sold["amount"], strict=True
+        )
     ]
     got = _run_learner_query(_connect(customers, orders))
     _check_same_result(got, _oracle(customers, orders), check_order=False)

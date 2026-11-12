@@ -47,3 +47,6 @@ table of the nine verdict combinations on seeded random judgments, check the pos
 (always "A" or always "B") gives one half, check a consistent judge gives one or zero, check that a tie
 and a decisive verdict do not count as a win, check that the order of items does not change the rate,
 and cover every invalid-input family.
+
+The hidden tests draw their bulk inputs from the real dataset `mt_bench_judgments` (see
+`docs/DATASETS.md`).

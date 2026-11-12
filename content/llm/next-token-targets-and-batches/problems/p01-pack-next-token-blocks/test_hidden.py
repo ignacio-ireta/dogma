@@ -2,12 +2,39 @@
 # Messages name the kind of mistake; they never show hidden inputs or expected blocks.
 from __future__ import annotations
 
+import collections
+import functools
+import re
+
 import torch
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import pack_next_token_blocks
 
+from dogma_data import load_text
+
 TOKEN = st.integers(min_value=0, max_value=40)
+
+
+BOOKS = ("gutenberg_frankenstein", "gutenberg_pride_prejudice", "gutenberg_walden")
+
+
+@functools.cache
+def _token_lines(vocab: int) -> tuple[tuple[int, ...], ...]:
+    """The lines of three vendored novels as word ids below ``vocab``.
+
+    A word's id is its frequency rank over the three books (0 for the most frequent). Ranks at
+    or above ``vocab - 1`` share the last id, as an unknown-word id does. Real text makes the
+    ids very uneven: a few small ids recur in almost every line.
+    """
+    lines = [
+        re.findall(r"[a-z]+", line.lower())
+        for name in BOOKS
+        for line in load_text(name).splitlines()
+    ]
+    ranked = collections.Counter(word for line in lines for word in line).most_common()
+    rank = {word: index for index, (word, _) in enumerate(ranked)}
+    return tuple(tuple(min(rank[word], vocab - 1) for word in line) for line in lines if line)
 
 
 def _call(documents, block_size, eos_id):
@@ -67,10 +94,12 @@ def _int(gen: torch.Generator, lo: int, hi: int) -> int:
 
 
 def _random_docs(gen: torch.Generator, n_docs: int, max_len: int, vocab: int):
+    """Documents of real text: the first 0..max_len word ids of randomly chosen lines."""
+    lines = _token_lines(vocab)
     docs = []
     for _ in range(n_docs):
         n = _int(gen, 0, max_len)
-        docs.append(torch.randint(0, vocab, (n,), generator=gen).tolist())
+        docs.append(list(lines[_int(gen, 0, len(lines) - 1)][:n]))
     return docs
 
 

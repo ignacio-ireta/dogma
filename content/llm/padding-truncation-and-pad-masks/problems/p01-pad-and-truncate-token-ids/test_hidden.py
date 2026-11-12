@@ -2,13 +2,40 @@
 # not) and a plain-Python reference built from list slicing. Messages name the kind of mistake.
 from __future__ import annotations
 
+import collections
+import functools
+import re
+
 import torch
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import pad_and_truncate
 from torch.nn.utils.rnn import pad_sequence  # oracle only
 
+from dogma_data import load_text
+
 TOKEN = st.integers(min_value=0, max_value=50)
+
+
+BOOKS = ("gutenberg_frankenstein", "gutenberg_pride_prejudice", "gutenberg_walden")
+
+
+@functools.cache
+def _token_lines(vocab: int) -> tuple[tuple[int, ...], ...]:
+    """The lines of three vendored novels as word ids below ``vocab``.
+
+    A word's id is its frequency rank over the three books (0 for the most frequent). Ranks at
+    or above ``vocab - 1`` share the last id, as an unknown-word id does. Real text makes the
+    ids very uneven: a few small ids recur in almost every line.
+    """
+    lines = [
+        re.findall(r"[a-z]+", line.lower())
+        for name in BOOKS
+        for line in load_text(name).splitlines()
+    ]
+    ranked = collections.Counter(word for line in lines for word in line).most_common()
+    rank = {word: index for index, (word, _) in enumerate(ranked)}
+    return tuple(tuple(min(rank[word], vocab - 1) for word in line) for line in lines if line)
 
 
 def _call(sequences, pad_id, width, trunc="right", side="right"):
@@ -67,11 +94,12 @@ def _int(gen: torch.Generator, lo: int, hi: int) -> int:
 
 
 def _ragged(gen: torch.Generator, rows: int, max_len: int, vocab: int) -> list[list[int]]:
-    """Seeded ragged batch: row lengths in [0, max_len], ids in [0, vocab)."""
+    """Seeded ragged batch of real text: the first 0..max_len word ids of random lines."""
+    lines = _token_lines(vocab)
     out = []
     for _ in range(rows):
         n = _int(gen, 0, max_len)
-        out.append(torch.randint(0, vocab, (n,), generator=gen).tolist())
+        out.append(list(lines[_int(gen, 0, len(lines) - 1)][:n]))
     return out
 
 
@@ -95,9 +123,11 @@ def test_right_padding_matches_pad_sequence_when_nothing_is_truncated():
 
 def test_left_padding_matches_flipped_pad_sequence():
     gen = torch.Generator().manual_seed(1)
-    for _ in range(20):
-        seqs = _ragged(gen, _int(gen, 1, 5), 6, 100)
-        seqs = [s if s else [1] for s in seqs]
+    batches = [_ragged(gen, _int(gen, 1, 5), 6, 100) for _ in range(20)]
+    # One batch of one-word lines, so that the width is 1: the smallest width the contract allows.
+    batches.append([list(line[:1]) for line in _token_lines(100)[:3]])
+    for batch in batches:
+        seqs = [s if s else [1] for s in batch]
         width = max(len(s) for s in seqs)
         ids, mask = _call(seqs, 0, width, "right", "left")
         want_ids = pad_sequence(

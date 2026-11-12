@@ -7,6 +7,8 @@ from hypothesis import strategies as st
 from sklearn.preprocessing import StandardScaler
 from submission import standardize
 
+from dogma_data import rng, sample_rows
+
 
 def _call(train, values):
     try:
@@ -33,9 +35,10 @@ def _reject(train, values):
 @settings(max_examples=35, deadline=None, report_multiple_bugs=False)
 @given(st.integers(0, 10000), st.integers(2, 25), st.integers(1, 6))
 def test_matches_sklearn_on_seeded_random_matrices(seed, rows, columns):
-    rng = np.random.default_rng(seed)
-    train = rng.normal(size=(rows, columns)) * np.arange(1, columns + 1) + 8
-    values = rng.normal(size=(7, columns)) - 15
+    # Raw wine: the columns sit on scales from hundredths to thousands. The scaler is fitted on
+    # `rows` wines and applied to seven other wines.
+    drawn, _ = sample_rows("wine", rng(f"standard-scaler-p01:sklearn:{seed}"), rows + 7, columns)
+    train, values = drawn[:rows], drawn[rows:]
     expected = StandardScaler().fit(train)
     out, mean, scale = _call(train, values)
     checks = [

@@ -55,3 +55,6 @@ dimensions. The hidden tests check dtype promotion and the dtype of the result, 
 independent float64 computation on seeded random inputs, non-negative output for identical points,
 accuracy when all points share a large offset, scale behaviour for very small coordinates, and
 input validation and non-mutation.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

@@ -44,3 +44,6 @@ flip under a row swap; the scaling of a row and of the whole matrix; the invaria
 multiple of one row to another; all 24 permutation matrices of size 4 giving their sign; singular
 matrices giving zero; the `0 x 0` and `1 x 1` cases; invalid input raising `ValueError`; integer
 input; and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `wine` (see
+`docs/DATASETS.md`).

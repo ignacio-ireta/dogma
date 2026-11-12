@@ -89,3 +89,6 @@ identity behaviour when the sub-layers are zero; large input magnitudes; the exa
 biased variance; the input and parameters left unchanged; the output shape and dtype; and every
 `ValueError` rule above. When an output matches a known wrong variant, the failure names that
 mistake, for example post-norm placement, a missing mask, or a missing residual.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

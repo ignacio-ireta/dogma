@@ -57,3 +57,6 @@ membership by name and rank, including a two-dimensional bias. They check the ex
 values, identity of tensors, order within groups, a run of `torch.optim.AdamW` with your groups
 against a run with reference groups, and invalid input. A failing test names the mistake, such as
 a norm gain that received decay or a group built from copies.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

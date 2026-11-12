@@ -6,7 +6,9 @@ Every failure names the kind of mistake and carries no hidden input or answer.
 
 from __future__ import annotations
 
+import functools
 import random
+import re
 import signal
 import threading
 from collections.abc import Iterator
@@ -19,6 +21,8 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import longest_common_subsequence
 
+from dogma_data import load_text
+
 LONG_LENGTH = 1200
 # The reference answers the 1,200-character case in well under a second; the budget leaves room.
 LONG_BUDGET_S = 10.0
@@ -26,6 +30,22 @@ LONG_BUDGET_S = 10.0
 
 class _TooSlow(BaseException):
     """Raised inside the learner's code when the time box expires."""
+
+
+BOOKS = ("gutenberg_frankenstein", "gutenberg_pride_prejudice", "gutenberg_walden")
+
+
+@functools.cache
+def _book_words() -> tuple[str, ...]:
+    """Every word of three vendored novels, lowercased: real strings that share letters."""
+    return tuple(word for name in BOOKS for word in re.findall(r"[a-z]+", load_text(name).lower()))
+
+
+def _phrase(rng: random.Random, max_len: int) -> str:
+    """Up to max_len characters of real prose: a run of consecutive words, cut at random."""
+    words = _book_words()
+    start = rng.randrange(len(words) - 4)
+    return " ".join(words[start : start + 4])[: rng.randrange(0, max_len + 1)]
 
 
 @contextmanager
@@ -128,19 +148,18 @@ def _check(a: str, b: str, expected: int) -> None:
 @settings(max_examples=120, deadline=None, derandomize=True, report_multiple_bugs=False)
 @given(seed=st.integers(min_value=0, max_value=10_000))
 def test_property_length_and_witness_on_random_short_strings(seed: int) -> None:
-    rng = random.Random(seed)  # noqa: S311 -- seeded synthetic strings, not security.
-    alphabet = rng.choice(["ab", "abc", "acgt"])
-    a = "".join(rng.choice(alphabet) for _ in range(rng.randrange(0, 13)))
-    b = "".join(rng.choice(alphabet) for _ in range(rng.randrange(0, 13)))
+    rng = random.Random(seed)  # noqa: S311 -- seeded choice of real phrases, not security.
+    a = _phrase(rng, 12)
+    b = _phrase(rng, 12)
     _check(a, b, _suffix_length(a, b))
 
 
 @settings(max_examples=80, deadline=None, derandomize=True, report_multiple_bugs=False)
 @given(seed=st.integers(min_value=0, max_value=10_000))
 def test_tiny_strings_match_the_subset_brute_force(seed: int) -> None:
-    rng = random.Random(seed)  # noqa: S311 -- seeded synthetic strings, not security.
-    a = "".join(rng.choice("xyz") for _ in range(rng.randrange(0, 8)))
-    b = "".join(rng.choice("xyz") for _ in range(rng.randrange(0, 8)))
+    rng = random.Random(seed)  # noqa: S311 -- seeded choice of real phrases, not security.
+    a = _phrase(rng, 7)
+    b = _phrase(rng, 7)
     _check(a, b, _brute_length(a, b))
 
 
@@ -171,9 +190,9 @@ def test_substring_trap_is_not_a_contiguous_block() -> None:
 
 
 def test_long_strings_finish_within_the_time_limit() -> None:
-    rng = random.Random(4242)  # noqa: S311 -- seeded synthetic strings, not security.
-    a = "".join(rng.choice("acgt") for _ in range(LONG_LENGTH))
-    b = "".join(rng.choice("acgt") for _ in range(LONG_LENGTH))
+    # The openings of two different novels: real text against real text, as a diff tool sees.
+    a = load_text("gutenberg_frankenstein")[:LONG_LENGTH]
+    b = load_text("gutenberg_walden")[:LONG_LENGTH]
     result = _answer(a, b, LONG_BUDGET_S)
     if type(result) is not tuple or result[0] != _suffix_length(a, b):
         pytest.fail(MISTAKE)

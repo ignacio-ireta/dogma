@@ -50,3 +50,6 @@ parcels, the lower end of the range (the heaviest parcel must fit), a day count 
 an empty list, a weight that is zero or not an integer, a `days` value that is not a positive integer,
 inputs that must not change, and a large list where a scan over every capacity reads far too many
 parcels.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

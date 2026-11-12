@@ -4,6 +4,9 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import minibatch_sgd
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 
 def _raised_value_error(call, mistake):
     try:
@@ -16,11 +19,14 @@ def _raised_value_error(call, mistake):
 
 
 def _data(seed, n, d):
-    """Deterministic design with rows of norm about 1, and a random target."""
-    rng = np.random.default_rng(seed)
-    X = rng.normal(size=(n, d)) / np.sqrt(d)
-    y = rng.normal(size=n)
-    return X, y
+    """n diabetes patients: d standardised features scaled to rows of norm about 1, real target.
+
+    The target is the disease progression, centred and scaled by round numbers near its mean
+    and spread.
+    """
+    gen = data_rng(f"minibatch-sgd-p01:data:{seed}:{n}:{d}")
+    X, y = sample_rows("diabetes", gen, n, d, standardize=True)
+    return X / np.sqrt(d), (y - 150.0) / 75.0
 
 
 def _reference(X, y, lr, batch_size, epochs, *, seed):
@@ -126,7 +132,14 @@ def test_single_sample_step_is_lr_times_x_times_y():
 
 def test_noise_free_data_converges_to_the_least_squares_solution():
     n, d = 60, 3
-    X, _ = _data(3, n, d)
+    # Reaching the fit in a fixed number of epochs is a statement about a well-conditioned
+    # design. Real columns are often strongly correlated, so such draws are skipped here.
+    attempt = 0
+    while True:
+        X, _ = _data(f"noise-free-{attempt}", n, d)
+        if np.linalg.cond(X) < 2.0:
+            break
+        attempt += 1
     w_true = np.array([2.0, -1.0, 0.5])
     y = X @ w_true
     lstsq = np.linalg.lstsq(X, y, rcond=None)[0]

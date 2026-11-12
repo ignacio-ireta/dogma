@@ -49,3 +49,6 @@ returned point. They check the ρ = 0 limit against the ridge closed form, and t
 They check the grouping effect: duplicated and nearly duplicated columns share their weight evenly, where
 the lasso picks one of them. They also check a zero column with ρ = 1 (which has zero denominator), the
 scaling of y with α, invalid inputs, integer input, and unchanged inputs.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `diabetes` (see
+`docs/DATASETS.md`).

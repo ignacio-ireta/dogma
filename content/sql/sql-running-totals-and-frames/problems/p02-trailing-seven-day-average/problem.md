@@ -85,3 +85,6 @@ and on a fixture. Hidden cases cover a window that ends exactly six days after a
 (included) and seven days after (excluded), gaps longer than the window, stores with the same
 dates that must not mix, a store with one day, dates across a month and a year boundary, large
 revenue values, exact output types and final ordering, and an empty table.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

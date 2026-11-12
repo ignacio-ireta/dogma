@@ -8,6 +8,8 @@ from pathlib import Path
 import duckdb
 import pytest
 
+from dogma_data import retail_events
+
 COLUMNS = ["entity_id", "event_id", "occurred_at", "payload", "rank_in_entity"]
 TYPES = ["BIGINT", "BIGINT", "TIMESTAMP", "VARCHAR", "BIGINT"]
 SQL = Path(__file__).with_name("submission.sql").read_text(encoding="utf-8")
@@ -67,24 +69,31 @@ def _oracle(rows):
 
 
 def test_matches_independent_group_sort_oracle_on_seeded_records():
-    rng = random.Random(2026)  # noqa: S311 -- seeded synthetic fixtures, not security.
+    # Real records (online_retail): a run of consecutive invoice lines of an online retailer.
+    # The entity is the customer, the time is the invoice minute, so the lines of an invoice
+    # tie, and the payload is the product description as typed. A sold line is a success and a
+    # line of a cancellation a failure. The source has no missing time and no hand-typed kind,
+    # and the contract has rules for both: one line in five loses its time, and one success in
+    # four is typed in capitals.
+    rng = random.Random(2026)  # noqa: S311 -- seeded choice of real rows, not security.
+    events = retail_events()
     for _ in range(20):
+        first = rng.randrange(len(events) - 80)
+        picked = events.iloc[first : first + rng.randrange(0, 79)]
         rows = []
-        for event in range(1, rng.randrange(1, 80)):
-            when = (
-                None
-                if rng.randrange(5) == 0
-                else datetime(2026, 1, 1) + timedelta(days=rng.randrange(4))
+        for customer, event, moment, cancelled, label in zip(
+            picked["user_id"],
+            picked["event_id"],
+            picked["ts"],
+            picked["cancelled"],
+            picked["label"],
+            strict=True,
+        ):
+            when = None if rng.randrange(5) == 0 else moment.to_pydatetime()
+            kind = (
+                "failure" if cancelled else rng.choice(["success", "success", "success", "SUCCESS"])
             )
-            rows.append(
-                (
-                    rng.randrange(1, 9),
-                    event,
-                    when,
-                    rng.choice(["success", "failure", "SUCCESS"]),
-                    str(event),
-                )
-            )
+            rows.append((int(customer), int(event), when, kind, str(label)))
         rng.shuffle(rows)
         _same(_run(rows), _oracle(rows))
 

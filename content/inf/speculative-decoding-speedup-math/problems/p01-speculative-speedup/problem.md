@@ -62,3 +62,6 @@ valid `alpha` and `gamma`. Hidden tests cover:
 - an acceptance rate near 1 with a long draft, where a naive subtraction loses digits;
 - a draft slower than the target at low acceptance;
 - invalid `alpha`, `gamma` and `c`, bool and float types, and the return types.
+
+Some hidden tests take their inputs from the real datasets `gutenberg_pride_prejudice` and
+`gutenberg_walden` (see `docs/DATASETS.md`).

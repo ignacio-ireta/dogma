@@ -62,3 +62,5 @@ They check a case where the residual is zero, a case where `tanh` saturates so i
 is exactly zero, and integer inputs. They check that repeated calls do not share state, and that
 NaN and infinite inputs raise `ValueError` for every argument. They also check the return shape:
 a tuple of a float and a dictionary with exactly four keys.
+
+The hidden tests draw their bulk inputs from the real dataset `wine` (see `docs/DATASETS.md`).

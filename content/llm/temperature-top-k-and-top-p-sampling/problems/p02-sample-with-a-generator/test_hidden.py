@@ -2,11 +2,15 @@
 # and never print hidden inputs, shapes or expected values.
 from __future__ import annotations
 
+import functools
 import math
+import re
 
 import pytest
 import torch
 from submission import sample_token as _learner
+
+from dogma_data import load_text
 
 
 def _call(*args, **kwargs):
@@ -36,8 +40,16 @@ def _draws(probs, seed, n):
     return [_call(probs, gen) for _ in range(n)]
 
 
+@functools.cache
+def _word_shares():
+    """A real distribution: the shares of four common words in Frankenstein."""
+    words = re.findall(r"[a-z]+", load_text("gutenberg_frankenstein").lower())
+    counts = [words.count(word) for word in ("the", "and", "my", "her")]
+    return tuple(count / sum(counts) for count in counts)
+
+
 def test_empirical_frequencies_match_the_probabilities():
-    probs_list = [0.5, 0.3, 0.15, 0.05]
+    probs_list = list(_word_shares())
     probs = torch.tensor(probs_list, dtype=torch.float64)
     n = 10000
     counts = [0] * len(probs_list)
@@ -75,7 +87,7 @@ def test_one_entry_vocabulary_returns_zero():
 
 
 def test_return_value_is_a_python_int_in_range():
-    probs = torch.tensor([0.25, 0.25, 0.25, 0.25], dtype=torch.float64)
+    probs = torch.tensor(_word_shares(), dtype=torch.float64)
     gen = torch.Generator().manual_seed(4)
     for _ in range(50):
         token = _call(probs, gen)
@@ -84,21 +96,21 @@ def test_return_value_is_a_python_int_in_range():
 
 
 def test_same_seed_reproduces_the_same_sequence():
-    probs = torch.tensor([0.2, 0.3, 0.1, 0.4], dtype=torch.float64)
+    probs = torch.tensor(_word_shares(), dtype=torch.float64)
     assert _draws(probs, seed=42, n=100) == _draws(probs, seed=42, n=100), (
         "same seed gave different tokens: the draw must come only from the passed generator"
     )
 
 
 def test_different_seeds_give_different_sequences():
-    probs = torch.tensor([0.2, 0.3, 0.1, 0.4], dtype=torch.float64)
+    probs = torch.tensor(_word_shares(), dtype=torch.float64)
     assert _draws(probs, seed=1, n=100) != _draws(probs, seed=2, n=100), (
         "different seeds gave the same sequence: the generator argument is being ignored"
     )
 
 
 def test_result_does_not_depend_on_the_global_seed():
-    probs = torch.tensor([0.2, 0.3, 0.1, 0.4], dtype=torch.float64)
+    probs = torch.tensor(_word_shares(), dtype=torch.float64)
     torch.manual_seed(1)
     first = _draws(probs, seed=7, n=50)
     torch.manual_seed(999)
@@ -107,7 +119,7 @@ def test_result_does_not_depend_on_the_global_seed():
 
 
 def test_global_random_state_is_left_unchanged():
-    probs = torch.tensor([0.2, 0.3, 0.1, 0.4], dtype=torch.float64)
+    probs = torch.tensor(_word_shares(), dtype=torch.float64)
     torch.manual_seed(123)
     before = torch.get_rng_state()
     gen = torch.Generator().manual_seed(8)
@@ -119,7 +131,7 @@ def test_global_random_state_is_left_unchanged():
 
 
 def test_input_probabilities_are_not_mutated():
-    probs = torch.tensor([0.2, 0.3, 0.1, 0.4], dtype=torch.float64)
+    probs = torch.tensor(_word_shares(), dtype=torch.float64)
     before = probs.clone()
     gen = torch.Generator().manual_seed(9)
     for _ in range(5):

@@ -65,3 +65,6 @@ families they cover: users with one event, a tie at the first timestamp, users w
 given out of time order, large non-sequential user ids, a result with no user who has two events, an empty
 events table, the direction of the difference, and random tables checked against an independent pandas
 computation.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

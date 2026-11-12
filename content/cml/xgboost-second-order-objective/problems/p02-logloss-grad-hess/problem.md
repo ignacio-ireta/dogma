@@ -35,3 +35,6 @@ ValueError: y must contain only 0 and 1
 
 ## Done looks like
 All public tests pass, then **Submit** runs the hidden tests. They check: the gradient and Hessian against central finite differences of the per-example log-loss over a grid of margins; the closed forms at moderate and random margins; warning-free, finite results at margins near $\pm 10^4$, with an exactly zero Hessian at saturation; the value at margin zero; the output bounds $|g| \le 1$ and $0 \le h \le 1/4$; empty input; rejection of labels other than 0 or 1, length mismatches, non-1-D arrays and non-finite margins; dtype and shape of the outputs; and that the inputs are left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

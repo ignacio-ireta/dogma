@@ -87,3 +87,6 @@ equal to its reference gives $\log 2$, that margins of plus and minus $10^4$ sta
 float32 keeps its dtype. They also check the gradient with respect to the policy arguments against the
 analytic form and against a float64 finite-difference estimate, and the rules on $\beta$, probabilities
 instead of log-probabilities, shapes, empty input, NaN, integer dtypes and mutation.
+
+The hidden tests draw their bulk inputs from the real datasets `gutenberg_frankenstein`,
+`gutenberg_pride_prejudice` and `gutenberg_walden` (see `docs/DATASETS.md`).

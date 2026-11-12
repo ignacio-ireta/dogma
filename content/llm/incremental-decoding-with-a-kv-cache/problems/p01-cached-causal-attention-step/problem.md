@@ -80,3 +80,6 @@ causal within itself; the cache growing by exactly `T` positions and keeping ear
 unchanged; the input cache left unchanged; batch independence; large and small magnitudes; the
 empty-cache path matching the `None` path; the output dtype and shape; and the `ValueError` rules for
 the input, weight, head count and cache shapes.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

@@ -50,3 +50,6 @@ grows, and that large α sends the coefficients to 0 and the intercept to ȳ. Th
 is unpenalised (shifting y moves only the intercept, and shifting X moves only the intercept), that
 rescaling a feature with α scaled by the square of the same factor rescales its coefficient, and that α = 0
 on a rank-deficient design is rejected. They also cover invalid inputs, integer input, and unchanged inputs.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `diabetes` (see
+`docs/DATASETS.md`).

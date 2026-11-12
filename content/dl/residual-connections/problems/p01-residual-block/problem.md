@@ -54,3 +54,6 @@ blocks with a `torch.nn.functional` oracle, cover the projection and identity pa
 full input Jacobian against the identity-plus-branch decomposition, and cover zero-size batches,
 float32 dtype, mixed dtype and integer rejection, scale extremes, input non-mutation, and
 projection use even when widths match.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

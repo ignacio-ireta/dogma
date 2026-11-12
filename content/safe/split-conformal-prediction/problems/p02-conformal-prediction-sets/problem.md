@@ -70,3 +70,6 @@ Passing means both examples match and the rank rule holds at every level. Hidden
   row), at a small and a moderate calibration size;
 - sets from a real logistic regression on `breast_cancer`, against the sorted-score oracle;
 - scores compared in float64: a test score a hair above the threshold is outside the set, not rounded in.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `digits` (see
+`docs/DATASETS.md`).

@@ -4,12 +4,38 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import best_rank_k
 
+from dogma_data import rng, sample_rows
+
 SEEDS = st.integers(min_value=0, max_value=10**6)
 DIMS = st.integers(min_value=1, max_value=6)
 
 
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
 def _matrix(seed, m, n):
-    return np.random.default_rng(seed).normal(size=(m, n))
+    """m rows and n columns of standardised wine: a real data matrix with correlated columns."""
+    A, _ = sample_rows("wine", rng(f"best-rank-k-p01:data:{seed}"), m, n, standardize=True)
+    return A
 
 
 def _call(A, k, mistake):
@@ -126,7 +152,7 @@ def test_no_random_rank_k_matrix_is_closer_than_the_truncation(seed, m, n, data)
     k = data.draw(st.integers(min_value=0, max_value=min(m, n)))
     _, error = _unpack(_call(A, k, "a valid random matrix was rejected or failed"), A.shape)
     rng = np.random.default_rng(seed + 7)
-    competitor = rng.normal(size=(m, k)) @ rng.normal(size=(k, n))
+    competitor = _real_normal(rng, (m, k)) @ _real_normal(rng, (k, n))
     _check(
         float(np.linalg.norm(A - competitor)) >= error - 1e-9 * _scale(A),
         "a rank-k matrix is closer to A than the truncation: keep the largest singular values, "
@@ -159,7 +185,7 @@ def test_zero_matrix_gives_zero_truncation_and_zero_error():
 
 def test_rank_one_input_is_reproduced_by_one_term_with_zero_error():
     rng = np.random.default_rng(21)
-    A = np.outer(rng.normal(size=5), rng.normal(size=3))
+    A = np.outer(_real_normal(rng, 5), _real_normal(rng, 3))
     A_k, error = _unpack(_call(A, 1, "a rank-one input was rejected or failed"), A.shape)
     _close(
         A_k,
@@ -200,7 +226,7 @@ def test_k_zero_gives_zero_matrix_with_error_equal_to_full_norm(m, n):
 
 def test_repeated_singular_values_keep_the_error_identity_and_rank():
     rng = np.random.default_rng(51)
-    Q = np.linalg.qr(rng.normal(size=(3, 3)))[0]
+    Q = np.linalg.qr(_real_normal(rng, (3, 3)))[0]
     A = 3.0 * Q  # all singular values are equal, so the best rank-one matrix is not unique
     A_k, error = _unpack(
         _call(A, 1, "a matrix with repeated singular values was rejected"), A.shape

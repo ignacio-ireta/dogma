@@ -55,3 +55,6 @@ for larger ones. Each call has a 5-second time box. A table of amounts finishes 
 so a call that hits the box is doing repeated work. The edge families they cover: an empty coin list; an amount of zero; impossible
 amounts; a greedy trap; repeated and unsorted coins; large amounts that must not overflow the
 recursion limit; the return type; rejected types and values; and inputs that must not change.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

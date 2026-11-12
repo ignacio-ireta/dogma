@@ -1,24 +1,48 @@
 from __future__ import annotations
 
+import math
+
 import pytest
 import torch
 from submission import adamw_step
+
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
 
 SHAPES = [(3,), (2, 4), (1, 1, 3)]
 LR = 0.05
 
 
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-adamw-step:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
+
+
 def _tensors(seed: int, scale: float = 1.0) -> list[torch.Tensor]:
     gen = torch.Generator().manual_seed(seed)
-    return [torch.randn(s, generator=gen, dtype=torch.float64) * scale for s in SHAPES]
+    return [_real_values(gen, [s], torch.float64) * scale for s in SHAPES]
 
 
 def _grad_steps(seed: int, steps: int, scale: float = 1.0) -> list[list[torch.Tensor]]:
     gen = torch.Generator().manual_seed(seed + 1000)
-    return [
-        [torch.randn(s, generator=gen, dtype=torch.float64) * scale for s in SHAPES]
-        for _ in range(steps)
-    ]
+    return [[_real_values(gen, [s], torch.float64) * scale for s in SHAPES] for _ in range(steps)]
 
 
 def _torch_reference(params0, grad_steps, lr, weight_decay, eps=1e-8):

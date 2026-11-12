@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import functools
 import math
 import random
 import re
@@ -10,10 +11,29 @@ from pathlib import Path
 import duckdb
 import pytest
 
+from dogma_data import retail_invoices
+
 COLUMNS = ["store_id", "sales_date", "trailing_average_cents", "days_in_window"]
 TYPES = ["BIGINT", "DATE", "DOUBLE", "BIGINT"]
 SQL = Path(__file__).with_name("submission.sql").read_text(encoding="utf-8")
 BASE = date(2026, 1, 1)
+
+
+@functools.cache
+def _real_daily_sales():
+    """Real daily revenue per shop: (store_id, sales_date, revenue_cents), in date order.
+
+    The rows come from online_retail. A shop is one of the four countries the retailer sold
+    to, numbered by revenue. A day's revenue is the total of that country's invoices that
+    were not cancelled, in cents. A day with no invoice has no row: the retailer never sells
+    on Saturdays, the largest shop sells on three days in eight and the smallest on four days.
+    """
+    invoices = retail_invoices()
+    sold = invoices[~invoices["cancelled"]]
+    cents = (sold["amount"] * 100.0).round().astype("int64")
+    daily = cents.groupby([sold["country"], sold["invoice_ts"].dt.date]).sum()
+    shops = {name: rank for rank, name in enumerate(sold["country"].value_counts().index, 1)}
+    return tuple((shops[country], day, int(total)) for (country, day), total in daily.items())
 
 
 def _run(rows):
@@ -71,14 +91,13 @@ MISTAKE = (
 
 
 def test_matches_calendar_oracle_on_seeded_shops_with_gaps():
-    rng = random.Random(2026)  # noqa: S311 -- seeded synthetic fixtures, not security.
+    rng = random.Random(2026)  # noqa: S311 -- seeded choice of real windows, not security.
+    sales = _real_daily_sales()
+    first = min(day for _, day, _ in sales)
     for _ in range(25):
-        rows = []
-        for store in range(1, rng.randrange(2, 5)):
-            for offset in range(60):
-                if rng.random() < 0.45:  # about half the days are closed
-                    continue
-                rows.append((store, BASE + timedelta(days=offset), rng.randrange(0, 5000)))
+        # Sixty consecutive calendar days of the real sales, starting on a random day.
+        start = first + timedelta(days=rng.randrange(0, 680))
+        rows = [row for row in sales if start <= row[1] < start + timedelta(days=60)]
         rng.shuffle(rows)
         _same(_run(rows), _oracle(rows), MISTAKE)
 

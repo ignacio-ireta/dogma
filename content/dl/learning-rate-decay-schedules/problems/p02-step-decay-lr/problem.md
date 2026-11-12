@@ -43,3 +43,6 @@ The public examples pass. Hidden tests compare with `StepLR` over full runs on s
 settings, check the boundary on both sides of each drop, a constant schedule when
 `gamma` is one, a very large step count evaluated directly (a step-by-step loop does not
 finish within the time limit, so it fails), the return type, and the invalid-argument families.
+
+Some hidden tests take their inputs from the real datasets `breast_cancer`, `diabetes`, `digits`,
+`iris` and `wine` (see `docs/DATASETS.md`).

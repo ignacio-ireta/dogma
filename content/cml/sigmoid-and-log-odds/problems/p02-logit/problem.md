@@ -40,3 +40,6 @@ independent reference on random probabilities; relative precision near $\tfrac12
 $1$, each against a 60-digit reference; the odd symmetry about one half; the round trip through the
 logistic function; the boundary and out-of-range rejections (zero, one, negative, above one, NaN and
 infinity); empty and matrix shapes; float32 input; and that the input is left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

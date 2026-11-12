@@ -52,3 +52,6 @@ Hidden tests compare your trajectory with `torch.optim.Adam(amsgrad=True)` on se
 tensors, including a sequence where gradients shrink after large ones. They also check input
 immutability, malformed state, zero gradients, scale extremes and dtype. A failing test names the
 mistake, such as a denominator that forgets the maximum.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

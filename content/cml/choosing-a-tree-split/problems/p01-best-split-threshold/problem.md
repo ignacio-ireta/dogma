@@ -45,3 +45,6 @@ The third example is a tie: thresholds $0.5$ and $2.5$ both decrease Gini by $1/
 ## Done looks like
 
 All public tests pass, then **Submit** runs the hidden tests. They check: agreement with a brute-force search over every midpoint, under both criteria, on random data; agreement with a depth-one scikit-learn tree on tie-free data; the tie rule on a symmetric example; invariance to the order of the rows; duplicate values never producing a threshold between equal values; constant or single-row input; pure labels; a 30,000-row input inside the time budget; rejection of an unknown criterion, empty, non-finite, two-dimensional and mismatched input; inputs left unchanged; and, on random data, a non-negative decrease and a threshold strictly between two data values.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `iris` (see
+`docs/DATASETS.md`).

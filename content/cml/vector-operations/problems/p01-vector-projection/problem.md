@@ -38,3 +38,6 @@ independent reference on random vectors, the geometric properties of a projectio
 orthogonal to `b`, idempotence, invariance to rescaling `b`), invalid shapes, integer input,
 very large and very small magnitudes (including a nonzero `b` whose squared length would overflow
 or underflow), and that inputs are left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `digits` and `wine` (see
+`docs/DATASETS.md`).

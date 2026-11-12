@@ -49,3 +49,6 @@ unchanged; rank one for an outer product; identity and zero matrices; the effect
 tolerance on a tiny pivot, including one equal to it; the default tolerance on nearly collinear pairs
 (square and tall) and on a clearly nonzero small pivot; invalid input and negative `tol` raising `ValueError`; integer input; and inputs left
 unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `wine` (see
+`docs/DATASETS.md`).

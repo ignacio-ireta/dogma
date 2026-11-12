@@ -58,3 +58,6 @@ The examples pass, and the single-row and shape errors raise `ValueError`. The h
 check the same gradients against central finite differences in float64, and cover a constant
 upstream gradient, an upstream gradient that is not constant across rows, several shapes where rows
 and features differ, large common offsets, invalid arguments, and no mutation of inputs.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

@@ -56,3 +56,6 @@ seeded random tensors. They also check the first-step rule, the momentum-zero ca
 buffer convention in the returned state, input immutability, invalid arguments, scale
 extremes and dtype. A failing test names the mistake, such as a damped first step or a
 learning rate that leaked into the buffer.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

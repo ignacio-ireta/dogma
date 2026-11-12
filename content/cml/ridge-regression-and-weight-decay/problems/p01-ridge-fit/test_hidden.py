@@ -7,13 +7,45 @@ from hypothesis import strategies as st
 from sklearn.linear_model import Ridge
 from submission import ridge_fit
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
 
 def _data(seed, n, d):
-    """Random design, a linear signal with an intercept, and mild noise."""
-    rng = np.random.default_rng(seed)
-    X = rng.normal(size=(n, d))
-    beta = rng.normal(size=d)
-    y = 1.5 + X @ beta + 0.3 * rng.normal(size=n)
+    """Semi-synthetic: real standardised diabetes columns, a known linear signal and mild noise.
+
+    The columns are correlated real measurements. A draw whose centred design is not of full
+    rank (a handful of patients can share one sex) is skipped, so alpha = 0 stays well posed.
+    """
+    rng = data_rng(f"ridge-fit-p01:data:{seed}:{n}:{d}")
+    while True:
+        X, _ = sample_rows("diabetes", rng, n, d, standardize=True)
+        if np.linalg.matrix_rank(np.column_stack([np.ones(n), X])) == d + 1:
+            break
+    beta = _real_normal(rng, d)
+    y = 1.5 + X @ beta + 0.3 * _real_normal(rng, n)
     return X, y
 
 
@@ -105,10 +137,10 @@ def test_matches_scikit_learn_ridge_without_intercept(n, d, seed, alpha):
 
 def test_rank_deficient_design_matches_scikit_learn_when_alpha_is_positive():
     rng = np.random.default_rng(7)
-    a = rng.normal(size=30)
-    b = rng.normal(size=30)
+    a = _real_normal(rng, 30)
+    b = _real_normal(rng, 30)
     X = np.column_stack([a, 2.0 * a, b, a + b])
-    y = 0.5 + a - b + 0.1 * rng.normal(size=30)
+    y = 0.5 + a - b + 0.1 * _real_normal(rng, 30)
     ref = Ridge(alpha=2.0).fit(X, y)
     intercept, coef = _checked(X, y, 2.0)
     np.testing.assert_allclose(
@@ -260,9 +292,9 @@ def test_rescaling_a_feature_with_alpha_times_square_rescales_its_coefficient(se
 
 def test_alpha_zero_on_a_rank_deficient_design_raises_value_error():
     rng = np.random.default_rng(16)
-    a = rng.normal(size=20)
+    a = _real_normal(rng, 20)
     X = np.column_stack([a, 3.0 * a])
-    y = rng.normal(size=20)
+    y = _real_normal(rng, 20)
     _expect_value_error(
         lambda: ridge_fit(X, y, 0.0),
         "a rank-deficient design with alpha = 0 was accepted: there is no unique least-squares "
@@ -272,8 +304,8 @@ def test_alpha_zero_on_a_rank_deficient_design_raises_value_error():
 
 def test_constant_column_with_intercept_at_alpha_zero_raises_value_error():
     rng = np.random.default_rng(17)
-    X = np.column_stack([np.full(20, 4.0), rng.normal(size=20)])
-    y = rng.normal(size=20)
+    X = np.column_stack([np.full(20, 4.0), _real_normal(rng, 20)])
+    y = _real_normal(rng, 20)
     _expect_value_error(
         lambda: ridge_fit(X, y, 0.0, fit_intercept=True),
         "a constant column was accepted at alpha = 0 with an intercept: centring makes it zero, so "
@@ -283,8 +315,8 @@ def test_constant_column_with_intercept_at_alpha_zero_raises_value_error():
 
 def test_constant_column_without_intercept_at_alpha_zero_is_least_squares():
     rng = np.random.default_rng(18)
-    X = np.column_stack([np.ones(20), rng.normal(size=20)])
-    y = 0.5 + 2.0 * X[:, 1] + 0.1 * rng.normal(size=20)
+    X = np.column_stack([np.ones(20), _real_normal(rng, 20)])
+    y = 0.5 + 2.0 * X[:, 1] + 0.1 * _real_normal(rng, 20)
     _, coef = _checked(X, y, 0.0, fit_intercept=False)
     np.testing.assert_allclose(
         coef,
@@ -307,8 +339,8 @@ def test_invalid_alpha_raises_value_error(alpha):
     ("X", "y"),
     [
         (np.array([1.0, 2.0, 3.0]), np.array([1.0, 2.0, 3.0])),
-        (np.random.default_rng(20).normal(size=(5, 2)), np.ones(4)),
-        (np.random.default_rng(21).normal(size=(5, 2)), np.ones((5, 1))),
+        (_real_normal(np.random.default_rng(20), (5, 2)), np.ones(4)),
+        (_real_normal(np.random.default_rng(21), (5, 2)), np.ones((5, 1))),
     ],
     ids=["1-D-X", "length-mismatch", "2-D-y"],
 )

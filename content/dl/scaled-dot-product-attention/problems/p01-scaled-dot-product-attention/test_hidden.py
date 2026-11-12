@@ -1,6 +1,7 @@
 # Hidden tests: oracle comparisons with torch.nn.functional, scale and stability checks,
 # degenerate and invalid inputs, dtype, and mutation. Messages name the kind of mistake.
 import functools
+import math
 
 import pytest
 import torch
@@ -9,7 +10,32 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import scaled_dot_product_attention
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 DT = torch.float64
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-scaled-dot-product-attention:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
 
 
 def checked(call):  # the learner gets clones in oracle tests; see test_inputs_are_not_mutated
@@ -60,9 +86,9 @@ def close(actual, expected, message):
 
 def random_inputs(seed, batch, L, S, d_k, d_v, scale=1.0):  # noqa: PLR0917 - shape test helper
     g = torch.Generator().manual_seed(seed)
-    q = scale * torch.randn(*batch, L, d_k, generator=g, dtype=DT)
-    k = scale * torch.randn(*batch, S, d_k, generator=g, dtype=DT)
-    v = torch.randn(*batch, S, d_v, generator=g, dtype=DT)
+    q = scale * _real_values(g, [*batch, L, d_k], DT)
+    k = scale * _real_values(g, [*batch, S, d_k], DT)
+    v = _real_values(g, [*batch, S, d_v], DT)
     return q, k, v
 
 
@@ -83,7 +109,7 @@ def test_random_unmasked_output_and_weights_match_oracle(L, S, d_k, seed):
 def test_random_masked_output_matches_functional_oracle(L, S, seed):
     g = torch.Generator().manual_seed(seed + 1)
     q, k, v = random_inputs(seed, (3,), L, S, 4, 2)
-    mask = torch.rand(3, L, S, generator=g) > 0.4
+    mask = torch.special.ndtr(_real_values(g, [3, L, S])) > 0.4
     out, w = checked(
         functools.partial(scaled_dot_product_attention, q.clone(), k.clone(), v.clone(), mask)
     )
@@ -228,7 +254,7 @@ def test_mixed_dtype_rejected_and_float32_stays_float32():
 
 def test_inputs_are_not_mutated():
     q, k, v = random_inputs(91, (2,), 3, 4, 3, 2)
-    mask = torch.rand(2, 3, 4) > 0.3
+    mask = torch.special.ndtr(_real_values(torch.Generator().manual_seed(257), [2, 3, 4])) > 0.3
     originals = [t.clone() for t in (q, k, v, mask)]
     checked(functools.partial(scaled_dot_product_attention, q, k, v, mask))
     for before, after in zip(originals, (q, k, v, mask), strict=True):

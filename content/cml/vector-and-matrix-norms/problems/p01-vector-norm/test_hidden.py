@@ -7,6 +7,9 @@ from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays
 from submission import vector_norm
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 FINITE = st.floats(min_value=-1e3, max_value=1e3, allow_nan=False, allow_infinity=False)
 VECTORS = arrays(np.float64, st.integers(min_value=1, max_value=8), elements=FINITE)
 EXPONENTS = st.sampled_from([1.0, 2.0, 3.5, math.inf])
@@ -51,10 +54,11 @@ def _raised_value_error(call, mistake):
 
 
 def test_matches_numpy_norm_on_random_vectors_for_common_exponents():
-    rng = np.random.default_rng(0)
+    rng = data_rng("vector-norm-p01:reference")
     for p in [1.0, 2.0, 3.5, np.inf]:
         for n in [1, 2, 5, 8]:
-            x = rng.normal(size=n)
+            # A real vector: n standardised measurements of one wine.
+            x = sample_rows("wine", rng, 1, n, standardize=True)[0][0]
             _assert_close(
                 vector_norm(x, p),
                 np.linalg.norm(x, ord=p),

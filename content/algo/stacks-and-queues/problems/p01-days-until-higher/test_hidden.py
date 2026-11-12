@@ -24,6 +24,9 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import days_until_higher
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_window
+
 LARGE_N = 200_000
 TIME_LIMIT_S = 5.0
 SMALL_CALL_S = 2.0
@@ -161,14 +164,21 @@ def _verify(values: list[float]) -> None:
 
 
 def _random_readings(rng: np.random.Generator, n: int, low: int, high: int) -> list[float]:
-    # Whole numbers, so equal readings (ties) are common. Negative values are included on purpose.
-    return [float(x) for x in rng.integers(low, high, size=n)]
+    """n real monthly sea-surface temperatures in a row, in whole degrees above or below 24.
+
+    Whole degrees, so equal readings (ties) are common, and the season makes runs that rise and
+    fall. Readings below 24 degrees come out negative, on purpose. The bounds are not used: the
+    range is the one the ocean has, from about -5 to 5.
+    """
+    if n == 0:
+        return []
+    return [float(x) for x in np.round(sample_window("elnino", rng, n)) - 24.0]
 
 
 @settings(max_examples=80, deadline=None, report_multiple_bugs=False)
 @given(seed=st.integers(min_value=0, max_value=10_000))
 def test_small_random_lists_match_brute_force(seed: int) -> None:
-    rng = np.random.default_rng(seed)
+    rng = data_rng(f"days-until-higher-p01:small:{seed}")
     values = _random_readings(rng, int(rng.integers(0, 14)), low=-4, high=6)
     _verify(values)
 
@@ -176,7 +186,7 @@ def test_small_random_lists_match_brute_force(seed: int) -> None:
 @settings(max_examples=40, deadline=None, report_multiple_bugs=False)
 @given(seed=st.integers(min_value=0, max_value=10_000))
 def test_medium_random_lists_with_ties_match_brute_force(seed: int) -> None:
-    rng = np.random.default_rng(seed)
+    rng = data_rng(f"days-until-higher-p01:medium:{seed}")
     values = _random_readings(rng, int(rng.integers(50, 260)), low=0, high=8)
     _verify(values)
 

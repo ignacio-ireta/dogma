@@ -41,3 +41,6 @@ degrees of freedom and the `ddof = 1` standard error on hand-checkable samples, 
 check that a higher confidence level gives a wider interval and that the interval covers the true mean at
 the nominal rate in a seeded simulation with `n = 5`. They also cover a large common offset, every kind
 of invalid input, and inputs that must be left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `california_housing` (see
+`docs/DATASETS.md`).

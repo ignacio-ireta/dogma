@@ -9,6 +9,19 @@ from scipy.special import expit
 from scipy.special import logit as scipy_logit
 from submission import logit
 
+from dogma_data import rng, sample_rows
+
+
+def _real_margins(key, n):
+    """Real margins of a linear classifier: n breast_cancer tumours scored on six features.
+
+    The score is the projection on the direction from the malignant mean to the benign mean of
+    the drawn rows, tripled. Most margins are large and of the right sign; a few are near zero
+    or on the wrong side.
+    """
+    X, y = sample_rows("breast_cancer", rng(key), n, 6, standardize=True)
+    return 3.0 * (X @ (X[y == 1.0].mean(axis=0) - X[y == 0.0].mean(axis=0)))
+
 
 def _call(p):
     """Call logit(p) with NumPy warnings turned into errors.
@@ -57,8 +70,9 @@ def _logit_decimal(p):
 
 
 def test_random_probabilities_match_an_independent_reference():
-    rng = np.random.default_rng(0)
-    p = rng.uniform(1e-6, 1.0 - 1e-6, size=300)
+    # Real probabilities: the sigmoid of real classifier margins, kept inside (0, 1). Most sit
+    # close to 0 or to 1, where the log-odds are large.
+    p = np.clip(expit(_real_margins("logit-p02:reference", 300)), 1e-6, 1.0 - 1e-6)
     expected = scipy_logit(p)
     np.testing.assert_allclose(
         _call(p),

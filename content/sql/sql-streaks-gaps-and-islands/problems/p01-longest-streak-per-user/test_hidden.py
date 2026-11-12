@@ -10,7 +10,7 @@ from pathlib import Path
 import duckdb
 import pytest
 
-from dogma_data import rng, synth
+from dogma_data import retail_events, rng
 
 COLUMNS = ["user_id", "streak_days", "streak_start", "streak_end"]
 TYPES = ["BIGINT", "BIGINT", "DATE", "DATE"]
@@ -146,27 +146,30 @@ def test_empty_table_returns_no_rows_with_the_declared_schema():
     _same(_run([]), [])
 
 
-def _visits_from_log(log) -> list[tuple[int, date]]:
-    days = log["ts"].astype("datetime64[D]")
-    return [
-        (int(user), date.fromisoformat(str(day)))
-        for user, day in zip(log["user_id"], days, strict=True)
-    ]
-
-
 @pytest.fixture(scope="module")
 def holiday_burst() -> list[tuple[int, date]]:
-    """Dense activity across 31 Dec 2028, a leap-year end: heavy-tailed users, duplicate rows."""
-    log = synth.event_log(
-        rng("sql/sql-streaks-gaps-and-islands/p01-longest-streak-per-user:holiday_burst:0"),
-        3000,
-        n_users=40,
-        zipf_a=1.1,
-        start="2028-12-20",
-        days=20,
-        duplicate_rate=0.2,
-    )
-    return _visits_from_log(log)
+    """Real activity across 31 Dec 2028, a leap-year end: skewed users and duplicate rows.
+
+    The rows are invoice lines of an online retailer (online_retail). A user is one product
+    family (the first two characters of the stock code) and a visit is a line of that family
+    on its invoice date, so a busy user appears many times on one day, is active on runs of up
+    to six days (the retailer is closed on Saturdays) and has gaps. The lines are those of
+    twenty days of its busy season, 13 November to 2 December 2010, and every date is moved
+    forward by the same number of days, so that they run from 20 December 2028 to 8 January
+    2029. A random four fifths of the lines is used.
+    """
+    gen = rng("sql/sql-streaks-gaps-and-islands/p01-longest-streak-per-user:holiday_burst:0")
+    events = retail_events()
+    busy = (events["ts"] >= "2010-11-13") & (events["ts"] < "2010-12-03")
+    events = events[busy]
+    events = events.iloc[gen.permutation(len(events))[: len(events) * 4 // 5]]
+    families = events["code"].str[:2]
+    user_of = {family: number for number, family in enumerate(sorted(families.unique()), 1)}
+    shift = date(2028, 12, 31) - date(2010, 11, 24)
+    return [
+        (user_of[family], moment.date() + shift)
+        for family, moment in zip(families, events["ts"], strict=True)
+    ]
 
 
 def test_matches_the_oracle_on_a_holiday_burst_across_a_leap_year_end(holiday_burst):

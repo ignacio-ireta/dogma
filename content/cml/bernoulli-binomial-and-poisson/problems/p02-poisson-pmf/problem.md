@@ -43,3 +43,5 @@ All public tests pass, then **Submit** passes the hidden tests. Those check agre
 also check that the pmf sums to 1 over its support, that the mean and variance are both $\lambda$,
 and the exact results at $\lambda = 0$. The families also include probability zero below 0, output
 shape that follows `k`, integral floats, invalid `lam` and `k`, and inputs left unchanged.
+
+Some hidden tests take their inputs from the real dataset `online_retail` (see `docs/DATASETS.md`).

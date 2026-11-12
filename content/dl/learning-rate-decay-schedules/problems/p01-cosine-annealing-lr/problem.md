@@ -52,3 +52,6 @@ The public examples pass. Hidden tests compare a full run, step by step, with th
 after `t_max`, the single-step schedule, a constant schedule when `eta_min == base_lr`,
 symmetry around the midpoint, monotonic decrease, extreme magnitudes of the base rate,
 return type, and the invalid-argument families.
+
+Some hidden tests take their inputs from the real datasets `breast_cancer`, `diabetes`, `digits`,
+`iris` and `wine` (see `docs/DATASETS.md`).

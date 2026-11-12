@@ -50,3 +50,6 @@ converging, and one past it raising `diverged`; the exact update count on a one-
 quadratic; the cap on `max_iters`; a start point that is already optimal; invalid learning rates,
 including when `x0` is already optimal; non-finite and integer start points; and inputs left
 unchanged (the start point, and the returned array versus `x0`).
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `wine` (see
+`docs/DATASETS.md`).

@@ -77,3 +77,6 @@ one-token requests; mean ITL computed per request rather than over pooled gaps; 
 percentiles where nearest-rank and linear interpolation differ; ties; large timestamps and small gaps; ints and
 floats mixed; the return types; each validation rule; input that must not change; and a 50,000-request list that
 must finish within the time limit.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

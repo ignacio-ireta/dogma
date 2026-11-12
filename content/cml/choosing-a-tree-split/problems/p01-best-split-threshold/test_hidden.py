@@ -9,11 +9,64 @@ import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from scipy.special import ndtr
 from sklearn.tree import DecisionTreeClassifier
 from submission import best_split
 
+from dogma_data import rng, sample_rows
+
 TIME_BUDGET_S = 10.0
 TIE_TOLERANCE = 1e-12
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
 
 
 class _OverBudget(BaseException):
@@ -105,10 +158,12 @@ def _brute_force(x, y, criterion):
 
 def test_matches_brute_force_search_under_both_criteria():
     for seed in range(10):
-        rng = np.random.default_rng(seed)
-        n = int(rng.integers(5, 40))
-        x = rng.normal(size=n)
-        y = ((x + rng.normal(scale=0.7, size=n)) > 0.1).astype(int).tolist()
+        # One real breast_cancer feature and the real diagnosis; measurements repeat.
+        gen = rng(f"best-split-p01:brute-force:{seed}")
+        n = int(gen.integers(5, 40))
+        feature, target = sample_rows("breast_cancer", gen, n, 1)
+        x = feature[:, 0]
+        y = target.astype(int).tolist()
         for criterion in ("gini", "entropy"):
             want_t, want_d = _brute_force(x.tolist(), y, criterion)
             got_t, got_d = _call(x, y, criterion=criterion)
@@ -128,8 +183,8 @@ def test_matches_brute_force_search_under_both_criteria():
 @pytest.mark.parametrize("criterion", ["gini", "entropy"], ids=["gini", "entropy"])
 def test_threshold_agrees_with_a_depth_one_scikit_learn_tree(criterion):
     rng = np.random.default_rng(21)
-    x = rng.normal(size=60)  # continuous values: no ties, so the optimum is unique
-    y = ((x - 0.3 + rng.normal(scale=0.5, size=60)) > 0).astype(int)
+    x = _real_normal(rng, 60)  # continuous values: no ties, so the optimum is unique
+    y = ((x - 0.3 + _real_normal(rng, 60, scale=0.5)) > 0).astype(int)
     stump = DecisionTreeClassifier(max_depth=1, criterion=criterion, random_state=0)
     stump.fit(x.reshape(-1, 1), y)
     want = float(stump.tree_.threshold[0])
@@ -166,10 +221,11 @@ def test_exact_tie_hidden_by_float_noise_still_goes_to_the_smallest_threshold():
 
 
 def test_row_order_does_not_change_the_answer():
-    rng = np.random.default_rng(8)
-    x = rng.normal(size=25)
-    y = rng.integers(0, 3, size=25)
-    perm = rng.permutation(25)
+    gen = rng("best-split-p01:row-order")
+    feature, target = sample_rows("iris", gen, 25, 1)  # three species; lengths repeat
+    x = feature[:, 0]
+    y = target.astype(int)
+    perm = gen.permutation(25)
     t1, d1 = _call(x, y, criterion="entropy")
     t2, d2 = _call(x[perm], y[perm], criterion="entropy")
     assert t1 == pytest.approx(t2, abs=1e-12), "the result depends on the order of the rows"
@@ -204,8 +260,8 @@ def test_pure_labels_return_the_smallest_candidate_with_zero_decrease():
 def test_large_input_finishes_within_the_time_budget_and_matches_a_stump():
     rng = np.random.default_rng(30)
     n = 30_000
-    x = rng.normal(size=n)
-    y = ((x + rng.normal(scale=1.0, size=n)) > 0).astype(int)
+    x = _real_normal(rng, n)
+    y = ((x + _real_normal(rng, n, scale=1.0)) > 0).astype(int)
     stump = DecisionTreeClassifier(max_depth=1, criterion="gini", random_state=0)
     stump.fit(x.reshape(-1, 1), y)
     got_t, _ = _timed_call(x, y, criterion="gini")
@@ -259,7 +315,7 @@ def test_inputs_are_not_mutated():
 def test_threshold_is_a_midpoint_and_the_decrease_is_not_negative(xs, seed, criterion):
     x = [float(v) for v in xs]
     rng = np.random.default_rng(seed)
-    y = rng.integers(0, 3, size=len(x)).tolist()
+    y = _real_ints(rng, 0, 3, len(x)).tolist()
     threshold, decrease = _call(x, y, criterion=criterion)
     distinct = sorted(set(x))
     if len(distinct) < 2:

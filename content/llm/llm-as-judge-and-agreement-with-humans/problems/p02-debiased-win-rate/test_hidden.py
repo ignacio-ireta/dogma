@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import itertools
 import math
 
@@ -7,6 +8,8 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import debiased_win_rate
+
+from dogma_data import load_frame
 
 VERDICTS = ["A", "B", "tie"]
 
@@ -44,13 +47,33 @@ def rejects(call, exc):
     pytest.fail(f"invalid input must raise {exc.__name__}", pytrace=False)
 
 
+@functools.cache
+def _human_judgments():
+    """Real verdict pairs: MT-Bench items that human experts judged in both orders.
+
+    An item is a question, a turn and two chat models; `X` is the model whose name sorts
+    first. `forward` is the first recorded verdict with `X` shown as model A and `reverse` the
+    first with `Y` shown as model A, each read as "A", "B" or "tie" for the position that won.
+    The two verdicts come from different experts, so they disagree more often than one
+    judge's position bias alone would make them. 582 items.
+    """
+    table = load_frame("mt_bench_judgments")
+    seen: dict[tuple[int, int, str, str], dict[bool, str]] = {}
+    for row in table.itertuples():
+        first, second = sorted((row.model_a, row.model_b))
+        verdict = {"model_a": "A", "model_b": "B", "tie": "tie"}[row.winner]
+        orders = seen.setdefault((int(row.question_id), int(row.turn), first, second), {})
+        orders.setdefault(row.model_a == first, verdict)
+    return tuple((orders[True], orders[False]) for orders in seen.values() if len(orders) == 2)
+
+
 @settings(max_examples=100, deadline=None, derandomize=True, report_multiple_bugs=False)
-@given(
-    st.lists(
-        st.tuples(st.sampled_from(VERDICTS), st.sampled_from(VERDICTS)), min_size=1, max_size=30
-    )
-)
+@given(st.lists(st.integers(min_value=0, max_value=581), min_size=1, max_size=30))
 def test_random_judgments_match_the_lookup_table_oracle(judgments):
+    # Each number picks a real item judged by human experts in both orders. All nine
+    # combinations of verdicts occur among them, the rarest 22 times.
+    real = _human_judgments()
+    judgments = [real[j % len(real)] for j in judgments]
     got = checked(lambda: debiased_win_rate(judgments))
     want = sum(TABLE[j] for j in judgments) / len(judgments)
     if not math.isclose(got, want, rel_tol=1e-12, abs_tol=1e-12):

@@ -11,6 +11,8 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import minibatch_indices
 
+from dogma_data import load
+
 SETTINGS = settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 
 
@@ -122,7 +124,8 @@ def test_drop_last_only_removes_a_short_final_batch(n, data, seed):
 
 
 def test_epochs_are_fresh_permutations_from_one_generator():
-    schedule = minibatch_indices(12, 4, 3, seed=5)
+    # Three epochs over the 150 rows of iris in batches of 32.
+    schedule = minibatch_indices(int(load("iris").X.shape[0]), 32, 3, seed=5)
     orders = [tuple(np.concatenate(epoch).tolist()) for epoch in schedule]
     if len(set(orders)) == 1:
         pytest.fail("every epoch repeated the same order: draw one permutation per epoch")
@@ -136,11 +139,13 @@ def test_batch_size_equal_to_n_gives_one_full_batch_per_epoch():
 
 
 def test_same_seed_reproduces_and_another_seed_changes_the_schedule():
-    first = _as_lists(minibatch_indices(20, 6, 2, seed=9))
-    again = _as_lists(minibatch_indices(20, 6, 2, seed=9))
+    # Two epochs over the 178 rows of wine in batches of 16.
+    rows = int(load("wine").X.shape[0])
+    first = _as_lists(minibatch_indices(rows, 16, 2, seed=9))
+    again = _as_lists(minibatch_indices(rows, 16, 2, seed=9))
     if first != again:
         pytest.fail("the same seed must reproduce the schedule exactly")
-    others = [_as_lists(minibatch_indices(20, 6, 2, seed=s)) for s in range(1, 6)]
+    others = [_as_lists(minibatch_indices(rows, 16, 2, seed=s)) for s in range(1, 6)]
     if all(other == first for other in others):
         pytest.fail("the seed must control the draws: every seed gave the same schedule")
 

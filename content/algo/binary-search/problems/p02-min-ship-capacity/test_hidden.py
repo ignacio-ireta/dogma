@@ -7,11 +7,14 @@ answer.
 
 from __future__ import annotations
 
+import functools
 import random
 from collections.abc import Sequence
 from typing import Any
 
 from submission import min_ship_capacity  # type: ignore[import-not-found]
+
+from dogma_data import retail_events
 
 INFEASIBLE = 10**9
 
@@ -90,10 +93,22 @@ def _expect_value_error(call: Any, mistake: str) -> None:
     raise AssertionError(f"{mistake}: no ValueError was raised")
 
 
+@functools.cache
+def _units() -> tuple[int, ...]:
+    """Units per sold invoice line (online_retail), in file order, capped at 100 a line.
+
+    Most lines hold 1 to 12 units, a few hold dozens, and cases of 6, 12 and 24 repeat.
+    """
+    events = retail_events()
+    return tuple(min(int(q), 100) for q in events.loc[events["quantity"] > 0, "quantity"])
+
+
 def test_matches_brute_force_over_every_capacity_on_small_random_inputs() -> None:
     rng = random.Random(0)  # noqa: S311 - seeded, so the test is deterministic
     for _ in range(300):
-        weights = [rng.randint(1, 9) for _ in range(rng.randint(1, 8))]
+        # Real parcel sizes: the units on consecutive invoice lines of an online retailer.
+        first = rng.randrange(len(_units()) - 8)
+        weights = list(_units()[first : first + rng.randint(1, 8)])
         days = rng.randint(1, 9)
         got = min_ship_capacity(list(weights), days)
         assert got == _brute_force(weights, days), (
@@ -195,7 +210,7 @@ def test_inputs_are_not_mutated() -> None:
 
 def test_large_input_is_answered_by_a_search_not_a_scan() -> None:
     rng = random.Random(7)  # noqa: S311 - seeded, so the test is deterministic
-    weights = [rng.randint(1, 100) for _ in range(5_000)]
+    weights = list(_units()[rng.randrange(len(_units()) - 5_000) :][:5_000])
     days = 20
     # A binary search makes about 20 passes over the parcels, plus three for validation and the
     # bounds. A scan over every capacity makes thousands of passes and is stopped after this budget.

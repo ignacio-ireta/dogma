@@ -47,3 +47,6 @@ category that is never returned; a rounding case at the top of the CDF that must
 category; probabilities that sum to one only up to rounding, which must be accepted; invalid
 probabilities (including sums just outside the tolerance) and `n` that must raise `ValueError`; one call to `rng.random(n)`; the integer dtype
 and shape; a chi-square goodness-of-fit at a fixed seed; and no mutation of the input.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

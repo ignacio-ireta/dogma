@@ -7,6 +7,8 @@ import torch
 from submission import step_decay_lr
 from torch.optim.lr_scheduler import StepLR
 
+from dogma_data import load
+
 REL = 1e-9
 ABS = 1e-12
 SLOW_CALL_SECONDS = 2.0
@@ -62,13 +64,30 @@ def _rejects(call, message):
     pytest.fail(message, pytrace=False)
 
 
+def _steps_per_epoch():
+    """Updates in one epoch over a real dataset: its rows over a batch size, rounded up.
+
+    Five datasets (iris 150 rows, wine 178, diabetes 442, breast_cancer 569, digits 1,797) at
+    batch sizes 16, 32 and 64 give fifteen run lengths from 3 to 113 updates.
+    """
+    steps = []
+    for name in ("iris", "wine", "diabetes", "breast_cancer", "digits"):
+        rows = load(name).X.shape[0]
+        steps.extend(math.ceil(rows / batch) for batch in (16, 32, 64))
+    return steps
+
+
 def test_full_run_matches_step_lr_scheduler_on_seeded_settings():
+    # The rate drops once per epoch over a real dataset, and the run lasts up to four epochs
+    # and a few updates more. The decay factor and the base rate are drawn.
+    steps = _steps_per_epoch()
     rng = torch.Generator().manual_seed(7)
     for _ in range(30):
-        step_size = int(torch.randint(1, 9, (1,), generator=rng))
+        step_size = steps[int(torch.randint(0, len(steps), (1,), generator=rng))]
         gamma = float(torch.rand((), generator=rng) * 0.9 + 0.05)
         base_lr = float(torch.rand((), generator=rng) + 1e-3)
-        updates = int(torch.randint(1, 40, (1,), generator=rng))
+        epochs = int(torch.randint(0, 4, (1,), generator=rng))
+        updates = epochs * step_size + int(torch.randint(1, 40, (1,), generator=rng))
         expected = _scheduler_run(base_lr, step_size, gamma, updates)
         for step, want in enumerate(expected):
             _close(

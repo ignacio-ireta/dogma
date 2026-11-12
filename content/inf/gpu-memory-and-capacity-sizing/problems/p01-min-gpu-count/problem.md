@@ -86,3 +86,6 @@ the usable memory fitting, and one byte more not; a reserve that is floored, not
 when it does not divide; a KV-head count that rules out a power of two that would otherwise fit; a sliding window that
 caps the cache; a model whose weights alone never fit; large byte counts that stay exact; zero workspace and zero
 reserve; the return type; configs that must not change; and each validation rule.
+
+Some hidden tests take their inputs from the real datasets `gutenberg_frankenstein`,
+`gutenberg_pride_prejudice` and `gutenberg_walden` (see `docs/DATASETS.md`).

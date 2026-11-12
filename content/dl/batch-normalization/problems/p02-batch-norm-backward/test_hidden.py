@@ -3,10 +3,15 @@
 # closed form. Messages name the kind of mistake and never show hidden inputs or expected values.
 from __future__ import annotations
 
+import math
+
 import pytest
 import torch
 import torch.nn.functional as ref_f  # oracle only
 from submission import batch_norm_backward
+
+from dogma_data import rng, sample_rows
+from dogma_data import rng as data_rng
 
 ATOL = 1e-9
 RTOL = 1e-9
@@ -16,9 +21,50 @@ FD_TOL = 1e-6
 FD_STEP = 1e-6
 
 
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p02-batch-norm-backward:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
+
+
+def _features(shape, seed, scale=1.0, offset=0.0, dtype=torch.float64):
+    """Real inputs of the given shape: standardised breast_cancer features, scaled and shifted.
+
+    The last axis holds the features and the leading axes hold the rows drawn. The columns
+    are correlated and skewed, and a small batch can repeat a value, as measured data does.
+    Weights, gains, biases and running statistics are parameters and stay random.
+    """
+    shape = tuple(shape)
+    rows = math.prod(shape[:-1])
+    drawn, _ = sample_rows(
+        "breast_cancer",
+        rng(f"batch-norm-backward-p02:features:{seed}"),
+        rows,
+        shape[-1],
+        standardize=True,
+    )
+    return torch.tensor(drawn.reshape(shape), dtype=torch.float64).to(dtype) * scale + offset
+
+
 def _randn(shape, seed, scale=1.0, offset=0.0, dtype=torch.float64):
     g = torch.Generator().manual_seed(seed)
-    return torch.randn(shape, generator=g, dtype=dtype) * scale + offset
+    return _real_values(g, [shape], dtype) * scale + offset
 
 
 def _call(*args, **kwargs):
@@ -89,7 +135,7 @@ SHAPES = [(2, 3), (3, 1), (4, 3), (5, 2), (8, 4)]
 
 def test_gradients_match_autograd_on_random_batches():
     for seed, (n, c) in enumerate(SHAPES):
-        x = _randn((n, c), seed, scale=2.0, offset=0.3)
+        x = _features((n, c), seed, scale=2.0, offset=0.3)
         gamma = _randn((c,), seed + 10)
         grad_y = _randn((n, c), seed + 20)
         gx, gg, gb = _result(_call(grad_y, x, gamma, eps=1e-5), n, c)
@@ -107,7 +153,7 @@ def test_gradients_match_autograd_on_random_batches():
 
 
 def test_gradients_match_finite_differences_in_float64():
-    x = _randn((4, 3), 31)
+    x = _features((4, 3), 31)
     gamma = _randn((3,), 32)
     beta = _randn((3,), 33)
     grad_y = _randn((4, 3), 34)
@@ -143,7 +189,7 @@ def test_gradients_match_finite_differences_in_float64():
 
 
 def test_constant_upstream_gradient_gives_zero_input_gradient():
-    x = _randn((5, 2), 41)
+    x = _features((5, 2), 41)
     gamma = _randn((2,), 42)
     grad_y = torch.full((5, 2), 0.75, dtype=torch.float64)
     gx, _, gb = _result(_call(grad_y, x, gamma, eps=1e-5), 5, 2)
@@ -158,7 +204,7 @@ def test_constant_upstream_gradient_gives_zero_input_gradient():
 
 def test_varying_upstream_gradient_includes_variance_path():
     # A non-constant upstream gradient exercises the x_hat term, which vanishes for constant grad_y.
-    x = _randn((6, 4), 51, scale=3.0)
+    x = _features((6, 4), 51, scale=3.0)
     gamma = _randn((4,), 52)
     grad_y = _randn((6, 4), 53)
     gx, _, _ = _result(_call(grad_y, x, gamma, eps=1e-5), 6, 4)
@@ -168,7 +214,7 @@ def test_varying_upstream_gradient_includes_variance_path():
 
 def test_backward_uses_biased_variance_like_the_forward_pass():
     # With N=3 the unbiased variance differs from the biased one by 50 percent.
-    x = _randn((3, 2), 61)
+    x = _features((3, 2), 61)
     gamma = torch.ones(2, dtype=torch.float64)
     grad_y = _randn((3, 2), 62)
     gx, _, _ = _result(_call(grad_y, x, gamma, eps=1e-5), 3, 2)
@@ -181,7 +227,7 @@ def test_backward_uses_biased_variance_like_the_forward_pass():
 
 
 def test_parameter_gradients_sum_over_rows_not_average():
-    x = _randn((4, 3), 71)
+    x = _features((4, 3), 71)
     gamma = _randn((3,), 72)
     grad_y = _randn((4, 3), 73)
     _, gg, gb = _result(_call(grad_y, x, gamma, eps=1e-5), 4, 3)
@@ -192,7 +238,7 @@ def test_parameter_gradients_sum_over_rows_not_average():
 
 
 def test_large_common_offset_matches_autograd():
-    x = _randn((5, 2), 81, scale=1.0, offset=1e6)
+    x = _features((5, 2), 81, scale=1.0, offset=1e6)
     gamma = _randn((2,), 82)
     grad_y = _randn((5, 2), 83)
     gx, gg, gb = _result(_call(grad_y, x, gamma, eps=1e-5), 5, 2)
@@ -215,7 +261,7 @@ def test_large_common_offset_matches_autograd():
 
 
 def test_float32_inputs_return_float32_gradients():
-    x = _randn((4, 3), 91, dtype=torch.float32)
+    x = _features((4, 3), 91, dtype=torch.float32)
     gamma = torch.ones(3, dtype=torch.float32)
     grad_y = _randn((4, 3), 92, dtype=torch.float32)
     gx, gg, gb = _result(_call(grad_y, x, gamma, eps=1e-5), 4, 3)
@@ -229,7 +275,7 @@ def test_float32_inputs_return_float32_gradients():
 
 
 def test_inputs_are_not_mutated():
-    x = _randn((4, 3), 101)
+    x = _features((4, 3), 101)
     gamma = _randn((3,), 102)
     grad_y = _randn((4, 3), 103)
     originals = [t.clone() for t in (grad_y, x, gamma)]
@@ -241,7 +287,7 @@ def test_inputs_are_not_mutated():
 
 
 def test_invalid_arguments_raise_value_error():
-    x = _randn((4, 3), 111)
+    x = _features((4, 3), 111)
     g = torch.ones(3, dtype=torch.float64)
     gy = _randn((4, 3), 112)
     cases = {
@@ -272,7 +318,7 @@ def test_invalid_arguments_raise_value_error():
 
 def test_default_eps_matches_the_documented_signature():
     # Small variance (about 1e-5) so that a different default eps changes the gradients clearly.
-    x = _randn((6, 3), 201, scale=3e-3)
+    x = _features((6, 3), 201, scale=3e-3)
     gamma = _randn((3,), 202)
     grad_y = _randn((6, 3), 203)
     gx, gg, gb = _result(_call(grad_y, x, gamma), 6, 3)
@@ -296,7 +342,7 @@ def test_default_eps_matches_the_documented_signature():
 
 def test_large_upstream_gradient_is_not_modified():
     # Upstream values well outside the usual unit range: the caller's grad_y must keep them.
-    x = _randn((4, 3), 151)
+    x = _features((4, 3), 151)
     gamma = _randn((3,), 152)
     grad_y = _randn((4, 3), 153, scale=10.0)
     original = grad_y.clone()

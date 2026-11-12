@@ -45,7 +45,8 @@ def acf(x: Sequence[float] | NDArray[np.float64], nlags: int) -> NDArray[np.floa
         d = values / np.max(np.abs(values))
     d = d / np.max(np.abs(d))
     d = d - d.mean()
-    denominator = float(np.dot(d, d))  # n * biased variance, shared by every lag
+    # The denominator is added the same way as the lag sums, so that lag 0 is exactly one.
+    denominator = sum(float(a) * float(a) for a in d)  # n * biased variance, shared by every lag
     out = np.empty(nlags + 1, dtype=np.float64)
     for k in range(nlags + 1):
         # Sum the n - k products that exist at lag k, but divide by the full denominator.

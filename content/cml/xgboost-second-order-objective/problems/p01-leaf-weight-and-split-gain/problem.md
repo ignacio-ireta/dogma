@@ -37,3 +37,6 @@ ValueError: reg_lambda must be a finite number that is zero or positive
 
 ## Done looks like
 All public tests pass, then **Submit** runs the hidden tests. They check: the closed forms against an independent evaluation on random splits; that each leaf weight minimises the quadratic leaf objective (checked by finite differences); that the gain equals the drop in the regularised objective, computed numerically from the leaf minimums; that $\gamma$ lowers the gain one for one and a larger $\lambda$ shrinks the leaf weights; empty sides and zero-hessian sides with and without $\lambda$; rejection of negative regularisers, negative hessians, non-finite gradients and mismatched lengths; finite and accurate results at large and small magnitudes; invariance to sample order; and that the inputs are left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

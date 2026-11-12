@@ -7,15 +7,52 @@ from hypothesis import strategies as st
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from submission import regression_report
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 KEYS = {"mae", "mse", "rmse", "r2"}
 
 
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _house_values_and_predictions(gen, n):
+    """Real house values and the predictions of a real linear model for n block groups.
+
+    The model is least squares on median income, house age and latitude (standardised), fitted
+    to sixty other california_housing block groups. Its errors are what a real model makes:
+    mostly small, a few large, and largest where the value is capped at 5.
+    """
+    X, value = sample_rows("california_housing", gen, n + 60, standardize=True)
+    design = np.column_stack([np.ones(n + 60), X[:, [0, 1, 6]]])
+    beta = np.linalg.lstsq(design[n:], value[n:], rcond=None)[0]
+    return value[:n], design[:n] @ beta
+
+
 def _data(seed, n, scale=1.0):
-    """Random truth and predictions with a known amount of noise."""
-    rng = np.random.default_rng(seed)
-    y_true = scale * (rng.normal(size=n) + 3.0)
-    y_pred = y_true + 0.8 * scale * rng.normal(size=n)
-    return y_true, y_pred
+    """Real house values and a real model's predictions, both multiplied by ``scale``."""
+    gen = data_rng(f"regression-report-p01:data:{seed}:{n}")
+    y_true, y_pred = _house_values_and_predictions(gen, n)
+    return scale * y_true, scale * y_pred
 
 
 def _call(y_true, y_pred):
@@ -98,7 +135,7 @@ def test_matches_scikit_learn_on_random_predictions(n, seed, scale):
 def test_r2_is_not_clipped_for_very_poor_predictions():
     y_true, _ = _data(11, 40)
     rng = np.random.default_rng(12)
-    y_pred = -4.0 * y_true + 10.0 * rng.normal(size=40)
+    y_pred = -4.0 * y_true + 10.0 * _real_normal(rng, 40)
     r2_ref = r2_score(y_true, y_pred)
     report = _report(y_true, y_pred)
     assert r2_ref < -1.0, "the fixture must be a very poor fit"

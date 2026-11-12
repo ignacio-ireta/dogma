@@ -70,3 +70,6 @@ input; invalid input and parameters; and inputs left unchanged. The realism fami
 `wine`, where one column holds nearly all the variance), digit-style data with constant columns and a rank below
 its width, and the same real data scaled by a power of two, where a tiny total variance must still give its real
 ratios.
+
+The hidden tests draw their bulk inputs from the real datasets `diabetes` and `wine` (see
+`docs/DATASETS.md`).

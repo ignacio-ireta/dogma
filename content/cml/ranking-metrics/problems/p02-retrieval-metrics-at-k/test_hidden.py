@@ -17,6 +17,9 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import retrieval_metrics
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 KEYS = ("precision_at_k", "recall_at_k", "reciprocal_rank", "average_precision_at_k")
 LARGE_N = 200_000
 LARGE_TIME_LIMIT_S = 5.0
@@ -103,11 +106,18 @@ def _check_against(ranked: list[Any], relevant: set[Any], k: int) -> None:
 
 @pytest.mark.parametrize("seed", range(20), ids=[f"random-{s}" for s in range(20)])
 def test_matches_the_numpy_reference_on_random_rankings(seed: int) -> None:
-    rng = np.random.default_rng(seed)
+    # A real ranking: 22 california_housing block groups with the ids of the pool. The relevant
+    # ones are those whose house value is above 2.6 (about the top quarter of the table), or
+    # the most valuable one when none is. Even seeds rank by median income, a good predictor;
+    # odd seeds rank by house age, a poor one, so the first relevant id can sit deep in the
+    # list. The ranking is cut at a random length, so relevant ids can be missing from it.
+    rng = data_rng(f"retrieval-metrics-p02:ranking:{seed}")
     pool = POOL + [f"doc-{i}" for i in range(12)]
+    features, value = sample_rows("california_housing", rng, len(pool))
     size = int(rng.integers(0, 15))
-    ranked = [pool[i] for i in rng.permutation(len(pool))[:size]]
-    relevant = {pool[i] for i in rng.choice(len(pool), size=int(rng.integers(1, 9)), replace=False)}
+    ranker = features[:, 1] if seed % 2 else features[:, 0]
+    ranked = [pool[i] for i in np.argsort(-ranker, kind="stable")[:size]]
+    relevant = {pool[i] for i in np.flatnonzero(value > 2.6)} or {pool[int(np.argmax(value))]}
     k = int(rng.integers(1, 18))  # sometimes larger than the list
     _check_against(ranked, relevant, k)
 

@@ -21,6 +21,9 @@ The loss must stay finite and accurate for very large margins in either directio
   - `accuracy`: 0-dimensional tensor with the dtype of the inputs. It is the fraction of pairs with
     $r_{c,i} > r_{r,i}$ **strictly**. A tie counts as incorrect.
 - `loss` must stay connected to autograd: gradients flow into both reward tensors.
+- The gradient of `loss` is the derivative of the mean of $-\log \sigma(d_i)$ at every margin, a tie
+  included: the chosen reward of pair `i` receives $-(1 - \sigma(d_i)) / B$ and the rejected reward
+  the opposite. At a tie ($d_i = 0$) that is $-1/(2B)$, not 0.
 - Raises `ValueError` when: an argument is not a `torch.Tensor`; either argument is not 1-D; the
   shapes differ; `B == 0`; the dtype is not floating-point; the two dtypes differ; any value is not
   finite (NaN or inf).
@@ -63,6 +66,10 @@ bradley_terry_loss_and_accuracy(reward_chosen, reward_rejected)
   banned too), `torch.binary_cross_entropy_with_logits` (a loss routine that computes this loss as a
   whole), and any other routine that computes the loss as a whole. Write the stable form yourself
   from the definition.
+- A stable form has a positive part, $\max(x, 0)$. `clamp(x, min=0)` and `where(x > 0, x, 0)` have a
+  kink at 0, and autograd gives a tied pair no gradient through them. `(x + abs(x)) / 2` and
+  `maximum(x, zeros_like(x))` have the same values and slope 1/2 at 0, which is the slope the loss
+  has there.
 
 ## Done looks like
 
@@ -70,5 +77,9 @@ The three examples above pass, including the tie and the large-margin cases. The
 compare the loss with a PyTorch log-sigmoid reference on seeded random pairs, check that adding one
 constant to both rewards changes nothing, check margins of plus and minus 1000 stay finite and exact
 in float64, and check that float32 keeps its dtype. They also check the gradient against a float64
-finite-difference estimate, that the rejected reward receives the opposite gradient sign, that ties
-are counted as wrong, and the shape, empty, NaN and mutation rules.
+finite-difference estimate, that the rejected reward receives the opposite gradient sign, that a
+tied pair receives gradient $-1/(2B)$, that ties are counted as wrong, and the shape, empty, NaN and
+mutation rules.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

@@ -2,11 +2,39 @@
 # mistake and never print hidden inputs, shapes or expected values.
 from __future__ import annotations
 
+import collections
+import functools
 import math
+import re
 
 import numpy as np
 import pytest
 from submission import fit_power_law as _learner
+
+from dogma_data import load_text
+from dogma_data import rng as data_rng
+
+BOOKS = ("gutenberg_frankenstein", "gutenberg_pride_prejudice", "gutenberg_walden")
+
+
+@functools.cache
+def _word_counts(book):
+    """Counts of the words of one vendored novel, most frequent first."""
+    words = re.findall(r"[a-z]+", load_text(book).lower())
+    return tuple(count for _, count in collections.Counter(words).most_common())
+
+
+def _zipf(gen, n):
+    """A real power law: word frequency against rank in a novel (Zipf's law).
+
+    x holds n consecutive ranks starting at a randomly chosen rank from 1 to 20, and y the
+    number of times the word of that rank occurs. The exponent is near -1 and the points
+    scatter around the line, as measured data does; equal counts repeat far down the ranks.
+    """
+    counts = _word_counts(BOOKS[int(gen.integers(len(BOOKS)))])
+    first = int(gen.integers(1, 21))
+    x = np.arange(first, first + n, dtype=np.float64)
+    return x, np.array(counts[first - 1 : first - 1 + n], dtype=np.float64)
 
 
 def _call(x, y):
@@ -35,10 +63,9 @@ def _polyfit_oracle(x, y):
 
 
 def test_seeded_noisy_fit_matches_polyfit_on_the_logs():
-    rng = np.random.default_rng(301)
-    for n, a_true, b_true in [(8, 3.0, 0.7), (20, 0.02, -1.2), (50, 1e4, 0.0)]:
-        x = rng.uniform(1.0, 1000.0, size=n)
-        y = a_true * x**b_true * np.exp(rng.normal(0.0, 0.05, size=n))
+    rng = data_rng("fit-power-law-p02:polyfit")
+    for n in (8, 20, 50):
+        x, y = _zipf(rng, n)
         a, b = _call(x, y)
         a_want, b_want = _polyfit_oracle(x, y)
         assert abs(b - b_want) <= 1e-9 + 1e-9 * abs(b_want), (
@@ -58,9 +85,7 @@ def test_noise_free_power_laws_with_negative_and_positive_exponents_are_recovere
 
 
 def test_multiplying_y_scales_a_and_keeps_b():
-    rng = np.random.default_rng(302)
-    x = rng.uniform(1.0, 50.0, size=15)
-    y = 0.8 * x**0.3 * np.exp(rng.normal(0.0, 0.02, size=15))
+    x, y = _zipf(data_rng("fit-power-law-p02:scale-y"), 15)
     a, b = _call(x, y)
     a2, b2 = _call(x, 1000.0 * y)
     assert abs(b2 - b) < 1e-9, "scaling y must not change the exponent"
@@ -68,9 +93,7 @@ def test_multiplying_y_scales_a_and_keeps_b():
 
 
 def test_multiplying_x_rescales_a_by_a_power_of_the_factor():
-    rng = np.random.default_rng(303)
-    x = rng.uniform(1.0, 50.0, size=15)
-    y = 4.0 * x**-0.6 * np.exp(rng.normal(0.0, 0.02, size=15))
+    x, y = _zipf(data_rng("fit-power-law-p02:scale-x"), 15)
     a, b = _call(x, y)
     s = 1000.0
     a2, b2 = _call(s * x, y)

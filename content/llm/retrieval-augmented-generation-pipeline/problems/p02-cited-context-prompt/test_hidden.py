@@ -9,9 +9,31 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import build_cited_prompt
 
-from dogma_data import load_text, rng
+from dogma_data import load_text, rng, sample_rows
 
 VOCAB = ["alpha", "beta", "gamma", "delta", "eps", "zeta"]
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
 
 
 def checked(call):
@@ -58,9 +80,15 @@ def random_case(seed: int):
     d = int(rng.integers(1, 5))
     names = [f"c{j}" for j in range(m)]
     rng.shuffle(names)
-    texts = [" ".join(rng.choice(VOCAB, size=int(rng.integers(0, 6)))) for _ in range(m)]
-    vectors = rng.normal(size=(m, d))
-    qv = rng.normal(size=d)
+    # Chunk texts are the first 0 to 5 words of real lines of the novel. The vectors stand for
+    # the output of an embedding model, so they stay random.
+    lines = [line for line in load_text("gutenberg_pride_prejudice").splitlines() if line.strip()]
+    texts = [
+        " ".join(lines[int(rng.integers(len(lines)))].split()[: int(rng.integers(0, 6))])
+        for _ in range(m)
+    ]
+    vectors = _real_normal(rng, (m, d))
+    qv = _real_normal(rng, d)
     k = int(rng.integers(1, m + 2))
     budget = int(rng.integers(0, 16))
     return "what is it?", qv, names, texts, vectors, k, budget

@@ -41,3 +41,6 @@ uses the scheduler's own counter, on seeded settings. They also check the peak l
 and value, the rise and fall on each side of the peak, the decay for very large steps,
 the scaling in `d_model`, the one-step warmup, extreme magnitudes, the return type, and the
 invalid-argument families, including step 0.
+
+Some hidden tests take their inputs from the real datasets `breast_cancer`, `diabetes`, `digits`,
+`iris` and `wine` (see `docs/DATASETS.md`).

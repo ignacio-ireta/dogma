@@ -6,6 +6,8 @@ from sklearn.base import BaseEstimator
 from sklearn.model_selection import KFold, cross_val_score
 from submission import cross_validate
 
+from dogma_data import rng, sample_rows
+
 
 def _least_squares(X_tr, y_tr, X_te):
     design = np.column_stack([np.ones(len(X_tr)), X_tr])
@@ -39,10 +41,13 @@ METRICS = {"mse": _mse, "mae": _mae, "under": _under}
 
 
 def _data(seed, n=23, d=2):
-    rng = np.random.default_rng(seed)
-    X = rng.normal(size=(n, d))
-    y = 1.0 + X @ np.array([2.0, -1.0])[:d] + 0.5 * rng.normal(size=n)
-    return X, y
+    """n diabetes patients, d standardised features, and the real disease progression.
+
+    The target is centred and scaled by round numbers near its mean and spread.
+    """
+    gen = rng(f"cross-validate-p02:data:{seed}")
+    X, y = sample_rows("diabetes", gen, n, d, standardize=True)
+    return X, (y - 150.0) / 75.0
 
 
 def _folds_for(kind, n, seed):

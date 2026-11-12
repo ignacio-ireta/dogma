@@ -51,3 +51,5 @@ including a column whose repeated value is not exactly representable (the mean o
 differs from the value itself); a column with a tiny spread or a large offset that is not constant; fewer
 than two rows, non-2-D, NaN, infinite, empty and zero-variable input raising `ValueError`; integer input;
 and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `wine` (see `docs/DATASETS.md`).

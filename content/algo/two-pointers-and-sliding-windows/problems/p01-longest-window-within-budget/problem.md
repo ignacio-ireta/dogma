@@ -52,3 +52,6 @@ The edge families are: empty input, a budget of zero, a window that sums to exac
 between windows of equal length, no valid window, a long run at the end of the list, negative costs and
 negative budgets, inputs that must not change, and a list of 200,000 entries that must finish within the
 time limit.
+
+The hidden tests draw their bulk inputs from the real datasets `co2` and `elnino` (see
+`docs/DATASETS.md`).

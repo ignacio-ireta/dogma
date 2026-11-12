@@ -47,3 +47,6 @@ generator input read to its end and giving the same sample as a list; a stream s
 an empty stream; `k = 0` and a negative `k`; memory that stays bounded by `k` on a long generator,
 measured with `tracemalloc`; the length and membership of the sample; and no mutation of the
 input.
+
+The hidden tests draw their bulk inputs from the real dataset `gutenberg_frankenstein` (see
+`docs/DATASETS.md`).

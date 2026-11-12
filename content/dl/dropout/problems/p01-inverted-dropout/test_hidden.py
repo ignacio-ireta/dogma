@@ -6,6 +6,9 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import dropout
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 
 def checked(call):
     try:
@@ -46,8 +49,11 @@ def close(actual, expected):
     st.sampled_from([0.0, 0.2, 0.5, 0.95]),
 )
 def test_random_seed_mask_oracle(n, d, seed, p):
-    X = np.arange(n * d, dtype=float).reshape(n, d)
-    G = X + 1
+    # Activations and upstream gradient are real: standardised measurements of 2n wines.
+    values, _ = sample_rows(
+        "wine", data_rng(f"p01-inverted-dropout:oracle:{seed}"), 2 * n, d, standardize=True
+    )
+    X, G = values[:n], values[n:]
     expected = (np.random.default_rng(seed).random((n, d)) >= p).astype(float) / (1 - p)
     out, dx, mask = checked(lambda: dropout(X, G, p, True, seed))
     close(mask, expected)

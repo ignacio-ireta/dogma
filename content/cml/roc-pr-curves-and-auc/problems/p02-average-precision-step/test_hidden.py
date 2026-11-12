@@ -12,12 +12,31 @@ from hypothesis import strategies as st
 from sklearn.metrics import average_precision_score
 from submission import average_precision
 
-from dogma_data import load, rng
+from dogma_data import load, rng, sample_rows
 
 VALUE_MISTAKE = (
     "AP differs from the reference: a step sum over the distinct thresholds of (recall gained) "
     "times (precision at that threshold), highest threshold first"
 )
+
+
+WEAK_FEATURES = (9, 11, 14, 18)  # fractal dimension; texture, smoothness and symmetry errors
+
+
+def _scored_tumours(gen, n, tied):
+    """Real diagnoses of n breast_cancer tumours and one real feature as the score.
+
+    With ``tied`` the score is a weak predictor rounded to whole standardised units, so many
+    tumours share a score and tied tumours differ in diagnosis. Otherwise it is a randomly
+    chosen feature as measured. A draw with a single class is skipped.
+    """
+    while True:
+        features, target = sample_rows("breast_cancer", gen, n, standardize=True)
+        if 0.0 < target.mean() < 1.0:
+            break
+    if tied:
+        return target.astype(np.int64), np.round(features[:, int(gen.choice(WEAK_FEATURES))])
+    return target.astype(np.int64), features[:, int(gen.integers(features.shape[1]))]
 
 
 def _expect_value_error(call, mistake):
@@ -61,22 +80,18 @@ def _threshold_sum(y_true, scores):
 
 @pytest.mark.parametrize("seed", range(6), ids=[f"case-{s}" for s in range(6)])
 def test_matches_scikit_learn_on_tied_and_continuous_scores(seed):
-    rng = np.random.default_rng(seed)
-    n = int(rng.integers(5, 80))
-    y = rng.integers(0, 2, size=n)
-    y[0] = 1
-    scores = rng.integers(0, 5, size=n) / 4.0 if seed % 2 else rng.random(n)
+    gen = rng(f"average-precision-p02:scikit-learn:{seed}")
+    n = int(gen.integers(5, 80))
+    y, scores = _scored_tumours(gen, n, tied=bool(seed % 2))
     expected = average_precision_score(y, scores)
     assert math.isclose(_solve(y, scores), expected, rel_tol=1e-9, abs_tol=1e-12), VALUE_MISTAKE
 
 
 @pytest.mark.parametrize("seed", range(4), ids=[f"sum-{s}" for s in range(4)])
 def test_matches_explicit_threshold_sum(seed):
-    rng = np.random.default_rng(200 + seed)
-    n = int(rng.integers(4, 40))
-    y = rng.integers(0, 2, size=n)
-    y[0] = 1
-    scores = rng.integers(0, 4, size=n) / 3.0
+    gen = rng(f"average-precision-p02:threshold-sum:{seed}")
+    n = int(gen.integers(4, 40))
+    y, scores = _scored_tumours(gen, n, tied=True)
     expected = _threshold_sum(y, scores)
     assert math.isclose(_solve(y, scores), expected, rel_tol=1e-12, abs_tol=1e-12), VALUE_MISTAKE
 

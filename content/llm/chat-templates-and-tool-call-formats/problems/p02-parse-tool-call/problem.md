@@ -94,3 +94,6 @@ non-finite numbers (NaN, Infinity, and an overflowing literal), duplicate keys, 
 (missing tags, two blocks, text outside the block, surrounding whitespace), the top-level shape,
 the wrong tool name, missing required parameters, unexpected parameters, the type of `name` and of
 `arguments`, the `TypeError` for a non-string text, and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `gsm8k` and `online_retail` (see
+`docs/DATASETS.md`).

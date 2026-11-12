@@ -62,3 +62,5 @@ standard deviation with scikit-learn's `cross_val_score` on the same folds, for 
 asymmetric metrics, with folds that are unequal in size and not contiguous. They check the standard
 deviation's degrees of freedom, the argument order of `metric`, that `fit_predict` never sees a test row
 and is called once per fold, the validation rules, determinism, and that the inputs are left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `diabetes` (see `docs/DATASETS.md`).

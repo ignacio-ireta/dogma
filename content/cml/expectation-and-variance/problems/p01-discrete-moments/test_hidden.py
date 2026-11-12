@@ -5,15 +5,24 @@ from hypothesis import strategies as st
 from scipy import stats
 from submission import discrete_moments
 
+from dogma_data import load, rng
+
 SEEDS = st.integers(min_value=0, max_value=10**6)
 SIZES = st.integers(min_value=1, max_value=12)
 
 
 def _random_distribution(seed, n):
-    rng = np.random.default_rng(seed)
-    values = rng.normal(scale=10.0, size=n)
-    weights = rng.uniform(0.01, 1.0, size=n)
-    return values, weights / weights.sum()
+    """A real discrete distribution: iris sepal widths, in cm above or below 3.
+
+    The widths are recorded to one decimal, so the 150 flowers share 23 distinct values. n of
+    them are drawn; each keeps its share of the flowers that have one of the drawn values. A
+    few values hold most of the mass and the rest are rare.
+    """
+    gen = rng(f"discrete-moments-p01:distribution:{seed}")
+    widths, counts = np.unique(load("iris").X[:, 1], return_counts=True)
+    picked = gen.choice(len(widths), size=n, replace=False)
+    weights = counts[picked].astype(np.float64)
+    return widths[picked] - 3.0, weights / weights.sum()
 
 
 def _moments(values, probs, mistake):

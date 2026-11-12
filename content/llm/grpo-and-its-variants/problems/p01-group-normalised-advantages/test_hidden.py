@@ -10,6 +10,9 @@ import pytest
 import torch
 from submission import group_advantages
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 ATOL = 1e-9
 RTOL = 1e-9
 # float32 keeps about 7 significant digits. Values of order one with eps = 1e-6 need about 1e-6 of
@@ -19,12 +22,34 @@ FLOAT32_ATOL = 1e-5
 OFFSET_ATOL = 1e-6
 
 
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-group-normalised-advantages:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
+
+
 def _gen(seed: int) -> torch.Generator:
     return torch.Generator().manual_seed(seed)
 
 
 def _randn(shape, seed, scale=1.0, offset=0.0, dtype=torch.float64):
-    return (torch.randn(shape, generator=_gen(seed), dtype=dtype) * scale + offset).clone()
+    return (_real_values(_gen(seed), [shape], dtype) * scale + offset).clone()
 
 
 def _call(rewards, **kwargs):

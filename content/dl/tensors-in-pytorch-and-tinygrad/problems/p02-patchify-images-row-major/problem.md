@@ -56,3 +56,5 @@ order on random images against an independent reference. They also check one pat
 whole image, a single-pixel patch, non-square images, empty batches, dtype preservation, exact
 values at extreme magnitudes, rejection of invalid arguments, that the result does not share memory
 with the input, and that the input is unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `digits` (see `docs/DATASETS.md`).

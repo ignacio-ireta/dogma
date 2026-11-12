@@ -8,6 +8,8 @@ from hypothesis import strategies as st
 from scipy.special import log_expit
 from submission import binary_cross_entropy_with_logits
 
+from dogma_data import rng, sample_rows
+
 
 def _call(z, y):
     """Call the loss with NumPy warnings turned into errors.
@@ -57,10 +59,13 @@ def _decimal_loss(z, y):
 
 
 def test_moderate_logits_match_the_scipy_log_sigmoid_reference():
-    rng = np.random.default_rng(0)
-    z = rng.normal(scale=3.0, size=50)
-    y = rng.uniform(size=50)
-    y[:10] = np.round(y[:10])
+    # A real linear score: standardised breast_cancer features projected on the direction from
+    # the malignant mean to the benign mean of the drawn rows. Forty labels are smoothed (soft
+    # targets), ten stay hard.
+    X, label = sample_rows("breast_cancer", rng("bce-p02:reference"), 50, 6, standardize=True)
+    z = X @ (X[label == 1].mean(axis=0) - X[label == 0].mean(axis=0))
+    y = 0.9 * label + 0.05
+    y[:10] = label[:10]
     want = float(np.mean(-y * log_expit(z) - (1.0 - y) * log_expit(-z)))
     got = _call(z, y)
     assert abs(got - want) <= 1e-12, (

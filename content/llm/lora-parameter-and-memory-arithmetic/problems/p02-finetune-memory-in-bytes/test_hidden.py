@@ -2,10 +2,13 @@
 # and never print hidden inputs, shapes or expected values.
 from __future__ import annotations
 
+import functools
 import random
 
 import pytest
 from submission import finetune_memory_bytes as _learner
+
+from dogma_data import load
 
 KEYS = ["base_weights", "adapter_weights", "adapter_gradients", "adam_states", "total"]
 
@@ -41,15 +44,31 @@ def _reference(base_params, base_bits, lora_params, adapter_bits):
     }
 
 
+@functools.cache
+def _dataset_ends() -> tuple[tuple[int, int], ...]:
+    """(features, outputs) of five real datasets: iris 4 and 3, wine 13 and 3, breast_cancer 30
+    and 2, digits 64 and 10, diabetes 10 and 1 (a regression target)."""
+    outputs = {"iris": 3, "wine": 3, "breast_cancer": 2, "digits": 10, "diabetes": 1}
+    return tuple((int(load(name).X.shape[1]), classes) for name, classes in outputs.items())
+
+
 def test_random_configurations_match_the_reference_term_by_term():
     rng = random.Random(77)  # noqa: S311 -- seeded synthetic configurations, not security
-    for _ in range(300):
+    for trial in range(300):
         args = {
             "base_params": rng.randint(0, 10**11),
             "base_bits": rng.choice([4, 8, 16, 32]),
             "lora_params": rng.randint(0, 10**9),
             "adapter_bits": rng.choice([16, 32]),
         }
+        if trial % 2:
+            # Every other model is a dense network for a real dataset: its features in, a
+            # drawn hidden width, its outputs out. The adapter is a low-rank pair on the
+            # first layer.
+            features, outputs = rng.choice(_dataset_ends())
+            hidden, rank = rng.randint(1, 4096), rng.randint(1, 16)
+            args["base_params"] = features * hidden + hidden + hidden * outputs + outputs
+            args["lora_params"] = rank * (features + hidden)
         got = _call(**args)
         want = _reference(**args)
         assert list(got) == KEYS, "the dictionary must have the five keys in the stated order"

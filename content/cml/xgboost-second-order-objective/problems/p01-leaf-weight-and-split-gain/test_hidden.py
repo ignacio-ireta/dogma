@@ -6,7 +6,61 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from scipy.optimize import minimize_scalar
+from scipy.special import ndtr
 from submission import leaf_weight_and_split_gain
+
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
 
 
 def _call(g_left, h_left, g_right, h_right, **kwargs):
@@ -50,13 +104,23 @@ def _reference(g_l, h_l, g_r, h_r, *, lam, gam):
 
 
 def _random_split(seed):
-    rng = np.random.default_rng(seed)
-    n_l = int(rng.integers(1, 40))
-    n_r = int(rng.integers(1, 40))
-    g_l = rng.normal(size=n_l)
-    g_r = rng.normal(size=n_r)
-    h_l = rng.uniform(0.01, 1.0, size=n_l)
-    h_r = rng.uniform(0.01, 1.0, size=n_r)
+    """A real candidate split: log-loss gradients and hessians of breast_cancer tumours.
+
+    The margin is a weak linear score of three standardised features, as early in boosting, so
+    g = sigmoid(margin) - y and h = sigmoid(margin) * (1 - sigmoid(margin)). The tumours go left
+    or right by a fourth feature at a randomly chosen quantile; a split that leaves one side
+    empty is skipped. The regularisation settings are hyperparameters and stay random.
+    """
+    rng = data_rng(f"split-gain-p01:split:{seed}")
+    while True:
+        n = int(rng.integers(2, 79))
+        X, y = sample_rows("breast_cancer", rng, n, 4, standardize=True)
+        left = X[:, 3] <= np.quantile(X[:, 3], float(rng.uniform(0.1, 0.9)))
+        if 0 < int(left.sum()) < n:
+            break
+    p = 1.0 / (1.0 + np.exp(-0.5 * (X[:, :3] @ _real_normal(rng, 3))))
+    g, h = p - y, p * (1.0 - p)
+    g_l, g_r, h_l, h_r = g[left], g[~left], h[left], h[~left]
     lam = float(rng.uniform(0.0, 3.0))
     gam = float(rng.uniform(0.0, 1.0))
     return g_l, h_l, g_r, h_r, lam, gam
@@ -241,10 +305,10 @@ def test_invalid_arrays_raise_value_error(g_l, h_l, g_r, h_r):
 
 def test_large_magnitudes_stay_finite_and_accurate():
     rng = np.random.default_rng(600)
-    g_l = rng.normal(size=20) * 1e6
-    h_l = rng.uniform(1e3, 1e4, size=20)
-    g_r = rng.normal(size=15) * 1e6
-    h_r = rng.uniform(1e3, 1e4, size=15)
+    g_l = _real_normal(rng, 20) * 1e6
+    h_l = 1e3 + (1e4 - 1e3) * _real_unit(rng, 20)
+    g_r = _real_normal(rng, 15) * 1e6
+    h_r = 1e3 + (1e4 - 1e3) * _real_unit(rng, 15)
     got = _call(g_l, h_l, g_r, h_r, reg_lambda=1.0, gamma=0.0)
     assert all(math.isfinite(v) for v in got), (
         "large gradients must not overflow: compute G^2 / (H + reg_lambda) without extra scaling"
@@ -259,10 +323,10 @@ def test_large_magnitudes_stay_finite_and_accurate():
 
 def test_small_magnitudes_with_small_lambda_stay_accurate():
     rng = np.random.default_rng(601)
-    g_l = rng.normal(size=10) * 1e-9
-    h_l = rng.uniform(1e-10, 1e-9, size=10)
-    g_r = rng.normal(size=10) * 1e-9
-    h_r = rng.uniform(1e-10, 1e-9, size=10)
+    g_l = _real_normal(rng, 10) * 1e-9
+    h_l = 1e-10 + (1e-9 - 1e-10) * _real_unit(rng, 10)
+    g_r = _real_normal(rng, 10) * 1e-9
+    h_r = 1e-10 + (1e-9 - 1e-10) * _real_unit(rng, 10)
     got = _call(g_l, h_l, g_r, h_r, reg_lambda=1e-9, gamma=0.0)
     np.testing.assert_allclose(
         got,

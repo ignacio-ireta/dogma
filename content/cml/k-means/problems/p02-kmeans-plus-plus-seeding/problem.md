@@ -42,3 +42,6 @@ With seed 0 the generator first picks row 3 (value 7), then row 0 (value 0), whi
 
 ## Done looks like
 All public tests pass, then **Submit** runs the hidden tests. They check: exact agreement with an independent implementation of the same protocol on several datasets and seeds; that the second centre's frequencies over many seeds follow the mixture of $D^2$ weights, not uniform weights; that $k = 1$ and $k = n$ behave as the protocol says; that the centres are copies of distinct rows; that the output is invariant under an exact power-of-two rescaling of the data; the validation rules, including the distinct-row requirement and the seed rule; that the same seed reproduces the output; and that the inputs are left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `california_housing` (see
+`docs/DATASETS.md`).

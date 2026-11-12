@@ -30,3 +30,6 @@ Compute the Shannon entropy of a discrete probability vector, $H(\mathbf p)=-\su
 ## Done looks like
 
 All public tests pass, then **Submit** runs the hidden tests. They check: agreement with a reference entropy on random distributions in three bases; zero-probability entries contributing nothing rather than `nan`; a certain outcome and a uniform distribution, both with analytic values; the relation between bases; a base below 1 giving the negated value; the sum tolerance on both sides of $10^{-9}$; rejection of negative, non-finite, empty, two-dimensional and wrong-sum input; rejection of invalid bases; tiny probabilities staying finite; a `float` return; and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `adult` and `breast_cancer` (see
+`docs/DATASETS.md`).

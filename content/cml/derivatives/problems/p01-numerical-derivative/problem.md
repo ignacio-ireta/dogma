@@ -47,3 +47,5 @@ the exact truncation error of a cubic, which is $h^2$ for central and $3xh + h^2
 default step at large and at tiny `x`, for both schemes and for negative as well as positive `x`;
 agreement with a complex-step reference on a composite function; a random polynomial; integer `x`;
 and the validation of `method` (exact spelling only), `x` and `h`.
+
+The hidden tests draw their bulk inputs from the real dataset `wine` (see `docs/DATASETS.md`).

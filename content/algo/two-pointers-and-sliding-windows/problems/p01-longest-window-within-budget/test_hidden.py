@@ -25,6 +25,8 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import longest_window_within_budget
 
+from dogma_data import sample_window
+
 LARGE_N = 200_000
 TIME_LIMIT_S = 5.0
 SMALL_CALL_S = 2.0
@@ -149,7 +151,17 @@ def _verify(costs: list[int], budget: int, want: tuple[int, int]) -> None:
 
 
 def _random_costs(rng: np.random.Generator, n: int, high: int) -> list[int]:
-    return [int(x) for x in rng.integers(0, high, size=n)]
+    """n real costs in a row: a run of a measured series, in whole units above its lowest value.
+
+    A short list is monthly sea-surface temperature above 19 degrees (0 to 10); a long one is
+    weekly CO2 above 313 ppm (0 to about 60), which climbs with a yearly wave. The bound is
+    not used.
+    """
+    if n == 0:
+        return []
+    if n < 100:
+        return [int(x) for x in np.round(sample_window("elnino", rng, n)) - 19]
+    return [int(x) for x in np.round(sample_window("co2", rng, n)) - 313]
 
 
 @settings(max_examples=80, deadline=None, report_multiple_bugs=False)

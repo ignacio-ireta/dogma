@@ -74,3 +74,6 @@ independent search over batch sizes on seeded random models and devices. They al
 the one before it; a tie at the ridge counting as compute-bound; a model that is compute-bound from batch 1; a model
 whose KV traffic keeps it memory-bound at every batch size; a threshold that a floating-point division would round
 down, which must come out exact; the return type; configs that must not change; and each validation rule.
+
+Some hidden tests take their inputs from the real datasets `gutenberg_frankenstein`,
+`gutenberg_pride_prejudice` and `gutenberg_walden` (see `docs/DATASETS.md`).

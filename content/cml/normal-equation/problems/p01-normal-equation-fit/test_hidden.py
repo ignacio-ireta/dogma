@@ -5,17 +5,45 @@ from hypothesis import strategies as st
 from sklearn.linear_model import LinearRegression
 from submission import fit_linear_regression
 
-from dogma_data import load, rng, synth
+from dogma_data import load, rng, sample_rows
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
 
 
 def _data(seed, n, d):
-    """Correlated columns on moderate scales (synth), a true linear signal and mild noise."""
+    """Semi-synthetic: real standardised diabetes columns, a known linear signal and mild noise.
+
+    The columns are correlated real measurements. A draw whose design ``[1 | X]`` is not of full
+    rank (a handful of patients can share one sex) is skipped: these tests are about designs
+    the contract accepts.
+    """
     gen = rng(f"cml/normal-equation/p01-normal-equation-fit:data:{seed}")
-    X = synth.correlated_mixed_scale(
-        gen, n, d, n_factors=1, strength=1.0, scale_range=(0.5, 2.0), offset_range=(-1.0, 1.0)
-    )
-    beta = gen.normal(size=d)
-    y = 1.5 + X @ beta + 0.3 * gen.normal(size=n)
+    while True:
+        X, _ = sample_rows("diabetes", gen, n, d, standardize=True)
+        if np.linalg.matrix_rank(np.column_stack([np.ones(n), X])) == d + 1:
+            break
+    beta = _real_normal(gen, d)
+    y = 1.5 + X @ beta + 0.3 * _real_normal(gen, n)
     return X, y
 
 
@@ -226,10 +254,10 @@ def test_noise_free_line_is_recovered_exactly():
 )
 def test_rank_deficient_design_raises_value_error(make_design):
     rng = np.random.default_rng(12)
-    x = rng.normal(size=12)
-    z = rng.normal(size=12)
+    x = _real_normal(rng, 12)
+    z = _real_normal(rng, 12)
     X = make_design(x, z)
-    y = rng.normal(size=12)
+    y = _real_normal(rng, 12)
     _expect_value_error(
         lambda: fit_linear_regression(X, y),
         "a rank-deficient design was accepted: check the rank of [1 | X] before solving, "
@@ -240,16 +268,16 @@ def test_rank_deficient_design_raises_value_error(make_design):
 def test_more_features_than_rows_raises_value_error():
     rng = np.random.default_rng(13)
     _expect_value_error(
-        lambda: fit_linear_regression(rng.normal(size=(3, 4)), rng.normal(size=3)),
+        lambda: fit_linear_regression(_real_normal(rng, (3, 4)), _real_normal(rng, 3)),
         "fewer rows than columns was accepted: an underdetermined design has no unique fit",
     )
 
 
 def test_constant_column_is_fine_without_an_intercept():
     rng = np.random.default_rng(14)
-    x = rng.normal(size=20)
+    x = _real_normal(rng, 20)
     X = np.column_stack([np.ones(20), x])
-    y = 0.5 + 2.0 * x + 0.1 * rng.normal(size=20)
+    y = 0.5 + 2.0 * x + 0.1 * _real_normal(rng, 20)
     intercept, coef = _fit(X, y, fit_intercept=False)
     expected = np.linalg.lstsq(X, y, rcond=None)[0]
     assert intercept == 0.0, "a constant feature without fit_intercept must return intercept 0.0"
@@ -265,9 +293,9 @@ def test_constant_column_is_fine_without_an_intercept():
     ("X", "y"),
     [
         (np.array([1.0, 2.0, 3.0]), np.array([1.0, 2.0, 3.0])),
-        (np.random.default_rng(21).normal(size=(4, 2, 2)), np.ones(4)),
-        (np.random.default_rng(22).normal(size=(5, 2)), np.ones(4)),
-        (np.random.default_rng(23).normal(size=(5, 2)), np.ones((5, 1))),
+        (_real_normal(np.random.default_rng(21), (4, 2, 2)), np.ones(4)),
+        (_real_normal(np.random.default_rng(22), (5, 2)), np.ones(4)),
+        (_real_normal(np.random.default_rng(23), (5, 2)), np.ones((5, 1))),
     ],
     ids=["one-dimensional-x", "three-dimensional-x", "length-mismatch", "two-dimensional-y"],
 )

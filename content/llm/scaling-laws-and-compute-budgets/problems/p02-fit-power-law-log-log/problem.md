@@ -61,3 +61,6 @@ laws with negative and positive exponents; the scaling rules (multiplying `y` sc
 from zero in log space, where the expanded formula fails; two points; the error rules (length, rank,
 single point, equal `x`, non-positive or non-finite values); integer arrays; the return type; and
 inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `gutenberg_frankenstein`,
+`gutenberg_pride_prejudice` and `gutenberg_walden` (see `docs/DATASETS.md`).

@@ -1,13 +1,13 @@
-problem_version: 4
+problem_version: 5
 accept:
-- file: accept_blind.py
-  origin: blind
-- file: accept_where_for_clamp.py
-  origin: freedom
-  freedom: uses torch.where to choose the positive part instead of clamp
 - file: accept_sum_over_count.py
   origin: freedom
   freedom: divides the sum by the element count instead of calling mean
+- file: accept_maximum_for_positive_part.py
+  origin: freedom
+  freedom: uses torch.maximum for the positive part instead of (x + abs(x)) / 2
+- file: accept_blind.py
+  origin: blind
 reject:
 - file: reject_float16_rejected.py
   mistake: refuses float16 rewards, which the Contract allows
@@ -60,6 +60,13 @@ reject:
   mistake: clamps the caller rejected rewards in place
   clause: Must not mutate inputs.
   killed_by: test_gradient_matches_the_analytic_form_in_float64
+  visible: hidden
+- file: reject_tied_pair_gets_no_gradient.py
+  mistake: writes the positive part with clamp, which has a kink at 0, so a tied pair gets no gradient
+  clause: 'The gradient of `loss` is the derivative of the mean of $-\log \sigma(d_i)$ at every margin,
+    a tie included: the chosen reward of pair `i` receives $-(1 - \sigma(d_i)) / B$ and the rejected reward
+    the opposite. At a tie ($d_i = 0$) that is $-1/(2B)$, not 0.'
+  killed_by: test_tied_pairs_receive_the_gradient_of_the_smooth_loss
   visible: hidden
 uncovered: []
 sweeps:

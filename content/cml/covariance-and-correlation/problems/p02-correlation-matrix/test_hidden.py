@@ -4,14 +4,24 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import correlation_matrix
 
+from dogma_data import rng, sample_rows
+
 SEEDS = st.integers(min_value=0, max_value=10**6)
 ROWS = st.integers(min_value=2, max_value=15)
 COLS = st.integers(min_value=1, max_value=4)
 
 
 def _random_matrix(seed, n, d):
-    rng = np.random.default_rng(seed)
-    return rng.normal(size=(n, d))
+    """n rows and d columns of standardised wine: real, correlated measurements.
+
+    Real measurements are rounded, so a small draw can repeat one value down a whole column.
+    Such a draw is skipped: these tests are about columns that vary.
+    """
+    gen = rng(f"correlation-p02:data:{seed}")
+    while True:
+        X, _ = sample_rows("wine", gen, n, d, standardize=True)
+        if np.all(np.ptp(X, axis=0) > 0.0):
+            return X
 
 
 def _correlation(X, mistake):

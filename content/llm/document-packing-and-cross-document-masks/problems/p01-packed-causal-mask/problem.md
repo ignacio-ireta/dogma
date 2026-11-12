@@ -56,3 +56,6 @@ another document is ever visible, each token attends to every earlier token of i
 and each token attends to itself. They also cover restart positions, the input contract (empty,
 two-dimensional, non-integer and non-contiguous ids), outputs of the documented dtype and shape,
 and inputs that are left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `gutenberg_walden` (see
+`docs/DATASETS.md`).

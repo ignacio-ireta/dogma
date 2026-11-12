@@ -65,3 +65,5 @@ changes nothing), the invariance to row scaling, a small temperature where a nai
 float32 dtype within a declared bound, invalid shapes, zero rows and temperatures, non-finite embeddings, and
 that inputs are not mutated. A property test checks that the loss is non-negative and unchanged when the pairs are
 permuted together.
+
+The hidden tests draw their bulk inputs from the real dataset `digits` (see `docs/DATASETS.md`).

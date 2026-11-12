@@ -2,15 +2,63 @@
 # and never print hidden inputs, shapes or expected values.
 from __future__ import annotations
 
+import collections
 import copy
+import functools
+import math
 import random
+import re
 
 import pytest
 import torch
 import torch.nn.functional as ref_f  # oracle only: the learner may not use torch.nn
 from submission import build_sft_batch as _learner
 
+from dogma_data import load_frame, sample_rows
+from dogma_data import rng as data_rng
+
 IGNORE = -100
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-sft-batch-with-loss-masks:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
+
+
+@functools.cache
+def _gsm8k_ids(vocab):
+    """GSM8K questions and worked answers as word ids below ``vocab``: real instruction pairs.
+
+    A word's id is its frequency rank over the 300 pairs (0 for the most frequent). Ranks at
+    or above ``vocab - 1`` share the last id, as an unknown-word id does, so that id is common.
+    """
+    table = load_frame("gsm8k")
+    questions = [re.findall(r"[a-z0-9#]+", text.lower()) for text in table["question"]]
+    answers = [re.findall(r"[a-z0-9#]+", text.lower()) for text in table["answer"]]
+    ranked = collections.Counter(w for words in (*questions, *answers) for w in words).most_common()
+    rank = {word: index for index, (word, _) in enumerate(ranked)}
+
+    def ids(words):
+        return tuple(min(rank[word], vocab - 1) for word in words)
+
+    return tuple((ids(q), ids(a)) for q, a in zip(questions, answers, strict=True))
 
 
 def _call(pairs, pad_id):
@@ -47,11 +95,14 @@ def _reference(pairs, pad_id):
 
 
 def _random_pairs(seed, rows, max_prompt, max_resp, vocab):
-    rng = random.Random(seed)  # noqa: S311 -- seeded synthetic data, not security
+    """Real prompt and response pairs: the first words of a GSM8K question and of its answer."""
+    rng = random.Random(seed)  # noqa: S311 -- seeded choice of rows and lengths, not security
+    source = _gsm8k_ids(vocab)
     pairs = []
     for _ in range(rows):
-        p = [rng.randrange(vocab) for _ in range(rng.randint(1, max_prompt))]
-        r = [rng.randrange(vocab) for _ in range(rng.randint(1, max_resp))]
+        question, answer = source[rng.randrange(len(source))]
+        p = list(question[: rng.randint(1, max_prompt)])
+        r = list(answer[: rng.randint(1, max_resp)])
         pairs.append((p, r))
     return pairs
 
@@ -82,7 +133,7 @@ def test_shifted_cross_entropy_scores_exactly_the_response_tokens():
     pairs = _random_pairs(seed=99, rows=4, max_prompt=5, max_resp=4, vocab=vocab)
     _, labels, _ = _call(pairs, pad_id=0)
     width = labels.shape[1]
-    logits = torch.randn(len(pairs), width, vocab, generator=gen, dtype=torch.float64)
+    logits = _real_values(gen, [len(pairs), width, vocab], torch.float64)
 
     loss_sum = ref_f.cross_entropy(
         logits[:, :-1, :].reshape(-1, vocab),

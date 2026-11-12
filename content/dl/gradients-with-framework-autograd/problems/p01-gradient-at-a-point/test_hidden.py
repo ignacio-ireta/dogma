@@ -1,11 +1,38 @@
 from __future__ import annotations
 
+import math
+
 import pytest
 import torch
 from submission import grad_at
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 ATOL = 1e-6  # matches meta.yaml tolerance
 RTOL = 1e-6  # matches meta.yaml tolerance
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-gradient-at-a-point:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
 
 
 def checked(call) -> torch.Tensor:
@@ -77,7 +104,7 @@ SMOOTH_CASES = [
 def test_matches_analytic_gradient_on_seeded_random_points(name, f, analytic):
     gen = torch.Generator().manual_seed(0)
     for _ in range(3):
-        x = torch.randn(2, generator=gen, dtype=torch.float64)
+        x = _real_values(gen, [2], torch.float64)
         expected = analytic(x)
         got = checked(lambda x=x: grad_at(f, x))
         assert got.dtype == torch.float64, "gradient dtype must match x"
@@ -89,7 +116,7 @@ def test_matches_analytic_gradient_on_seeded_random_points(name, f, analytic):
 def test_matches_central_finite_differences_in_float64():
     gen = torch.Generator().manual_seed(1)
     f = lambda v: (torch.exp(v) * v**2).sum() + torch.sin(v).prod()  # noqa: E731
-    x = torch.randn(4, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [4], torch.float64)
     got = checked(lambda: grad_at(f, x))
     numeric = central_difference(f, x)
     assert torch.allclose(got, numeric, atol=ATOL, rtol=RTOL), (

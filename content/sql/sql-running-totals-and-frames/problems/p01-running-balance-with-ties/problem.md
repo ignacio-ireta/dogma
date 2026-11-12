@@ -70,3 +70,6 @@ is the reverse of their identifier order, balances that restart per account, sin
 accounts, empty input, debits that make the balance negative, values beyond 2^53, exact output
 types and final ordering. A query whose order ignores `posting_id` fails the tie cases, whatever
 its frame.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

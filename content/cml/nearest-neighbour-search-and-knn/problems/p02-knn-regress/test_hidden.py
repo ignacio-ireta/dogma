@@ -5,8 +5,74 @@ import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from scipy.special import ndtr
 from sklearn.neighbors import KNeighborsRegressor
 from submission import knn_regress
+
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+RATIO_COLUMNS = (2, 3, 5)  # rooms, bedrooms and occupants per household
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
+
+
+def _houses(gen, n, d):
+    """n real california_housing block groups: d standardised averages and the house value.
+
+    The features are ratios of counts, so no two distances tie exactly, and they are
+    heavy-tailed. The value is the median house value in units of 100,000 dollars.
+    """
+    X, value = sample_rows("california_housing", gen, n, standardize=True)
+    return X[:, RATIO_COLUMNS[:d]], value
 
 
 def _call(X, y, Q, k, **kwargs):
@@ -56,10 +122,8 @@ def _reference(X, y, Q, k, weights):
 
 
 def test_matches_scikit_learn_for_both_weightings_on_continuous_data():
-    rng = np.random.default_rng(3)
-    X = rng.normal(size=(150, 3))
-    y = X[:, 0] - 0.5 * X[:, 2] + rng.normal(scale=0.2, size=150)
-    Q = rng.normal(size=(50, 3))
+    points, value = _houses(data_rng("knn-regress-p02:scikit-learn"), 200, 3)
+    X, Q, y = points[:150], points[150:], value[:150]
     for weights in ("uniform", "distance"):
         for k in (1, 4, 9):
             ref = (
@@ -79,9 +143,9 @@ def test_matches_scikit_learn_for_both_weightings_on_continuous_data():
 
 def test_matches_brute_force_reference_with_duplicates_and_ties():
     rng = np.random.default_rng(5)
-    X = rng.integers(-2, 3, size=(25, 2)).astype(float)
-    y = rng.integers(-4, 5, size=25).astype(float)
-    Q = rng.integers(-2, 3, size=(20, 2)).astype(float)
+    X = _real_ints(rng, -2, 3, (25, 2)).astype(float)
+    y = _real_ints(rng, -4, 5, 25).astype(float)
+    Q = _real_ints(rng, -2, 3, (20, 2)).astype(float)
     for weights in ("uniform", "distance"):
         for k in (1, 2, 3, 6, 25):
             np.testing.assert_allclose(
@@ -170,10 +234,8 @@ def test_empty_query_returns_empty_float_array():
 
 
 def test_translating_every_point_does_not_change_any_prediction():
-    rng = np.random.default_rng(32)
-    X = rng.normal(size=(60, 3))
-    y = rng.normal(size=60)
-    Q = rng.normal(size=(40, 3))
+    points, value = _houses(data_rng("knn-regress-p02:translation"), 100, 3)
+    X, Q, y = points[:60], points[60:], value[:60]
     for weights in ("uniform", "distance"):
         base = _call(X, y, Q, 5, weights=weights)
         shifted = _call(X + 1e8, y, Q + 1e8, 5, weights=weights)
@@ -192,11 +254,10 @@ def test_translating_every_point_does_not_change_any_prediction():
 @settings(max_examples=80, deadline=None, report_multiple_bugs=False)
 @given(st.integers(min_value=0, max_value=10_000), st.sampled_from(["uniform", "distance"]))
 def test_prediction_lies_between_the_smallest_and_largest_target(seed, weights):
-    rng = np.random.default_rng(seed)
+    rng = data_rng(f"knn-regress-p02:between:{seed}")
     n = int(rng.integers(1, 15))
-    X = rng.normal(size=(n, 2))
-    y = rng.normal(size=n) * 10.0
-    Q = rng.normal(size=(4, 2))
+    points, value = _houses(rng, n + 4, 2)
+    X, Q, y = points[:n], points[n:], value[:n] * 10.0
     k = int(rng.integers(1, n + 1))
     out = _call(X, y, Q, k, weights=weights)
     assert np.all(out >= y.min() - 1e-9) and np.all(out <= y.max() + 1e-9), (
@@ -205,10 +266,8 @@ def test_prediction_lies_between_the_smallest_and_largest_target(seed, weights):
 
 
 def test_inputs_are_not_mutated():
-    rng = np.random.default_rng(42)
-    X = rng.normal(size=(20, 2))
-    y = rng.normal(size=20)
-    Q = rng.normal(size=(5, 2))
+    points, value = _houses(data_rng("knn-regress-p02:not-mutated"), 25, 2)
+    X, Q, y = points[:20], points[20:], value[:20]
     X0, y0, Q0 = X.copy(), y.copy(), Q.copy()
     _call(X, y, Q, 3, weights="distance")
     np.testing.assert_array_equal(X, X0, err_msg="X_train was modified in place")

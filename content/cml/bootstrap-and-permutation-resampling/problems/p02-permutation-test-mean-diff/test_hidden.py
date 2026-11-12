@@ -1,18 +1,37 @@
+import functools
 import itertools
 
 import numpy as np
 import pytest
 from submission import permutation_test_mean_diff
 
-# Small samples whose every relabelling can be enumerated. The last one has exact ties in the mean
-# difference once rounded in floating point, which is where a naive comparison goes wrong.
-EXACT_CASES = [
-    ([1.2, 2.5, 3.1], [2.0, 3.3, 4.8]),
-    ([4.1, 5.0, 6.2, 5.5], [3.0, 3.8, 4.4, 2.9]),
-    ([10.0, 11.0, 12.0], [10.0, 13.0, 14.0, 15.0]),
-    ([1.0, 2.0, 3.0], [7.0, 8.0, 9.0]),
-    ([0.3, 0.9, 1.4, 2.2], [0.1, 0.4, 0.6, 1.1, 1.5]),
+from dogma_data import load, rng
+
+# Small real samples whose every relabelling can be enumerated: one iris measurement in two
+# species. Each entry is (column, first species, its size, second species, its size). The
+# measurements are recorded to one decimal, so equal values within and across groups are common.
+EXACT_GROUPS = [
+    (0, 0, 3, 1, 3),  # sepal length, setosa against versicolor
+    (1, 0, 4, 1, 4),  # sepal width, setosa against versicolor
+    (0, 1, 3, 2, 4),  # sepal length, versicolor against virginica
+    (2, 0, 3, 2, 3),  # petal length, setosa against virginica: no overlap at all
+    (3, 1, 4, 2, 5),  # petal width, versicolor against virginica
 ]
+
+
+@functools.cache
+def _exact_cases():
+    """The small real samples named by EXACT_GROUPS, as (a, b) pairs of lists."""
+    iris = load("iris")
+    gen = rng("permutation-test-p02:exact-cases")
+    cases = []
+    for column, first, n_first, second, n_second in EXACT_GROUPS:
+        a = gen.choice(iris.X[iris.y == first, column], size=n_first, replace=False)
+        b = gen.choice(iris.X[iris.y == second, column], size=n_second, replace=False)
+        cases.append((a.tolist(), b.tolist()))
+    return cases
+
+
 TIE_CASE = ([0.1, 0.5, 0.1], [0.3, 0.3, 0.5, 0.3])
 MC_TOLERANCE = 0.02
 N_PERM = 10000
@@ -49,11 +68,12 @@ def _must_raise_value_error(call, mistake):
 
 
 @pytest.mark.parametrize(
-    ("a", "b"),
-    EXACT_CASES,
-    ids=[f"exact{index}" for index in range(len(EXACT_CASES))],
+    "case",
+    range(len(EXACT_GROUPS)),
+    ids=[f"exact{index}" for index in range(len(EXACT_GROUPS))],
 )
-def test_p_value_is_close_to_exact_enumeration(a, b):
+def test_p_value_is_close_to_exact_enumeration(case):
+    a, b = _exact_cases()[case]
     p = permutation_test_mean_diff(a, b, n_permutations=N_PERM, seed=0)
     assert abs(p - _exact_p(a, b)) <= MC_TOLERANCE, (
         "p-value is far from the exact enumeration: check the statistic (mean difference), "
@@ -83,7 +103,7 @@ def test_a_near_tie_below_the_observed_difference_is_not_counted():
 
 
 def test_p_value_is_the_same_whichever_group_comes_first():
-    for a, b in EXACT_CASES[:2]:
+    for a, b in _exact_cases()[:2]:
         for first, second in ((a, b), (b, a)):
             p = permutation_test_mean_diff(first, second, n_permutations=N_PERM, seed=1)
             assert abs(p - _exact_p(a, b)) <= MC_TOLERANCE, (
@@ -112,14 +132,14 @@ def test_p_value_has_the_plus_one_form_and_is_never_zero():
 
 
 def test_same_seed_gives_the_same_p_value():
-    a, b = EXACT_CASES[1]
+    a, b = _exact_cases()[1]
     first = permutation_test_mean_diff(a, b, n_permutations=500, seed=42)
     second = permutation_test_mean_diff(a, b, n_permutations=500, seed=42)
     assert first == second, "the same seed must give the same p-value: use default_rng(seed)"
 
 
 def test_rescaling_both_groups_leaves_p_unchanged():
-    a, b = EXACT_CASES[0]
+    a, b = _exact_cases()[0]
     p = permutation_test_mean_diff(a, b, n_permutations=2000, seed=7)
     p_scaled = permutation_test_mean_diff(
         np.asarray(a) * 10.0, np.asarray(b) * 10.0, n_permutations=2000, seed=7
@@ -172,7 +192,7 @@ def test_a_single_permutation_is_a_valid_request():
 
 
 def test_default_number_of_permutations_is_5000():
-    a, b = EXACT_CASES[0]
+    a, b = _exact_cases()[0]
     default = permutation_test_mean_diff(a, b, seed=11)
     explicit = permutation_test_mean_diff(a, b, n_permutations=5000, seed=11)
     assert default == explicit, (

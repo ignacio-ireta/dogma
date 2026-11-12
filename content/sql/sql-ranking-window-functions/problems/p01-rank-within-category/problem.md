@@ -52,8 +52,8 @@ tools     307         NULL       4           3     2
 
 A `product_id` such as `905113208` is compared as a number, not as text.
 
-A generated event log can supply product ids, dirty category labels, and lognormal amounts. Its
-category spellings stay separate ranking groups.
+Real rows (invoice lines of the `online_retail` data) supply ids, hand-typed category labels and
+amounts that repeat inside a category. The category spellings stay separate ranking groups.
 
 ## Constraints
 
@@ -68,5 +68,8 @@ The families they cover: ties on revenue with the tie-break decided by `product_
 differs from their numeric order; NULL revenues after every number, including 0, and peers of each other;
 a category where every revenue is NULL; a single-product category; large, non-sequential ids; a table
 inserted in shuffled order, so an unordered result would show; an empty table; dirty category keys kept
-as stored, lognormal amounts, and generated event-log rows checked against an independent pandas computation
+as stored, repeated and negative amounts, and real retail rows checked against an independent pandas computation
 with `groupby().rank()`.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

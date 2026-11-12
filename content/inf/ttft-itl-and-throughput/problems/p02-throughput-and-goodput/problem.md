@@ -65,3 +65,6 @@ rates with an exact-fraction computation on seeded random requests, and they cov
 a window that starts at the earliest arrival rather than the first token; throughput counting every token; one-token
 requests judged on TTFT alone; goodput counting requests rather than tokens; SLO values of zero; the return type;
 each validation rule; and input that must not change.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

@@ -7,6 +7,7 @@ Failure messages name the kind of mistake. They never print hidden inputs or exp
 
 from __future__ import annotations
 
+import functools
 import math
 import random
 from decimal import ROUND_HALF_UP, Decimal, localcontext
@@ -15,6 +16,8 @@ from typing import Any
 
 import pytest
 from submission import cost_and_break_even
+
+from dogma_data import retail_events
 
 
 def _oracle(price: Decimal, gpus: int, rate: int, util: int, api: Decimal) -> dict[str, Any]:
@@ -39,14 +42,35 @@ def _expect_error(exc_type: type[Exception], call: Any, mistake: str) -> None:
     pytest.fail(mistake)
 
 
+@functools.cache
+def _real_prices() -> tuple[tuple[Decimal, ...], tuple[Decimal, ...]]:
+    """Real money amounts in pounds and pence, as Decimals: line amounts, and unit prices.
+
+    They stand in for the two prices of the problem: the amount of an invoice line for the
+    price of a GPU-hour and the unit price of another line for the API price per million
+    tokens. What they bring is real pence (1.25, 2.95, 0.42) and a long tail up to the
+    thousands, where the old draw was uniform over every cent. Refund lines are left out:
+    prices are positive. The two are drawn from different lines, because the amount of a line
+    is a whole multiple of its own unit price.
+    """
+    lines = retail_events()
+    lines = lines[(lines["quantity"] > 0) & (lines["amount"] > 0)]
+    amounts, units = [], []
+    for quantity, amount in zip(lines["quantity"], lines["amount"], strict=True):
+        pence = round(float(amount) * 100)
+        amounts.append(Decimal(pence) / Decimal(100))
+        units.append(Decimal(max(1, round(pence / int(quantity)))) / Decimal(100))
+    return tuple(amounts), tuple(units)
+
+
 def test_seeded_random_inputs_match_independent_decimal_computation() -> None:
     rng = random.Random(2026)  # noqa: S311 -- seeded synthetic prices, not security
     for _ in range(300):
-        price = Decimal(rng.randint(0, 10_000)) / Decimal(100)
+        amounts, units = _real_prices()
+        price, api = rng.choice(amounts), rng.choice(units)
         gpus = rng.randint(1, 16)
         rate = rng.randint(1, 50_000)
         util = rng.randint(1, 100)
-        api = Decimal(rng.randint(1, 50_000)) / Decimal(100)
         want = _oracle(price, gpus, rate, util, api)
         got = cost_and_break_even(price, gpus, rate, util, api)
         if got["self_host_usd_per_million"] != want["self_host_usd_per_million"]:

@@ -59,3 +59,6 @@ cycle when one exists. The hidden tests compare with a brute-force search over p
 graphs, both acyclic and cyclic. They check that every edge is respected on larger random DAGs, that duplicate
 edges change nothing, that isolated names are included, and that a self-loop is a cycle. They also check
 that the inputs are not mutated, the type rules, and that the message for a cycle names a real cycle.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

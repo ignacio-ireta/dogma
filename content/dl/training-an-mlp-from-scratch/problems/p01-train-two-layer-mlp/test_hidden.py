@@ -4,6 +4,8 @@ import numpy as np
 import pytest
 from submission import train_mlp
 
+from dogma_data import rng, sample_rows
+
 
 def checked(call):
     try:
@@ -38,6 +40,16 @@ def close(actual, expected):
         pytest.fail("output shape differs from contract", pytrace=False)
     if not np.allclose(actual, expected, atol=1e-8, rtol=1e-6):
         pytest.fail("numerical result differs from the independent oracle", pytrace=False)
+
+
+def _patients(key, n, d):
+    """Real training data: n diabetes patients, d standardised features, the real target.
+
+    The target is the disease progression, centred and scaled by round numbers near its mean
+    and spread, as a column vector. Every entry is well inside the contract's bound of 10.
+    """
+    X, y = sample_rows("diabetes", rng(key), n, d, standardize=True)
+    return X, ((y - 150.0) / 75.0).reshape(-1, 1)
 
 
 def initial(d, h, seed):
@@ -83,8 +95,7 @@ def finite_grads(X, y, params):
 
 
 def test_initialization_and_initial_loss_oracle():
-    X = np.array([[1.0, -1.0], [2.0, 0.5]])
-    y = np.array([[0.3], [-0.2]])
+    X, y = _patients("train-mlp-p01:initial", 2, 2)
     params, losses = checked(lambda: train_mlp(X, y, 3, 0, 0.1, 17))
     oracle = initial(2, 3, 17)
     for a, b in zip(params, oracle, strict=True):
@@ -93,8 +104,7 @@ def test_initialization_and_initial_loss_oracle():
 
 
 def test_one_step_all_parameter_gradients_finite_difference():
-    X = np.array([[0.1, 0.8], [-0.4, 0.2], [0.3, -0.9]])
-    y = np.array([[0.2], [0.7], [-0.3]])
+    X, y = _patients("train-mlp-p01:one-step", 3, 2)
     before = initial(2, 2, 23)
     numerical = finite_grads(X, y, before)
     after, losses = checked(lambda: train_mlp(X, y, 2, 1, 0.03, 23))
@@ -104,8 +114,7 @@ def test_one_step_all_parameter_gradients_finite_difference():
 
 
 def test_multiple_steps_match_numeric_gradient_descent():
-    X = np.array([[-0.5], [0.8]])
-    y = np.array([[0.1], [-0.2]])
+    X, y = _patients("train-mlp-p01:several-steps", 2, 1)
     expected = initial(1, 2, 9)
     history = [objective(X, y, expected)]
     for _ in range(3):

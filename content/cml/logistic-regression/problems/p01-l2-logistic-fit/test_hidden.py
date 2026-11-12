@@ -8,7 +8,7 @@ from scipy.optimize import minimize
 from scipy.special import expit
 from submission import fit_logistic_regression
 
-from dogma_data import load, rng
+from dogma_data import load, rng, sample_rows
 
 
 def _call(X, y, **kwargs):
@@ -46,15 +46,19 @@ def _expect_value_error(X, y, **kwargs):
 
 
 def _random_problem(seed, n_min=20, n_max=120, d_max=4):
-    """A random problem with both classes present. The labels follow a noisy linear rule."""
-    rng = np.random.default_rng(seed)
-    n = int(rng.integers(n_min, n_max))
-    d = int(rng.integers(1, d_max + 1))
-    X = rng.normal(size=(n, d))
-    beta = rng.normal(size=d)
-    y = (rng.uniform(size=n) < expit(0.5 + X @ beta)).astype(float)
-    y[0], y[1] = 0.0, 1.0
-    return X, y
+    """Real tumours: standardised breast_cancer measurements and the real diagnosis.
+
+    The columns are strongly correlated and the diagnosis is nearly separable on some of them,
+    which is why every test that uses this fixture fits with a positive penalty. The draw is
+    repeated until both diagnoses are present.
+    """
+    gen = rng(f"l2-logistic-p01:random-problem:{seed}")
+    n = int(gen.integers(n_min, n_max))
+    d = int(gen.integers(1, d_max + 1))
+    while True:
+        X, y = sample_rows("breast_cancer", gen, n, d, standardize=True)
+        if 0.0 < y.mean() < 1.0:
+            return X, y
 
 
 def _objective_and_gradient(theta, X, y, l2):
@@ -115,20 +119,19 @@ def test_matches_an_independent_optimiser_on_raw_breast_cancer_scales(raw_breast
 
 
 @pytest.mark.parametrize(
-    ("draw", "quantile"),
-    [(0, 0.5), (2, 0.99)],
+    ("column", "quantile"),
+    [(23, 0.5), (22, 0.99)],
     ids=["balanced-separable", "rare-separable"],
 )
 def test_separable_real_features_with_a_weak_penalty_fit_without_overflow(
-    raw_breast_cancer, draw, quantile
+    raw_breast_cancer, column, quantile
 ):
-    # Labels are a linear rule on the real features: perfectly separable, with linear scores in
-    # the hundreds along the way. The rare variant has about one positive in a hundred.
+    # Labels are a real rule: the tumours whose worst area (column 23) is above the median,
+    # or whose worst perimeter (column 22) is in the top hundredth. One real measurement
+    # separates them perfectly, and on its raw scale the linear scores reach the hundreds
+    # along the way. The rare variant has about one positive in a hundred.
     X, _ = raw_breast_cancer
-    key = f"cml/logistic-regression/p01-l2-logistic-fit:separable:{draw}"
-    beta = rng(key).normal(size=X.shape[1])
-    eta = X @ beta
-    y = (eta > np.quantile(eta, quantile)).astype(float)
+    y = (X[:, column] > np.quantile(X[:, column], quantile)).astype(float)
     b, w = _call(X, y, l2=1e-3)
     assert np.isfinite(b) and np.all(np.isfinite(w)), (
         "coefficients must stay finite on separable data under a positive penalty"
@@ -239,10 +242,10 @@ def test_perfectly_separated_data_with_a_penalty_stays_finite():
 
 
 def test_zero_penalty_on_non_separable_data_matches_the_maximum_likelihood_fit():
-    rng = np.random.default_rng(7)
-    X = rng.normal(size=(80, 2))
-    y = (rng.uniform(size=80) < expit(0.3 + X @ np.array([1.0, -0.5]))).astype(float)
-    y[0], y[1] = 0.0, 1.0
+    # The classic real logit example, which is not separable: 32 students, their grade point
+    # average, test score and teaching method, and whether their grade improved (spector).
+    students = load("spector")
+    X, y = students.X, students.y.astype(float)
     want = _oracle(X, y, 0.0)
     b, w = _call(X, y, l2=0.0)
     np.testing.assert_allclose(
@@ -255,11 +258,14 @@ def test_zero_penalty_on_non_separable_data_matches_the_maximum_likelihood_fit()
 
 
 def test_identical_columns_share_their_coefficient_equally():
-    rng = np.random.default_rng(3)
-    x = rng.normal(size=40)
+    # One real measurement of forty tumours, entered twice, and their real diagnosis.
+    gen = rng("l2-logistic-p01:identical-columns")
+    while True:
+        column, y = sample_rows("breast_cancer", gen, 40, 1, standardize=True)
+        if 0.0 < y.mean() < 1.0:
+            break
+    x = column[:, 0]
     X = np.column_stack([x, x])
-    y = (rng.uniform(size=40) < expit(x)).astype(float)
-    y[0], y[1] = 0.0, 1.0
     _, w = _call(X, y, l2=1.0)
     assert abs(w[0] - w[1]) <= 1e-8, (
         "identical columns must share the coefficient equally under an L2 penalty: the penalised "
@@ -323,11 +329,12 @@ def test_inputs_are_not_mutated():
 @settings(max_examples=30, deadline=None, report_multiple_bugs=False)
 @given(st.integers(min_value=0, max_value=10_000))
 def test_gradient_condition_holds_on_small_random_problems(seed):
-    rng = np.random.default_rng(seed)
-    n = int(rng.integers(4, 15))
-    X = rng.normal(size=(n, 2))
-    y = (rng.uniform(size=n) < 0.5).astype(float)
-    y[0], y[1] = 0.0, 1.0
+    gen = rng(f"l2-logistic-p01:small:{seed}")
+    n = int(gen.integers(4, 15))
+    while True:
+        X, y = sample_rows("breast_cancer", gen, n, 2, standardize=True)
+        if 0.0 < y.mean() < 1.0:
+            break
     b, w = _call(X, y, l2=1.0)
     assert _gradient_max(b, w, X, y, 1.0) <= 1e-7, (
         "the returned point is not stationary on a small problem: check the gradient "

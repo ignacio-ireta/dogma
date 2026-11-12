@@ -6,6 +6,9 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import relu_family as _learner
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 
 def relu_family(*args):
     try:
@@ -40,8 +43,8 @@ def _invalid(fn, *args):
 
 
 def test_seeded_scalar_piecewise_oracle():
-    rng = np.random.default_rng(4)
-    x = rng.normal(size=(5, 7))
+    # Real inputs of both signs: five tumours by seven standardised breast_cancer measurements.
+    x, _ = sample_rows("breast_cancer", data_rng("relu-family-p01:oracle"), 5, 7, standardize=True)
     for slope in (0.0, 0.03, 0.8, 1.0):
         y, d = relu_family(x, slope)
         expected = np.array([v if v > 0 else slope * v for v in x.flat]).reshape(x.shape)

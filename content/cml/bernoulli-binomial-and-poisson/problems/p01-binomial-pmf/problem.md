@@ -50,3 +50,5 @@ is loosened on purpose (see `meta.yaml`). They also check that the pmf sums to 1
 the mean is $np$ and the variance $np(1-p)$, and the exact results at $p = 0$, $p = 1$ and $n = 0$.
 The families also include probability zero outside $[0, n]$, output shape that follows `k`,
 integral floats, the invalid cases for `n`, `p` (NaN included) and `k`, and inputs left unchanged.
+
+Some hidden tests take their inputs from the real dataset `online_retail` (see `docs/DATASETS.md`).

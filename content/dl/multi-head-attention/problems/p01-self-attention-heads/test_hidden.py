@@ -8,6 +8,31 @@ import pytest
 import torch
 from submission import multi_head_self_attention as _learner
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-self-attention-heads:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
+
 
 def _call(*args, **kwargs):
     """Call the learner; any exception on a valid input is reported as a named contract failure."""
@@ -29,10 +54,10 @@ def _invalid(*args, **kwargs):
 
 def _weights(gen, d, scale=0.5):
     def mat():
-        return torch.randn(d, d, generator=gen, dtype=torch.float64) * scale
+        return _real_values(gen, [d, d], torch.float64) * scale
 
     def vec():
-        return torch.randn(d, generator=gen, dtype=torch.float64) * scale
+        return _real_values(gen, [d], torch.float64) * scale
 
     return {
         "W_q": mat(),
@@ -83,7 +108,7 @@ def test_swapping_head_blocks_consistently_leaves_output_unchanged():
     gen = torch.Generator().manual_seed(40)
     d, heads = 8, 2
     d_k = d // heads
-    x = torch.randn(2, 4, d, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [2, 4, d], torch.float64)
     w = _weights(gen, d)
     swap = torch.cat([torch.arange(d_k, 2 * d_k), torch.arange(0, d_k), torch.arange(2 * d_k, d)])
     swapped = {
@@ -109,7 +134,7 @@ def test_each_head_reads_its_own_contiguous_feature_block():
     gen = torch.Generator().manual_seed(23)
     d, heads, length = 6, 3, 4
     d_k = d // heads
-    x = torch.randn(1, length, d, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [1, length, d], torch.float64)
     w = _weights(gen, d)
     q = x @ w["W_q"].T + w["b_q"]
     k = x @ w["W_k"].T + w["b_k"]
@@ -133,7 +158,7 @@ def test_each_head_reads_its_own_contiguous_feature_block():
 def test_projections_use_nn_linear_layout_on_non_symmetric_weights():
     gen = torch.Generator().manual_seed(25)
     d = 4
-    x = torch.randn(1, 3, d, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [1, 3, d], torch.float64)
     w = _weights(gen, d)
     torch.testing.assert_close(
         _run(x, w, 1),
@@ -147,7 +172,7 @@ def test_projections_use_nn_linear_layout_on_non_symmetric_weights():
 def test_scores_scale_by_per_head_width_not_model_width():
     gen = torch.Generator().manual_seed(24)
     d, heads = 16, 4  # d_k = 4, while sqrt(d_model) = 4 and sqrt(d_k) = 2 differ
-    x = torch.randn(2, 6, d, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [2, 6, d], torch.float64)
     w = _weights(gen, d, scale=1.0)
     torch.testing.assert_close(
         _run(x, w, heads),
@@ -162,7 +187,7 @@ def test_matches_pytorch_multihead_attention_on_seeded_batches():
     gen = torch.Generator().manual_seed(21)
     for batch, length, heads in [(1, 4, 1), (2, 5, 2), (3, 6, 4)]:
         d = 8
-        x = torch.randn(batch, length, d, generator=gen, dtype=torch.float64)
+        x = _real_values(gen, [batch, length, d], torch.float64)
         w = _weights(gen, d)
         torch.testing.assert_close(
             _run(x, w, heads),
@@ -176,7 +201,7 @@ def test_matches_pytorch_multihead_attention_on_seeded_batches():
 def test_matches_reference_with_mask_on_seeded_batches():
     gen = torch.Generator().manual_seed(22)
     d, length = 8, 5
-    x = torch.randn(2, length, d, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [2, length, d], torch.float64)
     w = _weights(gen, d)
     mask = torch.tril(torch.ones(length, length, dtype=torch.bool))
     torch.testing.assert_close(
@@ -191,7 +216,7 @@ def test_matches_reference_with_mask_on_seeded_batches():
 def test_diagonal_mask_keeps_only_self_attention():
     gen = torch.Generator().manual_seed(26)
     d, length = 4, 3
-    x = torch.randn(1, length, d, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [1, length, d], torch.float64)
     w = _weights(gen, d)
     v = x @ w["W_v"].T + w["b_v"]
     want = v @ w["W_o"].T + w["b_o"]
@@ -207,7 +232,7 @@ def test_diagonal_mask_keeps_only_self_attention():
 
 def test_fully_masked_row_raises_value_error():
     gen = torch.Generator().manual_seed(27)
-    x = torch.randn(1, 3, 4, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [1, 3, 4], torch.float64)
     w = _weights(gen, 4)
     mask = torch.ones(3, 3, dtype=torch.bool)
     mask[1] = False
@@ -247,7 +272,7 @@ def test_output_bias_is_added_once_to_every_token():
 def test_batch_rows_are_independent():
     gen = torch.Generator().manual_seed(29)
     d = 8
-    x = torch.randn(3, 4, d, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [3, 4, d], torch.float64)
     w = _weights(gen, d)
     together = _run(x, w, 2)
     separately = torch.cat([_run(x[b : b + 1], w, 2) for b in range(3)])
@@ -263,7 +288,7 @@ def test_batch_rows_are_independent():
 def test_large_input_magnitudes_match_reference():
     gen = torch.Generator().manual_seed(30)
     d = 8
-    x = torch.randn(2, 5, d, generator=gen, dtype=torch.float64) * 50.0
+    x = _real_values(gen, [2, 5, d], torch.float64) * 50.0
     w = _weights(gen, d)
     torch.testing.assert_close(
         _run(x, w, 2),
@@ -277,7 +302,7 @@ def test_large_input_magnitudes_match_reference():
 def test_tiny_input_magnitudes_stay_finite_and_match_reference():
     gen = torch.Generator().manual_seed(31)
     d = 8
-    x = torch.randn(2, 5, d, generator=gen, dtype=torch.float64) * 1e-12
+    x = _real_values(gen, [2, 5, d], torch.float64) * 1e-12
     w = _weights(gen, d)
     out = _run(x, w, 2)
     assert torch.isfinite(out).all(), "tiny inputs must not produce NaN or infinity"
@@ -292,7 +317,7 @@ def test_tiny_input_magnitudes_stay_finite_and_match_reference():
 
 def test_output_dtype_and_shape_follow_input():
     gen = torch.Generator().manual_seed(32)
-    x = torch.randn(2, 3, 4, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [2, 3, 4], torch.float64)
     out = _run(x, _weights(gen, 4), 2)
     assert out.dtype == torch.float64, "output dtype must be float64 for float64 input"
     assert tuple(out.shape) == (2, 3, 4), "output shape must be (B, L, d_model)"
@@ -302,7 +327,7 @@ def test_three_dimensional_input_is_required():
     gen = torch.Generator().manual_seed(33)
     w = _weights(gen, 4)
     _invalid(
-        torch.randn(3, 4, dtype=torch.float64),
+        _real_values(torch.Generator().manual_seed(330), [3, 4], torch.float64),
         w["W_q"],
         w["W_k"],
         w["W_v"],
@@ -317,11 +342,11 @@ def test_three_dimensional_input_is_required():
 
 def test_non_square_weight_raises_value_error():
     gen = torch.Generator().manual_seed(34)
-    x = torch.randn(1, 3, 4, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [1, 3, 4], torch.float64)
     w = _weights(gen, 4)
     _invalid(
         x,
-        torch.randn(4, 3, dtype=torch.float64),
+        _real_values(torch.Generator().manual_seed(349), [4, 3], torch.float64),
         w["W_k"],
         w["W_v"],
         w["W_o"],
@@ -335,7 +360,7 @@ def test_non_square_weight_raises_value_error():
 
 def test_bias_with_wrong_length_raises_value_error():
     gen = torch.Generator().manual_seed(35)
-    x = torch.randn(1, 3, 4, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [1, 3, 4], torch.float64)
     w = _weights(gen, 4)
     _invalid(
         x,
@@ -354,7 +379,7 @@ def test_bias_with_wrong_length_raises_value_error():
 @pytest.mark.parametrize("heads", [0, -1], ids=["zero-heads", "negative-heads"])
 def test_non_positive_head_count_raises_value_error(heads):
     gen = torch.Generator().manual_seed(36)
-    x = torch.randn(1, 3, 4, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [1, 3, 4], torch.float64)
     w = _weights(gen, 4)
     _invalid(
         x, w["W_q"], w["W_k"], w["W_v"], w["W_o"], w["b_q"], w["b_k"], w["b_v"], w["b_o"], heads
@@ -363,7 +388,7 @@ def test_non_positive_head_count_raises_value_error(heads):
 
 def test_mask_must_be_boolean():
     gen = torch.Generator().manual_seed(37)
-    x = torch.randn(1, 3, 4, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [1, 3, 4], torch.float64)
     w = _weights(gen, 4)
     _invalid(
         x,
@@ -382,7 +407,7 @@ def test_mask_must_be_boolean():
 
 def test_mask_shape_must_match_sequence_length():
     gen = torch.Generator().manual_seed(38)
-    x = torch.randn(1, 3, 4, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [1, 3, 4], torch.float64)
     w = _weights(gen, 4)
     _invalid(
         x,
@@ -401,7 +426,7 @@ def test_mask_shape_must_match_sequence_length():
 
 def test_inputs_are_not_mutated():
     gen = torch.Generator().manual_seed(39)
-    x = torch.randn(2, 3, 4, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [2, 3, 4], torch.float64)
     w = _weights(gen, 4)
     before_x = x.clone()
     before_wq = w["W_q"].clone()
@@ -412,7 +437,7 @@ def test_inputs_are_not_mutated():
 
 def test_head_count_that_does_not_divide_d_model_raises_value_error():
     gen = torch.Generator().manual_seed(37)
-    x = torch.randn(1, 2, 3, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [1, 2, 3], torch.float64)
     w = _weights(gen, 3)
     # 2 is at most d_model = 3 but does not divide it, so the contract requires ValueError.
     _invalid(x, w["W_q"], w["W_k"], w["W_v"], w["W_o"], w["b_q"], w["b_k"], w["b_v"], w["b_o"], 2)
@@ -420,7 +445,7 @@ def test_head_count_that_does_not_divide_d_model_raises_value_error():
 
 def test_single_token_sequence_gets_output_bias():
     gen = torch.Generator().manual_seed(38)
-    x = torch.randn(2, 1, 4, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [2, 1, 4], torch.float64)
     w = _weights(gen, 4)
     out = _run(x, w, 2)
     want = _oracle(x, w, 2)

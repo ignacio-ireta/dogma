@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import functools
 import random
+import re
 from dataclasses import dataclass, field
 
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import BlockAllocator, OutOfBlocksError
+
+from dogma_data import load_frame
 
 
 def _raises(expected, call, mistake):
@@ -85,6 +89,20 @@ def same_outcome(learner, expected, where: str) -> None:
         raise AssertionError(f"{where}: wrong return value (check the offset or the block id)")
 
 
+@functools.cache
+def _request_sizes() -> tuple[int, ...]:
+    """Sizes of real requests, in the small units of this allocator.
+
+    For each GSM8K problem: the number of sentences of its question and the number of
+    calculations in its worked answer. Both stand for token counts. They run from 0 (an
+    answer with no calculation) to 8, so a request takes from no block to several.
+    """
+    table = load_frame("gsm8k")
+    sizes = [len(re.findall(r"[.?!](?:\s|$)", question)) for question in table["question"]]
+    sizes += [answer.count("<<") for answer in table["answer"]]
+    return tuple(sizes)
+
+
 @pytest.mark.parametrize(
     "seed", list(range(30)), ids=[chr(97 + i // 26) + chr(97 + i % 26) for i in range(30)]
 )
@@ -98,7 +116,7 @@ def test_random_operations_match_the_independent_model(seed):
         op = rng.choice(["allocate", "append", "append", "free", "read"])
         where = f"seed {seed}, step {step}, {op}"
         if op == "allocate":
-            n = rng.randint(0, 3 * block_size + 2)
+            n = rng.choice(_request_sizes())
             same_outcome(outcome(learner.allocate, sid, n), model.allocate(sid, n), where)
         elif op == "append":
             same_outcome(outcome(learner.append_token, sid), model.append(sid), where)

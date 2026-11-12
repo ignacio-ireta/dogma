@@ -54,3 +54,5 @@ subexpressions, duplicate edges, central finite differences of composed function
 reset behavior across different roots, unreachable graphs, float representation,
 saturated tanh, tiny values, and invalid scalars. Every use contributes an edge,
 even when two operands refer to the same node.
+
+The hidden tests draw their bulk inputs from the real dataset `wine` (see `docs/DATASETS.md`).

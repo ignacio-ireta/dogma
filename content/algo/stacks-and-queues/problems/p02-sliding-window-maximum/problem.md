@@ -49,3 +49,6 @@ a window of width 1, a window as wide as the whole list, a maximum that must lea
 by a smaller value, a maximum that stays inside for exactly `k` positions, equal maxima across a slide, the
 invalid widths (zero, negative, larger than the list, and an empty list) that must raise `ValueError`, an input
 that must not change, and a list of 200,000 values that must finish within the time limit.
+
+The hidden tests draw their bulk inputs from the real datasets `elnino` and `sunspots` (see
+`docs/DATASETS.md`).

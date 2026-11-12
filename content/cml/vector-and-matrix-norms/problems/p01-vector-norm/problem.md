@@ -48,3 +48,5 @@ where NumPy is reliable. They check the norm axioms: homogeneity, the triangle i
 ordering of norms as $p$ grows. They cover the zero vector, single entries, invalid `p` (below 1, or
 NaN), non-one-dimensional and empty input, inputs left unchanged, and extreme magnitudes for the L2
 norm and for a non-integer $p$, both very large and very small.
+
+The hidden tests draw their bulk inputs from the real dataset `wine` (see `docs/DATASETS.md`).

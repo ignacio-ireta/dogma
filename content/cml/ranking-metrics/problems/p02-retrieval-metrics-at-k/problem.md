@@ -65,3 +65,6 @@ appending irrelevant items to the ranking changes no metric. They check that a r
 empty relevant set and a `k` of 0 raise `ValueError`, that an empty ranking gives all zeros, that a
 perfect ranking gives all ones, and that the inputs are unchanged. Ids are large and non-sequential
 integers and strings.
+
+The hidden tests draw their bulk inputs from the real dataset `california_housing` (see
+`docs/DATASETS.md`).

@@ -49,3 +49,6 @@ larger lists. The edge families they cover: an empty list; a target of zero with
 target that no subarray reaches; a subarray that starts at the first position; negative targets and
 all-negative lists; very large values, where the count must stay exact; the return type; rejected types;
 inputs that must not change; and a 200,000-entry list that must finish within the time limit.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `elnino` (see
+`docs/DATASETS.md`).

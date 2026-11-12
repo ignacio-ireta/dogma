@@ -6,6 +6,9 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import epsilon_greedy_action
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 
 def _close(
     actual, desired, *, err_msg="values differ from the expected result", atol=0.0, rtol=1e-7
@@ -67,6 +70,13 @@ def test_replayed_draw_order_matches_reference_sequence():
         np.array([0.4, 0.4, 0.4]),
         np.array([7.0]),
     ]
+    # Real action values: eight pixel intensities of two handwritten digits (whole numbers,
+    # so several actions tie at the top or at zero) and four measurements of two wines.
+    pixels, _ = sample_rows("digits", data_rng("p01-epsilon-greedy-action:pixels"), 2, 8)
+    wines, _ = sample_rows(
+        "wine", data_rng("p01-epsilon-greedy-action:wines"), 2, 4, standardize=True
+    )
+    patterns += [*pixels, *wines]
     for epsilon in (0.0, 0.1, 0.5, 1.0):
         for q in patterns:
             got_rng = np.random.default_rng(2024)

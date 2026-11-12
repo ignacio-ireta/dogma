@@ -2,13 +2,19 @@
 # torch.nn; the learner may not). Messages name the kind of mistake, never hidden inputs or values.
 from __future__ import annotations
 
+import collections
+import functools
 import math
+import re
 
 import torch
 import torch.nn.functional as ref_f  # oracle only
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import masked_nll_and_perplexity
+
+from dogma_data import load_text, sample_rows
+from dogma_data import rng as data_rng
 
 ATOL = 1e-9
 RTOL = 1e-9
@@ -17,6 +23,28 @@ RTOL = 1e-9
 # far below any real mistake (a wrong denominator, a naive exp).
 ATOL_F32 = 1e-5
 RTOL_F32 = 1e-5
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-masked-nll-and-perplexity:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
 
 
 def _call(logits, targets, ignore_index=-100):
@@ -66,11 +94,58 @@ def _gen(seed: int) -> torch.Generator:
     return torch.Generator().manual_seed(seed)
 
 
+BOOKS = ("gutenberg_frankenstein", "gutenberg_pride_prejudice", "gutenberg_walden")
+
+
+@functools.cache
+def _bigram_model(vocab: int) -> tuple[tuple[tuple[int, ...], ...], torch.Tensor]:
+    """Real text as word ids below ``vocab``, and the logits of a bigram model fitted to it.
+
+    A word's id is its frequency rank over three vendored novels; ranks at or above
+    ``vocab - 1`` share the last id. Row ``p`` of the logits is the log of one plus the number
+    of times each id follows id ``p``. The last row, ``vocab``, is the start of a line.
+    """
+    lines = [
+        re.findall(r"[a-z]+", line.lower())
+        for name in BOOKS
+        for line in load_text(name).splitlines()
+    ]
+    ranked = collections.Counter(word for line in lines for word in line).most_common()
+    rank = {word: index for index, (word, _) in enumerate(ranked)}
+    ids = tuple(tuple(min(rank[word], vocab - 1) for word in line) for line in lines if line)
+    counts = torch.zeros((vocab + 1, vocab), dtype=torch.float64)
+    for line in ids:
+        previous = vocab
+        for token in line:
+            counts[previous, token] += 1.0
+            previous = token
+    return ids, torch.log1p(counts)
+
+
+def _real_batch(g: torch.Generator, b: int, t: int, v: int, dtype=torch.float64):
+    """The first t words of b real lines, and a real bigram model's logits at every position.
+
+    The logits at a position depend on the word before it, so the right next word usually has
+    a high logit and now and then a low one, as with a trained language model.
+    """
+    ids, table = _bigram_model(v)
+    long_enough = [line for line in ids if len(line) >= t]
+    targets = torch.empty((b, t), dtype=torch.int64)
+    logits = torch.empty((b, t, v), dtype=torch.float64)
+    for row in range(b):
+        line = long_enough[int(torch.randint(0, len(long_enough), (1,), generator=g))]
+        previous = v
+        for step in range(t):
+            targets[row, step] = line[step]
+            logits[row, step] = table[previous]
+            previous = line[step]
+    return logits.to(dtype), targets
+
+
 def _random_batch(seed: int, b: int, t: int, v: int, *, dtype=torch.float64, ignore_rate=0.3):
     g = _gen(seed)
-    logits = torch.randn((b, t, v), generator=g, dtype=dtype) * 2.0
-    targets = torch.randint(0, v, (b, t), generator=g)
-    drop = torch.rand((b, t), generator=g) < ignore_rate
+    logits, targets = _real_batch(g, b, t, v, dtype)
+    drop = torch.special.ndtr(_real_values(g, [(b, t)])) < ignore_rate
     targets = targets.masked_fill(drop, -100)
     # keep at least one scored position so the mean is defined
     targets[0, 0] = int(torch.randint(0, v, (1,), generator=g))
@@ -103,7 +178,7 @@ def test_perplexity_is_exp_of_mean_nll_and_matches_oracle():
 
 
 def test_denominator_counts_scored_tokens_when_a_whole_row_is_ignored():
-    logits = torch.randn((2, 3, 6), generator=_gen(7), dtype=torch.float64)
+    logits = _real_values(_gen(7), [(2, 3, 6)], torch.float64)
     targets = torch.tensor([[-100, -100, -100], [2, -100, 4]])  # row 0 is fully ignored
     mean_nll, _ = _call(logits, targets)
     want, _ = _oracle(logits, targets)
@@ -188,7 +263,7 @@ def test_custom_ignore_index_that_is_a_valid_class_id():
 
 
 def test_single_class_vocabulary_has_zero_nll_and_perplexity_one():
-    logits = torch.randn((2, 3, 1), generator=_gen(61), dtype=torch.float64)
+    logits = _real_values(_gen(61), [(2, 3, 1)], torch.float64)
     targets = torch.zeros((2, 3), dtype=torch.int64)
     mean_nll, ppl = _call(logits, targets)
     if abs(float(mean_nll)) > ATOL or abs(float(ppl) - 1.0) > ATOL:
@@ -271,8 +346,7 @@ def test_inputs_are_not_mutated():
 def test_property_mean_nll_is_per_token_average_and_perplexity_is_at_least_one(rows, steps, seed):
     vocab = 5
     g = _gen(seed)
-    logits = torch.randn((rows, steps, vocab), generator=g, dtype=torch.float64) * 3.0
-    targets = torch.randint(0, vocab, (rows, steps), generator=g)
+    logits, targets = _real_batch(g, rows, steps, vocab)
     targets[0, 0] = 2  # guarantee one scored token
     mean_nll, ppl = _call(logits, targets)
     per_token = []

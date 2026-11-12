@@ -71,3 +71,6 @@ only, cancelled only, or no order at all), non-completed statuses and a capitali
 not count, orders with no customer and orders whose customer has no row, ties in total broken by customer id with large non-sequential
 ids, an average over customer totals rather than over order amounts, a result with no row (zero rows
 with the four columns), and random tables checked against an independent pandas computation.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

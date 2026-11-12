@@ -38,6 +38,9 @@ Five rules follow:
    $\operatorname{softplus}(-d) = \max(-d, 0) + \log(1 + e^{-|d|})$. The naive
    $-\log(\sigma(d))$ fails for large negative margins: near $d \approx -710$ the term $e^{-d}$
    overflows float64, so $\sigma$ becomes exactly 0. Its log is $-\infty$, so the naive loss is $+\infty$.
+   In code, write $\max(x, 0)$ as $(x + |x|) / 2$. A `clamp` has a kink at 0 and autograd gives it
+   slope 0 there, so a tied pair gets no gradient, and a reward head that starts at zero ties every
+   pair and never trains.
 
 ## Worked example
 

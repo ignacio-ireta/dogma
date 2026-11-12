@@ -75,3 +75,6 @@ real prose (paragraphs of `gutenberg_pride_prejudice`, a public-domain novel), t
 has unit length, that an empty document gives a zero row, the order of a fixed vocabulary, and the errors for an empty
 corpus, a corpus with no tokens, a repeated vocabulary term and an empty vocabulary. They check that the
 inputs are unchanged, that the matrix is `float64`, and that a 3,000-document corpus finishes quickly.
+
+The hidden tests draw their bulk inputs from the real datasets `gutenberg_frankenstein`,
+`gutenberg_pride_prejudice` and `gutenberg_walden` (see `docs/DATASETS.md`).

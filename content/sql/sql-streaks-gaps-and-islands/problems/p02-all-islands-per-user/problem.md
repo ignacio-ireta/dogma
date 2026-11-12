@@ -68,5 +68,8 @@ user_id visit_date
 
 The result matches an independent oracle that takes each user's distinct dates, sorts them, and splits them
 at every gap of more than one day. The seeded fixture and the hidden cases cover: one streak per user; many
-streaks per user; duplicate visits; single-day streaks; a gap of exactly one day; a run across a leap day and a leap-year end; a dense holiday burst across a leap-year end, with heavy-tailed users and duplicate visits;
+streaks per user; duplicate visits; single-day streaks; a gap of exactly one day; a run across a leap day and a leap-year end; real retail activity (`online_retail`) moved onto a leap-year end, with heavy-tailed users and duplicate visits;
 consecutive days of two different users, which must not join; users with no visits absent; an empty table; the exact output types; and the final ordering.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

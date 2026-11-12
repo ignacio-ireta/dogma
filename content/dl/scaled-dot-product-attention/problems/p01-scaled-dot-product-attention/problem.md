@@ -72,3 +72,6 @@ that masked pairs have zero weight, check the `sqrt(d_k)` scale at `d_k = 64`, a
 logits (queries scaled by `1e3`) with and without masks. They also cover fully masked rows,
 broadcastable masks, boolean-only masks, dtype, zero-size and batch-shape errors, and input
 non-mutation.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

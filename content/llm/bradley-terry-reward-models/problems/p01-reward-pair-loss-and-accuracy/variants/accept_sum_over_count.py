@@ -39,7 +39,7 @@ def bradley_terry_loss_and_accuracy(
     # which never exponentiates a large positive number. The naive log(sigmoid(d)) underflows to
     # log(0) = -inf for large negative margins.
     x = -margin
-    per_pair = torch.clamp(x, min=0.0) + torch.log1p(torch.exp(-torch.abs(x)))
+    per_pair = 0.5 * (x + torch.abs(x)) + torch.log1p(torch.exp(-torch.abs(x)))
     # Step 3: the loss is the mean over pairs. Gradients flow through both reward tensors.
     loss = per_pair.sum() / per_pair.numel()
     # Step 4: a pair is correct only when the chosen reward is strictly larger.

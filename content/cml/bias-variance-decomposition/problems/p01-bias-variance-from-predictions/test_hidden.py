@@ -2,7 +2,60 @@ import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from scipy.special import ndtr
 from submission import bias_variance
+
+from dogma_data import rng, sample_rows
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
 
 
 def _call(predictions, f_true, noise_var):
@@ -38,6 +91,25 @@ def _direct(preds, f, noise_var):
     return bias2, variance, expected
 
 
+def _real_predictions(seed, models, points):
+    """Predictions of real refitted models, and the real targets they aim at.
+
+    Each model is a least-squares line fitted to its own bootstrap resample of 40 diabetes
+    patients (3 standardised features). ``preds[b, i]`` is model ``b`` at held-out patient ``i``
+    and ``f[i]`` is that patient's real disease progression, centred and scaled by round numbers.
+    """
+    gen = rng(f"bias-variance-p01:predictions:{seed}")
+    X, y = sample_rows("diabetes", gen, 40 + points, 3, standardize=True)
+    y = (y - 150.0) / 75.0
+    design = np.column_stack([np.ones(len(X)), X])
+    preds = np.empty((models, points))
+    for b in range(models):
+        rows = gen.integers(0, 40, size=40)
+        beta = np.linalg.lstsq(design[rows], y[rows], rcond=None)[0]
+        preds[b] = design[40:] @ beta
+    return preds, y[40:]
+
+
 def _simulate(*, seed, degrees, n_models=300, n_train=60, sigma=0.3, m=50):
     """Polynomial fits of increasing degree to fresh training sets from y = sin(2 pi x) + noise."""
     rng = np.random.default_rng(seed)
@@ -47,8 +119,8 @@ def _simulate(*, seed, degrees, n_models=300, n_train=60, sigma=0.3, m=50):
     for degree in degrees:
         preds = np.empty((n_models, m))
         for b in range(n_models):
-            x = rng.uniform(0.0, 1.0, size=n_train)
-            y = np.sin(2 * np.pi * x) + rng.normal(scale=sigma, size=n_train)
+            x = _real_unit(rng, n_train)
+            y = np.sin(2 * np.pi * x) + _real_normal(rng, n_train, scale=sigma)
             preds[b] = np.polyval(np.polyfit(x, y, degree), grid)
         by_degree[degree] = preds
     return truth, by_degree
@@ -58,9 +130,7 @@ def _simulate(*, seed, degrees, n_models=300, n_train=60, sigma=0.3, m=50):
     "seed", [0, 1, 2, 3], ids=["seed-zero", "seed-one", "seed-two", "seed-three"]
 )
 def test_matches_the_direct_formula_on_random_predictions(seed):
-    rng = np.random.default_rng(seed)
-    preds = rng.normal(size=(12, 7))
-    f = rng.normal(size=7)
+    preds, f = _real_predictions(seed, 12, 7)
     noise = 0.4
     exp_bias2, exp_var, exp_expected = _direct(preds, f, noise)
     got_bias2, got_var, got_expected = _call(preds, f, noise)
@@ -89,9 +159,7 @@ def test_matches_the_direct_formula_on_random_predictions(seed):
     st.floats(min_value=0.0, max_value=5.0, allow_nan=False),
 )
 def test_expected_mse_is_the_sum_of_bias_variance_and_noise(models, points, seed, noise):
-    rng = np.random.default_rng(seed)
-    preds = rng.normal(size=(models, points))
-    f = rng.normal(size=points)
+    preds, f = _real_predictions(seed, models, points)
     bias2, variance, expected = _call(preds, f, noise)
     _require(
         abs(expected - (bias2 + variance + noise)) <= 1e-9,
@@ -158,9 +226,7 @@ def test_simulated_polynomial_fits_bias_falls_and_variance_rises_on_a_fixed_seed
 
 
 def test_scaling_predictions_truth_and_noise_scales_every_output_by_the_square():
-    rng = np.random.default_rng(9)
-    preds = rng.normal(size=(5, 4))
-    f = rng.normal(size=4)
+    preds, f = _real_predictions(9, 5, 4)
     base = _call(preds, f, 0.3)
     scaled = _call(3.0 * preds, 3.0 * f, 0.3 * 9.0)
     _require(
@@ -170,9 +236,7 @@ def test_scaling_predictions_truth_and_noise_scales_every_output_by_the_square()
 
 
 def test_permuting_models_and_test_points_leaves_the_outputs_unchanged():
-    rng = np.random.default_rng(10)
-    preds = rng.normal(size=(6, 5))
-    f = rng.normal(size=5)
+    preds, f = _real_predictions(10, 6, 5)
     base = _call(preds, f, 0.2)
     shuffled = _call(preds[::-1][:, [4, 0, 3, 1, 2]], f[[4, 0, 3, 1, 2]], 0.2)
     _require(

@@ -54,3 +54,5 @@ losses. The hidden tests check repeated calls on the same batch (stale gradients
 is applied and not tracked by autograd, that the returned loss is the pre-update value, the sign and
 size of the step, that parameters keep their identity, degenerate zero-gradient batches, input
 validation, and that `x` and `y` are unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `diabetes` (see `docs/DATASETS.md`).

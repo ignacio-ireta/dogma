@@ -41,3 +41,6 @@ Public examples and empty-input rejection pass. Hidden families cover independen
 scalar-loop comparisons, finite differences for X/W/b under both reductions,
 non-square and strided shapes, integer casting, scale extremes, zero upstream,
 invalid inputs, and mutation. Use sum when an external loss already averaged G.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `digits` (see
+`docs/DATASETS.md`).

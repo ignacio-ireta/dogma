@@ -55,3 +55,6 @@ sample average with the batch mean on random streams, check the constant-step re
 closed form with exponential weights, check that the first sample-average step forgets the initial
 value, check that an optimistic start decays toward the reward, cover large and small reward
 magnitudes, invalid arguments and step sizes, dtype, and input mutation.
+
+The hidden tests draw their bulk inputs from the real dataset `online_retail` (see
+`docs/DATASETS.md`).

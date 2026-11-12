@@ -86,3 +86,5 @@ tabs, non-ASCII text), the empty message, the reserved strings inside content, e
 family (system position, user followed by user, tool after user, assistant after assistant, a user
 after a tool), the generation-prompt rules, the key, role and type rules, empty and system-only
 lists, the non-list input, and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `gsm8k` (see `docs/DATASETS.md`).

@@ -3,6 +3,9 @@ import pytest
 from scipy import stats
 from submission import mean_confidence_interval
 
+from dogma_data import load, sample_rows
+from dogma_data import rng as data_rng
+
 # (seed, n, confidence) triples for the oracle comparison. The data are Student-t with 3 degrees of
 # freedom scaled and shifted, so the samples are not normal and the quantile choice matters.
 ORACLE_CASES = [
@@ -18,8 +21,9 @@ ORACLE_CASES = [
 
 
 def _sample(seed, n):
-    rng = np.random.default_rng(seed)
-    return rng.standard_t(df=3, size=n) * 2.0 + 1.0
+    """Rooms per household in n real california_housing block groups: skewed and heavy-tailed."""
+    gen = data_rng(f"mean-ci-p01:sample:{seed}:{n}")
+    return sample_rows("california_housing", gen, n)[0][:, 2]
 
 
 def _reference(x, confidence):
@@ -106,11 +110,15 @@ def test_higher_confidence_gives_a_wider_interval():
 
 
 def test_long_run_coverage_of_the_true_mean_is_close_to_95_percent():
+    # A real population with a mean that is known exactly: the worst smoothness of the 569
+    # tumours of breast_cancer, close to normal. It is sorted, so the draws do not depend on
+    # the order of the data, and samples of five are drawn from it with replacement.
+    population = np.sort(load("breast_cancer").X[:, 24])
     rng = np.random.default_rng(1234)
-    true_mean, n, reps = 10.0, 5, 4000
+    true_mean, n, reps = float(population.mean()), 5, 4000
     covered = 0
     for _ in range(reps):
-        x = rng.normal(true_mean, 2.0, size=n)
+        x = population[rng.integers(0, population.size, size=n)]
         _, lo, hi = mean_confidence_interval(x)
         if lo <= true_mean <= hi:
             covered += 1

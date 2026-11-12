@@ -5,6 +5,7 @@ Each failure message names the kind of mistake. No message contains a hidden inp
 
 from __future__ import annotations
 
+import functools
 import itertools
 import signal
 import threading
@@ -16,7 +17,10 @@ import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from scipy.special import ndtr
 from submission import merge_sorted_streams
+
+from dogma_data import retail_events, sample_rows
 
 READ_CAP = 20_000  # total reads across the counted streams before a learner is stopped
 LARGE_STREAMS = 5_000
@@ -26,6 +30,56 @@ ORDER_MISTAKE = (
     "the merged order differs from the stable reference: output by key, and among equal keys "
     "put the lower stream index first, keeping each stream's own order"
 )
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
 
 
 class _TooGreedy(BaseException):
@@ -116,10 +170,27 @@ def _stable_reference(streams: list[list[tuple[Any, Any]]]) -> list[tuple[Any, A
     return sorted(itertools.chain.from_iterable(streams), key=lambda pair: pair[0])
 
 
+@functools.cache
+def _customer_hours() -> tuple[tuple[int, ...], ...]:
+    events = retail_events()
+    return tuple(
+        tuple(int(h) for h in frame["ts"].dt.hour) for _, frame in events.groupby("user_id")
+    )
+
+
 def _random_streams(rng: np.random.Generator) -> list[list[tuple[Any, Any]]]:
+    """Up to six real streams: each is one customer of an online retailer (online_retail).
+
+    The keys of a stream are the hours of the day of up to ten of that customer's invoice
+    lines, in order. Customers shop in the same office hours, so equal keys across streams and
+    inside a stream are the rule.
+    """
+    hours = _customer_hours()
     streams = []
     for index in range(int(rng.integers(0, 7))):
-        keys = sorted(int(v) for v in rng.integers(0, 6, size=int(rng.integers(0, 11))))
+        mine = hours[int(rng.integers(0, len(hours)))]
+        size = int(rng.integers(0, 11))
+        keys = sorted(mine[int(i)] for i in rng.integers(0, len(mine), size=size))
         streams.append([(key, (index, position)) for position, key in enumerate(keys)])
     return streams
 
@@ -262,7 +333,7 @@ def test_large_merge_finishes_within_the_time_limit_and_matches_the_stable_sort(
     rng = np.random.default_rng(21)
     streams = []
     for index in range(LARGE_STREAMS):
-        keys = sorted(int(v) for v in rng.integers(0, 10_000, size=LARGE_LENGTH))
+        keys = sorted(int(v) for v in _real_ints(rng, 0, 10_000, LARGE_LENGTH))
         streams.append([(key, (index, position)) for position, key in enumerate(keys)])
     want = _stable_reference(streams)
     merge = merge_sorted_streams(streams)

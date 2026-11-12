@@ -18,7 +18,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import monthly_revenue_by_region
 
-from dogma_data import load_frame
+from dogma_data import retail_invoices
 
 REGIONS = ["North", "South", "East", "West"]
 ORDER_COLUMNS = ["order_id", "customer_id", "order_date", "amount"]
@@ -136,16 +136,33 @@ def _pandas_oracle(orders: pd.DataFrame, customers: pd.DataFrame) -> pd.DataFram
 
 @pytest.fixture(scope="module")
 def interview_frames() -> tuple[pd.DataFrame, pd.DataFrame]:
-    source_orders = load_frame("orders")
-    orders = source_orders[["order_id", "customer_id", "order_date", "amount"]].copy()
-    orders["order_id"] = orders["order_id"].str[1:].astype("int64")
-    orders["customer_id"] = orders["customer_id"].str[1:].astype("int64")
-    orders["amount"] = orders["amount"].astype("float64")
+    """Real orders and a real, incomplete customer table (online_retail).
 
-    source_customers = load_frame("customers")
-    customers = source_customers[["customer_id", "city"]].rename(columns={"city": "region"}).copy()
-    customers["customer_id"] = customers["customer_id"].str[1:].astype("int64")
-    customers = customers.drop_duplicates("customer_id", keep="first").reset_index(drop=True)
+    orders: every invoice of 60 customers of an online retailer from December 2009 to December
+    2011, with the invoice total as the amount (negative for a cancellation) and the date as an
+    ISO string. customers: the customers known by the end of 2010, with their country as the
+    region. A customer whose first invoice is from 2011 is missing from it, so those orders
+    belong to no known region. Most revenue is from one country, and the rest is thin. The
+    source records a country for everyone, so the region of every tenth customer is blanked
+    here: the contract has a rule for a known customer with no region.
+    """
+    invoices = retail_invoices()
+    orders = pd.DataFrame(
+        {
+            "order_id": invoices["invoice"].str.lstrip("C").astype("int64"),
+            "customer_id": invoices["customer_id"].astype("int64"),
+            "order_date": invoices["invoice_ts"].dt.strftime("%Y-%m-%d"),
+            "amount": invoices["amount"].astype("float64"),
+        }
+    )
+    known = invoices[invoices["invoice_ts"] < pd.Timestamp("2011-01-01")]
+    customers = (
+        known.drop_duplicates("customer_id", keep="first")[["customer_id", "country"]]
+        .rename(columns={"country": "region"})
+        .reset_index(drop=True)
+    )
+    customers["region"] = customers["region"].astype(object)
+    customers.loc[customers.index[::10], "region"] = np.nan
     return orders, customers
 
 

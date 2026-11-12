@@ -5,6 +5,8 @@ from hypothesis import strategies as st
 from scipy import stats
 from submission import poisson_pmf
 
+from dogma_data import retail_invoices
+
 RTOL = 1e-9
 ATOL = 1e-14
 ORACLE_HINT = (
@@ -69,12 +71,33 @@ def test_counts_past_170_factorial_do_not_overflow():
     _check_pmf(k, 180.0, stats.poisson.pmf(k, 180.0), OVERFLOW_HINT)
 
 
+def _rate(lam):
+    """A number as it is; a name as the real rate it stands for.
+
+    Two rates from the Online Retail II sample: invoices per trading day and lines per invoice.
+    The name is replaced inside the test, so no dataset is read at import.
+    """
+    if lam == "invoices-per-day":
+        invoices = retail_invoices()
+        return float(invoices.shape[0] / invoices["invoice_ts"].dt.normalize().nunique())
+    if lam == "lines-per-invoice":
+        return float(retail_invoices()["n_lines"].mean())
+    return lam
+
+
 @pytest.mark.parametrize(
     ("lam", "k_max"),
-    [(0.5, 40), (7.5, 80), (50.0, 300)],
-    ids=["small-rate-short-support", "medium-rate-medium-support", "large-rate-long-support"],
+    [(0.5, 40), (7.5, 80), (50.0, 300), ("invoices-per-day", 60), ("lines-per-invoice", 150)],
+    ids=[
+        "small-rate-short-support",
+        "medium-rate-medium-support",
+        "large-rate-long-support",
+        "real-invoices-per-day",
+        "real-lines-per-invoice",
+    ],
 )
 def test_pmf_sums_to_one_over_the_support(lam, k_max):
+    lam = _rate(lam)
     k = np.arange(k_max + 1)
     got, crash = _call(k, lam)
     if crash is not None:
@@ -88,8 +111,19 @@ def test_pmf_sums_to_one_over_the_support(lam, k_max):
     )
 
 
-@pytest.mark.parametrize("lam", [0.7, 7.5, 120.0], ids=["small-rate", "medium-rate", "large-rate"])
+@pytest.mark.parametrize(
+    "lam",
+    [0.7, 7.5, 120.0, "invoices-per-day", "lines-per-invoice"],
+    ids=[
+        "small-rate",
+        "medium-rate",
+        "large-rate",
+        "real-invoices-per-day",
+        "real-lines-per-invoice",
+    ],
+)
 def test_mean_and_variance_are_both_lambda(lam):
+    lam = _rate(lam)
     k = np.arange(int(lam * 5) + 40)
     got, crash = _call(k, lam)
     if crash is not None:

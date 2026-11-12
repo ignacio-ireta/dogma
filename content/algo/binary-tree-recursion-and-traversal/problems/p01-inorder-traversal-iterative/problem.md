@@ -74,3 +74,5 @@ and right-leaning chains of depth 10,000, check a balanced tree, and confirm tha
 exactly, that the return type is `list`, and that the tree is unchanged after the call. A pre-order or
 post-order answer, a walk that drops right subtrees, and a recursive walk that fails on the deep chain
 each fail with the mistake named.
+
+The hidden tests draw their bulk inputs from the real dataset `wine` (see `docs/DATASETS.md`).

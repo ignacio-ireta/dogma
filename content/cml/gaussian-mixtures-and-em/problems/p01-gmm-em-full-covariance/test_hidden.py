@@ -8,6 +8,8 @@ from scipy.special import logsumexp
 from scipy.stats import multivariate_normal
 from submission import gmm_em
 
+from dogma_data import rng, sample_rows
+
 
 def _close(actual, desired, *, err_msg, **tolerance):
     """assert_allclose whose failure shows err_msg as the first line, without the values."""
@@ -93,9 +95,13 @@ def _reference(X, k, init_means, n_iter, reg):
 
 
 def _blobs(seed, n=60):
-    rng = np.random.default_rng(seed)
-    centres = np.array([[0.0, 0.0], [4.0, 1.0], [1.0, 5.0]])
-    return np.vstack([c + rng.normal(scale=1.0, size=(n // 3, 2)) for c in centres])
+    """n iris flowers, a third from each species, stacked species by species.
+
+    The two columns are sepal length and petal length in cm. Setosa stands apart; versicolor
+    and virginica overlap, and the one-decimal measurements repeat.
+    """
+    X, species = sample_rows("iris", rng(f"gmm-p01:blobs:{seed}"), 150)
+    return np.vstack([X[species == c][: n // 3][:, [0, 2]] for c in range(3)])
 
 
 def _raised_value_error(call, mistake):
@@ -414,8 +420,7 @@ def test_live_component_after_a_dead_one_still_takes_its_m_step():
 
 def test_initial_covariance_is_the_pooled_scatter_when_no_eigenvalue_is_floored():
     # With reg tiny, no eigenvalue is raised, so the floor must return the pooled scatter itself.
-    rng = np.random.default_rng(11)
-    X = rng.normal(size=(12, 3)) * np.array([1.0, 2.0, 0.5])
+    X, _ = sample_rows("wine", rng("gmm-p01:zero-iterations"), 12, 3, standardize=True)
     _, _, cov, _ = _call(X, 2, X[[0, 6]], 0, 1e-12)
     centred = X - X.mean(axis=0)
     scatter = centred.T @ centred / len(X)

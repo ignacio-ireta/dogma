@@ -46,3 +46,6 @@ $\hat\Sigma = \frac{n-1}{n}\,S$; that the returned parameters score a higher log
 perturbations of them; a single observation; a large common offset of about $10^9$, where the shortcut
 $\mathbb{E}[xy]-\mathbb{E}[x]\,\mathbb{E}[y]$ loses all precision; the one-variable shape; NaN, non-2-D and
 empty input raising `ValueError`; integer input; and inputs left unchanged.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `wine` (see
+`docs/DATASETS.md`).

@@ -62,3 +62,6 @@ most documents still adds a positive score. They check that `avgdl` includes emp
 collection of empty documents gives zeros without an error, that an empty query gives zeros, that the
 argument errors raise `ValueError`, that reordering the documents reorders the scores, that the inputs
 are unchanged, and that a 5,000-document collection finishes quickly.
+
+The hidden tests draw their bulk inputs from the real datasets `gutenberg_frankenstein`,
+`gutenberg_pride_prejudice` and `gutenberg_walden` (see `docs/DATASETS.md`).

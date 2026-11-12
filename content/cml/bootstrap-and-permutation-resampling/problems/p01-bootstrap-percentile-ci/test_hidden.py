@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from submission import bootstrap_percentile_ci
 
-from dogma_data import load
+from dogma_data import load, rng, sample_rows
 
 # Cases for the protocol comparison: (seed, n, confidence, statistic name).
 PROTOCOL_CASES = [
@@ -19,8 +19,9 @@ STATISTICS = {"mean": np.mean, "median": np.median, "max": np.max}
 
 
 def _data(seed, n):
-    rng = np.random.default_rng(100 + seed)
-    return rng.normal(10.0, 3.0, size=n)
+    """n real block groups of california_housing: average rooms per household (heavy-tailed)."""
+    gen = rng(f"bootstrap-ci-p01:data:{seed}")
+    return sample_rows("california_housing", gen, n)[0][:, 2]
 
 
 def _reference(x, statistic, n_resamples, confidence, seed):

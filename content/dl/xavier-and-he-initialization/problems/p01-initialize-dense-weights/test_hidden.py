@@ -6,6 +6,9 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import initialize_dense as _learner
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 
 def initialize_dense(*args):
     try:
@@ -35,8 +38,28 @@ def _invalid(fn, *args):
     pytest.fail("invalid input was accepted instead of raising ValueError")
 
 
+def _real_layers():
+    """(fan_in, fan_out) of the single dense layer that maps a real dataset to its outputs.
+
+    The fan-in is the number of features and the fan-out the number of classes, or 1 for a
+    regression target: iris 4 and 3, wine 13 and 3, breast_cancer 30 and 2, digits 64 and 10,
+    diabetes 10 and 1.
+    """
+    layers = []
+    for name, outputs in (
+        ("iris", 3),
+        ("wine", 3),
+        ("breast_cancer", 2),
+        ("digits", 10),
+        ("diabetes", 1),
+    ):
+        features, _ = sample_rows(name, data_rng(f"p01-initialize-dense-weights:{name}"), 1)
+        layers.append((int(features.shape[1]), outputs))
+    return layers
+
+
 def test_seeded_oracle_uses_raw_base_draws_and_independent_scaling():
-    for rows, cols in ((1, 4), (5, 2), (4, 4)):
+    for rows, cols in ((1, 4), (5, 2), (4, 4), *_real_layers()):
         for seed in (0, 19, 501):
             rng = np.random.default_rng(seed)
             unit = rng.random((rows, cols))

@@ -7,11 +7,14 @@ an expected answer.
 from __future__ import annotations
 
 import bisect
+import functools
 import random
 from collections.abc import Sequence
 from typing import Any
 
 from submission import lower_bound  # type: ignore[import-not-found]
+
+from dogma_data import load
 
 
 class _ReadBudgetExceeded(BaseException):
@@ -62,19 +65,34 @@ def _check(values: list[Any], target: Any) -> None:
     )
 
 
+@functools.cache
+def _pixels() -> tuple[int, ...]:
+    return tuple(int(v) for v in load("digits").X.ravel())
+
+
+@functools.cache
+def _iris_sizes() -> tuple[float, ...]:
+    return tuple(float(v) for v in load("iris").X.ravel())
+
+
 def test_matches_bisect_bisect_left_on_random_integer_lists_with_duplicates() -> None:
     rng = random.Random(0)  # noqa: S311 - seeded, so the test is deterministic
     for _ in range(400):
-        values = sorted(rng.randint(-6, 6) for _ in range(rng.randint(0, 40)))
-        _check(values, rng.randint(-7, 7))
+        # Real whole numbers with many repeats: the ink levels (0 to 16) of pixels drawn from
+        # handwritten digit images, where half the pixels are blank.
+        values = sorted(int(rng.choice(_pixels())) for _ in range(rng.randint(0, 40)))
+        _check(values, rng.randint(-1, 17))
 
 
 def test_matches_bisect_bisect_left_on_random_float_lists() -> None:
     rng = random.Random(1)  # noqa: S311 - seeded, so the test is deterministic
     for _ in range(300):
-        # Rounding to one decimal creates duplicates, and targets from the same grid hit them.
-        values = sorted(round(rng.uniform(-10.0, 10.0), 1) for _ in range(rng.randint(0, 30)))
-        target = round(rng.uniform(-11.0, 11.0), 1)
+        # Real measurements recorded to one decimal: iris sepal and petal sizes in cm. Repeats
+        # are common, and a target taken from the same measurements hits them. One target in
+        # four is moved off the recorded values.
+        sizes = _iris_sizes()
+        values = sorted(rng.choice(sizes) for _ in range(rng.randint(0, 30)))
+        target = rng.choice(sizes) + rng.choice([0.0, 0.0, 0.0, 0.05])
         _check(values, target)
 
 

@@ -15,6 +15,8 @@ from hypothesis import strategies as st
 from scipy import stats
 from submission import sample_discrete
 
+from dogma_data import retail_invoices
+
 TOP = 1.0 - 2.0**-53  # the largest uniform that rng.random can return
 
 
@@ -98,9 +100,20 @@ def test_matches_a_linear_scan_for_the_same_uniforms(weights, seed, n):
     )
 
 
+def _weekday_shares():
+    """A real distribution with an empty category: the share of invoices on each weekday.
+
+    Monday to Sunday over every invoice of the Online Retail II sample. The shop was closed
+    on Saturdays, so that category has probability exactly zero.
+    """
+    weekday = retail_invoices()["invoice_ts"].dt.day_of_week
+    counts = np.bincount(weekday.to_numpy(), minlength=7).astype(np.float64)
+    return counts / counts.sum()
+
+
 @pytest.mark.parametrize("seed", [0, 1, 2, 3], ids=["seed-a", "seed-b", "seed-c", "seed-d"])
 def test_seeded_draws_match_the_linear_scan_of_the_same_uniforms(seed):
-    probs = np.array([0.05, 0.0, 0.15, 0.3, 0.5])
+    probs = _weekday_shares()
     n = 500
     got = _run(
         lambda: sample_discrete(probs, n, np.random.default_rng(seed)),
@@ -115,13 +128,13 @@ def test_seeded_draws_match_the_linear_scan_of_the_same_uniforms(seed):
 
 
 def test_chi_square_goodness_of_fit_at_a_fixed_seed():
-    probs = np.array([0.05, 0.0, 0.15, 0.3, 0.5])
+    probs = _weekday_shares()
     draws = _run(
         lambda: sample_discrete(probs, 20_000, np.random.default_rng(11)),
         "valid inputs must not raise: sample_discrete raised",
     )
     counts = np.bincount(draws, minlength=len(probs))
-    assert counts[1] == 0, "a category with probability zero was returned"
+    assert counts[probs == 0].sum() == 0, "a category with probability zero was returned"
     nonzero = probs > 0
     p_value = stats.chisquare(counts[nonzero], f_exp=probs[nonzero] * draws.size).pvalue
     assert p_value > 0.001, (

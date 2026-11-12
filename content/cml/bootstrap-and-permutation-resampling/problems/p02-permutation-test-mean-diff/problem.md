@@ -49,3 +49,5 @@ floating-point ties, near-ties that sit just below the observed difference and a
 tolerance counts them), identical groups (p must be exactly 1), the `+1` correction (the p-value has the form
 `(count + 1) / (n_permutations + 1)` and is never zero), two-sidedness (the same answer for either group
 order), determinism for a fixed seed, invalid arguments, and inputs that are left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `iris` (see `docs/DATASETS.md`).

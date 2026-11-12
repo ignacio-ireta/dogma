@@ -19,10 +19,11 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from numpy.typing import ArrayLike
+from scipy.special import ndtr
 from sklearn.metrics import ndcg_score
 from submission import ndcg_at_k
 
-from dogma_data import load, rng
+from dogma_data import load, rng, sample_rows
 
 LARGE_N = 200_000
 LARGE_TIME_LIMIT_S = 10.0
@@ -32,6 +33,56 @@ VALUE_MISTAKE = (
     "NDCG differs from the reference: sort by score descending, gain = relevance, discount "
     "1 / log2(rank + 1), and average the gain over each group of tied scores"
 )
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
 
 
 class _TooSlow(BaseException):
@@ -124,11 +175,15 @@ def _expected_by_enumeration(
     "seed", range(6), ids=[f"tied-{s}" for s in range(3)] + [f"continuous-{s}" for s in range(3)]
 )
 def test_matches_scikit_learn_on_tied_and_continuous_scores(seed: int) -> None:
-    rng = np.random.default_rng(seed)
-    n = int(rng.integers(2, 120))
-    relevance = rng.integers(0, 5, size=n).astype(float)
-    scores = rng.integers(0, 6, size=n) / 5.0 if seed < 3 else rng.normal(size=n)
-    k = None if seed % 2 == 0 else int(rng.integers(1, n + 1))
+    # Real block groups of california_housing. Relevance is the house-value band (0 to 4) and
+    # the score is the median income, a real predictor of it. The first three seeds round the
+    # income to whole units, so many block groups share a score.
+    gen = rng(f"ndcg-p01:scikit-learn:{seed}")
+    n = int(gen.integers(2, 120))
+    features, value = sample_rows("california_housing", gen, n)
+    relevance = np.digitize(value, [1.0, 1.8, 2.6, 4.0]).astype(float)
+    scores = np.round(features[:, 0]) if seed < 3 else features[:, 0]
+    k = None if seed % 2 == 0 else int(gen.integers(1, n + 1))
     expected = _sklearn(relevance, scores, k)
     assert math.isclose(_solve(relevance, scores, k), expected, rel_tol=1e-9, abs_tol=1e-12), (
         VALUE_MISTAKE
@@ -140,8 +195,8 @@ def test_matches_the_enumerated_tie_expectation(seed: int) -> None:
     rng = np.random.default_rng(40 + seed)
     for _ in range(12):
         n = int(rng.integers(2, 7))
-        relevance = [float(v) for v in rng.integers(0, 4, size=n)]
-        scores = [float(v) for v in rng.integers(0, 3, size=n)]  # heavy ties
+        relevance = [float(v) for v in _real_ints(rng, 0, 4, n)]
+        scores = [float(v) for v in _real_ints(rng, 0, 3, n)]  # heavy ties
         k = None if rng.random() < 0.5 else int(rng.integers(1, n + 1))
         expected = _expected_by_enumeration(relevance, scores, k)
         assert math.isclose(_solve(relevance, scores, k), expected, rel_tol=1e-9, abs_tol=1e-12), (
@@ -297,8 +352,8 @@ def test_invalid_input_raises_value_error(
 
 def test_large_list_finishes_quickly_and_matches_scikit_learn() -> None:
     rng = np.random.default_rng(9)
-    relevance = rng.integers(0, 4, size=LARGE_N).astype(float)
-    scores = rng.normal(size=LARGE_N)
+    relevance = _real_ints(rng, 0, 4, LARGE_N).astype(float)
+    scores = _real_normal(rng, LARGE_N)
     expected = _sklearn(relevance, scores, 1000)
     start = time.perf_counter()
     got = _solve(relevance, scores, 1000, limit=LARGE_TIME_LIMIT_S)
@@ -363,8 +418,8 @@ def test_only_the_order_and_equality_of_scores_matter_at_tiny_magnitudes(
         "equality, so no absolute tolerance may merge distinct score groups"
     )
     gen = rng(f"{PROBLEM}:tiny-scale:0")
-    noisy = np.round(gen.normal(size=300), 3)  # rounded scores: real ties, small magnitudes
-    grades = gen.integers(0, 4, size=300).astype(float)
+    noisy = np.round(_real_normal(gen, 300), 3)  # rounded scores: real ties, small magnitudes
+    grades = _real_ints(gen, 0, 4, 300).astype(float)
     assert math.isclose(
         _solve(grades, noisy * 1e-9), _sklearn(grades, noisy), rel_tol=1e-9, abs_tol=1e-12
     ), "NDCG with tiny-magnitude scores must still average over exact tie groups only"

@@ -4,6 +4,9 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import numerical_derivative
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 # Smooth test functions with known derivatives: (f, f', sampling interval for x).
 CASES = [
     (np.sin, np.cos, (-3.0, 3.0)),
@@ -12,6 +15,20 @@ CASES = [
     (lambda t: t**3 - 2 * t + 1, lambda t: 3 * t**2 - 2, (-3.0, 3.0)),
 ]
 FINITE = st.floats(min_value=-3.0, max_value=3.0, allow_nan=False, allow_infinity=False)
+
+
+def _real_points(what, lo, hi, count):
+    """Evaluation points that are real measurements: standardised wine values inside [lo, hi].
+
+    A standardised measurement is a number of standard deviations from the mean of its
+    column, so the values crowd around zero and thin out towards three, with repeats where
+    the instrument rounded.
+    """
+    gen = data_rng(f"p01-numerical-derivative:points:{what}")
+    values, _ = sample_rows("wine", gen, 178, standardize=True)
+    inside = values.ravel()
+    inside = inside[(inside >= lo) & (inside <= hi)]
+    return inside[:count]
 
 
 def _raised_value_error(call, mistake):
@@ -33,9 +50,8 @@ def _estimate_or_nan(f, x, method="central"):
 
 
 def test_central_matches_analytic_derivative_on_random_points():
-    rng = np.random.default_rng(0)
-    for f, df, (lo, hi) in CASES:
-        for x in rng.uniform(lo, hi, size=25):
+    for case, (f, df, (lo, hi)) in enumerate(CASES):
+        for x in _real_points(f"central-{case}", lo, hi, 25):
             want = float(df(x))
             got = _estimate_or_nan(f, float(x))
             assert abs(got - want) <= 1e-8 * max(1.0, abs(want)), (
@@ -49,8 +65,7 @@ def test_central_matches_complex_step_reference_on_composite_function():
     def f(t):
         return np.exp(np.sin(t)) / (1.0 + t * t)
 
-    rng = np.random.default_rng(1)
-    for x in rng.uniform(-2.0, 2.0, size=25):
+    for x in _real_points("composite", -2.0, 2.0, 25):
         # Complex-step differentiation has no subtraction, so it is exact to machine precision.
         want = float(np.imag(f(float(x) + 1e-20j)) / 1e-20)
         got = numerical_derivative(f, float(x))
@@ -61,9 +76,8 @@ def test_central_matches_complex_step_reference_on_composite_function():
 
 
 def test_forward_method_meets_its_first_order_accuracy_class():
-    rng = np.random.default_rng(2)
-    for f, df, (lo, hi) in CASES:
-        for x in rng.uniform(lo, hi, size=25):
+    for case, (f, df, (lo, hi)) in enumerate(CASES):
+        for x in _real_points(f"forward-{case}", lo, hi, 25):
             want = float(df(x))
             got = numerical_derivative(f, float(x), method="forward")
             assert abs(got - want) <= 1e-6 * max(1.0, abs(want)), (
@@ -106,8 +120,7 @@ def test_default_step_does_not_shrink_to_zero_near_the_origin():
 
 
 def test_linear_function_has_its_slope_for_both_methods():
-    rng = np.random.default_rng(3)
-    for x in rng.uniform(-10.0, 10.0, size=20):
+    for x in _real_points("linear", -10.0, 10.0, 20):
         for method in ("forward", "central"):
             got = numerical_derivative(lambda t: 3.0 * t + 2.0, float(x), method=method)
             assert abs(got - 3.0) <= 1e-6, (

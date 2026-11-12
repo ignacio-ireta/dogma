@@ -7,11 +7,14 @@ The reference is a small recursive walk defined here, and it is used only on tre
 
 from __future__ import annotations
 
+import functools
 import random
 from typing import Any
 
 import pytest
 from submission import inorder_traversal
+
+from dogma_data import load
 
 
 class _Node:
@@ -49,12 +52,23 @@ def _reference(node: Any) -> list[int]:
     return [*_reference(node.left), node.val, *_reference(node.right)]
 
 
+@functools.cache
+def _real_values() -> tuple[int, ...]:
+    """Real whole numbers of both signs: the proline level of 178 wines, with 750 subtracted."""
+    return tuple(int(v) - 750 for v in load("wine").X[:, 12])
+
+
 def _random_tree(rng: random.Random, size: int) -> Any:
-    """A random binary tree with `size` nodes: each new node hangs from a random free slot."""
-    nodes = [_Node(rng.randint(-1000, 1000))]
+    """A binary tree with `size` nodes: each new node hangs from a random free slot.
+
+    The shape is drawn, because the shape is what the problem is about. The values in the nodes
+    are real measurements (wine proline levels, centred), which repeat and have both signs.
+    """
+    values = _real_values()
+    nodes = [_Node(rng.choice(values))]
     slots = [(nodes[0], "left"), (nodes[0], "right")]
     for _ in range(size - 1):
-        node = _Node(rng.randint(-1000, 1000))
+        node = _Node(rng.choice(values))
         parent, side = slots.pop(rng.randrange(len(slots)))
         setattr(parent, side, node)
         slots.extend([(node, "left"), (node, "right")])

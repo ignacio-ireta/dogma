@@ -6,7 +6,60 @@ import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from scipy.special import ndtr
 from submission import adaboost_round
+
+from dogma_data import rng, sample_rows
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _real_unit(gen, size=None):
+    """Real numbers between 0 and 1 where this test used to draw uniform ones.
+
+    Each is the share of a standard normal that lies below a standardised breast_cancer
+    measurement, so the values keep the order, the ties and the skew of real measurements.
+    """
+    return ndtr(_real_normal(gen, size))
+
+
+def _real_ints(gen, low, high, size=None):
+    """Real whole numbers from ``low`` up to ``high - 1``: the band a real measurement falls in.
+
+    The range is cut into ``high - low`` bands of equal normal probability, and each value is
+    the band of one standardised measurement. Real measurements are skewed, so the bands are
+    not equally full, and neighbouring values tie as real categories and grades do.
+    """
+    bands = np.floor(_real_unit(gen, size) * (high - low))
+    return (low + np.minimum(bands, high - low - 1)).astype(np.int64)
+
+
+def _real_shares(gen, alpha, size=None):
+    """Real probability vectors: positive real numbers (see `_real_unit`) divided by their sum."""
+    k = int(np.size(alpha))
+    shape = (k,) if size is None else (int(size), k)
+    weights = _real_unit(gen, shape) + 1e-3
+    return weights / weights.sum(axis=-1, keepdims=True)
 
 
 def _call(y, pred, weights):
@@ -50,11 +103,21 @@ def _oracle(y, pred, weights):
 
 
 def _random_round(seed, n=12):
-    rng = np.random.default_rng(seed)
-    y = rng.choice([-1, 1], size=n)
-    flips = rng.uniform(size=n) < 0.3
-    pred = np.where(flips, -y, y)
-    weights = rng.uniform(0.1, 2.0, size=n)
+    """A real boosting round: breast_cancer labels and a one-feature stump's votes.
+
+    The stump splits one randomly chosen feature at the median of the drawn rows and votes
+    malignant (-1) above it, so its mistakes are the ones a real weak learner makes. A draw the
+    stump classifies perfectly is skipped: the contract rejects that round. The sample weights
+    are the state of the algorithm, not data, and stay random.
+    """
+    gen = rng(f"adaboost-round-p02:round:{seed}")
+    while True:
+        X, target = sample_rows("breast_cancer", gen, n, 1)
+        y = np.where(target > 0.5, 1, -1)
+        pred = np.where(X[:, 0] > np.median(X[:, 0]), -1, 1)
+        if np.any(pred != y):
+            break
+    weights = 0.1 + (2.0 - 0.1) * _real_unit(gen, n)
     return y, pred, weights
 
 
@@ -218,8 +281,8 @@ def test_invalid_round_raises_value_error(y, pred, weights, mistake):
 def test_non_chance_rounds_give_a_positive_vote_and_a_distribution(seed, n):
     rng = np.random.default_rng(seed)
     y = rng.choice([-1, 1], size=n)
-    pred = np.where(rng.uniform(size=n) < 0.2, -y, y)
-    weights = rng.uniform(0.01, 5.0, size=n)
+    pred = np.where(_real_unit(rng, n) < 0.2, -y, y)
+    weights = 0.01 + (5.0 - 0.01) * _real_unit(rng, n)
     if np.all(pred == y):
         return  # a perfect classifier is rejected; covered elsewhere
     alpha, new_weights = _call(y, pred, weights)

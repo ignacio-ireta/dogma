@@ -11,6 +11,8 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import sinusoidal_encoding as _learner
 
+from dogma_data import load_frame
+
 
 def _table(max_len, d_model):
     """Call the learner; any exception on a valid input is reported as a named contract failure."""
@@ -42,9 +44,11 @@ def _invalid(fn, *args):
 
 
 def test_matches_position_by_position_reference_on_seeded_shapes():
+    # The table is as long as a real sequence: the number of words of a GSM8K question.
+    questions = load_frame("gsm8k")["question"].tolist()
     rng = np.random.default_rng(3)
     for _ in range(8):
-        max_len = int(rng.integers(1, 40))
+        max_len = len(questions[int(rng.integers(0, len(questions)))].split())
         d_model = 2 * int(rng.integers(1, 20))
         got = _table(max_len, d_model)
         np.testing.assert_allclose(

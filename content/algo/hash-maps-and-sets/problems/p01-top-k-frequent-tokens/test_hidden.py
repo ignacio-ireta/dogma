@@ -7,10 +7,11 @@ from __future__ import annotations
 
 import collections
 
-import numpy as np
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from submission import top_k_frequent  # type: ignore[import-not-found]
+
+from dogma_data import load_text
 
 VOCAB = ["a", "b", "c", "B", "ab", "", "zz"]
 
@@ -35,9 +36,11 @@ def test_matches_counter_oracle_on_random_token_lists(tokens: list[str], k: int)
 
 
 def test_matches_counter_oracle_on_a_large_seeded_stream() -> None:
-    rng = np.random.default_rng(0)
-    vocab = [f"tok{i}" for i in range(400)]
-    tokens = [vocab[int(i)] for i in rng.integers(0, len(vocab), size=40_000)]
+    # Every whitespace-separated token of three novels, about 21,000 of them, as printed:
+    # capitals and punctuation stay attached. A few tokens are very frequent and thousands
+    # occur once or twice, so ties between counts are everywhere.
+    books = ("gutenberg_frankenstein", "gutenberg_pride_prejudice", "gutenberg_walden")
+    tokens = [token for name in books for token in load_text(name).split()]
     assert top_k_frequent(tokens, 25) == _oracle(tokens, 25), (
         "large stream: the counts or the ranking are wrong. Check that every token is counted "
         "and that ties are ordered by token"

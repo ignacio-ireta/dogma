@@ -63,3 +63,6 @@ compare your count with an independent computation on seeded random configuratio
 grouped-query and multi-query head counts; a window smaller than, equal to and larger than the context;
 zero context; batch scaling; every dtype name; extra config keys that must be ignored; exact results
 beyond float precision; the return type; each validation rule; and a config that must not change.
+
+Some hidden tests take their inputs from the real datasets `gutenberg_frankenstein`,
+`gutenberg_pride_prejudice` and `gutenberg_walden` (see `docs/DATASETS.md`).

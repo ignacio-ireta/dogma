@@ -84,3 +84,6 @@ only the best token can survive; `top_p = 1` and `top_k >= V` as no-ops; `top_k 
 at the argmax; temperature `1` as a plain softmax; small temperatures and large logit magnitudes
 that must stay finite; a one-entry vocabulary; the output sum, sign and dtype; the input left
 unchanged; and the `ValueError` rules for every argument.
+
+The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
+`docs/DATASETS.md`).

@@ -75,3 +75,6 @@ a matrix input raise `ValueError`. A 200,000-item list must finish quickly, and 
 be unchanged. Realism families covered: graded real relevance on raw `breast_cancer` with natural score
 ties, checked against scikit-learn at several cut-offs, and a tiny-scale invariance that rejects any absolute
 tolerance merging score groups.
+
+The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and
+`california_housing` (see `docs/DATASETS.md`).

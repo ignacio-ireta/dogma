@@ -53,3 +53,6 @@ driven by an optimizer, on seeded settings. They also check the zero start, the 
 boundary at `warmup_steps`, the floor at and after `total_steps`, the no-warmup case,
 the one-step warmup, monotonic shape on each side of the peak, a constant schedule when
 `min_lr == base_lr`, extreme magnitudes, the return type, and the invalid-argument families.
+
+Some hidden tests take their inputs from the real datasets `breast_cancer`, `diabetes`, `digits`,
+`iris` and `wine` (see `docs/DATASETS.md`).

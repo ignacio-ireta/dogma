@@ -2,9 +2,36 @@
 # and never print hidden inputs, shapes or expected values.
 from __future__ import annotations
 
+import math
+
 import pytest
 import torch
 from submission import cached_attention_step as _learner
+
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
+
+def _real_values(gen, shape, dtype=torch.float64):
+    """Real numbers in the shape asked for: standardised breast_cancer measurements.
+
+    The tensors of this problem are weights, gradients, scores or hidden states. No dataset
+    holds those, so real measurements stand in for them: skewed, correlated along a row, with
+    a few entries far from the rest. The torch generator picks the draw.
+    """
+    if len(shape) == 1 and isinstance(shape[0], (tuple, list, torch.Size)):
+        shape = shape[0]
+    shape = tuple(int(side) for side in shape)
+    total = math.prod(shape)
+    if total == 0:
+        return torch.zeros(shape, dtype=dtype)
+    draw = int(torch.randint(0, 2**31 - 1, (1,), generator=gen))
+    key = f"p01-cached-causal-attention-step:values:{draw}"
+    rows = max(1, min(569, -(-total // 30)))
+    drawn, _ = sample_rows("breast_cancer", data_rng(key), rows, standardize=True)
+    flat = torch.tensor(drawn.ravel(), dtype=torch.float64)
+    flat = flat.repeat(-(-total // flat.numel()))[:total]
+    return flat.reshape(shape).to(dtype)
 
 
 def _call(*args, **kwargs):
@@ -28,7 +55,7 @@ def _expect_value_error(*args, **kwargs):
 
 def _weights(gen, d, scale=0.5):
     def mat():
-        return torch.randn(d, d, generator=gen, dtype=torch.float64) * scale
+        return _real_values(gen, [d, d], torch.float64) * scale
 
     return mat(), mat(), mat(), mat()
 
@@ -67,7 +94,7 @@ def _run_chunks(x, weights, heads, chunk_sizes):
 def test_decode_steps_match_full_recomputation_single_head():
     gen = torch.Generator().manual_seed(31)
     d, heads, steps = 6, 1, 6
-    x = torch.randn(2, steps, d, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [2, steps, d], torch.float64)
     weights = _weights(gen, d)
     got, _ = _run_chunks(x, weights, heads, [1] * steps)
     want = _full_causal(x, *weights, heads)
@@ -87,7 +114,7 @@ def test_decode_steps_match_full_recomputation_single_head():
 def test_decode_steps_match_full_recomputation_multi_head(heads):
     gen = torch.Generator().manual_seed(40 + heads)
     d, steps = 8, 5
-    x = torch.randn(3, steps, d, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [3, steps, d], torch.float64)
     weights = _weights(gen, d)
     got, _ = _run_chunks(x, weights, heads, [1] * steps)
     want = _full_causal(x, *weights, heads)
@@ -106,7 +133,7 @@ def test_decode_steps_match_full_recomputation_multi_head(heads):
 def test_prefill_chunk_then_single_steps_match_full_recomputation():
     gen = torch.Generator().manual_seed(52)
     d, heads = 8, 2
-    x = torch.randn(2, 6, d, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [2, 6, d], torch.float64)
     weights = _weights(gen, d)
     got, _ = _run_chunks(x, weights, heads, [3, 1, 1, 1])
     want = _full_causal(x, *weights, heads)
@@ -125,7 +152,7 @@ def test_prefill_chunk_then_single_steps_match_full_recomputation():
 def test_chunk_of_several_tokens_after_cache_uses_the_bottom_right_offset():
     gen = torch.Generator().manual_seed(61)
     d, heads = 6, 2
-    x = torch.randn(1, 7, d, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [1, 7, d], torch.float64)
     weights = _weights(gen, d)
     got, _ = _run_chunks(x, weights, heads, [2, 3, 2])
     want = _full_causal(x, *weights, heads)
@@ -144,7 +171,7 @@ def test_chunk_of_several_tokens_after_cache_uses_the_bottom_right_offset():
 def test_one_chunk_equals_token_by_token_decoding():
     gen = torch.Generator().manual_seed(70)
     d, heads = 8, 4
-    x = torch.randn(2, 5, d, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [2, 5, d], torch.float64)
     weights = _weights(gen, d)
     all_at_once, _ = _run_chunks(x, weights, heads, [5])
     one_by_one, _ = _run_chunks(x, weights, heads, [1, 1, 1, 1, 1])
@@ -161,7 +188,7 @@ def test_cache_grows_by_exactly_the_new_tokens_and_keeps_earlier_positions():
     gen = torch.Generator().manual_seed(80)
     d, heads = 6, 2
     d_k = d // heads
-    x = torch.randn(2, 4, d, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [2, 4, d], torch.float64)
     W_q, W_k, W_v, W_o = _weights(gen, d)
     _, cache = _call(x[:, :3], None, W_q, W_k, W_v, W_o, heads)
     K_old, V_old = cache[0].clone(), cache[1].clone()
@@ -183,7 +210,7 @@ def test_cache_grows_by_exactly_the_new_tokens_and_keeps_earlier_positions():
 def test_input_cache_is_not_mutated():
     gen = torch.Generator().manual_seed(81)
     d, heads = 6, 3
-    x = torch.randn(2, 3, d, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [2, 3, d], torch.float64)
     W_q, W_k, W_v, W_o = _weights(gen, d)
     _, cache = _call(x[:, :2], None, W_q, W_k, W_v, W_o, heads)
     before = (cache[0].clone(), cache[1].clone())
@@ -196,7 +223,10 @@ def test_input_cache_is_not_mutated():
 def test_input_and_weights_are_not_mutated():
     gen = torch.Generator().manual_seed(82)
     d, heads = 4, 2
-    x = torch.randn(1, 2, d, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [1, 2, d], torch.float64)
+    while float(x.abs().max()) <= 1.0:
+        # Keep a draw with an entry above one in magnitude: a rescale in place must show.
+        x = _real_values(gen, [1, 2, d], torch.float64)
     weights = _weights(gen, d)
     x_before = x.clone()
     w_before = [w.clone() for w in weights]
@@ -210,7 +240,7 @@ def test_input_and_weights_are_not_mutated():
 def test_empty_zero_length_cache_matches_none():
     gen = torch.Generator().manual_seed(83)
     d, heads = 6, 2
-    x = torch.randn(2, 3, d, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [2, 3, d], torch.float64)
     W = _weights(gen, d)
     empty = (torch.zeros(2, heads, 0, d // heads, dtype=torch.float64),) * 2
     a, _ = _call(x, None, *W, heads)
@@ -223,7 +253,7 @@ def test_empty_zero_length_cache_matches_none():
 def test_batch_rows_are_independent():
     gen = torch.Generator().manual_seed(84)
     d, heads = 6, 2
-    x = torch.randn(3, 4, d, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [3, 4, d], torch.float64)
     W = _weights(gen, d)
     together, _ = _run_chunks(x, W, heads, [2, 1, 1])
     alone = torch.cat([_run_chunks(x[b : b + 1], W, heads, [2, 1, 1])[0] for b in range(3)], dim=0)
@@ -236,7 +266,7 @@ def test_large_and_small_magnitudes_match_full_recomputation():
     gen = torch.Generator().manual_seed(85)
     d, heads = 6, 2
     for scale in (1e-6, 1e3):
-        x = torch.randn(1, 4, d, generator=gen, dtype=torch.float64) * scale
+        x = _real_values(gen, [1, 4, d], torch.float64) * scale
         W = _weights(gen, d, scale=0.5)
         got, _ = _run_chunks(x, W, heads, [1, 1, 1, 1])
         want = _full_causal(x, *W, heads)
@@ -252,7 +282,7 @@ def test_large_and_small_magnitudes_match_full_recomputation():
 def test_output_has_input_shape_and_float64_dtype():
     gen = torch.Generator().manual_seed(86)
     d, heads = 8, 4
-    x = torch.randn(2, 3, d, generator=gen, dtype=torch.float64)
+    x = _real_values(gen, [2, 3, d], torch.float64)
     out, cache = _call(x, None, *_weights(gen, d), heads)
     assert out.shape == (2, 3, d), "output must be (B, T, d)"
     assert out.dtype == torch.float64 and cache[0].dtype == torch.float64, "dtype must be float64"

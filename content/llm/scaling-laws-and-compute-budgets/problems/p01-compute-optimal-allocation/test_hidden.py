@@ -2,11 +2,14 @@
 # mistake and never print hidden inputs, shapes or expected values.
 from __future__ import annotations
 
+import functools
 import itertools
 import random
 
 import pytest
 from submission import compute_optimal_allocation as _learner
+
+from dogma_data import load_text
 
 TWO_53 = 2**53
 
@@ -82,11 +85,29 @@ def test_random_large_budgets_match_binary_search_oracle():
         )
 
 
+@functools.cache
+def _corpus_sizes() -> tuple[int, ...]:
+    """Sizes, in words, of real training corpora: the first k lines of a novel, for every k
+    that gives at least a hundred words. A word stands for a token."""
+    sizes = set()
+    for name in ("gutenberg_frankenstein", "gutenberg_pride_prejudice", "gutenberg_walden"):
+        total = 0
+        for line in load_text(name).splitlines():
+            total += len(line.split())
+            sizes.add(total)
+    return tuple(sorted(size for size in sizes if size >= 100))
+
+
 def test_budget_is_never_exceeded_and_one_more_parameter_would_not_fit():
     rng = random.Random(8)  # noqa: S311 -- seeded synthetic budgets, not security
-    for _ in range(200):
+    for trial in range(200):
         budget = rng.randrange(6 * 3 * 3, 10**25)
         r = rng.choice([3, 20, 50])
+        if trial % 2:
+            # Every other budget pays for one pass over a real corpus of D words by the
+            # model that corpus calls for: N = D // r parameters, C = 6 * N * D.
+            tokens = rng.choice(_corpus_sizes())
+            budget = 6 * (tokens // r) * tokens
         n, d = _call(budget, r)
         assert 6 * n * d <= budget, "the chosen model exceeds the budget: 6 * N * D must be <= C"
         assert 6 * (n + 1) * (r * (n + 1)) > budget, (

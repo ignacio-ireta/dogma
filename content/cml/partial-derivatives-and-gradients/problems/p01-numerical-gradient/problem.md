@@ -42,3 +42,5 @@ the softmax; the Rosenbrock function against its closed form; every partial agai
 reference on a composite function; a one-dimensional square at two points, where a one-sided step
 would be visibly off; very large coordinates, where the step must scale with $|x_i|$; an integer
 input; empty, two-dimensional and non-finite input; and that `x` is left unchanged.
+
+The hidden tests draw their bulk inputs from the real dataset `wine` (see `docs/DATASETS.md`).

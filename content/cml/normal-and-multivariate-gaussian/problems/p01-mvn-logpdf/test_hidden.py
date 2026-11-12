@@ -5,12 +5,48 @@ from hypothesis import strategies as st
 from scipy import stats
 from submission import mvn_logpdf
 
+from dogma_data import rng as data_rng
+from dogma_data import sample_rows
+
 SEEDS = st.integers(min_value=0, max_value=10**6)
 DIMS = st.integers(min_value=1, max_value=5)
 
 
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
+
+
+def _fitted_gaussian(gen, n, d):
+    """A Gaussian fitted to real data, and other real points to evaluate it at.
+
+    Sixty wines (d standardised columns) give the mean and the sample covariance, which carries
+    the real correlations between the columns. The n points are other wines.
+    """
+    rows, _ = sample_rows("wine", gen, 60 + n, d, standardize=True)
+    fit, points = rows[:60], rows[60:]
+    return points, fit.mean(axis=0), np.atleast_2d(np.cov(fit, rowvar=False))
+
+
 def _spd(rng, d):
-    A = rng.normal(size=(d, d))
+    A = _real_normal(rng, (d, d))
     return A @ A.T / d + 0.2 * np.eye(d)
 
 
@@ -34,10 +70,7 @@ def _raised_value_error(call, mistake):
 @settings(max_examples=60, deadline=None, report_multiple_bugs=False)
 @given(SEEDS, st.integers(min_value=1, max_value=10), DIMS)
 def test_matches_scipy_multivariate_normal_on_random_inputs(seed, n, d):
-    rng = np.random.default_rng(seed)
-    cov = _spd(rng, d)
-    mean = rng.normal(size=d)
-    X = rng.normal(size=(n, d)) * 2.0
+    X, mean, cov = _fitted_gaussian(data_rng(f"mvn-logpdf-p01:scipy:{seed}"), n, d)
     expected = stats.multivariate_normal(mean=mean, cov=cov).logpdf(X)
     np.testing.assert_allclose(
         _logpdf(X, mean, cov, "a valid normal density was rejected or failed"),
@@ -67,7 +100,7 @@ def test_dimension_sixty_with_underflowing_determinant_keeps_its_log_density():
     # range, so it underflows to 0.0.
     rng = np.random.default_rng(5)
     d = 60
-    Q, _ = np.linalg.qr(rng.normal(size=(d, d)))
+    Q, _ = np.linalg.qr(_real_normal(rng, (d, d)))
     cov = Q @ np.diag(np.linspace(1e-7, 1e-6, d)) @ Q.T
     cov = (cov + cov.T) / 2
     x = rng.multivariate_normal(np.zeros(d), cov, size=3)
@@ -87,7 +120,7 @@ def test_dimension_sixty_with_overflowing_determinant_keeps_its_log_density():
     # range, so it overflows to inf.
     rng = np.random.default_rng(6)
     d = 60
-    Q, _ = np.linalg.qr(rng.normal(size=(d, d)))
+    Q, _ = np.linalg.qr(_real_normal(rng, (d, d)))
     cov = Q @ np.diag(np.linspace(1e6, 1e7, d)) @ Q.T
     cov = (cov + cov.T) / 2
     x = rng.multivariate_normal(np.zeros(d), cov, size=3)
@@ -106,11 +139,9 @@ def test_dimension_sixty_with_overflowing_determinant_keeps_its_log_density():
 @given(SEEDS, st.integers(min_value=1, max_value=4))
 def test_affine_change_of_variables_shifts_log_density_by_log_abs_det(seed, d):
     # If Y = A X, then density(Y) = density(X) / |det A|, so the log-densities differ by log|det A|.
-    rng = np.random.default_rng(seed)
-    cov = _spd(rng, d)
-    mean = rng.normal(size=d)
-    A = rng.normal(size=(d, d)) + 3.0 * np.eye(d)
-    X = rng.normal(size=(4, d))
+    rng = data_rng(f"mvn-logpdf-p01:affine:{seed}")
+    X, mean, cov = _fitted_gaussian(rng, 4, d)
+    A = _real_normal(rng, (d, d)) + 3.0 * np.eye(d)
     X_mapped = X @ A.T  # built before any call, so the call below cannot change it
     base = _logpdf(X, mean, cov, "a valid density was rejected or failed")
     mapped = _logpdf(X_mapped, A @ mean, A @ cov @ A.T, "a valid transformed density was rejected")

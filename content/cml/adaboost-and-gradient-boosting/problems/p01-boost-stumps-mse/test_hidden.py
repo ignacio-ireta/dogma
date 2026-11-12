@@ -11,7 +11,31 @@ from hypothesis import strategies as st
 from sklearn.ensemble import GradientBoostingRegressor
 from submission import boost_stumps_mse
 
+from dogma_data import rng, sample_rows
+
 GAIN_TOLERANCE = 1e-9
+
+
+def _real_normal(gen, size=None, loc=0.0, scale=1.0):
+    """Real numbers where this test used to draw from a normal distribution.
+
+    Standardised breast_cancer measurements (mean 0 and standard deviation 1 over the dataset,
+    skewed, with a few values far out), drawn by ``gen``. A vector is one real measurement
+    over that many tumours, a matrix is real tumours by real measurements, and any other
+    shape is filled from whole rows. ``loc`` and ``scale`` shift and stretch them as before.
+    """
+    shape = () if size is None else tuple(int(side) for side in np.atleast_1d(size))
+    total = int(np.prod(shape)) if shape else 1
+    if len(shape) == 1 and 1 <= shape[0] <= 569:
+        values = sample_rows("breast_cancer", gen, shape[0], 1, standardize=True)[0][:, 0]
+    elif len(shape) == 2 and 1 <= shape[0] <= 569 and 1 <= shape[1] <= 30:
+        values = sample_rows("breast_cancer", gen, shape[0], shape[1], standardize=True)[0]
+    else:
+        rows = max(1, min(569, -(-total // 30)))
+        drawn = sample_rows("breast_cancer", gen, rows, standardize=True)[0]
+        values = np.resize(drawn.ravel(), total).reshape(shape)
+    values = values * scale + loc
+    return values if shape else float(values)
 
 
 def _fit(X, y, n_estimators, learning_rate):
@@ -81,17 +105,21 @@ def _oracle(X, y, n_estimators, learning_rate):
 
 
 def _random_problem(seed, n=30, d=3):
-    rng = np.random.default_rng(seed)
-    X = rng.normal(size=(n, d))
-    y = X[:, 0] * 1.5 - X[:, 1] + rng.normal(scale=0.4, size=n)
-    return X, y
+    """n patients and d standardised features of diabetes, with the real disease progression.
+
+    The target is centred and scaled by round numbers near its mean and spread, so the absolute
+    tolerances below mean the same as they do for the hand-built cases. Feature values repeat
+    (ages, the binary sex column), so equal values share a side of every split.
+    """
+    gen = rng(f"boost-stumps-p01:problem:{seed}")
+    X, y = sample_rows("diabetes", gen, n, d, standardize=True)
+    return X, (y - 150.0) / 75.0
 
 
 def test_matches_a_brute_force_implementation_at_train_and_new_points():
     for seed in range(5):
-        X, y = _random_problem(seed)
-        rng = np.random.default_rng(100 + seed)
-        X_new = rng.normal(size=(12, X.shape[1]))
+        X_all, y_all = _random_problem(seed, n=42)  # 30 patients to fit, 12 held out
+        X, y, X_new = X_all[:30], y_all[:30], X_all[30:]
         want_predict, want_train = _oracle(X, y, n_estimators=4, learning_rate=0.3)
         got_predict, got_train = _fit(X, y, n_estimators=4, learning_rate=0.3)
         np.testing.assert_allclose(
@@ -115,8 +143,8 @@ def test_matches_a_brute_force_implementation_at_train_and_new_points():
 @pytest.mark.parametrize("learning_rate", [1.0, 0.5], ids=["unit-rate", "half-rate"])
 def test_agrees_with_scikit_learn_depth_one_gradient_boosting_on_tie_free_data(learning_rate):
     rng = np.random.default_rng(41)
-    X = rng.normal(size=(40, 2))  # continuous values: no ties in any feature
-    y = 2.0 * X[:, 0] + rng.normal(scale=0.5, size=40)
+    X = _real_normal(rng, (40, 2))  # continuous values: no ties in any feature
+    y = 2.0 * X[:, 0] + _real_normal(rng, 40, scale=0.5)
     reference = GradientBoostingRegressor(
         n_estimators=5,
         learning_rate=learning_rate,
