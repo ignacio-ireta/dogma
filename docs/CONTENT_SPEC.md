@@ -262,6 +262,13 @@ categories; dirty categorical keys (case, stray spaces).
 - Compute expected values at runtime from an oracle on the same data. Never hard-code a number
   read off a random draw or a real dataset; literal expectations belong to hand-built cases.
 - A statistical assertion states its bound (binomial or CLT, at least 4 standard errors).
+- Bulk inputs are draws of real rows, windows or text (`sample_rows`, `sample_window`,
+  `load_text`, `retail_invoices`), not `rng.normal(...)`. This holds for every input that can
+  hold values, tensors inside a network included (real values as a stand-in). Random numbers
+  remain for scalar parameters (hyperparameters, policies, seeds), for a known truth laid over
+  real inputs, where a property must be set exactly, and next to real values where no
+  measurement reaches (subnormals, NaN). The table and the rules are in
+  [DATASETS.md](DATASETS.md#real-draws-instead-of-random-numbers).
 - Seed data with `dogma_data.rng("<problem id>:<purpose>:<i>")`, not `range(8)`. The exercise
   audit varies the draw through `DOGMA_DATA_SALT`, so a test that passes only for one lucky draw
   is caught. Hypothesis stays seeded by the runner.

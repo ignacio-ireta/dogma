@@ -71,6 +71,7 @@ Work stops and resumes across sessions through the status table and the handoff 
 | I-32c | One blind solution per problem, committed as `variants/accept_blind` | — | I-32a, I-31c | done |
 | I-32d | Reject sweep and mutant triage: one wrong solution per Contract bullet, gaps closed by gated tests | — | I-32b, I-32c | done |
 | I-32e | Test-strength close-out: enforce the rules in the gate, re-audit, report | — | I-32d | done |
+| I-33 | Real datasets everywhere: seeded real draws (`sample_rows`, `sample_window`), the Online Retail snapshot, and every problem moved off random numbers onto real values, sizes and rates (251 of 251), each under the refactor gate | — | I-31c, I-32e | done |
 
 ### Content runway (one wave per path week; ARCHITECTURE §7)
 
@@ -289,6 +290,25 @@ note in `docs/audits/test-strength-decisions.md`; the report is in `docs/audits/
 `make test-all` passes. Hidden tests are only added to, apart from message-only edits the gate
 proves equal.
 
+### I-33 · Real datasets everywhere
+
+**Owns:** `src/dogma_data/` (`draws.py`, the `online_retail` loader and catalog entry,
+`hf_manifest.yaml`, the snapshot and its lock and NOTICE), `tests/unit/dogma_data/`,
+`docs/DATASETS.md`, CONTENT_SPEC §6.6 (one rule), and in the topic directories only
+`test_hidden.py` and one sentence under "Done looks like" in `problem.md`. No `solution`,
+`starter`, `test_public.py`, `meta.yaml` or `variants/` file changes.
+**Do:** wherever a hidden test builds an input that can hold values from random numbers (a
+feature matrix, labels, scores, a sample, a series, text, tokens, an image, an order table, and
+also a tensor inside a network, a distribution, rewards, a transition model, request sizes, a
+rate), draw it from a real dataset instead. Keep hand-built cases, Hypothesis properties over the
+stated domain, scalar parameters and generators that set a property exactly. A problem whose
+arguments are only sizes, counts or rates reads those off real data (rows, features, updates per
+epoch, words in a passage, a rate counted from a table).
+The rules are in DATASETS.md, "Real draws instead of random numbers".
+**Accept:** every edited problem passes `exercise_gate.py gate <id> --mode refactor` (no test
+function removed, reference and every accept pass, every recorded reject still fails its test, no
+mutant weakened, seeds 1 to 5 with the data salt, time). `make test-all` passes.
+
 ## 3. Milestones
 
 
@@ -305,6 +325,220 @@ proves equal.
 
 *Newest first. One entry per session or agent: what changed · what was verified (exact commands
 and results) · what's left or blocked.*
+
+### 2026-11-11 · Real datasets in every problem that takes data · I-33 done
+
+- **Why:** the owner asked that every problem that can use a real-world dataset (scikit-learn,
+  HuggingFace, Kaggle-style tables) use one instead of dummy data, and that the answers be
+  checked. Before this, 28 of 251 problems tested on real data; the bulk inputs of the rest were
+  `rng.normal`, random labels, white-noise series, toy vocabularies, hand-typed numbers and
+  generated order logs.
+- **Result:** all 251 problems now have hidden tests that read real data. In 221 the problem
+  takes data, and the arrays its hidden tests draw are real values or are derived from real
+  values by a stated rule. A scan of every hidden test finds 10 problems that still call a
+  random distribution for an array, and the audit lists each. In seven the call computes the
+  expected output: it replays the function's own seeded draws (dropout, initialisers,
+  bootstrap, inverse-transform sampling). In two it is the test's own Monte Carlo check and
+  is never passed to the function. In one it is passed to the function: the standard normal
+  of a closed-form check, E[exp(Z)] = e^(1/2), that the Monte Carlo test is named after.
+  Hand-built edge
+  cases with exact answers and Hypothesis properties over the stated domain are unchanged.
+  In 30 the function has no argument that could hold dataset values (the audit prints the 30
+  signatures), and the sizes, rates and prices its tests feed it are read off real datasets
+  where they were drawn at random before. 246 problems changed: `test_hidden.py`, and in 236
+  of them one sentence in `problem.md` naming the data. In 243 of them no starter, public
+  test, `meta.yaml` or variant changed and no version moved: every test edit is a refactor
+  under the gate, with no test function added or removed. Three problems changed beyond
+  their tests (Bradley-Terry, k-NN classify and ACF, below).
+- **The rule:** every input that can hold values is real. A problem whose arguments are only
+  sizes, counts or rates reads those off real data (rows and features of a dataset, updates
+  per epoch over it, words in a passage, a rate counted from a table). No dataset is read at
+  import: a parametrized case names the dataset and the test resolves it.
+- **Platform:** `dogma_data.sample_rows(name, gen, n, d, standardize=)` and
+  `sample_window(name, gen, n)` give seeded draws of real rows, columns and series runs, so a
+  test keeps its shapes and its seeds and gets real values. `california_housing` is drawable.
+  Two new pinned HuggingFace snapshots. `online_retail` (Online Retail II, UCI, CC BY 4.0,
+  876 KB): every invoice line of the 60 customers whose id ends in 77, two years, with real
+  cancellations, duplicate lines and product descriptions as typed; `retail_events()` gives it
+  as an activity log and `retail_invoices()` as one row per invoice. `mt_bench_judgments`
+  (MT-Bench human judgments, LMSYS, CC BY 4.0, 140 KB): 3,355 expert verdicts on pairs of chat
+  models, 582 items judged in both presentation orders; the conversation text and the
+  annotator id are left out. 13 unit tests for the draws, 10 for the two tables. DATASETS.md
+  has the table of which real data stands in for which kind of input, and the rules.
+- **What the data is now:** feature matrices, labels and scores from wine, breast_cancer,
+  diabetes, digits, iris and california_housing, with the errors of simple real models (a
+  stump, nearest centroid, least squares) where a test needs predictions; categorical tables
+  and counts from the adult census; samples and series from engel, nile, sunspots, elnino and
+  co2; images, grids and whole numbers from digits; text, tokens, word counts and a bigram
+  model from three novels and GSM8K; orders, activity logs, postings, sessions, shipments and
+  daily revenue from online_retail, for all 22 SQL and pandas problems. In the second pass:
+  tensors inside a network (29 torch problems) draw standardised breast_cancer measurements
+  through one helper, `_real_values`, as a stand-in that the helper names as one; a greedy
+  decoder runs on a bigram model counted from forty lines of a novel; a Bayes model is a
+  class-by-band table counted from iris, wine, breast_cancer or California districts, as
+  exact fractions; target and draft distributions are word shares in two novels; DPO
+  log-probabilities come from two unigram models; rewards are invoice amounts and series
+  changes, Q tables are wine and digit values, and an MDP is counted from transitions between
+  bands of El Niño temperature; request sizes are GSM8K sentence and step counts and invoice
+  line counts, arrivals are invoice times, and overflow flags are runs of cancelled invoices; tool-call arguments are GSM8K questions as written;
+  trees, coin amounts, cache keys and dependency graphs come from wine and the retail lines.
+- **What is still placed by a test, and said so in its docstring:** a known truth over real
+  inputs (lasso, ridge, logistic, normal equation, permutation importance); a property that
+  must be exact (the spectrum over real principal axes in power iteration and gradient
+  descent, the rank over real columns, gaps of exactly thirty minutes on real clocks, dates on
+  a year boundary); dirt and gaps the source lacks (missing measurements, a missing region, a
+  status typed with a capital, labels in another letter case, a missing timestamp); and a
+  fixed shift of real dates where a statement names a calendar window (monthly active users,
+  top five orders of 2024, both streak problems). In the SQL problems an invoice line stands
+  for a session, a posting, a view or a shipment, as each fixture says.
+- **What real data broke, and the fix each time:** all-positive columns let a sign mistake and
+  an in-place clip pass (standardised draws); values stored to four decimals let an in-place
+  rounding pass (a ratio column); whole-number hours let a truncation pass (iris
+  measurements); a strong predictor left no mixed ties for the F1, ROC and AP tie rules (a weak
+  predictor, rounded); a good ranker never put the first relevant item beyond k (a poor ranker
+  on odd seeds); a real stump is sometimes perfect, a small draw sometimes has a constant
+  column or a rank-deficient design, a river series has equal neighbours (the draw is repeated,
+  and the docstring says why); real queries needed a repeated word and an unknown word first
+  (BM25); real labels differ in spaces but never in letter case alone (one in seven is
+  lower-cased); the longest real streak has to cross the year end (twenty busy days moved onto
+  it); a pivot mutant in matrix rank was caught only by luck before (the dependent row is now
+  inserted at every position, with both signs). No tolerance was widened and no assertion
+  removed.
+  In the second pass: a greedy model on real text almost never emits the pad id as its last
+  token (the word the longest rows end on trades ids with the pad id); a row of standardised
+  measurements can lie wholly inside one, which hid an in-place rescale (the draw is repeated
+  until an entry exceeds one); real distributions over a dataset smaller than the sequence
+  (California districts for 1,500 observations).
+- **Third pass (sizes, rates and the last stand-ins):** index generators take the row counts
+  of real datasets; schedules last one epoch over a real dataset; networks are sized by real
+  features and classes; sequence, prompt and context lengths are word counts of real
+  passages; acceptance rates come from the next-word distributions of two novels; verdict
+  pairs are MT-Bench items judged in both orders; token timings in the latency problems are
+  real waits between invoices; prices are real prices in pounds. What broke: a line amount
+  is a whole multiple of its own unit price, so floor and ceiling agreed (the two prices
+  come from different lines); no passage of whole lines is one word long (single lines
+  count as passages); a prompt never filled the budget exactly (the budget is drawn from the
+  longest prompt upward).
+- **Fourth pass (no generated draw left in a data problem):** the floating-point problems
+  lost their random bit patterns and magnitudes: real numbers now span forty orders of
+  magnitude (measurements, census weights, the probabilities of real phrases down to 1e-45,
+  their differences, logarithms and reciprocals), so float32 subnormals, zeros and infinities
+  come from real values, NaN from the missing weeks of the CO2 record, and only the special
+  words are typed by hand. Vector projection draws every pair from real tables, one of them
+  digit pixels as a shortfall from full ink, which gives the exact zeros a scaling mutant
+  needs. The debiased win rate draws only real verdict pairs (all nine combinations occur).
+  Monte Carlo resamples three real populations, and its coverage test uses the exact
+  population mean as the truth. Reservoir sampling streams real words in every test, and the
+  memory test is three times longer because a stored list of shared words is small.
+- **Fifth pass (secondary draws):** a scan of every hidden test found about ninety data
+  problems whose main draw was real but whose other tests still drew arrays at random. Two
+  tools rewrote those calls inside test functions (never at module level): normal draws and
+  `torch.randn` became standardised `breast_cancer` measurements of the same shape
+  (`_real_normal`, `_real_values`); uniform draws, whole numbers in a range, Dirichlet
+  vectors and random masks became the same measurements passed through the normal
+  distribution function, cut into bands, normalised or thresholded (`_real_unit`,
+  `_real_ints`, `_real_shares`). 84 problems were rewritten; 80 passed the gate as they were,
+  three of the other four were then done by hand, and so was k-NN classify (below).
+  Logistic regression fits the real diagnosis and
+  the spector grades. The prior-shift simulation resamples real tumours
+  at the deployment rate under Gaussians fitted to a real measurement. The coverage test
+  samples a real population whose mean is known exactly. ROC AUC times real diagnoses.
+  Only the two-layer MLP went back unchanged: its draws are the seeded initialisation the
+  function itself performs. Coin systems, arrival steps and bandit arms are real as well
+  (order quantities and prices, invoice minutes, the weekday of each invoice line), and the
+  microsecond sessions fixture is built from real customers and real waits between invoices
+  (read in seconds), with only the gaps at the thirty-minute boundary placed.
+- **k-NN classify: a tie the Contract did not define, now defined.** The integer-grid test
+  expected rows at the same distance on paper to tie exactly. That holds for rows whose
+  coordinate differences from the query are the same up to sign, whatever the arithmetic.
+  It does not hold for rows such as (1, 3, 3) and (3, 3, 1): on a real-derived grid the
+  blind accept, which rescales before squaring, was separated from the exact oracle by one
+  rounding step on one query in three hundred. The Contract now says which ties are exact
+  and that the other kind may go either way; the test compares only queries whose ties are
+  exact (586 of 1,200 grid queries, 436 of them with an equal-distance pair, and it asserts
+  that at least 300 are compared) on real-derived grids. Reference, blind accept and every
+  reject behave as recorded; no mutant is weakened; the version is unchanged because the
+  gate tool derives it from the tests. Gated against a snapshot of the amended statement and
+  again with base `HEAD` in a scratch worktree.
+- **ACF: an accepted variant broke the Contract on some series, and is replaced.** After
+  the conversions I ran every accepted variant of the 246 changed problems under three other
+  data salts (1,365 runs; the gate runs accepts on the default data only). Two failed.
+  `accept_loop_sums.py` of `p02-acf` added the lag sums in a Python loop and the denominator
+  with a dot product, so lag 0 was not exactly 1 on some real windows, which clause C3
+  requires; a normal draw had never shown it. The variant now adds the denominator the same
+  way, the old form is recorded as `reject_lag_zero_sums_differ.py`, and the lag-0 test
+  checks twelve real windows where it checked one. Gate passed; both accepts pass eight
+  salts.
+- **Logistic regression: the engineered separable case is now a real rule, and the blind
+  accept passes every salt.** The other failure of that run was the blind accept of logistic
+  regression, which did not converge on one separable case under data salt 1 (so at
+  `6ce4070` too). The case drew a random direction over the real features, so each salt set
+  a different bar. It is now a real rule with no draw in it: the tumours whose worst area is
+  above the median, and those whose worst perimeter is in the top hundredth. One real
+  measurement separates them perfectly, the raw scale still drives linear scores into the
+  hundreds, the reference and both accepts converge, and the reject without a line search
+  still fails. Gate passed; both accepts pass twelve salts. The run over every accepted
+  variant was repeated on the final tree, for all 251 problems and five salts: 461 accepted
+  variants, 2,305 runs, no failure.
+- **A reference solution was wrong at one point; the problem is corrected and re-versioned:**
+  `llm/bradley-terry-reward-models/p01-reward-pair-loss-and-accuracy` returned a gradient of 0
+  for a pair whose two rewards are equal, where the loss has -1/(2B): it wrote max(x, 0) as
+  `clamp(x, min=0)`, which has a kink at 0. Real rewards tie; random normals never did. A
+  reward head initialised at zero ties every pair, so that solution could not start
+  training. Now: the Contract states the gradient at every margin, a tie included (clause
+  C5), and the Constraints, hint 2 and the lesson name the pitfall; the reference writes
+  max(x, 0) as (x + |x|) / 2 (the same mean loss, to the last bit, on 14 batches of 64 pairs
+  at scales from 1e-30 to 1e300, 1e30 in float32, and the analytic gradient everywhere); a
+  new hidden test, `test_tied_pairs_receive_the_gradient_of_the_smooth_loss`, entered through
+  `add-test` with the old form recorded as `reject_tied_pair_gets_no_gradient.py`; the two
+  older gradient tests take tied draws again; the three accepts were replaced through the
+  tool (sum over count, `torch.maximum` for the positive part, and a new blind solution
+  written by the local model server from the amended statement, the starter and the public
+  tests only); the eight older rejects carry the corrected line, so each still has one
+  mistake; version 4 to 5. Both gate runs passed (`add`, then `refactor`). The gate freezes
+  the statement and the reference against its base, so the base was a snapshot of the
+  corrected statement and reference: once through `add-test --base` with snapshots made by
+  `git stash create` (a commit object, no branch moved), and once more with the default
+  base, `HEAD`, in two scratch worktrees checked out at those snapshots and removed after.
+- **Verified (answers are right):** each of the 246 problems passed
+  `exercise_gate.py gate <id> --mode refactor` against `HEAD` after its last edit: the
+  reference passes twice, every accept variant passes (blind solutions included), every
+  recorded reject still fails the test named in its manifest, no sampled mutant that the old
+  tests killed survives the new ones, seeds 1 to 5 pass with the data salt, and the run time
+  holds. Gates that print FAIL do so only on the `names` check for numbered ids such as
+  `case-0`, which are unchanged and are the open A2 point of I-32. Expected values come from
+  library oracles on the same data (NumPy, SciPy, scikit-learn, statsmodels, pandas, DuckDB,
+  torch) or from the brute-force references already in the tests. `exercise_audit.py seeds`:
+  2,000 runs on the first 100 problems with one failure (permutation importance p01, salt 17:
+  two permutation seeds gave the same mean drops on correlated real columns; the test now
+  compares six other seeds, and the 20 runs of that problem pass), and 980 runs on the other
+  49 with none, and 1,360 runs on the 68 problems of the second pass with none, 100 runs
+  on the five test files edited after that audit with none, 660 runs on the 33 problems of the
+  third pass with none, 160 runs on the eight problems of the fourth pass and Bradley-Terry
+  with none, 1,600 runs on the 80 problems of the fifth pass with none, and 220 runs on the
+  problems finished by hand after it with none.
+- **Verified (whole repository):** `make test-all` exit 0 on the final tree of tests, solutions,
+  statements, variants and data (`var/i33/test-all-10.log`): Ruff and format, strict mypy
+  (181 files), 6 import contracts, content types (251 problems), 2,247 Python tests, `All 175
+  topic(s) verified`, 187 browser unit tests and the build, audit clean (6,261 files),
+  `variants: 2310 ok, 0 mismatches in 251 problems`, 11 e2e/slow tests, 22 Playwright tests.
+  Earlier attempts of the run failed three times and each cause was fixed: mypy on a helper
+  that reused one name for a list and a tensor (greedy generation), mypy on a case list that
+  mixes names and numbers (A/B sample size), and the example topic `cml/vector-operations`,
+  which is also linted as a copy outside the repository where `dogma_data` sorts as
+  third-party (its import now sits inside the helper). This entry, the card, DATASETS.md and
+  the audit file were written after that run; Ruff and the privacy audit were run again on
+  them. `sync_hf_datasets.py --check`: clean.
+- **Open:** the retail sample has 60 customers and no Saturdays, which is thin for
+  per-customer and streak tests (a product family stands for the user there); `linnerud`,
+  `macrodata` and the three generated interview-prep CSVs are in the catalog but unused.
+  Committed on branch `i33-real-datasets`, cut from `main` at `6ce4070`; not pushed and not
+  merged. `i32-test-strength` has since moved to `fbce158` in its own worktree (a merge of
+  `origin/main`); the only file both touch is this roadmap.
+- **Decided by the owner (2026-11-11):** the 30 problems whose functions take only sizes,
+  rates or prices stay as they are, and so do the ten problems whose tests still call a
+  random distribution (seven seeded replays, two Monte Carlo checks, one closed-form normal).
+  They are not to be redesigned or have tests retired for this.
 
 ### 2026-11-11 · Test strength finished: last 81 problems swept, rules enforced, report written · I-32d and I-32e done
 
