@@ -52,5 +52,23 @@
     "revision": "28973b04f28fd7be4a6186a042bc26159d4366ca",
     "rows": 1,
     "sha256": "84bf96b0c084493fc3a309d250338646260887dc6a11b4db9a507abdc0ff1618"
+  },
+  "mt_bench_judgments": {
+    "bytes": 139795,
+    "file": "data/hf/mt_bench_judgments.csv",
+    "licence": "cc-by-4.0",
+    "repo": "lmsys/mt_bench_human_judgments",
+    "revision": "f7d2896d2cc5d80f8b55c2bbc722613555233c25",
+    "rows": 3355,
+    "sha256": "94b466c5de1f82383c0acef836bdba47d888f232880c52343b3e0e66f19ab341"
+  },
+  "online_retail": {
+    "bytes": 875788,
+    "file": "data/hf/online_retail.csv",
+    "licence": "cc-by-4.0",
+    "repo": "apurba-pal/online_retail",
+    "revision": "69d033176f8c8884f6abd61ad7ded6dfd6ae034d",
+    "rows": 8768,
+    "sha256": "d3e0253f2b28d0e5320c65dcbfb72d7ad71470519575ef1f388479c99b4ed49e"
   }
 }

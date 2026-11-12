@@ -44,3 +44,17 @@ policy in scripts/sync_hf_datasets.py. Regenerate with:
 - File: data/hf/gutenberg_walden.txt (1 rows)
 - Selection: train split; columns TEXT; rows where METADATA contains '"title": "Walden, and'; rows 0 to 1 of the (filtered) split; TEXT cut at a line boundary within 40000, starting at the line with 'When I wrote the following pages'.
 - Notice: Project Gutenberg eBook text (Henry David Thoreau, 1854). The source card lists MIT for the dataset and warns that some books may be under copyright elsewhere; only titles published before 1900 were selected.
+
+## online_retail
+- Source: https://huggingface.co/datasets/apurba-pal/online_retail at 69d033176f8c8884f6abd61ad7ded6dfd6ae034d
+- Licence: cc-by-4.0
+- File: data/hf/online_retail.csv (8768 rows)
+- Selection: train split; columns Invoice, StockCode, Description, Quantity, InvoiceDate, Price, Customer ID, Country; rows where Customer ID contains '77.0'.
+- Notice: Online Retail II by Daqing Chen (UCI Machine Learning Repository, 2019, doi 10.24432/C5CG6D), licensed CC BY 4.0. Rows were selected; values are unchanged.
+
+## mt_bench_judgments
+- Source: https://huggingface.co/datasets/lmsys/mt_bench_human_judgments at f7d2896d2cc5d80f8b55c2bbc722613555233c25
+- Licence: cc-by-4.0
+- File: data/hf/mt_bench_judgments.csv (3355 rows)
+- Selection: human split; columns question_id, model_a, model_b, winner, turn.
+- Notice: MT-Bench human judgments by Zheng et al. (LMSYS, 2023, "Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena"), licensed CC BY 4.0. Columns were selected; values are unchanged.

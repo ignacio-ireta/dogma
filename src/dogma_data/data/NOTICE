@@ -13,3 +13,9 @@ with its origin and licence. Attributions:
 - statsmodels bundled datasets: Seabold S, Perktold J (2010), statsmodels, Python in Science
   Conference. Dataset texts are as recorded in each module's COPYRIGHT string. The spector dataset
   is used with the express permission of its author, who retains all rights.
+- Online Retail II (hf/online_retail.csv): Chen D (2019), Online Retail II, UCI Machine Learning
+  Repository, doi 10.24432/C5CG6D. Licence CC BY 4.0. The snapshot holds a selection of the
+  rows; the source, the pinned revision and the selection are in hf/NOTICE.
+- MT-Bench human judgments (hf/mt_bench_judgments.csv): Zheng L et al. (2023), "Judging
+  LLM-as-a-Judge with MT-Bench and Chatbot Arena", LMSYS. Licence CC BY 4.0. The snapshot holds a
+  selection of the columns; the source and the pinned revision are in hf/NOTICE.
