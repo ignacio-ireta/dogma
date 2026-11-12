@@ -532,9 +532,13 @@ and results) · what's left or blocked.*
 - **Open:** the retail sample has 60 customers and no Saturdays, which is thin for
   per-customer and streak tests (a product family stands for the user there); `linnerud`,
   `macrodata` and the three generated interview-prep CSVs are in the catalog but unused.
-  Committed on branch `i33-real-datasets`, cut from `main` at `6ce4070`; not pushed and not
-  merged. `i32-test-strength` has since moved to `fbce158` in its own worktree (a merge of
-  `origin/main`); the only file both touch is this roadmap.
+  Merged into `main` at `90ffc70` on the owner's instruction, on top of the I-32 branch
+  (`fbce158`, which carries the five commits of `origin/main`: CI, licences, run-timeout
+  scale). `make test-all` on the merge: exit 0, 2,252 Python tests, `All 175 topic(s)
+  verified`, `variants: 2310 ok, 0 mismatches in 251 problems`, 187 browser tests, 22
+  Playwright tests. Pushed to `origin/main`; the merged branches `i33-real-datasets` and
+  `i32-test-strength` and their worktrees were removed. `i34-test-strength-2` belongs to
+  another session and was left alone.
 - **Decided by the owner (2026-11-11):** the 30 problems whose functions take only sizes,
   rates or prices stay as they are, and so do the ten problems whose tests still call a
   random distribution (seven seeded replays, two Monte Carlo checks, one closed-form normal).
