@@ -13,6 +13,7 @@ Usage (the torch group is needed for the py-torch runtime)::
                  [--message-has TEXT]
     add-accept   --out DIR ID FILE --origin blind|freedom [--freedom TEXT] [--clause LABEL]
     add-uncovered --out DIR ID --clause LABEL --reason TEXT
+    prune-uncovered --out DIR [--only PREFIX]...
     remove-variant --out DIR ID NAME
     adopt-blind  --out DIR [--only PREFIX]...
     variants     --out DIR [--only PREFIX]... [--workers N]
@@ -692,6 +693,31 @@ def cmd_add_uncovered(args: argparse.Namespace) -> int:
     return 0
 
 
+def stale_uncovered(manifest: VariantsManifest) -> list[UncoveredClause]:
+    """The ``uncovered`` entries whose clause a reject entry now quotes."""
+    covered = {squash(entry.clause) for entry in manifest.reject}
+    return [entry for entry in manifest.uncovered if squash(entry.clause) in covered]
+
+
+def cmd_prune_uncovered(args: argparse.Namespace) -> int:
+    """Drop every ``uncovered`` entry that a later reject made untrue."""
+    dropped = 0
+    for problem in audit.discover(audit.REPO, args.only):
+        manifest = read_manifest(problem)
+        stale = [] if manifest is None else stale_uncovered(manifest)
+        if manifest is None or not stale:
+            continue
+        kept = tuple(entry for entry in manifest.uncovered if entry not in stale)
+        with _transaction(problem):
+            write_manifest(
+                problem, _build(VariantsManifest, **{**dict(manifest), "uncovered": kept})
+            )
+        dropped += len(stale)
+        print(f"{problem.id}: dropped {len(stale)}")
+    print(f"prune-uncovered: {dropped} entries dropped")
+    return 0
+
+
 def cmd_remove_variant(args: argparse.Namespace) -> int:
     problem = find_problem(args.id)
     manifest = read_manifest(problem)
@@ -1073,13 +1099,28 @@ def _meta_key(text: str | None) -> dict[str, Any] | None:
     return data
 
 
+# One tag per test-strength program, newest first. A problem's version rises by one in a
+# program, however many tests the program adds to it.
+START_TAGS = ("i34-start", "i32-start")
+
+
+def start_revision(problem: audit.Problem, base: str) -> str:
+    """The newest program tag that has this problem's meta.yaml, else ``base``."""
+    rel = _rel(problem)
+    for tag in START_TAGS:
+        if audit._git_show(tag, f"{rel}/meta.yaml") is not None:
+            return tag
+    return base
+
+
 def expected_version(problem: audit.Problem, base: str) -> int:
     """The version the tests call for: the start version, plus 1 for a new test function.
 
-    The start is the tag ``i32-start`` when it has this problem's meta.yaml, else ``base``.
+    The start is the newest tag of ``START_TAGS`` that has this problem's meta.yaml, else
+    ``base``.
     """
     rel = _rel(problem)
-    start = "i32-start" if audit._git_show("i32-start", f"{rel}/meta.yaml") is not None else base
+    start = start_revision(problem, base)
     meta_text = audit._git_show(start, f"{rel}/meta.yaml")
     if meta_text is None:
         return _problem_version(problem)
@@ -1987,6 +2028,13 @@ def _parser() -> argparse.ArgumentParser:  # noqa: PLR0915 - one add_parser bloc
     uncovered.add_argument("--clause", required=True, help="the contract label, e.g. C3")
     uncovered.add_argument("--reason", required=True, help="why, in plain words")
     uncovered.set_defaults(run=cmd_add_uncovered)
+
+    prune = commands.add_parser(
+        "prune-uncovered", help="drop uncovered entries that a reject now covers"
+    )
+    _add_out(prune)
+    prune.add_argument("--only", action="append", default=[], help="problem id prefix")
+    prune.set_defaults(run=cmd_prune_uncovered)
 
     remove = commands.add_parser("remove-variant", help="remove one variant and its entry")
     _add_out(remove)

@@ -1,6 +1,6 @@
 # Problem metadata (CONTENT_SPEC §6.2).
 id: safe/split-conformal-prediction/p01-split-conformal-intervals
-version: 2                      # bump when tests, tolerances or the contract change
+version: 3                      # bump when tests, tolerances or the contract change
 title: "Split conformal intervals for regression"
 language: python
 runtime: py-numpy

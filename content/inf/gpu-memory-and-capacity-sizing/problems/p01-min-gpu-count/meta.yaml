@@ -1,5 +1,5 @@
 id: inf/gpu-memory-and-capacity-sizing/p01-min-gpu-count
-version: 4                      # bump when tests, tolerances or the contract change
+version: 5                      # bump when tests, tolerances or the contract change
 title: Minimum tensor-parallel GPU count for a model and a target load
 language: python
 runtime: py-stdlib

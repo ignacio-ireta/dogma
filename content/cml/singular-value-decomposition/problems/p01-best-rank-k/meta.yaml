@@ -1,5 +1,5 @@
 id: cml/singular-value-decomposition/p01-best-rank-k
-version: 2
+version: 3
 title: "Best rank-k approximation"
 language: python
 runtime: py-numpy

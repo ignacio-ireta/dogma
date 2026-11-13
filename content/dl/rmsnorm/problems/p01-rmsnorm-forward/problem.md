@@ -13,6 +13,10 @@ subtract the mean. Keep no state between calls.
 - Returns: a tensor with the shape and dtype of `x`, equal to `gain * x / sqrt(mean(x**2) + eps)`.
 - Raises `ValueError` when: `x` is 0-dimensional or non-floating; `D == 0`; `gain` does not have shape `(D,)`; `eps <= 0`.
 - Must not mutate inputs.
+- Differentiable: the result stays on the autograd graph. When an input has
+  `requires_grad=True`, backpropagating through the result gives the gradient of the formula
+  above. Do not detach, and do not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on
+  the way.
 
 ## Examples
 
@@ -46,6 +50,9 @@ rms_norm(x, [1.0, 1.0], eps=1e-6)
 ## Done looks like
 
 The examples, the zero-input case and the single-feature case pass. The hidden tests compare outputs with PyTorch's RMSNorm over random inputs with 1 to 4 leading dimensions, and check that the mean is not subtracted (an additive offset must change the output), that eps sits inside the square root (small magnitudes expose outside placement), that the output has unit mean square before the gain, that the statistic runs over the last axis, that examples are independent, that very large and very small magnitudes are handled, and that float32, empty leading dimensions, invalid arguments and in-place mutation are covered.
+
+The hidden tests also backpropagate through the result and compare the gradients with PyTorch's
+own.
 
 The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
 `docs/DATASETS.md`).

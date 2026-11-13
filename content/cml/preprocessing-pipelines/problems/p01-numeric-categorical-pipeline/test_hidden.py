@@ -419,3 +419,17 @@ def test_empty_string_is_an_ordinary_category_not_a_missing_value():
         pytest.fail("an empty string is a category of its own, not a missing value to be filled")
     if out_test.tolist() != [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]:
         pytest.fail("a test empty string must match its own training category, not the mode")
+
+
+def test_frames_with_a_shuffled_index_give_the_same_arrays():
+    train, test = _frames(3)
+    want_train, want_test = _call(train, test, NUMERIC, CATEGORICAL)
+    moved_train, moved_test = train.copy(), test.copy()
+    moved_train.index = pd.Index(range(1000 + len(train), 1000, -1))
+    moved_test.index = pd.Index(range(500 + len(test), 500, -1))
+    got_train, got_test = _call(moved_train, moved_test, NUMERIC, CATEGORICAL)
+    same = np.array_equal(got_train, want_train) and np.array_equal(got_test, want_test)
+    assert same, (
+        "the arrays change with the index labels of the frames, as after a shuffled split: "
+        "assign by position, or reset the index of a copy first"
+    )

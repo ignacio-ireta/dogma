@@ -1,5 +1,5 @@
 id: cml/softmax/p01-stable-softmax
-version: 2
+version: 3
 title: Stable softmax
 language: python
 runtime: py-numpy

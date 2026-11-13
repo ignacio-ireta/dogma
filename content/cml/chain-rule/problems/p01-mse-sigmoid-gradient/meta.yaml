@@ -1,5 +1,5 @@
 id: cml/chain-rule/p01-mse-sigmoid-gradient
-version: 3
+version: 4
 title: Sigmoid MSE gradient
 language: python
 runtime: py-numpy

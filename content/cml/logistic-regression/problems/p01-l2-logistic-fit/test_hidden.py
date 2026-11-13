@@ -461,3 +461,25 @@ def test_single_class_is_refused_with_value_error_even_for_a_single_sample():
             f"not fail inside the class check; the call raised {type(exc).__name__}"
         )
     pytest.fail("a training set with only one class must be refused with ValueError, not fitted")
+
+
+def test_list_inputs_give_the_same_result_as_arrays():
+    X = np.array([[0.5, -1.0], [1.5, 0.25], [-0.75, 2.0], [2.0, 1.0], [-1.25, -0.5]])
+    y = np.array([0, 1, 0, 1, 1])
+    try:
+        from_lists = fit_logistic_regression(X.tolist(), y.tolist(), l2=1.0)
+    except Exception:
+        pytest.fail(
+            "a valid call with Python lists failed: the inputs are array-like, so convert them "
+            "with np.asarray before using array methods",
+            pytrace=False,
+        )
+    from_arrays = fit_logistic_regression(X, y, l2=1.0)
+    for got, want in zip(from_lists, from_arrays, strict=True):
+        np.testing.assert_allclose(
+            got,
+            want,
+            rtol=1e-9,
+            atol=1e-12,
+            err_msg="lists and arrays of the same numbers gave different results",
+        )

@@ -1,5 +1,5 @@
 id: sql/pandas-merge-and-reshape/p01-monthly-revenue-by-region
-version: 4                     # bump when tests, tolerances or the contract change
+version: 5                     # bump when tests, tolerances or the contract change
 title: Monthly revenue by region
 language: python
 runtime: py-data

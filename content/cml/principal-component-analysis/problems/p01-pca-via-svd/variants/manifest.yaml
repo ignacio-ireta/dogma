@@ -1,4 +1,4 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
@@ -80,6 +80,11 @@ reject:
     decides. scikit-learn settles such exact ties by floating-point rounding, so it can differ from this
     rule on them.'
   killed_by: test_near_tie_inside_the_band_makes_the_lower_index_positive
+  visible: hidden
+- file: reject_takes_abs_of_x_in_place.py
+  mistake: returns the right result and replaces the caller's X by its absolute values in place
+  clause: Must not mutate its input.
+  killed_by: test_read_only_input_arrays_are_accepted_and_left_alone
   visible: hidden
 uncovered:
 - clause: Raises `ValueError` when `X` is not 2-D, has fewer than two rows or no columns, contains NaN

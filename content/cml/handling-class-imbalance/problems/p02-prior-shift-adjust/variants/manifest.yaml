@@ -1,4 +1,4 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
@@ -40,6 +40,11 @@ reject:
   mistake: corrections are written into the caller's array
   clause: Must not mutate `probs`.
   killed_by: test_simulation_at_fixed_seed_is_calibrated_to_the_deployment_base_rate
+  visible: hidden
+- file: reject_sorts_probs_in_place.py
+  mistake: returns the right result and sorts the caller's probs in place
+  clause: Must not mutate `probs`.
+  killed_by: test_read_only_input_arrays_are_accepted_and_left_alone
   visible: hidden
 uncovered: []
 sweeps:

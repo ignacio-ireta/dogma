@@ -270,3 +270,23 @@ def test_value_between_three_and_the_default_is_not_flagged_without_a_threshold(
         "a call without a threshold flagged a value the default threshold does not flag:"
         " check the default threshold"
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    x = np.array([9.0, 1.0, 4.0, 8.0, 3.0, 50.0])
+    for array in (x,):
+        array.setflags(write=False)
+    try:
+        robust_zscore_outliers(x)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

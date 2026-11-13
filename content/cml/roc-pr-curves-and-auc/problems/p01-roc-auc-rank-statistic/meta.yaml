@@ -1,5 +1,5 @@
 id: cml/roc-pr-curves-and-auc/p01-roc-auc-rank-statistic
-version: 4
+version: 5
 title: ROC AUC from ranks
 language: python
 runtime: py-numpy

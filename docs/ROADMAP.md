@@ -72,6 +72,7 @@ Work stops and resumes across sessions through the status table and the handoff 
 | I-32d | Reject sweep and mutant triage: one wrong solution per Contract bullet, gaps closed by gated tests | — | I-32b, I-32c | done |
 | I-32e | Test-strength close-out: enforce the rules in the gate, re-audit, report | — | I-32d | done |
 | I-33 | Real datasets everywhere: seeded real draws (`sample_rows`, `sample_window`), the Online Retail snapshot, and every problem moved off random numbers onto real values, sizes and rates (251 of 251), each under the refactor gate | — | I-31c, I-32e | done |
+| I-34 | Test strength, second pass: machine probes (`scripts/exercise_probe.py`) for arguments changed in place, results returned in a laxer form and input forms no test gives; every gap closed by a gated hidden test (plan `2026-11-11-test-strength-2.md`) | — | I-32e, I-33 | in-progress |
 
 ### Content runway (one wave per path week; ARCHITECTURE §7)
 
@@ -308,6 +309,26 @@ The rules are in DATASETS.md, "Real draws instead of random numbers".
 **Accept:** every edited problem passes `exercise_gate.py gate <id> --mode refactor` (no test
 function removed, reference and every accept pass, every recorded reject still fails its test, no
 mutant weakened, seeds 1 to 5 with the data salt, time). `make test-all` passes.
+
+### I-34 · Test strength, second pass
+
+Plan: `docs/superpowers/plans/2026-11-11-test-strength-2.md`. Report:
+`docs/audits/2026-11-11-test-strength-2.md`.
+**Owns:** `scripts/exercise_probe.py`, `scripts/exercise_gate.py` (`START_TAGS`,
+`prune-uncovered`), `tests/unit/scripts/test_exercise_probe.py` and the gate's unit tests,
+CONTENT_SPEC §6.7 and §6.8, two lines of ARCHITECTURE, `docs/audits/` (the report and the
+decisions file), and in the topic directories: `test_hidden.py` (additions through `add-test`
+only), `variants/`, the version in `meta.yaml`, and in `problem.md` one new last Contract bullet
+plus one sentence under "Done looks like", where a test needs a sentence the statement lacks. No
+`solution`, `starter`, `hints.md` or `test_public.py` change.
+**Do:** find by machine what one hand-written wrong solution per Contract bullet cannot: record
+what the tests give each argument; grade the reference inside wrappers that change an argument in
+place or return the right value in a laxer form; close every gap the Contract promises with one
+test, proven by the wrapper as the wrong solution.
+**Accept:** every new test entered through `exercise_gate.py add-test` (reference twice, every
+accept, every recorded reject, the wrong solution on the old and the new tests, five other seeds,
+run time). `exercise_gate.py variants` has no mismatch, `lint` has no finding, `exercise_audit.py
+seeds` and `mutate` are no worse than at the start. `make test-all` passes.
 
 ## 3. Milestones
 

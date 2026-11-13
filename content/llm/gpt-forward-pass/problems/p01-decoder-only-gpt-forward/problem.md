@@ -50,6 +50,10 @@ row-vector projections `y = x @ W + b`, with every weight stored as `(in, out)`.
   has a value of the wrong type; any table, block or LayerNorm has the wrong shape; any tensor's
   dtype differs from `tok_emb`; `tok_emb` is not floating-point.
 - Must not mutate `idx` or any tensor in `params`.
+- Differentiable: the result stays on the autograd graph. When an input has
+  `requires_grad=True`, backpropagating through the result gives the gradient of the formula
+  above. Do not detach, and do not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on
+  the way.
 
 ## Examples
 
@@ -101,6 +105,9 @@ negative token ids rejected; large and small magnitudes; float32 inputs returnin
 inputs and parameters left unchanged; and every `ValueError` rule above. A wrong variant gets a
 named message, for example an untied head where the tie was intended, a transposed head or a
 missing position table.
+
+The hidden tests also backpropagate through the result and compare the gradients with PyTorch's
+own.
 
 The hidden tests draw their bulk inputs from the real datasets `breast_cancer`,
 `gutenberg_frankenstein`, `gutenberg_pride_prejudice` and `gutenberg_walden` (see

@@ -228,3 +228,24 @@ def test_list_inputs_match_their_array_equivalents():
     assert abs(got - want) <= 1e-12, (
         "list inputs must give the same loss as their array equivalents"
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    z = np.array([800.0, -3.0, 0.5])
+    y = np.array([0.0, 1.0, 0.25])
+    for array in (z, y):
+        array.setflags(write=False)
+    try:
+        binary_cross_entropy_with_logits(z, y)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

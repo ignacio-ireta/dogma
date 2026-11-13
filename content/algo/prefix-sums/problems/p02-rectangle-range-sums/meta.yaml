@@ -1,5 +1,5 @@
 id: algo/prefix-sums/p02-rectangle-range-sums
-version: 2
+version: 3
 title: Rectangle range sums
 language: python
 runtime: py-stdlib

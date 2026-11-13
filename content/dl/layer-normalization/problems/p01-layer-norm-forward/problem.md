@@ -13,6 +13,10 @@ and bias, and return a tensor of the same shape as `x`. Keep no state between ca
 - Returns: a tensor with the shape and dtype of `x`, equal to `weight * (x - mean) / sqrt(var + eps) + bias`.
 - Raises `ValueError` when: `x` is a 0-dimensional or non-floating tensor; `D == 0`; `weight` or `bias` does not have shape `(D,)`; `eps <= 0`.
 - Must not mutate inputs.
+- Differentiable: the result stays on the autograd graph. When an input has
+  `requires_grad=True`, backpropagating through the result gives the gradient of the formula
+  above. Do not detach, and do not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on
+  the way.
 
 ## Examples
 
@@ -44,6 +48,9 @@ layer_norm(x, weight, bias, eps=1e-12)
 ## Done looks like
 
 The examples and the single-feature edge case pass. The hidden tests compare outputs with PyTorch's layer norm over random inputs with 1 to 4 leading dimensions, and check that each example is normalized independently of the others, that the statistics run over the last axis, that the mean is subtracted before scaling, that eps sits inside the square root, that the variance is biased, and that large common offsets and tiny magnitudes are handled. They also cover float32 dtype, empty leading dimensions, invalid arguments, and no mutation.
+
+The hidden tests also backpropagate through the result and compare the gradients with PyTorch's
+own.
 
 The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
 `docs/DATASETS.md`).

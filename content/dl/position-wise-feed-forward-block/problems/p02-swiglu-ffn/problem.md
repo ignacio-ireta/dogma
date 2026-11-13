@@ -26,6 +26,10 @@ projection.
 - Raises `ValueError` when: `X` is 0-dimensional; `W` or `V` is not 2-D; `W` and `V` have different
   shapes; the last dimension of `X` is not `W.shape[1]`; `W2` is not `(d_model, d_ff)`.
 - Must not mutate inputs.
+- Differentiable: the result stays on the autograd graph. When an input has
+  `requires_grad=True`, backpropagating through the result gives the gradient of the formula
+  above. Do not detach, and do not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on
+  the way.
 
 ## Examples
 
@@ -61,6 +65,9 @@ up path (swapping the roles changes the output); the SiLU itself rather than ReL
 independently; a zero input giving a zero output; the empty gate (`d_ff = 0`); large and small
 magnitudes; the `ValueError` rules (scalar input, mismatched gate and up shapes, wrong down shape,
 feature mismatch); float64 dtype and shape; and inputs left unchanged.
+
+The hidden tests also backpropagate through the result and compare the gradients with PyTorch's
+own.
 
 The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
 `docs/DATASETS.md`).

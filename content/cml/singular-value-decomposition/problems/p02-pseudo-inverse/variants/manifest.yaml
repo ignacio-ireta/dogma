@@ -1,4 +1,4 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
@@ -38,6 +38,12 @@ reject:
   mistake: rescales a float64 input array in place before the SVD
   clause: Must not mutate its input.
   killed_by: test_matches_numpy_pseudo_inverse_on_random_full_rank_matrices
+  visible: hidden
+- file: reject_returns_a_list_for_the_array.py
+  mistake: returns a nested list of the right numbers where a NumPy array is promised
+  clause: 'Returns: a float64 array of shape `(n, m)`, equal to `V diag(s_plus) U^T`, where `s_plus_i
+    = 1 / s_i` for kept singular values and `0` otherwise.'
+  killed_by: test_pseudo_inverse_comes_back_as_a_numpy_array
   visible: hidden
 uncovered: []
 sweeps:

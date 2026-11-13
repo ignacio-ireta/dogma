@@ -297,3 +297,32 @@ def test_infinite_target_raises_value_error():
     _expect_value_error(
         "an infinite target was accepted", [[0.0], [1.0]], [0.0, np.inf], [[0.2]], 1
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    X = np.array([[0.0, 0.0], [1.0, 0.5], [2.0, 2.0], [3.0, 1.0]])
+    y = np.array([1.5, 0.25, 3.0, 2.0])
+    Q = np.array([[0.9, 0.4], [2.5, 1.5]])
+    for array in (X, y, Q):
+        array.setflags(write=False)
+    try:
+        knn_regress(X, y, Q, 2, weights="distance")
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )
+
+
+def test_predictions_come_back_as_a_numpy_array():
+    out = knn_regress([[0.0], [1.0], [2.0], [3.0]], [0.0, 1.0, 2.0, 3.0], [[1.2]], k=2)
+    assert isinstance(out, np.ndarray), (
+        "the result must be a NumPy array: a list of the same numbers is another type"
+    )

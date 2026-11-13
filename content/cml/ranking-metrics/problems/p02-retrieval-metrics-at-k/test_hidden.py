@@ -254,3 +254,12 @@ def test_long_ranking_finishes_quickly_and_matches_the_reference() -> None:
         assert math.isclose(got[key], want[key], rel_tol=1e-9, abs_tol=1e-12), (
             f"{key} differs from the reference on a long ranking: check the hit counts"
         )
+
+
+def test_a_list_of_relevant_ids_with_a_repeat_is_not_mutated() -> None:
+    ranked = [905_113_208, 17, 3, 42]
+    relevant = [42, 17, 3, 42]
+    _solve(ranked, relevant, 3)
+    assert relevant == [42, 17, 3, 42], (
+        "relevant_ids was reordered or changed: build your own set, do not edit the caller's list"
+    )

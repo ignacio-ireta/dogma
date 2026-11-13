@@ -384,3 +384,10 @@ def test_negative_definite_q_raises_value_error():
         lambda: constrained_quadratic_min(Q, np.zeros(2), A, np.array([1.0])),
         "negative definite Q is not positive definite: raise ValueError",
     )
+
+
+def test_both_results_come_back_as_numpy_arrays():
+    x, lam = constrained_quadratic_min(2 * np.eye(2), [0.0, 0.0], [[1.0, 1.0]], [1.0])
+    assert isinstance(x, np.ndarray) and isinstance(lam, np.ndarray), (
+        "x and lam must be NumPy arrays: lists of the same numbers are another type"
+    )

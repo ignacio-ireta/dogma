@@ -230,3 +230,10 @@ def test_large_input_is_answered_by_a_search_not_a_scan() -> None:
         "the answer is feasible but not the smallest on the large input: find the first capacity "
         "that works"
     )
+
+
+def test_capacity_is_an_int_and_not_a_float() -> None:
+    value = min_ship_capacity([4, 2, 7, 3, 5, 1, 6], 3)
+    assert isinstance(value, int) and not isinstance(value, bool), (
+        "the capacity must be an int: a float with the same value is another type"
+    )

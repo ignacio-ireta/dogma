@@ -352,3 +352,18 @@ def test_input_orders_are_not_mutated() -> None:
         assert orders.equals(before), (
             "orders was changed in place: do not sort, parse or assign into the input frame"
         )
+
+
+def test_orders_with_a_shuffled_index_give_the_same_features() -> None:
+    rows: list[Row] = [(5, 2, DAY0 + timedelta(days=5), 4.0), (1, 1, DAY0, 1.0), (3, 2, DAY0, 2.0)]
+    moved = _frame(rows)
+    moved.index = pd.Index([40, 7, 19])
+    want, problem = _run(_frame(rows))
+    got, moved_problem = _run(moved)
+    assert problem is None and moved_problem is None, (
+        "a valid orders frame crashed: its index is arbitrary, so never rely on labels 0 to n-1"
+    )
+    assert got.equals(want), (
+        "the features change with the index labels of the input: assign by position, or reset "
+        "the index of a copy first"
+    )

@@ -1,4 +1,4 @@
-problem_version: 6
+problem_version: 7
 accept:
 - file: accept_blind.py
   origin: blind
@@ -46,6 +46,12 @@ reject:
     holds fewer than `min_periods` values. The standard deviation is also NaN wherever the window holds
     one value.'
   killed_by: test_first_reading_near_the_float_limit_keeps_its_own_mean
+  visible: hidden
+- file: reject_rounds_x_in_place.py
+  mistake: returns the right result and rounds the caller's x to six decimals in place
+  clause: '`x`: 1-D sequence of finite real numbers (list, tuple or NumPy array), length n >= 0. Integers
+    are allowed, and an integer window mean is fractional: it is never rounded. Must not be mutated.'
+  killed_by: test_read_only_input_arrays_are_accepted_and_left_alone
   visible: hidden
 uncovered: []
 sweeps:

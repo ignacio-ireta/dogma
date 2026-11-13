@@ -1,4 +1,4 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
@@ -49,14 +49,17 @@ reject:
     |R|)`. Relevant ids that are never ranked add nothing to the sum, and the divisor still counts them.'
   killed_by: test_matches_the_numpy_reference_on_random_rankings
   visible: hidden
+- file: reject_sorts_relevant_ids_in_place.py
+  mistake: returns the right result and sorts the caller's relevant_ids in place
+  clause: Must not mutate its inputs.
+  killed_by: test_a_list_of_relevant_ids_with_a_repeat_is_not_mutated
+  visible: hidden
 uncovered:
 - clause: 'Returns: a dict with exactly the keys `precision_at_k`, `recall_at_k`, `reciprocal_rank` and
     `average_precision_at_k`, each a Python float.'
   reason: cap of eight wrong solutions per problem
 - clause: 'Raises `ValueError` for: a repeated id in `ranked_ids`, an empty `relevant_ids`, and a `k`
     that is not an integer of at least 1.'
-  reason: cap of eight wrong solutions per problem
-- clause: Must not mutate its inputs.
   reason: cap of eight wrong solutions per problem
 sweeps:
 - reject

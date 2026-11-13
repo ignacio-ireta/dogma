@@ -290,3 +290,31 @@ def test_tiny_nonzero_row_is_normalised_not_rejected():
         raise AssertionError(
             "a tiny nonzero row has a direction: normalise it, and raise only for a zero norm"
         )
+
+
+def test_gradients_flow_back_through_the_result():
+    a, b = _views(_gen(63), 4, 5)
+    a.requires_grad_()
+    b.requires_grad_()
+    mix = torch.ones((), dtype=torch.float64)
+    inputs = (a, b)
+    try:
+        out = symmetric_infonce_loss(a, b, temperature=0.5)
+    except Exception:
+        raise AssertionError(
+            "a valid call failed on tensors that require gradients: stay in PyTorch, with no "
+            "NumPy or Python-number round trip"
+        ) from None
+    assert out.requires_grad, (
+        "the result is cut off from the autograd graph: keep every step a torch operation, "
+        "with no detach, no_grad, item or NumPy on the way"
+    )
+    got = torch.autograd.grad((out * mix).sum(), inputs, allow_unused=True)
+    want = torch.autograd.grad((_oracle(a, b, 0.5) * mix).sum(), inputs, allow_unused=True)
+    for g, w in zip(got, want, strict=True):
+        expected = torch.zeros((), dtype=torch.float64) if w is None else w
+        have = torch.zeros_like(expected) if g is None else g
+        assert torch.allclose(have, expected, rtol=1e-7, atol=1e-9), (
+            "a gradient through the result is wrong or missing: an input or a statistic was "
+            "taken out of the autograd graph"
+        )

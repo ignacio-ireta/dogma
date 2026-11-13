@@ -1,5 +1,5 @@
 id: llm/scaling-laws-and-compute-budgets/p02-fit-power-law-log-log
-version: 3                      # bump when tests, tolerances or the contract change
+version: 4                      # bump when tests, tolerances or the contract change
 title: Fit a power law by log-log least squares
 language: python                # python | sql
 runtime: py-numpy               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch

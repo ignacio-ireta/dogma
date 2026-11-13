@@ -1,4 +1,4 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
@@ -50,6 +50,11 @@ reject:
     any finite input.
   killed_by: test_extreme_logits_are_finite_and_warning_free
   visible: public
+- file: reject_needs_an_array_for_logits.py
+  mistake: reads an array attribute of logits before converting it, so a list of the same numbers fails
+  clause: '`logits`: array-like of finite real numbers with at least one dimension. Any shape is valid.'
+  killed_by: test_list_inputs_give_the_same_result_as_arrays
+  visible: hidden
 uncovered: []
 sweeps:
 - reject

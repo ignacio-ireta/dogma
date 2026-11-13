@@ -29,6 +29,10 @@ The gate weights are the weights the layer later uses to mix the chosen experts'
     `expert_indices` equal to `e`, counted over **all k slots**. Their sum is `T * k`.
 - Must not mutate `logits`.
 - `T = 0` is valid and returns empty `(0, k)` tensors with all-zero counts.
+- Differentiable: `gate_weights` stays on the autograd graph. When `logits` has
+  `requires_grad=True`, backpropagating through the gates gives the gradient of the formula
+  above. Do not detach, and do not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on
+  the way.
 
 ## Examples
 
@@ -74,6 +78,9 @@ renormalisation of the gates, counts over every slot, a large-magnitude case whe
 overflows, a case where probabilities underflow and only the logits can order the experts, `T = 0`,
 `k = E`, the range and type rules for `k`, the dtype and rank rules for `logits`, non-finite
 values, the output dtypes and shapes, and inputs left unchanged.
+
+The hidden tests also backpropagate through the result and compare the gradients with PyTorch's
+own.
 
 The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
 `docs/DATASETS.md`).

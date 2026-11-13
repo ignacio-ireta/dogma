@@ -274,3 +274,16 @@ def test_duplicate_names_on_one_dimensional_tensors_are_rejected():
     except ValueError:
         return
     raise AssertionError("duplicate names on one-dimensional tensors must raise ValueError")
+
+
+def test_groups_hold_the_callers_own_tensor_objects():
+    weight = torch.zeros(2, 3, requires_grad=True)
+    bias = torch.zeros(2, requires_grad=True)
+    groups = build_adamw_groups(
+        [("linear.weight", weight), ("linear.bias", bias)], weight_decay=0.1
+    )
+    held = [tensor for group in groups for tensor in group["params"]]
+    assert len(held) == 2 and held[0] is weight and held[1] is bias, (
+        "the groups must hold the caller's own tensor objects: a copy or a detached tensor "
+        "never receives the optimiser's updates"
+    )

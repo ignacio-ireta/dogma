@@ -1,5 +1,5 @@
 id: inf/kv-cache-size-arithmetic/p02-max-batch-after-weights
-version: 3                      # bump when tests, tolerances or the contract change
+version: 4                      # bump when tests, tolerances or the contract change
 title: Largest batch that fits after the weights
 language: python
 runtime: py-stdlib

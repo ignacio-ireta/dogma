@@ -1,5 +1,5 @@
 id: llm/retrieval-augmented-generation-pipeline/p02-cited-context-prompt
-version: 5
+version: 6
 title: Retrieve top-k chunks by cosine similarity and pack a cited prompt
 language: python
 runtime: py-numpy

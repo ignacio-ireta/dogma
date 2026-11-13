@@ -1,4 +1,4 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
@@ -54,6 +54,11 @@ reject:
   clause: '`f`: a callable that takes one float and returns a real number. Only evaluate it; never change
     anything it is given.'
   killed_by: test_callable_argument_keeps_its_attributes_after_the_call
+  visible: hidden
+- file: reject_returns_a_one_element_array.py
+  mistake: returns a one-element array where a float is promised
+  clause: 'Returns: a Python `float`.'
+  killed_by: test_result_is_a_float_and_not_an_array
   visible: hidden
 uncovered: []
 sweeps:

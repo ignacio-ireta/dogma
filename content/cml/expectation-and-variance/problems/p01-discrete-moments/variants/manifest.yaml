@@ -1,4 +1,4 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
@@ -41,6 +41,16 @@ reject:
     is empty, when a value or probability is NaN or infinite, when a probability is negative, or when
     the probabilities do not sum to 1 within $10^{-9}$.
   killed_by: test_probability_just_below_zero_raises_value_error
+  visible: hidden
+- file: reject_sorts_values_in_place.py
+  mistake: returns the right result and sorts the caller's values in place
+  clause: Must not mutate its inputs.
+  killed_by: test_read_only_input_arrays_are_accepted_and_left_alone
+  visible: hidden
+- file: reject_probabilities_keyed_by_value.py
+  mistake: keys the probabilities by value, so a value listed twice keeps only its last probability
+  clause: '`values`: 1-D sequence of $n \ge 1$ finite real numbers (list or NumPy array; integers allowed).'
+  killed_by: test_a_value_listed_twice_keeps_both_of_its_probabilities
   visible: hidden
 uncovered: []
 sweeps:

@@ -276,3 +276,14 @@ def test_window_of_one_token_caps_the_cache_at_one_token() -> None:
         4,
         "a window of 1 is valid and must keep exactly one token per layer",
     )
+
+
+def test_zero_kv_heads_or_zero_head_dim_raises_value_error() -> None:
+    for key in ("num_kv_heads", "head_dim"):
+        cfg = {"num_layers": 2, "num_kv_heads": 4, "head_dim": 8}
+        cfg[key] = 0
+        _expect_error(
+            ValueError,
+            lambda cfg=cfg: kv_cache_bytes(cfg, 4, 1, "fp16"),
+            "a required config value of zero must raise ValueError: each one is at least 1",
+        )

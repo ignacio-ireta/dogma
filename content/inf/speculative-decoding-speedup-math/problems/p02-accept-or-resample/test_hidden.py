@@ -269,3 +269,20 @@ def test_p_within_tolerance_of_one_is_not_rescaled_in_place():
     assert np.array_equal(p, p_before), (
         "do not normalize the caller's p in place, even when its sum is almost one"
     )
+
+
+def test_list_inputs_give_the_same_result_as_arrays():
+    p = np.array([0.6, 0.4, 0.0])
+    q = np.array([0.2, 0.3, 0.5])
+    try:
+        from_lists = accept_or_resample(p.tolist(), q.tolist(), 2, ScriptedRng(0.9, 0.3))
+    except Exception:
+        pytest.fail(
+            "a valid call with Python lists failed: the inputs are array-like, so convert them "
+            "with np.asarray before using array methods",
+            pytrace=False,
+        )
+    from_arrays = accept_or_resample(p, q, 2, ScriptedRng(0.9, 0.3))
+    assert np.array_equal(from_lists, from_arrays), (
+        "lists and arrays of the same numbers gave different results"
+    )

@@ -295,3 +295,23 @@ def test_out_of_range_entries_of_k_are_not_overwritten():
         before,
         err_msg="input k was modified in place: entries outside [0, n] were overwritten",
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    k = np.array([3, 0, 2, 1])
+    for array in (k,):
+        array.setflags(write=False)
+    try:
+        binomial_pmf(k, 3, 0.5)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

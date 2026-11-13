@@ -1,4 +1,4 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
@@ -47,6 +47,11 @@ reject:
   clause: Use `O(rows * columns + len(queries))` arithmetic operations and `O(rows * columns)` auxiliary
     storage, excluding the output.
   killed_by: test_large_batch_reuses_one_prefix_table
+  visible: hidden
+- file: reject_sorts_queries_in_place.py
+  mistake: returns the right result and sorts the caller's queries in place
+  clause: Must not mutate either input.
+  killed_by: test_unsorted_grid_rows_and_queries_keep_their_order
   visible: hidden
 uncovered: []
 sweeps:

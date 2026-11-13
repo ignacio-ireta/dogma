@@ -1,4 +1,4 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
@@ -47,6 +47,12 @@ reject:
   clause: Raise `ValueError` for invalid ranks, shapes, bounds, dtypes, nonfinite entries, or reduction.
     Do not mutate input arrays.
   killed_by: test_every_gradient_matches_finite_difference
+  visible: hidden
+- file: reject_rounds_x_to_float32_in_place.py
+  mistake: returns the right result and rounds the caller's X to single precision in place
+  clause: Raise `ValueError` for invalid ranks, shapes, bounds, dtypes, nonfinite entries, or reduction.
+    Do not mutate input arrays.
+  killed_by: test_read_only_input_arrays_are_accepted_and_left_alone
   visible: hidden
 uncovered: []
 sweeps:

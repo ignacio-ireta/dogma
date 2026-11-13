@@ -462,3 +462,10 @@ def test_window_stores_every_window_token_not_one_fewer() -> None:
     got = min_gpu_count(1, cfg, 1, 4096, 1, 100, workspace_bytes=0, reserve_percent=0)
     if got != 0:
         pytest.fail("a sliding window stores exactly its window of tokens, not one fewer")
+
+
+def test_config_built_inside_the_test_is_not_mutated() -> None:
+    cfg = {"num_layers": 80, "num_kv_heads": 8, "head_dim": 128, "sliding_window": 4096}
+    min_gpu_count(70 * 10**9, cfg, 4, 4096, 2, GPU, workspace_bytes=0, reserve_percent=10)
+    if cfg != {"num_layers": 80, "num_kv_heads": 8, "head_dim": 128, "sliding_window": 4096}:
+        pytest.fail("the config dict was changed: read the keys without writing to the input")

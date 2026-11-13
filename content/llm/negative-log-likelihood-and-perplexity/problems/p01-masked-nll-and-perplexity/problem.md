@@ -20,6 +20,10 @@ negative log-likelihood of the targets over the tokens that are not ignored, and
   or its shape is not `(B, T)`; a non-ignored target is outside `[0, V-1]`; `ignore_index` is not a Python
   `int`; or every target is ignored (the mean is undefined).
 - Must not mutate `logits` or `targets`.
+- Differentiable: the result stays on the autograd graph. When an input has
+  `requires_grad=True`, backpropagating through the result gives the gradient of the formula
+  above. Do not detach, and do not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on
+  the way.
 
 ## Examples
 
@@ -69,6 +73,9 @@ constant to each row of logits leaves the NLL unchanged, that large common offse
 finite and match the oracle, that a float32 input returns float32 with a declared bound, that a custom
 `ignore_index` works, that a single-class vocabulary gives perplexity 1, and that invalid shapes, dtypes,
 out-of-range targets and an all-ignored batch raise `ValueError`. Inputs are not mutated.
+
+The hidden tests also backpropagate through the result and compare the gradients with PyTorch's
+own.
 
 The hidden tests draw their bulk inputs from the real datasets `breast_cancer`,
 `gutenberg_frankenstein`, `gutenberg_pride_prejudice` and `gutenberg_walden` (see

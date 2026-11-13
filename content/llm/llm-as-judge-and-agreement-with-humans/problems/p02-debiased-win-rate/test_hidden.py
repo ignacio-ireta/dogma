@@ -164,3 +164,11 @@ def test_tuple_of_judgments_is_read_in_full():
     assert math.isclose(got, 0.5, abs_tol=1e-12), (
         "a tuple of judgments must count every pair, the first one included"
     )
+
+
+def test_an_unsorted_judgment_list_keeps_its_order():
+    judgments = [("tie", "A"), ("B", "A"), ("A", "B"), ("A", "A")]
+    checked(lambda: debiased_win_rate(judgments))
+    assert judgments == [("tie", "A"), ("B", "A"), ("A", "B"), ("A", "A")], (
+        "the judgment list was reordered or changed: read the pairs without sorting the input"
+    )

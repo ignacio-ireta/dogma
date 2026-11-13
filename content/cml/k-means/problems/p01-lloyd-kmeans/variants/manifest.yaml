@@ -1,4 +1,4 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
@@ -37,6 +37,12 @@ reject:
   mistake: writes the final centroids back into the caller's init array
   clause: Must not mutate inputs.
   killed_by: test_large_common_offset_does_not_change_the_clustering
+  visible: hidden
+- file: reject_returns_a_one_element_array.py
+  mistake: returns a one-element array where a float is promised
+  clause: 'Returns: `(centroids, labels, inertia, n_iter)` as described above. `inertia` is one Python
+    `float`, not an array that holds one number.'
+  killed_by: test_inertia_is_a_float_and_not_an_array
   visible: hidden
 uncovered: []
 sweeps:

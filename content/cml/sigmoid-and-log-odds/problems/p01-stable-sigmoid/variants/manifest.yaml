@@ -1,4 +1,4 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
@@ -38,6 +38,17 @@ reject:
   mistake: clamps huge logits in place in the caller's array
   clause: Must not mutate its input.
   killed_by: test_input_with_huge_logits_is_not_mutated
+  visible: hidden
+- file: reject_rounds_z_in_place.py
+  mistake: returns the right result and rounds the caller's z to six decimals in place
+  clause: Must not mutate its input.
+  killed_by: test_read_only_input_arrays_are_accepted_and_left_alone
+  visible: hidden
+- file: reject_needs_an_array_for_z.py
+  mistake: reads an array attribute of z before converting it, so a list of the same numbers fails
+  clause: '`z`: array-like of real numbers, any shape. A scalar, an empty array and `+inf` / `-inf` are
+    valid. The limits are $\sigma(+\infty) = 1$ and $\sigma(-\infty) = 0$.'
+  killed_by: test_list_inputs_give_the_same_result_as_arrays
   visible: hidden
 uncovered: []
 sweeps:

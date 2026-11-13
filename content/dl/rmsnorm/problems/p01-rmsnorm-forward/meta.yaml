@@ -1,5 +1,5 @@
 id: dl/rmsnorm/p01-rmsnorm-forward
-version: 2
+version: 3
 title: RMSNorm forward with gain and eps
 language: python
 runtime: py-torch

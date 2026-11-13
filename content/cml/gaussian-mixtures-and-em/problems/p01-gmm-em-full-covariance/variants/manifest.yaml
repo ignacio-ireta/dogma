@@ -1,4 +1,4 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
@@ -50,6 +50,11 @@ reject:
   mistake: checks only the row count of init_means and not its width
   clause: '`init_means`: finite array-like of shape `(k, d)`.'
   killed_by: test_init_means_with_wrong_column_count_raise_value_error
+  visible: hidden
+- file: reject_rounds_init_means_in_place.py
+  mistake: returns the right result and rounds the caller's init_means to six decimals in place
+  clause: Must not mutate inputs.
+  killed_by: test_read_only_input_arrays_are_accepted_and_left_alone
   visible: hidden
 uncovered: []
 sweeps:

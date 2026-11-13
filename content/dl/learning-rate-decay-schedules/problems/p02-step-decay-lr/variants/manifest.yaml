@@ -48,10 +48,7 @@ reject:
     1]`.'
   killed_by: test_non_finite_base_lr_raises_value_error
   visible: hidden
-uncovered:
-- clause: Must not mutate inputs. Runs in constant time, however large `step` is.
-  reason: inputs are plain ints and floats, which cannot be changed in place, so the no-mutation part
-    has nothing to break
+uncovered: []
 sweeps:
 - reject
 - mutants

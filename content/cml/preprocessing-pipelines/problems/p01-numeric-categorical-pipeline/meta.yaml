@@ -1,5 +1,5 @@
 id: cml/preprocessing-pipelines/p01-numeric-categorical-pipeline
-version: 6
+version: 7
 title: Train-fitted preprocessing for mixed columns
 language: python
 runtime: py-data

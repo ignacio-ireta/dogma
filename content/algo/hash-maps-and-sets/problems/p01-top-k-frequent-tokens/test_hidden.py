@@ -100,3 +100,12 @@ def test_input_list_is_not_mutated() -> None:
     assert tokens == snapshot, (
         "the input list was modified: do not sort or change the tokens in place"
     )
+
+
+def test_an_unsorted_token_list_with_repeats_keeps_its_order() -> None:
+    tokens = ["pear", "fig", "pear", "apple", "fig", "pear", "kiwi"]
+    top_k_frequent(tokens, 2)
+    assert tokens == ["pear", "fig", "pear", "apple", "fig", "pear", "kiwi"], (
+        "the input list was reordered or changed: count the tokens without sorting, reversing "
+        "or popping the caller's list"
+    )

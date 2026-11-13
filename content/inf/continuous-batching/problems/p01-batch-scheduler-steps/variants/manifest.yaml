@@ -1,4 +1,4 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
@@ -40,6 +40,11 @@ reject:
   mistake: sorts the arrivals list in place
   clause: Must not mutate the input lists.
   killed_by: test_invariants_hold_for_any_workload
+  visible: hidden
+- file: reject_reverses_prompt_lens_in_place.py
+  mistake: returns the right result and reverses the caller's prompt_lens in place
+  clause: Must not mutate the input lists.
+  killed_by: test_one_call_leaves_each_input_list_in_its_original_order
   visible: hidden
 uncovered: []
 sweeps:

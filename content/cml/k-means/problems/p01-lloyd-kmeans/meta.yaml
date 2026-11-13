@@ -1,5 +1,5 @@
 id: cml/k-means/p01-lloyd-kmeans
-version: 4
+version: 5
 title: Lloyd's k-means from given centroids
 language: python
 runtime: py-numpy

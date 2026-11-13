@@ -387,3 +387,10 @@ def test_boolean_max_iter_is_rejected():
         [[0.0]],
         max_iter=True,
     )
+
+
+def test_inertia_is_a_float_and_not_an_array():
+    _, _, inertia, _ = kmeans([[0, 0], [0, 1], [10, 10], [10, 11]], [[0, 0], [10, 10]])
+    assert isinstance(inertia, float), (
+        "inertia must be one float: an array that holds one number is another type"
+    )

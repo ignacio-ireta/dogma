@@ -258,3 +258,23 @@ def test_very_large_count_keeps_its_probability():
         "a very large count gets the wrong probability: every count must keep its full value",
         rtol=1e-3,
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    k = np.array([3.0, 0.0, 2.0, 1.0])
+    for array in (k,):
+        array.setflags(write=False)
+    try:
+        poisson_pmf(k, 2.0)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

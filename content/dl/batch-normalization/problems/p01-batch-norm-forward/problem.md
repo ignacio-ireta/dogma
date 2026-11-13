@@ -20,6 +20,10 @@ statistics and leave them unchanged. Return the output and the two updated runni
 - Returns: `(y, new_running_mean, new_running_var)`. `y` has shape `(N, C)` and the dtype of `x`. The running statistics have shape `(C,)` and the dtype of the input running statistics.
 - Raises `ValueError` when: `x` is not 2-D or not floating-point; `N == 0`; any `(C,)` argument has a different length from `C`; `training` is true and `N < 2`; `momentum` is outside `[0, 1]`; `eps <= 0`.
 - Must not mutate inputs. PyTorch's own batch norm updates running buffers in place. Your function must return new tensors instead.
+- Differentiable: `y` stays on the autograd graph. When `x`, `gamma` or `beta` has
+  `requires_grad=True`, backpropagating through `y` gives the gradient of the formula above,
+  which in training mode runs through the batch statistics. Do not detach, and do not leave
+  PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on the way.
 
 ## Examples
 
@@ -54,6 +58,9 @@ batch_norm_forward(x, gamma, beta, running_mean, running_var, training=False, ep
 ## Done looks like
 
 The two public examples and the single-row training rejection pass. The hidden tests compare both modes against PyTorch's batch norm on random batches: outputs and running statistics, default and non-default momentum, several eps values, and batch shapes where rows and features differ. They also cover per-feature normalization, the unbiased running variance, eval mode leaving statistics unchanged, large common offsets, float32 dtype, invalid arguments, and no in-place mutation.
+
+The hidden tests also backpropagate through the result and compare the gradients with PyTorch's
+own.
 
 The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
 `docs/DATASETS.md`).

@@ -251,3 +251,11 @@ def test_prefill_budget_of_one_is_a_valid_budget():
     assert got == [(0, 0), (1, 1)], (
         "budget rule: a prefill_budget of 1 is valid and admits one one-token prompt per step"
     )
+
+
+def test_one_call_leaves_each_input_list_in_its_original_order():
+    arrivals, prompts, outputs = [0, 1, 1], [2, 3, 1], [2, 1, 3]
+    run(arrivals, prompts, outputs, 2, 5, "continuous")
+    assert (arrivals, prompts, outputs) == ([0, 1, 1], [2, 3, 1], [2, 1, 3]), (
+        "an input list was reordered or changed by a single call: work on copies"
+    )

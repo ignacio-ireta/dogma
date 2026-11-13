@@ -487,3 +487,11 @@ def test_one_target_for_many_rows_raises_value_error():
     except Exception as exc:
         pytest.fail(f"y needs one target per row of X; raised {type(exc).__name__} instead")
     pytest.fail("y needs one target per row of X; the function returned a model instead")
+
+
+def test_training_predictions_come_back_as_a_numpy_array():
+    X = [[0.0], [1.0], [2.0], [3.0]]
+    _, train_pred = boost_stumps_mse(X, [0.0, 0.0, 1.0, 1.0], n_estimators=1, learning_rate=1.0)
+    assert isinstance(train_pred, np.ndarray), (
+        "train_pred must be a NumPy array: a list of the same numbers is another type"
+    )

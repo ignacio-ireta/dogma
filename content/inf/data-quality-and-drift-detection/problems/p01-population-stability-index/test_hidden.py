@@ -358,3 +358,24 @@ def test_default_number_of_bins_is_ten():
     default = population_stability_index(expected, actual)
     explicit = population_stability_index(expected, actual, bins=10)
     _require(default == explicit, "the default for bins must be 10, as the signature states")
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    expected = np.array([3.0, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0, 6.0])
+    actual = np.array([2.0, 7.0, 1.0, 8.0])
+    for array in (expected, actual):
+        array.setflags(write=False)
+    try:
+        population_stability_index(expected, actual, bins=3)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

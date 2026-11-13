@@ -1,5 +1,5 @@
 id: cml/leakage-and-walk-forward-validation/p02-expanding-target-mean
-version: 4                      # bump when tests, tolerances or the contract change
+version: 5                      # bump when tests, tolerances or the contract change
 title: Leakage-safe target mean
 language: python                # python | sql
 runtime: py-numpy               # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch

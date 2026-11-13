@@ -347,3 +347,11 @@ def test_returned_array_holds_integer_labels():
     assert np.issubdtype(np.asarray(out).dtype, np.integer), (
         "the returned array must hold integer class labels, not floats"
     )
+
+
+def test_predicted_labels_come_back_as_a_numpy_array():
+    X = [[0, 0], [1, 0], [0, 1], [5, 5]]
+    out = knn_classify(X, [0, 1, 1, 0], [[0.2, 0.2]], k=3)
+    assert isinstance(out, np.ndarray), (
+        "the result must be a NumPy array: a list of the same numbers is another type"
+    )

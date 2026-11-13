@@ -289,3 +289,42 @@ def test_probability_just_below_zero_raises_value_error():
         lambda: discrete_moments(values, probs),
         "a negative probability, even a tiny one, is not a distribution: raise ValueError",
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    values = np.array([3.0, -1.0, 0.5])
+    probs = np.array([0.5, 0.25, 0.25])
+    for array in (values, probs):
+        array.setflags(write=False)
+    try:
+        discrete_moments(values, probs)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )
+
+
+def test_a_value_listed_twice_keeps_both_of_its_probabilities():
+    # mean = 0.2 * 1 + 0.3 * 1 + 0.5 * 2 = 1.5, and every value is 0.5 away from it, so the
+    # variance is 0.25 and the standard deviation is 0.5.
+    try:
+        mean, variance, std = discrete_moments([1.0, 1.0, 2.0], [0.2, 0.3, 0.5])
+    except Exception:
+        pytest.fail(
+            "a valid distribution that lists one value twice was rejected or crashed: values "
+            "need not be distinct",
+            pytrace=False,
+        )
+    close = abs(mean - 1.5) <= 1e-12 and abs(variance - 0.25) <= 1e-12 and abs(std - 0.5) <= 1e-12
+    assert close, (
+        "a value listed twice lost part of its probability: sum over every (value, probability) "
+        "pair, and never key the probabilities by value"
+    )

@@ -1,4 +1,4 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
@@ -54,6 +54,11 @@ reject:
   clause: Must not mutate its input. Must not emit a NumPy overflow, invalid-value or divide warning for
     any finite input.
   killed_by: test_extreme_logits_match_reference_and_stay_finite
+  visible: hidden
+- file: reject_needs_an_array_for_logits.py
+  mistake: reads an array attribute of logits before converting it, so a list of the same numbers fails
+  clause: '`logits`: array-like of finite real numbers with at least one dimension. Any shape is valid.'
+  killed_by: test_list_inputs_give_the_same_result_as_arrays
   visible: hidden
 uncovered: []
 sweeps:

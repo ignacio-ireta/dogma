@@ -1,5 +1,5 @@
 id: cml/covariance-and-correlation/p02-correlation-matrix
-version: 3
+version: 4
 title: Correlation matrix
 language: python
 runtime: py-numpy

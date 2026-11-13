@@ -227,3 +227,13 @@ def test_negative_left_bound_is_rejected_with_value_error():
     pytest.fail(
         "rectangle bounds must lie inside the grid: a negative left column must raise ValueError"
     )
+
+
+def test_unsorted_grid_rows_and_queries_keep_their_order():
+    grid = [[5, -3, 2], [1, 8, -4]]
+    queries = [[1, 0, 1, 2], [0, 1, 1, 1], [0, 0, 0, 0]]
+    _call(grid, queries)
+    if grid != [[5, -3, 2], [1, 8, -4]]:
+        pytest.fail("the grid was reordered or changed: never sort or write into the input")
+    if queries != [[1, 0, 1, 2], [0, 1, 1, 1], [0, 0, 0, 0]]:
+        pytest.fail("the query list was reordered or changed: never sort the caller's queries")

@@ -1,5 +1,5 @@
 id: cml/sigmoid-and-log-odds/p02-logit
-version: 3
+version: 4
 title: Logit (log-odds)
 language: python
 runtime: py-numpy

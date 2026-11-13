@@ -28,6 +28,10 @@ Per head `j`, with `d_k = d_model / num_heads`, the attention is
   not a `torch.bool` tensor of shape `(L, L)`; or some query row of `mask` has no `True` entry (its
   softmax would be undefined).
 - Must not mutate inputs.
+- Differentiable: the result stays on the autograd graph. When an input has
+  `requires_grad=True`, backpropagating through the result gives the gradient of the formula
+  above. Do not detach, and do not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on
+  the way.
 
 ## Examples
 
@@ -69,6 +73,9 @@ layout (the `x @ W.T` convention, on non-symmetric weights); the mask meaning (`
 and the fully-masked-row error; the output bias added once; the `ValueError` rules (rank, weight
 and bias shape, head count that does not divide, mask dtype and shape); batch independence; large
 and small input magnitudes; the dtype and shape; and inputs left unchanged.
+
+The hidden tests also backpropagate through the result and compare the gradients with PyTorch's
+own.
 
 The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
 `docs/DATASETS.md`).

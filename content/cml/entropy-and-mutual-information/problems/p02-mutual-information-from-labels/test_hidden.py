@@ -320,3 +320,24 @@ def test_zero_dimensional_array_raises_value_error():
         [0, 1],
         "a zero-dimensional array is not one-dimensional: it must raise ValueError",
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    x = np.array([2, 0, 1, 1, 0])
+    y = np.array([1, 0, 0, 1, 0])
+    for array in (x, y):
+        array.setflags(write=False)
+    try:
+        mutual_information(x, y)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

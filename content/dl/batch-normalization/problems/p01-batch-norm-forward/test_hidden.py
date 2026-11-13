@@ -523,3 +523,37 @@ def test_running_statistics_keep_the_dtype_of_the_running_buffers():
     assert new_rv.dtype == torch.float64, (
         "running variance rule broken: the returned running variance keeps the running buffer dtype"
     )
+
+
+def test_gradients_flow_back_through_the_result():
+    gen = _gen(65)
+    x = _real_values(gen, [4, 3]).requires_grad_()
+    gamma = _real_values(gen, [3]).requires_grad_()
+    beta = _real_values(gen, [3]).requires_grad_()
+    mean, var = torch.zeros(3, dtype=torch.float64), torch.ones(3, dtype=torch.float64)
+    mix = _real_values(gen, [4, 3])
+    inputs = (x, gamma, beta)
+    kw = {"training": True, "momentum": 0.1, "eps": 1e-5}
+    try:
+        out = batch_norm_forward(x, gamma, beta, mean, var, **kw)[0]
+    except Exception:
+        pytest.fail(
+            "a valid call failed on tensors that require gradients: stay in PyTorch, with no "
+            "NumPy or Python-number round trip",
+            pytrace=False,
+        )
+    assert out.requires_grad, (
+        "the result is cut off from the autograd graph: keep every step a torch operation, "
+        "with no detach, no_grad, item or NumPy on the way"
+    )
+    got = torch.autograd.grad((out * mix).sum(), inputs, allow_unused=True)
+    want = torch.autograd.grad(
+        (_oracle(x, gamma, beta, mean, var, **kw)[0] * mix).sum(), inputs, allow_unused=True
+    )
+    for g, w in zip(got, want, strict=True):
+        expected = torch.zeros((), dtype=torch.float64) if w is None else w
+        have = torch.zeros_like(expected) if g is None else g
+        assert torch.allclose(have, expected, rtol=1e-7, atol=1e-9), (
+            "a gradient through the result is wrong or missing: an input or a statistic was "
+            "taken out of the autograd graph"
+        )

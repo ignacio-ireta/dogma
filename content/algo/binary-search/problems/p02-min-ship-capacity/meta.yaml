@@ -1,5 +1,5 @@
 id: algo/binary-search/p02-min-ship-capacity
-version: 1                      # bump when tests, tolerances or the contract change
+version: 2                      # bump when tests, tolerances or the contract change
 title: Smallest truck capacity for a delivery window
 language: python
 runtime: py-stdlib

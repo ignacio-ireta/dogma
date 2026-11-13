@@ -1,4 +1,4 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
@@ -43,6 +43,13 @@ reject:
   mistake: symmetrised Q written back into the caller array
   clause: Must not mutate inputs.
   killed_by: test_invalid_inputs_raise_value_error
+  visible: hidden
+- file: reject_returns_a_list_for_the_array.py
+  mistake: returns a nested list of the right numbers where a NumPy array is promised
+  clause: 'Returns: a tuple `(x, lam)`. `x` is a float64 array of shape `(n,)` and `lam` is a float64
+    array of shape `(m,)`. They satisfy $Q\mathbf{x} + \mathbf{c} = A^\top\boldsymbol\lambda$ and $A\mathbf{x}
+    = \mathbf{b}$.'
+  killed_by: test_both_results_come_back_as_numpy_arrays
   visible: hidden
 uncovered: []
 sweeps:

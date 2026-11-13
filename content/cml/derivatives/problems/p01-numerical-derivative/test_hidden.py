@@ -228,3 +228,10 @@ def test_callable_argument_keeps_its_attributes_after_the_call():
     assert vars(f) == before, (
         "f must only be evaluated: the call must not add, remove or change attributes of f"
     )
+
+
+def test_result_is_a_float_and_not_an_array():
+    value = numerical_derivative(lambda t: t**3 - 2 * t + 1, 2.0)
+    assert isinstance(value, float), (
+        "the derivative must be a float: an array that holds one number is another type"
+    )

@@ -197,3 +197,43 @@ def test_scalar_probability_gives_a_zero_dimensional_array():
         rtol=1e-12,
         err_msg="wrong value for a scalar probability",
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    p = np.array([0.9, 0.1, 0.5])
+    for array in (p,):
+        array.setflags(write=False)
+    try:
+        logit(p)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )
+
+
+def test_list_inputs_give_the_same_result_as_arrays():
+    p = np.array([[0.1, 0.5], [0.9, 0.25]])
+    try:
+        from_lists = logit(p.tolist())
+    except Exception:
+        pytest.fail(
+            "a valid call with Python lists failed: the inputs are array-like, so convert them "
+            "with np.asarray before using array methods",
+            pytrace=False,
+        )
+    from_arrays = logit(p)
+    np.testing.assert_allclose(
+        from_lists,
+        from_arrays,
+        rtol=1e-9,
+        atol=1e-12,
+        err_msg="lists and arrays of the same numbers gave different results",
+    )

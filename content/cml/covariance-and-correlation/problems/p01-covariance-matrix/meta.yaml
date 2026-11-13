@@ -1,5 +1,5 @@
 id: cml/covariance-and-correlation/p01-covariance-matrix
-version: 3
+version: 4
 title: Covariance matrix
 language: python
 runtime: py-numpy

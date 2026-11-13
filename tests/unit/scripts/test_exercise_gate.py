@@ -560,6 +560,27 @@ def test_add_uncovered_and_remove_variant(gate, problem_dir, grader, tmp_path, c
     assert gate.main(["remove-variant", "--out", str(out), FIXTURE_REL, "accept_gone.py"]) == 2
 
 
+def test_prune_uncovered_drops_only_entries_a_reject_now_covers(
+    gate, problem_dir, grader, tmp_path, capsys
+):
+    out = tmp_path / "out"
+    for label in ("C2", "C3"):
+        argv = ["add-uncovered", "--out", str(out), FIXTURE_REL, "--clause", label]
+        assert gate.main([*argv, "--reason", "left for a later sweep"]) == 0
+    src = _candidate(tmp_path, "reject_bug.py", BUG)
+    assert gate.main(_reject_argv(out, src)) == 0  # a reject for C3
+    md = (problem_dir / "problem.md").read_text(encoding="utf-8")
+    capsys.readouterr()
+
+    assert gate.main(["prune-uncovered", "--out", str(out)]) == 0
+
+    assert "prune-uncovered: 1 entries dropped" in capsys.readouterr().out
+    left = _manifest_of(gate, problem_dir).uncovered
+    assert [entry.clause for entry in left] == [gate.clause_text(md, "C2")]
+    assert gate.main(["prune-uncovered", "--out", str(out)]) == 0
+    assert "prune-uncovered: 0 entries dropped" in capsys.readouterr().out
+
+
 def test_remove_of_the_last_entry_deletes_manifest_and_directory(
     gate, problem_dir, grader, tmp_path
 ):
@@ -1116,6 +1137,23 @@ def test_expected_version_counts_a_new_test_and_respects_the_tag(gate, gate_repo
     assert gate.expected_version(problem, "HEAD") == 2  # tag version 1, plus one new test
     _git(root, "tag", "-d", "i32-start")
     assert gate.expected_version(problem, "HEAD") == 3  # no tag: start is HEAD (version 2)
+
+
+def test_expected_version_starts_from_the_newest_program_tag(gate, gate_repo):
+    root = gate.audit.REPO
+    problem = gate.find_problem(FIXTURE_ID)
+    _git(root, "tag", "i32-start")  # the first program starts at version 1
+    _append(gate_repo / "test_hidden.py", CATCH_TEST)
+    _replace(gate_repo / "meta.yaml", "version: 1\n", "version: 2\n")
+    _git(root, "commit", "-q", "-am", "first program adds a test")
+    assert gate.expected_version(problem, "HEAD") == 2
+    _git(root, "tag", "i34-start")  # the next program starts at version 2
+    assert gate.start_revision(problem, "HEAD") == "i34-start"
+    assert gate.expected_version(problem, "HEAD") == 2  # nothing new since the newer tag
+    _append(gate_repo / "test_hidden.py", CATCH_TEST.replace("def test_", "def test_again_"))
+    assert gate.expected_version(problem, "HEAD") == 3  # one more test, one more version
+    _git(root, "tag", "-d", "i34-start")
+    _git(root, "tag", "-d", "i32-start")
 
 
 def test_bump_version_keeps_the_comment_and_updates_the_manifest(gate, gate_repo, tmp_path, capsys):

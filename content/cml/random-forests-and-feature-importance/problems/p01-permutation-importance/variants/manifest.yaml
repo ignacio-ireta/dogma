@@ -1,4 +1,4 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
@@ -52,6 +52,11 @@ reject:
     rejects valid input
   clause: '`X`: 2-D array-like of finite numbers, shape `(n, d)`, with $n \ge 1$ and $d \ge 1$.'
   killed_by: test_huge_finite_entries_are_accepted_and_ignored_column_has_no_drop
+  visible: hidden
+- file: reject_needs_an_array_for_x.py
+  mistake: reads an array attribute of X before converting it, so a list of the same numbers fails
+  clause: '`X`: 2-D array-like of finite numbers, shape `(n, d)`, with $n \ge 1$ and $d \ge 1$.'
+  killed_by: test_list_inputs_give_the_same_result_as_arrays
   visible: hidden
 uncovered:
 - clause: 'Raises: `ValueError` when `X` is not a non-empty 2-D finite array; when `y` is not 1-D or has

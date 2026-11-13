@@ -246,3 +246,23 @@ def test_infinite_entry_raises_value_error():
         lambda: gaussian_mle([[1.0, np.inf], [2.0, 3.0]]),
         "an infinite entry must raise ValueError: the Contract rejects NaN or infinity",
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    X = np.array([[1.0, 2.0], [3.0, 5.0], [4.0, 4.0]])
+    for array in (X,):
+        array.setflags(write=False)
+    try:
+        gaussian_mle(X)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

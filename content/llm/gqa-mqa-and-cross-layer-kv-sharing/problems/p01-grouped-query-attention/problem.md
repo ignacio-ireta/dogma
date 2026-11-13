@@ -34,6 +34,10 @@ Then the heads are concatenated in order and multiplied by `W_o`.
   `bool`; `n_kv_heads` does not divide `n_heads`; `n_heads` does not divide `d_model`; `mask` is not a
   `torch.bool` tensor of shape `(L, L)`; or some query row of `mask` has no `True` entry.
 - Must not mutate inputs.
+- Differentiable: the result stays on the autograd graph. When an input has
+  `requires_grad=True`, backpropagating through the result gives the gradient of the formula
+  above. Do not detach, and do not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on
+  the way.
 
 ## Examples
 
@@ -79,6 +83,9 @@ error; the `1/sqrt(d_head)` scale, checked where it differs from `1/sqrt(d_model
 non-symmetric weights; the shape and `ValueError` rules, including a full-width key projection and a head
 count that does not divide; batch independence; large and small input magnitudes; dtype and shape; and
 inputs left unchanged.
+
+The hidden tests also backpropagate through the result and compare the gradients with PyTorch's
+own.
 
 The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
 `docs/DATASETS.md`).

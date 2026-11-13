@@ -1,4 +1,4 @@
-problem_version: 1
+problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
@@ -39,6 +39,13 @@ reject:
   clause: 'Not allowed: a scan that tries every capacity from the heaviest parcel up to the total weight.
     The search must run in a logarithmic number of passes over the parcels.'
   killed_by: test_large_input_is_answered_by_a_search_not_a_scan
+  visible: hidden
+- file: reject_returns_a_float_for_the_int.py
+  mistake: returns a float with the same value where an int is promised
+  clause: 'Returns: an `int` capacity `C` such that the parcels can be cut into at most `days` consecutive
+    runs, each with total weight at most `C`, and no smaller capacity does. `C` is at least the heaviest
+    parcel and at most the total weight.'
+  killed_by: test_capacity_is_an_int_and_not_a_float
   visible: hidden
 uncovered: []
 sweeps:

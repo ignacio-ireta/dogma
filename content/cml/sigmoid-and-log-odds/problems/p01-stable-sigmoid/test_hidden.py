@@ -190,3 +190,43 @@ def test_input_with_huge_logits_is_not_mutated():
         before,
         err_msg="the input array was modified in place for a large finite logit",
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    z = np.array([-1000.0, -1.0, 0.0, 1.0, 1000.0])
+    for array in (z,):
+        array.setflags(write=False)
+    try:
+        sigmoid(z)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )
+
+
+def test_list_inputs_give_the_same_result_as_arrays():
+    z = np.array([[-2.0, 0.0, 3.5], [0.25, -0.75, 1.0]])
+    try:
+        from_lists = sigmoid(z.tolist())
+    except Exception:
+        pytest.fail(
+            "a valid call with Python lists failed: the inputs are array-like, so convert them "
+            "with np.asarray before using array methods",
+            pytrace=False,
+        )
+    from_arrays = sigmoid(z)
+    np.testing.assert_allclose(
+        from_lists,
+        from_arrays,
+        rtol=1e-9,
+        atol=1e-12,
+        err_msg="lists and arrays of the same numbers gave different results",
+    )

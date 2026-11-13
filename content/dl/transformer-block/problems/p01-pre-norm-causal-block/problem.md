@@ -47,6 +47,10 @@ dense-layer exercise. There is no dropout: the block is evaluated deterministica
   extra key, or has a value that is not a tensor; any parameter has the wrong shape; or any
   parameter's dtype differs from `x`.
 - Must not mutate `x` or any parameter.
+- Differentiable: the result stays on the autograd graph. When an input has
+  `requires_grad=True`, backpropagating through the result gives the gradient of the formula
+  above. Do not detach, and do not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on
+  the way.
 
 ## Examples
 
@@ -89,6 +93,9 @@ identity behaviour when the sub-layers are zero; large input magnitudes; the exa
 biased variance; the input and parameters left unchanged; the output shape and dtype; and every
 `ValueError` rule above. When an output matches a known wrong variant, the failure names that
 mistake, for example post-norm placement, a missing mask, or a missing residual.
+
+The hidden tests also backpropagate through the result and compare the gradients with PyTorch's
+own.
 
 The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
 `docs/DATASETS.md`).

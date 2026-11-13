@@ -234,3 +234,23 @@ def test_input_array_is_not_mutated():
     before = probs.copy()
     _solve(probs, 0.4, 0.05)
     assert np.array_equal(probs, before), "probs was changed: return a new array"
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    probs = np.array([0.6, 0.1, 0.95])
+    for array in (probs,):
+        array.setflags(write=False)
+    try:
+        prior_shift_adjust(probs, 0.4, 0.05)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

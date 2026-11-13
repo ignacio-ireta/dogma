@@ -1,5 +1,5 @@
 id: math/determinants-and-trace/p01-determinant
-version: 3
+version: 4
 title: Determinant
 language: python
 runtime: py-numpy

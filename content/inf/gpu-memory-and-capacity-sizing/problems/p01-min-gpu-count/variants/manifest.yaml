@@ -1,4 +1,4 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
@@ -44,6 +44,11 @@ reject:
   mistake: sliding window stores one token fewer than the window
   clause: '`context_len`: Python `int`, at least 1. Tokens per sequence at the target, prompt plus generated.'
   killed_by: test_window_stores_every_window_token_not_one_fewer
+  visible: hidden
+- file: reject_overwrites_config_in_place.py
+  mistake: returns the right result and writes new values into the caller's config
+  clause: '`config`: as above.'
+  killed_by: test_config_built_inside_the_test_is_not_mutated
   visible: hidden
 uncovered:
 - clause: Returns a Python `int`, `0` or a power of two, never a float.

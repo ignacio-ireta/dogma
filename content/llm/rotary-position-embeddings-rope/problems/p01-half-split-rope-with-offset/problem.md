@@ -29,6 +29,10 @@ ones.
 - Raises `ValueError` when: `q` or `k` is not a 4-D floating tensor; their shapes differ; their dtypes
   differ; `d` is odd or zero; `offset` is not an `int`, is a `bool`, or is negative.
 - Must not mutate `q`, `k` or `offset`.
+- Differentiable: the result stays on the autograd graph. When an input has
+  `requires_grad=True`, backpropagating through the result gives the gradient of the formula
+  above. Do not detach, and do not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on
+  the way.
 
 ## Examples
 
@@ -73,6 +77,9 @@ sequence; the value-free contract (only two tensors returned); large offsets and
 inputs; inputs left unchanged; and every `ValueError` rule above. A wrong variant gets a named message, for
 example the adjacent-pair layout, a shift applied to only one of q and k, or a block of positions that
 starts at 1 instead of at `offset`.
+
+The hidden tests also backpropagate through the result and compare the gradients with PyTorch's
+own.
 
 The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
 `docs/DATASETS.md`).

@@ -1,4 +1,4 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
@@ -52,6 +52,11 @@ reject:
   mistake: uses asarray so a float64 input is eliminated in place
   clause: Must not mutate its input.
   killed_by: test_input_matrix_is_not_mutated
+  visible: hidden
+- file: reject_returns_a_one_element_array.py
+  mistake: returns a one-element array where a float is promised
+  clause: 'Returns: the determinant as a float. For the `0 x 0` matrix, return `1.0`.'
+  killed_by: test_result_is_a_float_and_not_an_array
   visible: hidden
 uncovered:
 - clause: A large matrix can overflow or underflow the product of pivots. This function does not have

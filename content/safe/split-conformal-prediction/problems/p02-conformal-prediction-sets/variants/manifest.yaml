@@ -1,4 +1,4 @@
-problem_version: 5
+problem_version: 6
 accept:
 - file: accept_blind.py
   origin: blind
@@ -51,6 +51,12 @@ reject:
   mistake: alpha equal to zero accepted instead of rejected
   clause: '`alpha`: Python float, finite, `0 < alpha < 1`. A bool is invalid.'
   killed_by: test_alpha_at_the_open_lower_end_is_rejected
+  visible: hidden
+- file: reject_needs_an_array_for_cal_probs.py
+  mistake: reads an array attribute of cal_probs before converting it, so a list of the same numbers fails
+  clause: '`cal_probs`: real numeric array-like, shape `(n, K)` with `n >= 1` and `K >= 2`. Entries are
+    finite and nonnegative, and each row sums to 1 within `1e-9`.'
+  killed_by: test_list_inputs_give_the_same_result_as_arrays
   visible: hidden
 uncovered:
 - clause: Raises `ValueError` for any invalid argument above, including a class-count mismatch.

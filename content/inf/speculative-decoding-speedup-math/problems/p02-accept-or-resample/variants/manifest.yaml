@@ -1,4 +1,4 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
@@ -47,6 +47,13 @@ reject:
   mistake: invalid draft token raises TypeError instead of ValueError
   clause: 'Raises: `ValueError` for any invalid argument above.'
   killed_by: test_invalid_probabilities_or_draft_token_raise_value_error
+  visible: hidden
+- file: reject_needs_an_array_for_p.py
+  mistake: reads an array attribute of p before converting it, so a list of the same numbers fails
+  clause: '`p`: real numeric array-like, 1-D, length `V >= 1`. Entries are finite and nonnegative, and
+    they sum to 1 within `1e-9`. Other ndim, empty input, negative or NaN entries, and a wrong sum are
+    invalid.'
+  killed_by: test_list_inputs_give_the_same_result_as_arrays
   visible: hidden
 uncovered: []
 sweeps:

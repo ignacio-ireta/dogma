@@ -360,3 +360,10 @@ def test_zero_rcond_is_a_valid_cutoff_and_keeps_every_singular_value():
         "rcond = 0 must keep every non-zero singular value and invert it",
         atol=1e-12,
     )
+
+
+def test_pseudo_inverse_comes_back_as_a_numpy_array():
+    out = pseudo_inverse([[2.0, 0.0], [0.0, 4.0]])
+    assert isinstance(out, np.ndarray), (
+        "the result must be a NumPy array: a list of the same numbers is another type"
+    )
