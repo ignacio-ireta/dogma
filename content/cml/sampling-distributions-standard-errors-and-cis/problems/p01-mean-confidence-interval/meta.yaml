@@ -1,5 +1,5 @@
 id: cml/sampling-distributions-standard-errors-and-cis/p01-mean-confidence-interval
-version: 3
+version: 4
 title: Mean confidence interval
 language: python
 runtime: py-data

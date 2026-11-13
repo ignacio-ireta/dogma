@@ -1,5 +1,5 @@
 id: dl/position-wise-feed-forward-block/p01-gelu-ffn
-version: 3                       # bump when tests, tolerances or the contract change
+version: 4                       # bump when tests, tolerances or the contract change
 title: Position-wise GELU feed-forward block
 language: python                 # python | sql
 runtime: py-torch                # py-stdlib | py-numpy | py-data | sql-duckdb | py-torch

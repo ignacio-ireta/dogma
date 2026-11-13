@@ -1,5 +1,5 @@
 id: cml/bayes-theorem/p01-bayes-posterior
-version: 5
+version: 6
 title: Posterior from observations
 language: python
 runtime: py-numpy

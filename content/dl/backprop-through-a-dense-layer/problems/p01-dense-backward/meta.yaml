@@ -1,5 +1,5 @@
 id: dl/backprop-through-a-dense-layer/p01-dense-backward
-version: 3
+version: 4
 title: Dense layer vector-Jacobian product
 language: python
 runtime: py-numpy

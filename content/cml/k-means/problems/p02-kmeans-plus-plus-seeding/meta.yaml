@@ -1,5 +1,5 @@
 id: cml/k-means/p02-kmeans-plus-plus-seeding
-version: 4
+version: 5
 title: k-means++ seeding
 language: python
 runtime: py-numpy

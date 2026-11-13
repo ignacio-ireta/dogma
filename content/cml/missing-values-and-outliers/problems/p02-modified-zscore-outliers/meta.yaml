@@ -1,5 +1,5 @@
 id: cml/missing-values-and-outliers/p02-modified-zscore-outliers
-version: 5
+version: 6
 title: Modified z-score outliers
 language: python
 runtime: py-numpy

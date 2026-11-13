@@ -1,4 +1,4 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
@@ -54,9 +54,12 @@ reject:
   clause: '`seed`: a non-negative integer. It is the only argument of the random generator.'
   killed_by: test_seed_zero_on_four_points_gives_the_protocol_centres
   visible: public
-uncovered:
-- clause: 'Returns: a `float64` array of shape `(k, d)`. Each row is a row of `X`, copied.'
-  reason: wrong solution survives, see notes
+- file: reject_returns_a_list_for_the_array.py
+  mistake: returns a nested list of the right numbers where a NumPy array is promised
+  clause: 'Returns: a `float64` array of shape `(k, d)`. Each row is a row of `X`, copied.'
+  killed_by: test_centres_come_back_as_a_numpy_array
+  visible: hidden
+uncovered: []
 sweeps:
 - reject
 - mutants

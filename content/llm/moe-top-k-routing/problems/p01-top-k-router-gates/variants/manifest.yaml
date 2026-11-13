@@ -1,4 +1,4 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
@@ -64,6 +64,13 @@ reject:
     Ties in logit go to the **lower expert index**. Selection uses the logits, not the probabilities,
     so the order stays exact even where a probability underflows to zero.'
   killed_by: test_tie_for_first_place_in_a_wide_router_keeps_lowest_index
+  visible: hidden
+- file: reject_result_detached_from_the_graph.py
+  mistake: returns the right values cut off from the autograd graph, so no gradient reaches the inputs
+  clause: 'Differentiable: `gate_weights` stays on the autograd graph. When `logits` has `requires_grad=True`,
+    backpropagating through the gates gives the gradient of the formula above. Do not detach, and do not
+    leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on the way.'
+  killed_by: test_gradients_flow_back_through_the_result
   visible: hidden
 uncovered: []
 sweeps:

@@ -317,13 +317,34 @@ Follow these steps in order. The reasons and examples are in the
 4. **Inputs,** in this order: hand-built edge cases; a property or seeded loop over the stated
    domain; realistic data (§6.6); scale only when Constraints promise a complexity. Choose inputs
    for which a wrong step changes the result: a test of "does not mutate" needs an input the
-   wrong code would actually alter.
+   wrong code would actually alter. Three rules for that test:
+   - A NumPy argument is passed read-only (`array.setflags(write=False)`). Any write then fails,
+     whatever the values, so the test does not depend on guessing which change a learner makes.
+   - Any other argument (a list, a dict, a tensor, a frame) is compared with a literal or a deep
+     copy after **one** call, and holds values the usual changes would move: not sorted, not all
+     positive, not a palindrome, not whole numbers only.
+   - The input is built inside the test. A dict or list shared at module level may already carry
+     another test's damage, and then the check passes for the wrong reason.
+
+   Give every valid form the Contract names at least once to a call that succeeds: a list where
+   it says array-like, a frame whose index is not 0 to n-1, an integer array where it says
+   integers are allowed. `scripts/exercise_probe.py report` lists the forms no test gives.
 5. **Messages.** The first line names the rule that was broken and holds no hidden value. Order
    the file from the most basic behaviour to the most exotic.
 6. **Public and hidden.** Hidden tests repeat every family the public tests show, with other
    values.
 7. **Proof** (§6.8). No test without a wrong solution it fails. No wrong solution without a
    Contract clause.
+
+Two rules for what a function returns:
+
+- Where the Contract names a type (a NumPy array, an `int`, one `float`, the caller's own tensor
+  objects), a hidden test checks the type, because a comparison of values accepts a list for an
+  array, `12.0` for `12` and a one-element array for a float.
+- A PyTorch function that is a loss or sits in a forward pass says so in its Contract
+  ("Differentiable: ..."), and a hidden test backpropagates through the result and compares the
+  gradients with a library oracle. The values alone cannot tell a result that was detached, or
+  computed in NumPy, from a correct one.
 
 ### 6.8 Variants: proof that the tests work
 
@@ -337,8 +358,9 @@ Follow these steps in order. The reasons and examples are in the
 | `uncovered` | none | Name a Contract bullet that has no reject, with the reason |
 
 `manifest.yaml` is written only by `scripts/exercise_gate.py` (`add-accept`, `add-reject`,
-`add-uncovered`, `remove-variant`, `adopt-blind`, `add-test`, `mark-swept`), from what the grader
-showed. Never edit it by hand. A new hidden test enters through `add-test`: it appends the test,
+`add-uncovered`, `prune-uncovered`, `remove-variant`, `adopt-blind`, `add-test`, `mark-swept`),
+from what the grader showed. Never edit it by hand. `prune-uncovered` drops an `uncovered` entry
+once a reject quotes the same clause. A new hidden test enters through `add-test`: it appends the test,
 bumps the version, runs `gate` and records the wrong solution the test catches, or restores every
 file. A variant is evidence, not reference code: when one is installed, style findings are marked
 in the file with `noqa`, while syntax errors and undefined names refuse it. Static rules, checked
@@ -363,6 +385,26 @@ and keep the edit only on `GATE: PASS`. Modes: `add` for new tests (no line remo
 messages, ids and Hypothesis reporting flags, `refactor` for any other edit that must not change
 an outcome, `none` when the tests did not change. A failing accept is never fixed by editing the
 test: report it.
+
+`problem.md` is frozen for the gate. When a new test needs a new Contract sentence, write the
+sentence first, then pass the gate a snapshot of the tree as its base
+(`--base "$(git stash create)"`: a commit object, no branch or stash entry is touched). Add the
+sentence as a new bullet at the end of the Contract: editing an existing bullet breaks every
+manifest entry that quotes it. The version rises by one per test-strength program, counted from
+that program's tag (`START_TAGS` in the tool).
+
+**Probes.** Hand-written wrong solutions cover the mistakes somebody thought of.
+`scripts/exercise_probe.py` asks three questions of every Python problem by machine, each with
+the reference inside a wrapper, so that the only thing wrong is the one thing the probe names:
+
+| Command | Question | A survivor means |
+|---|---|---|
+| `record` | What was each argument given, and what came back? | (nothing is graded: `report` lists the classes of input no passing call was given) |
+| `scribble` | Is an argument changed in place noticed (sorted, centred, rescaled, a nested cell written)? | No test sees that change. `report` separates changes that would show on an input the tests already use from those that never show |
+| `returns` | Is the right value in a laxer form noticed (a list for an array, a float for an int, a one-element array for a float, a detached tensor)? | No test checks that part of the Returns bullet |
+
+A survivor is a candidate. The Contract decides: no sentence, no test. `write` saves one probe as
+a file for `add-test --wrong`, so the wrong solution that proves a new test is the probe itself.
 
 ## 7. Verification and the learner's loop (`dogma`)
 

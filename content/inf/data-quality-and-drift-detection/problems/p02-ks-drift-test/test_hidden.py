@@ -372,3 +372,24 @@ def test_p_value_stays_accurate_for_a_tiny_statistic():
         "for a tiny statistic from nearly identical samples the p-value must still follow "
         "the limiting distribution: the formula is wrong for very small lambda",
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    reference = np.array([3.0, 1.0, 4.0, 1.0, 5.0, 9.0])
+    current = np.array([2.0, 6.0, 5.0, 3.0])
+    for array in (reference, current):
+        array.setflags(write=False)
+    try:
+        ks_drift(reference, current)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

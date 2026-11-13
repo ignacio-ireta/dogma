@@ -1,5 +1,5 @@
 id: cml/bernoulli-binomial-and-poisson/p02-poisson-pmf
-version: 4
+version: 5
 title: Poisson probability mass function
 language: python
 runtime: py-numpy

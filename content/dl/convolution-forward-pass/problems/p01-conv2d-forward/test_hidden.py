@@ -368,3 +368,44 @@ def test_weight_wider_than_x_raises_value_error():
     x = torch.ones(1, 1, 4, 4, dtype=torch.float32)
     w = torch.ones(1, 1, 2, 2, dtype=torch.float64)
     _must_reject_conv(x, w, case="a weight wider than x (the weight must have x's dtype)")
+
+
+def test_a_bias_with_negative_entries_is_not_modified():
+    x = torch.tensor([[[[1.0, -2.0], [0.5, 3.0]]]], dtype=torch.float64)
+    w = torch.tensor([[[[0.5]]], [[[-1.5]]]], dtype=torch.float64)
+    b = torch.tensor([-0.75, 0.25], dtype=torch.float64)
+    conv2d_forward(x, w, b, 1, 0)
+    if not torch.equal(b, torch.tensor([-0.75, 0.25], dtype=torch.float64)):
+        pytest.fail("the bias was modified in place: write into new tensors only")
+
+
+def test_gradients_flow_back_through_the_result():
+    gen = torch.Generator().manual_seed(66)
+    x = _real_values(gen, [1, 2, 3, 3], torch.float64).requires_grad_()
+    w = _real_values(gen, [2, 2, 2, 2], torch.float64).requires_grad_()
+    b = _real_values(gen, [2], torch.float64).requires_grad_()
+    mix = _real_values(gen, [1, 2, 4, 4], torch.float64)
+    inputs = (x, w, b)
+    try:
+        out = conv2d_forward(x, w, b, 1, 1)
+    except Exception:
+        pytest.fail(
+            "a valid call failed on tensors that require gradients: stay in PyTorch, with no "
+            "NumPy or Python-number round trip",
+            pytrace=False,
+        )
+    assert out.requires_grad, (
+        "the result is cut off from the autograd graph: keep every step a torch operation, "
+        "with no detach, no_grad, item or NumPy on the way"
+    )
+    got = torch.autograd.grad((out * mix).sum(), inputs, allow_unused=True)
+    want = torch.autograd.grad(
+        (F.conv2d(x, w, b, stride=1, padding=1) * mix).sum(), inputs, allow_unused=True
+    )
+    for g, w in zip(got, want, strict=True):
+        expected = torch.zeros((), dtype=torch.float64) if w is None else w
+        have = torch.zeros_like(expected) if g is None else g
+        assert torch.allclose(have, expected, rtol=1e-7, atol=1e-9), (
+            "a gradient through the result is wrong or missing: an input or a statistic was "
+            "taken out of the autograd graph"
+        )

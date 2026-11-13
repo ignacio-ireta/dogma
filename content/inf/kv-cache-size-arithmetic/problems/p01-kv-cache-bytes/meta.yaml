@@ -1,5 +1,5 @@
 id: inf/kv-cache-size-arithmetic/p01-kv-cache-bytes
-version: 2                      # bump when tests, tolerances or the contract change
+version: 3                      # bump when tests, tolerances or the contract change
 title: KV-cache bytes from a config
 language: python
 runtime: py-stdlib

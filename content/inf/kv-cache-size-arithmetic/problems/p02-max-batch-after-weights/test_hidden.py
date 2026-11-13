@@ -339,3 +339,21 @@ def test_dtype_names_are_case_sensitive_and_upper_case_raises() -> None:
         lambda: max_batch_size(cfg, 8, "FP16", 0, 10**6),
         "an upper-case dtype name is not one of the four names and must raise ValueError",
     )
+
+
+def test_config_built_inside_the_test_is_not_mutated() -> None:
+    cfg = {"num_layers": 32, "num_kv_heads": 8, "head_dim": 128, "sliding_window": 4096}
+    max_batch_size(cfg, 9000, "bf16", 1, 10**12)
+    if cfg != {"num_layers": 32, "num_kv_heads": 8, "head_dim": 128, "sliding_window": 4096}:
+        pytest.fail("the config dict was changed: read the keys without writing to the input")
+
+
+def test_zero_layers_kv_heads_or_head_dim_raises_value_error() -> None:
+    for key in ("num_layers", "num_kv_heads", "head_dim"):
+        cfg = {"num_layers": 2, "num_kv_heads": 4, "head_dim": 8}
+        cfg[key] = 0
+        _expect_error(
+            ValueError,
+            lambda cfg=cfg: max_batch_size(cfg, 16, "fp16", 0, 10**9),
+            "a required config value of zero must raise ValueError: each one is at least 1",
+        )

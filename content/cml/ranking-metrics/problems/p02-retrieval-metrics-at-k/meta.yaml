@@ -1,5 +1,5 @@
 id: cml/ranking-metrics/p02-retrieval-metrics-at-k
-version: 2                      # bump when tests, tolerances or the contract change
+version: 3                      # bump when tests, tolerances or the contract change
 title: Precision, recall, reciprocal rank and AP at k
 language: python
 runtime: py-numpy

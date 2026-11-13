@@ -26,6 +26,10 @@ width, $n$ indexes examples, $c$ input channels, $o$ output channels, and $(u,v)
   is not an integer `>= 1`; `padding` is not an integer `>= 0`; or the kernel does not fit in the padded
   input, so that $H_{\text{out}}$ or $W_{\text{out}}$ would be below 1.
 - Must not mutate `x`, `weight` or `bias`.
+- Differentiable: the result stays on the autograd graph. When an input has
+  `requires_grad=True`, backpropagating through the result gives the gradient of the formula
+  above. Do not detach, and do not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on
+  the way.
 
 ## Examples
 
@@ -75,6 +79,9 @@ every output channel sums all input channels with its own filter; the bias added
 channel; the batch examples computed independently; a float32 dtype check; the input and kernel left
 unchanged; and every `ValueError` rule. When an output matches a known wrong variant, the failure names
 that mistake.
+
+The hidden tests also backpropagate through the result and compare the gradients with PyTorch's
+own.
 
 The hidden tests draw their bulk inputs from the real datasets `breast_cancer` and `digits` (see
 `docs/DATASETS.md`).

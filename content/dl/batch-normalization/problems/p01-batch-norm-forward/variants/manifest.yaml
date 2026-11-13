@@ -1,4 +1,4 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
@@ -53,6 +53,23 @@ reject:
   clause: Must not mutate inputs. PyTorch's own batch norm updates running buffers in place. Your function
     must return new tensors instead.
   killed_by: test_training_output_matches_reference_on_random_batches
+  visible: hidden
+- file: reject_result_detached_from_the_graph.py
+  mistake: returns the right values cut off from the autograd graph, so no gradient reaches the inputs
+  clause: 'Differentiable: `y` stays on the autograd graph. When `x`, `gamma` or `beta` has `requires_grad=True`,
+    backpropagating through `y` gives the gradient of the formula above, which in training mode runs through
+    the batch statistics. Do not detach, and do not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`)
+    on the way.'
+  killed_by: test_gradients_flow_back_through_the_result
+  visible: hidden
+- file: reject_statistics_taken_out_of_the_graph.py
+  mistake: computes the normalising statistics outside the autograd graph, so the values are right and
+    the gradients are wrong
+  clause: 'Differentiable: `y` stays on the autograd graph. When `x`, `gamma` or `beta` has `requires_grad=True`,
+    backpropagating through `y` gives the gradient of the formula above, which in training mode runs through
+    the batch statistics. Do not detach, and do not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`)
+    on the way.'
+  killed_by: test_gradients_flow_back_through_the_result
   visible: hidden
 uncovered:
 - clause: '`training`: `bool`.'

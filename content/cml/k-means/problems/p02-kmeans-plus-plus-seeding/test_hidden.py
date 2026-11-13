@@ -296,3 +296,10 @@ def test_three_dimensional_input_raises_value_error():
     _expect_value_error(
         "a sample array with more than two dimensions must be rejected", np.ones((3, 2, 2)), 1, 0
     )
+
+
+def test_centres_come_back_as_a_numpy_array():
+    out = kmeans_plus_plus([[0.0], [1.0], [3.0], [7.0]], 2, seed=0)
+    assert isinstance(out, np.ndarray), (
+        "the result must be a NumPy array: a list of the same numbers is another type"
+    )

@@ -271,3 +271,24 @@ def test_unsigned_integer_actions_are_valid():
     # action 1 gets 6.0, each mean is the single reward.
     got = _call(np.array([0, 1], dtype=np.uint8), np.array([2.0, 6.0]), 2)
     _close(got, [2.0, 6.0], atol=ATOL, err_msg="unsigned integer action indices must be accepted")
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    actions = np.array([0, 1, 1])
+    rewards = np.array([1.0, -2.0, 3.0])
+    for array in (actions, rewards):
+        array.setflags(write=False)
+    try:
+        action_value_estimates(actions, rewards, 2, 0.3, 1.0)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

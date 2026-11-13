@@ -275,3 +275,23 @@ def test_float_array_whose_sum_is_not_exactly_one_is_left_unchanged():
         "valid inputs must not raise: sample_discrete raised",
     )
     np.testing.assert_array_equal(probs, before, err_msg="probs was modified: work on a copy")
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    probs = np.array([0.2, 0.3, 0.5])
+    for array in (probs,):
+        array.setflags(write=False)
+    try:
+        sample_discrete(probs, 10, np.random.default_rng(0))
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

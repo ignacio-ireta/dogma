@@ -1,5 +1,5 @@
 id: cml/sigmoid-and-log-odds/p01-stable-sigmoid
-version: 3
+version: 4
 title: Stable sigmoid
 language: python
 runtime: py-numpy

@@ -472,3 +472,24 @@ def test_init_means_with_wrong_column_count_raise_value_error():
         lambda: gmm_em(X, 2, [[0.0], [2.0]], 0, 1e-3),
         "init_means must have one column per feature: a wrong column count must raise ValueError",
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    X = np.array([[0.0, 0.1], [0.2, -0.1], [-0.1, 0.0], [4.0, 4.1], [4.2, 3.9], [3.9, 4.0]])
+    init = np.array([[0.1, -0.2], [4.3, 3.8]])
+    for array in (X, init):
+        array.setflags(write=False)
+    try:
+        gmm_em(X, 2, init, 3, 1e-3)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

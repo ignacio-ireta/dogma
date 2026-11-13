@@ -297,3 +297,33 @@ def test_single_position_without_leading_axes_is_accepted():
         rtol=1e-9,
         msg="a single position with no leading axes must give the same values as a batch of one",
     )
+
+
+def test_gradients_flow_back_through_the_result():
+    gen = torch.Generator().manual_seed(68)
+    x = _real_values(gen, [2, 3]).requires_grad_()
+    w1, b1 = _real_values(gen, [4, 3]).requires_grad_(), _real_values(gen, [4]).requires_grad_()
+    w2, b2 = _real_values(gen, [3, 4]).requires_grad_(), _real_values(gen, [3]).requires_grad_()
+    mix = _real_values(gen, [2, 3])
+    inputs = (x, w1, b1, w2, b2)
+    try:
+        out = _learner(x, w1, b1, w2, b2)
+    except Exception:
+        pytest.fail(
+            "a valid call failed on tensors that require gradients: stay in PyTorch, with no "
+            "NumPy or Python-number round trip",
+            pytrace=False,
+        )
+    assert out.requires_grad, (
+        "the result is cut off from the autograd graph: keep every step a torch operation, "
+        "with no detach, no_grad, item or NumPy on the way"
+    )
+    got = torch.autograd.grad((out * mix).sum(), inputs, allow_unused=True)
+    want = torch.autograd.grad((_oracle(x, w1, b1, w2, b2) * mix).sum(), inputs, allow_unused=True)
+    for g, w in zip(got, want, strict=True):
+        expected = torch.zeros((), dtype=torch.float64) if w is None else w
+        have = torch.zeros_like(expected) if g is None else g
+        assert torch.allclose(have, expected, rtol=1e-7, atol=1e-9), (
+            "a gradient through the result is wrong or missing: an input or a statistic was "
+            "taken out of the autograd graph"
+        )

@@ -1,5 +1,5 @@
 id: cml/regression-metrics-and-robust-losses/p01-regression-report
-version: 4
+version: 5
 title: Regression report
 language: python
 runtime: py-numpy

@@ -24,6 +24,8 @@ Reaching `max_iter` without meeting `tol` is not an error. Return the current st
 - `tol`: finite real number, zero or positive.
 - Raises: `ValueError` for any violation of the rules above.
 - Must not mutate inputs.
+- Returns: `(centroids, labels, inertia, n_iter)` as described above. `inertia` is one Python
+  `float`, not an array that holds one number.
 
 ## Examples
 

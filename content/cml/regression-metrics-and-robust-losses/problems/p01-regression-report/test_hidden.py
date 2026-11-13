@@ -339,3 +339,24 @@ def test_repeated_target_values_all_count_toward_the_mean():
         rtol=1e-12,
         err_msg="rows whose target value repeats were dropped before scoring: every row counts",
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    y_true = np.array([3.0, -0.5, 2.0, 7.0])
+    y_pred = np.array([2.5, 0.0, 2.0, 8.0])
+    for array in (y_true, y_pred):
+        array.setflags(write=False)
+    try:
+        regression_report(y_true, y_pred)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

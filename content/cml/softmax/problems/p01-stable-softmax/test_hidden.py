@@ -272,3 +272,23 @@ def test_cold_temperature_splits_mass_uniformly_between_tied_maxima():
         atol=1e-12,
         err_msg="cold temperature must preserve a uniform split across tied maximum logits",
     )
+
+
+def test_list_inputs_give_the_same_result_as_arrays():
+    logits = np.array([[1.0, 2.0, 3.0], [0.5, -1.0, 0.25]])
+    try:
+        from_lists = softmax(logits.tolist())
+    except Exception:
+        pytest.fail(
+            "a valid call with Python lists failed: the inputs are array-like, so convert them "
+            "with np.asarray before using array methods",
+            pytrace=False,
+        )
+    from_arrays = softmax(logits)
+    np.testing.assert_allclose(
+        from_lists,
+        from_arrays,
+        rtol=1e-9,
+        atol=1e-12,
+        err_msg="lists and arrays of the same numbers gave different results",
+    )

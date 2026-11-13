@@ -1,4 +1,4 @@
-problem_version: 6
+problem_version: 7
 accept:
 - file: accept_blind.py
   origin: blind
@@ -85,6 +85,13 @@ reject:
   mistake: treats an empty string as a missing value instead of a category
   clause: '`categorical`: list of column names with string values. Missing values are NaN.'
   killed_by: test_empty_string_is_an_ordinary_category_not_a_missing_value
+  visible: hidden
+- file: reject_assumes_a_default_index.py
+  mistake: builds a column from bare values and lets pandas align it, which is right only when the index
+    runs from 0 to n-1
+  clause: '`train`, `test`: pandas DataFrames. Every column named in `numeric` or `categorical` must be
+    present in both frames.'
+  killed_by: test_frames_with_a_shuffled_index_give_the_same_arrays
   visible: hidden
 uncovered: []
 sweeps:

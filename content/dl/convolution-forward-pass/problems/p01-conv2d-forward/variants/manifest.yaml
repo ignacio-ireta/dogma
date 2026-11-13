@@ -1,4 +1,4 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
@@ -51,9 +51,19 @@ reject:
     not fit in the padded input, so that $H_{\text{out}}$ or $W_{\text{out}}$ would be below 1.'
   killed_by: test_kernel_is_not_flipped
   visible: public
-uncovered:
-- clause: Must not mutate `x`, `weight` or `bias`.
-  reason: cap of eight wrong solutions per problem
+- file: reject_takes_abs_of_bias_in_place.py
+  mistake: returns the right result and replaces the caller's bias by its absolute values in place
+  clause: Must not mutate `x`, `weight` or `bias`.
+  killed_by: test_a_bias_with_negative_entries_is_not_modified
+  visible: hidden
+- file: reject_result_detached_from_the_graph.py
+  mistake: returns the right values cut off from the autograd graph, so no gradient reaches the inputs
+  clause: 'Differentiable: the result stays on the autograd graph. When an input has `requires_grad=True`,
+    backpropagating through the result gives the gradient of the formula above. Do not detach, and do
+    not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on the way.'
+  killed_by: test_gradients_flow_back_through_the_result
+  visible: hidden
+uncovered: []
 sweeps:
 - reject
 - mutants

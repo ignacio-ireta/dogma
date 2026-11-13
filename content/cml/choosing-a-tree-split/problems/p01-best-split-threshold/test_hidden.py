@@ -349,3 +349,24 @@ def test_distinct_scalar_label_types_are_not_coerced_to_one_class():
     assert decrease == pytest.approx(1.0 / 6.0, abs=1e-12), (
         "class-label coercion must not merge unequal numeric and string labels"
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    x = np.array([2.0, -1.0, 0.5, 3.0])
+    y = np.array([1, 0, 0, 1])
+    for array in (x, y):
+        array.setflags(write=False)
+    try:
+        best_split(x, y, criterion="entropy")
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

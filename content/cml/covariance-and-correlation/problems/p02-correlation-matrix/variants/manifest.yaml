@@ -1,4 +1,4 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
@@ -48,6 +48,11 @@ reject:
   mistake: rescales the caller array in place
   clause: Must not mutate its input.
   killed_by: test_inputs_are_not_mutated
+  visible: hidden
+- file: reject_sorts_x_in_place.py
+  mistake: returns the right result and sorts the caller's X in place
+  clause: Must not mutate its input.
+  killed_by: test_read_only_input_arrays_are_accepted_and_left_alone
   visible: hidden
 uncovered: []
 sweeps:

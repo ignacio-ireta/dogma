@@ -690,3 +690,82 @@ None.
 - `safe/split-conformal-prediction/p01-split-conformal-intervals`: reject_integer_inputs_refused.py: test_threshold_is_the_eighth_smallest_residual_at_alpha_point_two shows kind=bare_exception
 - `sql/pandas-merge-and-reshape/p01-monthly-revenue-by-region`: reject_datetime_only_dates.py: test_worked_example_matches_the_table_in_problem_md shows kind=bare_exception
 - `sql/sql-conditional-aggregation/p01-channel-conversion-and-device-revenue`: probe output pairs a FAILED test name with a message from a different check, for example reject_null_revenue_rows_dropped reports test_rate_is_a_fraction_not_a_percentage with a sessions message; the verdict and killed_by lines were unaffected
+
+## 2026-11-11 · Second pass with machine probes (I-34)
+
+Scope: all 225 Python problems whose entry is a function (the 20 SQL problems and the 6 class
+entries have no single call to wrap). The method and the runbook are in
+`docs/superpowers/plans/2026-11-11-test-strength-2.md`, the numbers in
+`docs/audits/2026-11-11-test-strength-2.md`. 84 problems gained 93 hidden tests, each through
+`add-test`, and 96 wrong solutions were recorded.
+
+### Decided in this pass, for the owner to confirm or undo
+
+Each of these adds a sentence to a statement. I-32 left this kind of change to the owner. The
+owner then asked for the tests to be strengthened and for the plan to be improved where needed,
+so the sentences were written. Every one states what the reference already did, and every blind
+accept passes the test that came with it.
+
+- **"Differentiable" in 15 PyTorch statements.** 28 PyTorch problems never gave the function a
+  tensor that requires gradients, so a solution that leaves the autograd graph (`detach`,
+  `.numpy()`, `no_grad`) passed every test. I-32 had recorded one case as unpromised
+  (`dl/scaled-dot-product-attention/p01`). The 15 are the losses and the functions that sit in
+  a forward pass: layer norm, RMSNorm, batch norm forward, conv2d forward, InfoNCE, masked NLL,
+  scaled dot-product attention, multi-head attention, both feed-forward blocks, the transformer
+  block, the GPT forward pass, grouped-query attention, the MoE router gates and half-split
+  RoPE. Each got a last Contract bullet and one test that compares gradients with a library
+  oracle. Left without the sentence on purpose: the four optimiser steps, batch norm backward,
+  both position tables, RoPE interpolation, the sampling filter, the cached decoding step,
+  pairwise distances and patchify.
+- **The minimum of the KV-cache config keys** (`inf/kv-cache-size-arithmetic`, both problems):
+  "each at least 1" is now written, which closes the first item under "Waiting for the owner" of
+  the mutant triage. Two tests for a zero value; the surviving mutants that lowered a minimum to
+  0 are now rejected.
+- **`cml/k-means/p01`:** the Returns sentence was above the Contract list, where no test could
+  cite it. A last bullet now repeats it, and a test checks that `inertia` is a float.
+- **A read-only NumPy array is valid input.** 42 new not-mutated tests pass their arrays with
+  `setflags(write=False)`. A solution that writes to its input and restores it afterwards now
+  fails. That reading of "must not mutate" is stricter than comparing before and after.
+- **Stale `uncovered` entries are gone.** `prune-uncovered` dropped 12, among them the four that
+  I-32 listed (adamw p01 C1 and C3, prefill p01 C2, k-means p02 C5).
+
+### Left out on purpose
+
+- A list returned where the statement writes `(a, b)` survives in 30 problems, an `int` where a
+  whole-valued float is promised in 21, a tuple where a list is promised in 3. A caller that
+  unpacks or compares cannot tell, so no test was added. The 30 are listed in the report.
+- In-place changes that never show on any tested input of that argument (269 probes): the
+  absolute value of a probability, a float-only change on integer labels, and so on. They are
+  listed in the report by problem.
+
+### Still waiting for the owner, unchanged from I-32
+
+- The 102 `message-defect` rows: a wrong solution that sees a bare exception or a bare assert.
+- The id rule (A2) against the numbered ids of 35 problems.
+- `dl/kl-divergence/p01`: the blind accept and the reference disagree on an underflowed
+  probability.
+- `llm/temperature-top-k-and-top-p-sampling/p02`: the statement does not fix how the uniform
+  value is drawn.
+- `cml/a-b-test-design-and-analysis/p01` (an effect within float noise of zero),
+  `cml/handling-class-imbalance/p01` (a bare scalar), `sql/pandas-groupby-aggregate-and-transform/p01`
+  (an unreadable date), `cml/t-tests-and-anova/p01` (one sample that varies by one unit in the
+  last place).
+- Non-tensor arguments in five PyTorch problems, and defaults that live only in a signature.
+
+The ledger rows of this pass follow.
+
+### unpromised
+- `cml/descriptive-statistics/p01-welford-mean-variance`: probe xs:sort: a list input sorted in place survives, the statement has no sentence about leaving xs unchanged, no test added
+- `cml/preprocessing-pipelines/p01-numeric-categorical-pipeline`: probes numeric:sort and categorical:sort: the caller's lists of column names sorted in place survive, bullet C7 names train and test only, no test added
+
+### no-witness
+- `inf/speculative-decoding-speedup-math/p02-accept-or-resample`: valid list input for p and q is given to raising calls only, the needs_array probe is already rejected by those tests, so add-test has no wrong solution that passes the old tests, no test added
+- `safe/split-conformal-prediction/p02-conformal-prediction-sets`: valid list input for cal_probs and test_probs is given to raising calls only, the needs_array probe is already rejected by those tests, no test added
+
+### inspect
+- `dl/a-complete-training-loop/p01-fit-with-seeded-batches`: probes y:sort and y_val:sort survive: y is a column, so sorting along the last axis shows in one recorded call only, no test added
+- `cml/bernoulli-binomial-and-poisson/p01-binomial-pmf`: probes k:centre and k:scale still survive: they act on a float k and the new read-only test passes an integer k
+- `cml/ranking-metrics/p02-retrieval-metrics-at-k`: probe relevant_ids:reverse still survives: the list in the new test reads the same in both directions
+- `llm/llm-as-judge-and-agreement-with-humans/p02-debiased-win-rate`: probe judgments:inner still survives: a write into a pair given as a list is not seen, the new test passes tuples
+- `sql/pandas-merge-and-reshape/p01-monthly-revenue-by-region`: probe customers:strings still survives: stripping and lower-casing the region text in place shows in one recorded call
+

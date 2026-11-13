@@ -1,5 +1,5 @@
 id: cml/nearest-neighbour-search-and-knn/p02-knn-regress
-version: 4
+version: 5
 title: K-nearest-neighbour regressor
 language: python
 runtime: py-numpy

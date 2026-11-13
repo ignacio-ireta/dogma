@@ -455,3 +455,25 @@ def test_huge_finite_entries_are_accepted_and_ignored_column_has_no_drop():
     assert mean_drop[2] == 0.0 and std_drop[2] == 0.0, (
         "a feature the model ignores must have exactly zero mean drop and zero spread"
     )
+
+
+def test_list_inputs_give_the_same_result_as_arrays():
+    X, y = _problem(7, n=12, d=3)
+    kw = {"n_repeats": 3, "seed": 0}
+    try:
+        from_lists = permutation_importance(_predict, X.tolist(), y.tolist(), _accuracy, **kw)
+    except Exception:
+        pytest.fail(
+            "a valid call with Python lists failed: the inputs are array-like, so convert them "
+            "with np.asarray before using array methods",
+            pytrace=False,
+        )
+    from_arrays = permutation_importance(_predict, X, y, _accuracy, **kw)
+    for got, want in zip(from_lists, from_arrays, strict=True):
+        np.testing.assert_allclose(
+            got,
+            want,
+            rtol=1e-9,
+            atol=1e-12,
+            err_msg="lists and arrays of the same numbers gave different results",
+        )

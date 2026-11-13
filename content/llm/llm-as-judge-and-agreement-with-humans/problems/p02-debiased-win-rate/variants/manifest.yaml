@@ -1,4 +1,4 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
@@ -45,6 +45,11 @@ reject:
   mistake: sorts the caller judgment list in place
   clause: Must not mutate the input.
   killed_by: test_tuples_and_lists_are_both_accepted
+  visible: hidden
+- file: reject_sorts_judgments_in_place.py
+  mistake: returns the right result and sorts the caller's judgments in place
+  clause: Must not mutate the input.
+  killed_by: test_an_unsorted_judgment_list_keeps_its_order
   visible: hidden
 uncovered: []
 sweeps:

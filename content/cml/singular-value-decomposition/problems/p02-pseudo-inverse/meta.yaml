@@ -1,5 +1,5 @@
 id: cml/singular-value-decomposition/p02-pseudo-inverse
-version: 4
+version: 5
 title: "Pseudo-inverse"
 language: python
 runtime: py-numpy

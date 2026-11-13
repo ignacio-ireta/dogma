@@ -1,5 +1,5 @@
 id: inf/data-quality-and-drift-detection/p01-population-stability-index
-version: 3
+version: 4
 title: Population stability index
 language: python
 runtime: py-numpy

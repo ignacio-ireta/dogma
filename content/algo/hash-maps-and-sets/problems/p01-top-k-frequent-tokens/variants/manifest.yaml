@@ -1,4 +1,4 @@
-problem_version: 1
+problem_version: 2
 accept:
 - file: accept_blind.py
   origin: blind
@@ -42,6 +42,11 @@ reject:
   clause: '`tokens`: a list of `str`, possibly empty. Tokens are compared exactly: case-sensitive, with
     no stripping or normalisation. The empty string `""` is an ordinary token.'
   killed_by: test_matches_counter_oracle_on_random_token_lists
+  visible: hidden
+- file: reject_reverses_tokens_in_place.py
+  mistake: returns the right result and reverses the caller's tokens in place
+  clause: Must not mutate `tokens`.
+  killed_by: test_an_unsorted_token_list_with_repeats_keeps_its_order
   visible: hidden
 uncovered: []
 sweeps:

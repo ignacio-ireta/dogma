@@ -47,9 +47,6 @@ reject:
   killed_by: test_fresh_config_gains_no_key_after_a_call
   visible: hidden
 uncovered:
-- clause: '`config`: `dict` with the Python `int` keys `num_layers`, `num_kv_heads` and `head_dim`, each
-    at least 1. Other keys, including `sliding_window`, are ignored. Must not be mutated.'
-  reason: wrong solution survives, see notes
 - clause: Raises `TypeError` when a value is not a Python `int` (`bool`, `float`, `str` and `None` are
     rejected) or `config` is not a `dict`. Raises `ValueError` when a value is below its minimum or a
     required key is missing.

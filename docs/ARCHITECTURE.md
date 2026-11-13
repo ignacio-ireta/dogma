@@ -265,6 +265,10 @@ GradeReport
 - **Variants** (`problems/<p>/variants/`): solutions the tests must accept and wrong solutions
   they must reject, each tied to a Contract clause. `scripts/exercise_gate.py` writes the
   manifest, checks every test edit and replays all variants in `make test-all` (ADR-0022).
+- **Probes** (`scripts/exercise_probe.py`): the reference inside a wrapper that changes an
+  argument in place, or returns the right value in a laxer form, graded on the learner's path.
+  A probe that passes every test points at a Contract sentence no test checks
+  (CONTENT_SPEC §6.8).
 
 **Feedback contract** (ported from MVS `selfcheck`): blank or unattempted → a gentle reminder,
 not a failure. Wrong → a precise message that names the *type* of error ("shape mismatch",
@@ -680,7 +684,7 @@ dogma/
 ├── content/     <track>/<topic>/…                          # the curriculum (committed)
 ├── sources/     manifest.yaml  manifest.lock.json  <id>/…  # imported seed material (committed, scrubbed)
 ├── templates/   topic + problem scaffolds for `content new`
-├── scripts/     grade.py (legacy loop)  import_sources.py  audit_privacy.py  check_commit_files.py  check_content_types.py  exercise_audit.py  exercise_gate.py
+├── scripts/     grade.py (legacy loop)  import_sources.py  audit_privacy.py  check_commit_files.py  check_content_types.py  exercise_audit.py  exercise_gate.py  exercise_probe.py
 ├── src/
 │   ├── dogma/
 │   │   ├── core/      config, errors (codes), fsio (atomic writes)

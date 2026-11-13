@@ -270,3 +270,23 @@ def test_single_observation_with_ddof_zero_is_a_zero_matrix():
         err_msg="one observation has no spread: with ddof 0 the divisor is 1, so C is zero, "
         "and only n <= ddof is an error",
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    X = np.array([[1.0, 2.0], [3.0, 5.0], [4.0, 4.0]])
+    for array in (X,):
+        array.setflags(write=False)
+    try:
+        covariance_matrix(X)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

@@ -1,5 +1,5 @@
 id: cml/rolling-statistics-stationarity-and-autocorrelation/p03-seasonal-naive-forecast-and-mase
-version: 3
+version: 4
 title: Seasonal naive forecast and MASE
 language: python
 runtime: py-numpy

@@ -1,4 +1,4 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
@@ -68,6 +68,19 @@ reject:
     not zero, so it creates no region row and no month column of its own. 4. The month of an order is
     its calendar month, written `"YYYY-MM"`.'
   killed_by: test_interview_prep_frames_match_the_pandas_merge_oracle
+  visible: hidden
+- file: reject_sorts_customers_in_place.py
+  mistake: returns the right result and sorts the caller's customers in place
+  clause: Must not mutate `orders` or `customers`.
+  killed_by: test_unsorted_customers_frame_keeps_its_row_order
+  visible: hidden
+- file: reject_assumes_a_default_index.py
+  mistake: builds a column from bare values and lets pandas align it, which is right only when the index
+    runs from 0 to n-1
+  clause: '`orders`: a `pandas.DataFrame` with columns `order_id`, `customer_id`, `order_date`, `amount`.
+    `order_date` is a `datetime64` column or ISO-8601 date strings such as `"2024-03-05"`. `amount` is
+    numeric, integers or floats, and may contain NaN.'
+  killed_by: test_frames_with_shuffled_indexes_give_the_same_table
   visible: hidden
 uncovered:
 - clause: '`customers`: a `pandas.DataFrame` with columns `customer_id` and `region` (strings). `customer_id`

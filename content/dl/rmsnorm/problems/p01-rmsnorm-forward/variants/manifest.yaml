@@ -1,4 +1,4 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
@@ -42,6 +42,21 @@ reject:
   mistake: divides a one-dimensional input in place
   clause: Must not mutate inputs.
   killed_by: test_matches_reference_over_random_leading_shapes
+  visible: hidden
+- file: reject_result_detached_from_the_graph.py
+  mistake: returns the right values cut off from the autograd graph, so no gradient reaches the inputs
+  clause: 'Differentiable: the result stays on the autograd graph. When an input has `requires_grad=True`,
+    backpropagating through the result gives the gradient of the formula above. Do not detach, and do
+    not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on the way.'
+  killed_by: test_gradients_flow_back_through_the_result
+  visible: hidden
+- file: reject_statistics_taken_out_of_the_graph.py
+  mistake: computes the normalising statistics outside the autograd graph, so the values are right and
+    the gradients are wrong
+  clause: 'Differentiable: the result stays on the autograd graph. When an input has `requires_grad=True`,
+    backpropagating through the result gives the gradient of the formula above. Do not detach, and do
+    not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on the way.'
+  killed_by: test_gradients_flow_back_through_the_result
   visible: hidden
 uncovered: []
 sweeps:

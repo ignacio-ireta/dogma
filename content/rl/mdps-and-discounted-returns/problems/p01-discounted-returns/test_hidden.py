@@ -179,3 +179,23 @@ def test_invalid_rewards_rejected():
     _rejects(np.array([1.0, float("nan")]), 0.9)
     _rejects(np.array([1.0, float("inf")]), 0.9)
     _rejects(np.array(["a", "b"]), 0.9)
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    rewards = np.array([1.0, 2.0, 3.0])
+    for array in (rewards,):
+        array.setflags(write=False)
+    try:
+        discounted_returns(rewards, 0.7)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

@@ -1,5 +1,5 @@
 id: llm/negative-log-likelihood-and-perplexity/p01-masked-nll-and-perplexity
-version: 3
+version: 4
 title: Masked mean NLL and perplexity from logits
 language: python
 runtime: py-torch

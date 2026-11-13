@@ -1,6 +1,6 @@
 # Problem metadata (CONTENT_SPEC §6.2).
 id: safe/split-conformal-prediction/p02-conformal-prediction-sets
-version: 5                      # bump when tests, tolerances or the contract change
+version: 6                      # bump when tests, tolerances or the contract change
 title: "Conformal prediction sets for classification"
 language: python
 runtime: py-numpy

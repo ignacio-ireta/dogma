@@ -1,4 +1,4 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
@@ -48,6 +48,13 @@ reject:
   mistake: centres V in place after use so the input changes for a nonzero mean
   clause: Must not mutate inputs.
   killed_by: test_matches_pytorch_reference_on_seeded_batches
+  visible: hidden
+- file: reject_result_detached_from_the_graph.py
+  mistake: returns the right values cut off from the autograd graph, so no gradient reaches the inputs
+  clause: 'Differentiable: the result stays on the autograd graph. When an input has `requires_grad=True`,
+    backpropagating through the result gives the gradient of the formula above. Do not detach, and do
+    not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on the way.'
+  killed_by: test_gradients_flow_back_through_the_result
   visible: hidden
 uncovered: []
 sweeps:

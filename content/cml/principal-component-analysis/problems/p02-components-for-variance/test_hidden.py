@@ -303,3 +303,23 @@ def test_integer_input_with_fractional_column_means_matches_float_count():
         "integer input must be centred by its exact means, so its count must match the float64 "
         "version of the same matrix",
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    X = np.array([[1.0, 2.0], [3.0, 5.0], [4.0, 4.0]])
+    for array in (X,):
+        array.setflags(write=False)
+    try:
+        components_for_variance(X, 0.5)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

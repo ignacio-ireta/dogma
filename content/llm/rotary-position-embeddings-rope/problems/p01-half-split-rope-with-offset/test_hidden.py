@@ -336,3 +336,36 @@ def test_empty_batch_returns_empty_tensors():
     assert k_rot.shape == q.shape, (
         "empty batch rule broken: a batch of zero rows must return keys of the same shape"
     )
+
+
+def test_gradients_flow_back_through_the_result():
+    gen = torch.Generator().manual_seed(75)
+    q = _real_values(gen, [1, 2, 3, 4]).requires_grad_()
+    k = _real_values(gen, [1, 2, 3, 4]).requires_grad_()
+    mix = _real_values(gen, [2, 1, 2, 3, 4])
+    inputs = (q, k)
+    try:
+        out = torch.stack(apply_rope_qk(q, k, 3))
+    except Exception:
+        pytest.fail(
+            "a valid call failed on tensors that require gradients: stay in PyTorch, with no "
+            "NumPy or Python-number round trip",
+            pytrace=False,
+        )
+    assert out.requires_grad, (
+        "the result is cut off from the autograd graph: keep every step a torch operation, "
+        "with no detach, no_grad, item or NumPy on the way"
+    )
+    got = torch.autograd.grad((out * mix).sum(), inputs, allow_unused=True)
+    want = torch.autograd.grad(
+        (torch.stack((_ref_half_split(q, 3), _ref_half_split(k, 3))) * mix).sum(),
+        inputs,
+        allow_unused=True,
+    )
+    for g, w in zip(got, want, strict=True):
+        expected = torch.zeros((), dtype=torch.float64) if w is None else w
+        have = torch.zeros_like(expected) if g is None else g
+        assert torch.allclose(have, expected, rtol=1e-7, atol=1e-9), (
+            "a gradient through the result is wrong or missing: an input or a statistic was "
+            "taken out of the autograd graph"
+        )

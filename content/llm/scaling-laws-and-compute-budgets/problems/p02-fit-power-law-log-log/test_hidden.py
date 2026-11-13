@@ -215,3 +215,24 @@ def test_returns_a_tuple_of_two_values_not_a_list():
     result = _call(np.array([1.0, 2.0, 3.0]), np.array([2.0, 3.0, 5.0]))
     assert isinstance(result, tuple), "the return value must be a tuple (a, b), not a list"
     assert len(result) == 2, "the tuple must hold exactly two values: a and b"
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    x = np.array([1.0, 2.0, 4.0])
+    y = np.array([2.0, 3.0, 5.0])
+    for array in (x, y):
+        array.setflags(write=False)
+    try:
+        _learner(x, y)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

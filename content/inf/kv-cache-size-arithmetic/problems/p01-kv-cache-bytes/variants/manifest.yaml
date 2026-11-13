@@ -1,4 +1,4 @@
-problem_version: 2
+problem_version: 3
 accept:
 - file: accept_blind.py
   origin: blind
@@ -46,6 +46,11 @@ reject:
   mistake: the window key is removed from config
   clause: Must not mutate `config`.
   killed_by: test_config_is_not_mutated
+  visible: hidden
+- file: reject_zero_head_dim_accepted.py
+  mistake: accepts a head_dim of zero, where the minimum of each required config key is 1
+  clause: '`num_layers`, `num_kv_heads` and `head_dim` are each at least 1.'
+  killed_by: test_zero_kv_heads_or_zero_head_dim_raises_value_error
   visible: hidden
 uncovered: []
 sweeps:

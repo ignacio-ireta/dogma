@@ -221,3 +221,24 @@ def test_draw_equal_to_drop_probability_is_kept():
 def test_entry_just_above_the_magnitude_limit_is_rejected():
     # Contract: entries have absolute value at most 1e6, so an entry of 1.5e6 must be rejected.
     rejects(lambda: dropout(np.array([[1.5e6, 1.0]]), np.ones((1, 2)), 0.5, True, 0))
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    X = np.array([[1.0, -2.0], [0.5, 3.0]])
+    G = np.array([[0.1, 0.2], [-0.3, 0.4]])
+    for array in (X, G):
+        array.setflags(write=False)
+    try:
+        dropout(X, G, 0.3, True, 7)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

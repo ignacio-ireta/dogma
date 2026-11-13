@@ -358,3 +358,30 @@ def test_customers_with_a_missing_region_are_left_as_given() -> None:
         "customers was changed in place: a missing region must stay missing in the input table; "
         "the 'unknown' label belongs in the result only"
     )
+
+
+def test_unsorted_customers_frame_keeps_its_row_order() -> None:
+    order_rows = [(1, 3, "2024-01-05", 10.0), (2, 1, "2024-02-06", 4.5), (3, 2, "2024-01-09", 2.0)]
+    orders, customers = _frames(order_rows, [(3, "South"), (1, "North"), (2, "East")])
+    before = customers.copy(deep=True)
+    _run(orders, customers)
+    assert customers.equals(before) and list(customers.index) == list(before.index), (
+        "customers was reordered or changed in place: sort or merge a copy, never the input frame"
+    )
+
+
+def test_frames_with_shuffled_indexes_give_the_same_table() -> None:
+    order_rows = [(1, 3, "2024-01-05", 10.0), (2, 1, "2024-02-06", 4.5), (3, 2, "2024-01-09", 2.0)]
+    customer_rows = [(3, "South"), (1, "North"), (2, "East")]
+    want, problem = _try(*_frames(order_rows, customer_rows))
+    orders, customers = _frames(order_rows, customer_rows)
+    orders.index = pd.Index([12, 5, 30])
+    customers.index = pd.Index([9, 2, 4])
+    got, moved_problem = _try(orders, customers)
+    assert problem is None and moved_problem is None, (
+        "valid frames crashed: their index is arbitrary, so never rely on labels 0 to n-1"
+    )
+    assert got.equals(want), (
+        "the table changes with the index labels of the inputs: assign by position, or reset "
+        "the index of a copy first"
+    )

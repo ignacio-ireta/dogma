@@ -1,5 +1,5 @@
 id: cml/feature-scaling/p02-robust-median-iqr-scaler
-version: 5
+version: 6
 title: Robust median and IQR scaler
 language: python
 runtime: py-numpy

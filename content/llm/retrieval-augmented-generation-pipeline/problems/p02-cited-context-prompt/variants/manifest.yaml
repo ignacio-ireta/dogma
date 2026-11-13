@@ -1,4 +1,4 @@
-problem_version: 5
+problem_version: 6
 accept:
 - file: accept_blind.py
   origin: blind
@@ -79,6 +79,28 @@ reject:
     or non-finite array, a wrong shape or length mismatch, a zero-norm query or chunk vector, a duplicate
     or empty chunk id, `k < 1`, or `word_budget < 0`. Must not mutate inputs.'
   killed_by: test_real_passages_print_exactly_and_cost_their_words_across_line_breaks
+  visible: hidden
+- file: reject_rounds_chunk_vectors_to_float32_in_place.py
+  mistake: returns the right result and rounds the caller's chunk_vectors to single precision in place
+  clause: 'All vector entries must be finite. Integer and float arrays are accepted; complex, boolean
+    and object arrays are not. **Score.** `s_i = (q . v_i) / (|q| * |v_i|)`, the cosine similarity. Round
+    each score to 9 decimal places before comparing, so that numerically equal scores are ties. **Ranking.**
+    Sort chunks by the key `(-s_i, chunk_id)`. Equal scores are broken by the chunk id in ascending string
+    order. Insertion order never decides a tie. **Candidates.** The first `min(k, m)` chunks in the ranking
+    are the candidates. `k` counts candidates, not selected chunks. **Packing.** Walk the candidates in
+    rank order. A chunk costs `len(text.split())` words. Add it if the running total plus its cost is
+    at most `word_budget`. Otherwise skip it and keep going, so a shorter lower-ranked candidate can still
+    fit. The budget counts chunk-text words only; ids, labels and the question are not counted. A chunk
+    text may hold line breaks or runs of spaces: it is printed unchanged, and its cost is the number of
+    words `str.split()` finds (`"a\nb"` costs 2). **Output.** A string built with `"\n".join` from these
+    lines, in order: 1. `Context:` 2. one line per selected chunk, in rank order: `[<chunk id>] <chunk
+    text exactly as given>` 3. an empty line 4. `Question: <query exactly as given>` With no selected
+    chunks, the context block is empty and the output is `Context:`, an empty line, then the question
+    line. **Errors.** Raise `TypeError` when `query` or any id or text is not a `str`, or when `k` or
+    `word_budget` is not an `int` (bool is not accepted). Raise `ValueError` for a blank query, a non-numeric
+    or non-finite array, a wrong shape or length mismatch, a zero-norm query or chunk vector, a duplicate
+    or empty chunk id, `k < 1`, or `word_budget < 0`. Must not mutate inputs.'
+  killed_by: test_read_only_input_arrays_are_accepted_and_left_alone
   visible: hidden
 uncovered: []
 sweeps:

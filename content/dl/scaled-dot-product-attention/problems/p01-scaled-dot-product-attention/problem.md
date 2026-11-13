@@ -27,6 +27,10 @@ weights. Leading batch axes are shared by `q`, `k` and `v`.
   `(*batch, L, S)`.
 - Must be finite for finite inputs whose scores `q @ k^T / sqrt(d_k)` are finite, including scores
   far outside the range of `exp`. Must not mutate inputs.
+- Differentiable: the result stays on the autograd graph. When an input has
+  `requires_grad=True`, backpropagating through the result gives the gradient of the formula
+  above. Do not detach, and do not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on
+  the way.
 
 ## Examples
 
@@ -72,6 +76,9 @@ that masked pairs have zero weight, check the `sqrt(d_k)` scale at `d_k = 64`, a
 logits (queries scaled by `1e3`) with and without masks. They also cover fully masked rows,
 broadcastable masks, boolean-only masks, dtype, zero-size and batch-shape errors, and input
 non-mutation.
+
+The hidden tests also backpropagate through the result and compare the gradients with PyTorch's
+own.
 
 The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
 `docs/DATASETS.md`).

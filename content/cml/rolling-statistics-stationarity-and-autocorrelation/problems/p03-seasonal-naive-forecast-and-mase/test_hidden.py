@@ -333,3 +333,24 @@ def test_all_zero_training_series_raises_value_error():
         lambda: seasonal_naive_forecast_and_mase([0.0, 0.0, 0.0, 0.0, 0.0], [1.0, 2.0], 2),
         "an all-zero training series was accepted: the MASE scale is zero, so raise ValueError",
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    train = np.array([3.0, 1.0, 4.0, 1.0, 5.0, 9.0])
+    test = np.array([6.0, 2.0])
+    for array in (train, test):
+        array.setflags(write=False)
+    try:
+        seasonal_naive_forecast_and_mase(train, test, 2)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

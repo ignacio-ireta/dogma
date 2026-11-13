@@ -1,4 +1,4 @@
-problem_version: 5
+problem_version: 6
 accept:
 - file: accept_blind.py
   origin: blind
@@ -67,6 +67,11 @@ reject:
     `MAD` the median of `|x - median|`. Compute each midpoint without overflow when its exact value is
     finite: the median of `1.6e308` and `1.7e308` is `1.65e308`.'
   killed_by: test_flags_match_independent_scipy_mad_computation
+  visible: hidden
+- file: reject_rounds_x_in_place.py
+  mistake: returns the right result and rounds the caller's x to six decimals in place
+  clause: Must not mutate `x`.
+  killed_by: test_read_only_input_arrays_are_accepted_and_left_alone
   visible: hidden
 uncovered: []
 sweeps:

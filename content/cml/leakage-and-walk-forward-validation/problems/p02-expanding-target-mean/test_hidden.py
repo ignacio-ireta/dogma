@@ -349,3 +349,31 @@ def test_matches_pandas_expanding_idiom_on_real_census_keys_and_income(adult_row
         "the encoding on real census keys is not the plain expanding mean of earlier rows:"
         " no window, decay or smoothing",
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    cats = ["a", "b", "a", "c"]
+    y = np.array([1.0, -2.0, 0.0, 4.0])
+    for array in (y,):
+        array.setflags(write=False)
+    try:
+        expanding_target_mean(cats, y)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )
+
+
+def test_encoding_comes_back_as_a_numpy_array():
+    got = expanding_target_mean(["a", "b", "a", "a"], [1.0, 5.0, 3.0, 2.0])
+    assert isinstance(got, np.ndarray), (
+        "the result must be a NumPy array: a list of the same numbers is another type"
+    )

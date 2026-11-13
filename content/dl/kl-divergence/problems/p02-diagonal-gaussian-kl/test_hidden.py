@@ -238,3 +238,26 @@ def test_zero_or_negative_sigma_q_raises_value_error():
             lambda bad=bad: diagonal_gaussian_kl([0.0], [1.0], [0.0], bad),
             "sigma_q must be strictly positive: zero or negative standard deviations were accepted",
         )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    mu_p = np.array([0.2, -0.5])
+    sigma_p = np.array([1.3, 0.9])
+    mu_q = np.array([0.1, 0.0])
+    sigma_q = np.array([2.0, 1.0])
+    for array in (mu_p, sigma_p, mu_q, sigma_q):
+        array.setflags(write=False)
+    try:
+        diagonal_gaussian_kl(mu_p, sigma_p, mu_q, sigma_q)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

@@ -1,4 +1,4 @@
-problem_version: 5
+problem_version: 6
 accept:
 - file: accept_blind.py
   origin: blind
@@ -47,12 +47,15 @@ reject:
     so a threshold never splits a tie.
   killed_by: test_matches_brute_force_on_tied_and_continuous_scores
   visible: hidden
+- file: reject_takes_abs_of_scores_in_place.py
+  mistake: returns the right result and replaces the caller's scores by its absolute values in place
+  clause: Must not mutate its inputs.
+  killed_by: test_read_only_input_arrays_are_accepted_and_left_alone
+  visible: hidden
 uncovered:
 - clause: F1 at a candidate is 2 TP / (2 TP + FP + FN), computed as one division of the integer counts
     at that threshold.
   reason: wrong solution survives, see notes
-- clause: Must not mutate its inputs.
-  reason: cap of eight wrong solutions per problem
 - clause: 'Must run in O(n log n): sort once, then sweep the thresholds.'
   reason: cap of eight wrong solutions per problem
 sweeps:

@@ -1,4 +1,4 @@
-problem_version: 5
+problem_version: 6
 accept:
 - file: accept_blind.py
   origin: blind
@@ -69,6 +69,11 @@ reject:
     error
   clause: '`y`: 1-D array-like, shape `(n,)`. Every entry is exactly `0` or `1`. Both classes must appear.'
   killed_by: test_single_class_is_refused_with_value_error_even_for_a_single_sample
+  visible: hidden
+- file: reject_needs_an_array_for_x.py
+  mistake: reads an array attribute of X before converting it, so a list of the same numbers fails
+  clause: '`X`: 2-D array-like, shape `(n, d)`, with $n \ge 1$ and $d \ge 1$. Every entry is finite.'
+  killed_by: test_list_inputs_give_the_same_result_as_arrays
   visible: hidden
 uncovered:
 - clause: 'Returns: `(intercept, coef)`. `intercept` is a Python `float`. `coef` is a `float64` array

@@ -22,6 +22,10 @@ with the diagonal as the correct label.
   an embedding contains a non-finite value; a row has zero norm; `temperature` is a bool, not a real number,
   not finite, or not positive.
 - Must not mutate `a` or `b`.
+- Differentiable: the result stays on the autograd graph. When an input has
+  `requires_grad=True`, backpropagating through the result gives the gradient of the formula
+  above. Do not detach, and do not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on
+  the way.
 
 ## Examples
 
@@ -65,5 +69,8 @@ changes nothing), the invariance to row scaling, a small temperature where a nai
 float32 dtype within a declared bound, invalid shapes, zero rows and temperatures, non-finite embeddings, and
 that inputs are not mutated. A property test checks that the loss is non-negative and unchanged when the pairs are
 permuted together.
+
+The hidden tests also backpropagate through the result and compare the gradients with PyTorch's
+own.
 
 The hidden tests draw their bulk inputs from the real dataset `digits` (see `docs/DATASETS.md`).

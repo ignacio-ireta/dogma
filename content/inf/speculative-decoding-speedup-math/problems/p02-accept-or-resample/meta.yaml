@@ -1,6 +1,6 @@
 # Problem metadata (CONTENT_SPEC §6.2).
 id: inf/speculative-decoding-speedup-math/p02-accept-or-resample
-version: 4                      # bump when tests, tolerances or the contract change
+version: 5                      # bump when tests, tolerances or the contract change
 title: "Accept or resample one speculative token"
 language: python
 runtime: py-numpy

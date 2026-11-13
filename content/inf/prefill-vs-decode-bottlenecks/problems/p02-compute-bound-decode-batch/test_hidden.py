@@ -296,3 +296,10 @@ def test_sliding_window_key_does_not_change_the_threshold() -> None:
     assert got == plain, (
         "the answer depends on sliding_window: the key must be ignored, attention is full"
     )
+
+
+def test_config_built_inside_the_test_is_not_mutated() -> None:
+    cfg = {"num_layers": 32, "num_kv_heads": 8, "head_dim": 128, "sliding_window": 4096}
+    compute_bound_decode_batch(7 * 10**9, cfg, 512, 2, peak_flops=PEAK, bandwidth=BW)
+    if cfg != {"num_layers": 32, "num_kv_heads": 8, "head_dim": 128, "sliding_window": 4096}:
+        pytest.fail("the config dict was changed: read the keys without writing to the input")

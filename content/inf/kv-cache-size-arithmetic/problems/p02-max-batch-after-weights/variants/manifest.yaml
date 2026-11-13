@@ -1,4 +1,4 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
@@ -42,6 +42,19 @@ reject:
   mistake: the window key is removed from config
   clause: Must not mutate `config`.
   killed_by: test_context_beyond_the_window_does_not_shrink_the_batch_further
+  visible: hidden
+- file: reject_overwrites_config_in_place.py
+  mistake: returns the right result and writes new values into the caller's config
+  clause: Must not mutate `config`.
+  killed_by: test_config_built_inside_the_test_is_not_mutated
+  visible: hidden
+- file: reject_zero_head_dim_accepted.py
+  mistake: accepts a head_dim of zero, where the minimum of each required config key is 1
+  clause: '`config`, `dtype`: as above. Validation is the same as the KV-cache bytes problem: TypeError
+    for values that are not Python `int` (`bool`, `float`, `str` and `None` are rejected, except `sliding_window`
+    may be `None`); ValueError for a missing required key, a value below its minimum, or an unknown dtype.
+    The minimum of `num_layers`, `num_kv_heads` and `head_dim` is 1.'
+  killed_by: test_zero_layers_kv_heads_or_head_dim_raises_value_error
   visible: hidden
 uncovered: []
 sweeps:

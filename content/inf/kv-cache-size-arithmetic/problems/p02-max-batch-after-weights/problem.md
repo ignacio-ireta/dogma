@@ -22,6 +22,7 @@ The budget is `memory_bytes - weight_bytes - reserve_bytes`. A batch of `B` sequ
 - `config`, `dtype`: as above. Validation is the same as the KV-cache bytes problem: TypeError for values
   that are not Python `int` (`bool`, `float`, `str` and `None` are rejected, except `sliding_window` may be
   `None`); ValueError for a missing required key, a value below its minimum, or an unknown dtype.
+  The minimum of `num_layers`, `num_kv_heads` and `head_dim` is 1.
 - `seq_len`: a Python `int` of at least 1. Zero is a ValueError, because an empty sequence has no bound.
 - `weight_bytes`, `memory_bytes`, `reserve_bytes`: Python `int` values of at least 0. `reserve_bytes` defaults to 0.
 - Returns: a Python `int` of at least 0. Never negative.

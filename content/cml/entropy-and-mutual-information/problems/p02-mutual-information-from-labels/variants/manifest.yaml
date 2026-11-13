@@ -1,4 +1,4 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
@@ -41,6 +41,11 @@ reject:
   clause: 'Raises: `ValueError` when either sequence is empty, when a sequence is not one-dimensional,
     or when the two lengths differ.'
   killed_by: test_zero_dimensional_array_raises_value_error
+  visible: hidden
+- file: reject_overwrites_x_in_place.py
+  mistake: returns the right result and writes new values into the caller's x
+  clause: Must not mutate its inputs.
+  killed_by: test_read_only_input_arrays_are_accepted_and_left_alone
   visible: hidden
 uncovered: []
 sweeps:

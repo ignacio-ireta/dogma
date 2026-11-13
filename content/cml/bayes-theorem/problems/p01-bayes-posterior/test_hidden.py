@@ -586,3 +586,25 @@ def test_nan_prior_is_rejected_when_there_are_no_observations():
         [],
         "a NaN in the prior must raise ValueError even when there is no evidence",
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    prior = np.array([0.3, 0.7])
+    lik = np.array([[0.9, 0.1], [0.2, 0.8]])
+    obs = np.array([1, 0, 1])
+    for array in (prior, lik, obs):
+        array.setflags(write=False)
+    try:
+        posterior(prior, lik, obs)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

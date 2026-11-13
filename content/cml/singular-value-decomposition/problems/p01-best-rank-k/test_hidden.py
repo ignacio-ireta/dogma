@@ -330,3 +330,10 @@ def test_matrix_with_no_columns_raises_value_error():
         lambda: best_rank_k(np.zeros((2, 0)), 0),
         "a matrix with no columns was accepted: A must have at least one row and one column",
     )
+
+
+def test_approximation_comes_back_as_a_numpy_array():
+    A_k, _ = best_rank_k([[3.0, 0.0], [0.0, 1.0]], 1)
+    assert isinstance(A_k, np.ndarray), (
+        "A_k must be a NumPy array: a nested list of the same numbers is another type"
+    )

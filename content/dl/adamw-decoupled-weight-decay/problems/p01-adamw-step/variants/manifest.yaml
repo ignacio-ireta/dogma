@@ -56,13 +56,7 @@ reject:
     shape and dtype as `params[i]`.'
   killed_by: test_zero_dimensional_parameter_is_updated_like_torch_adamw
   visible: hidden
-uncovered:
-- clause: '`params`, `grads`: lists of floating-point tensors of equal length. `grads[i]` has the same
-    shape and dtype as `params[i]`.'
-  reason: wrong solution survives, see notes
-- clause: '`lr` is finite and `>= 0`. `beta1`, `beta2` are in `[0, 1)`. `eps` is finite and `> 0`. `weight_decay`
-    is finite and `>= 0`.'
-  reason: wrong solution survives, see notes
+uncovered: []
 sweeps:
 - reject
 - mutants

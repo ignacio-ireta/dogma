@@ -230,3 +230,35 @@ def test_tie_for_first_place_in_a_wide_router_keeps_lowest_index():
         "a tie for first place in a wide router must go to the lowest expert index: "
         "keep equal logits in their original order"
     )
+
+
+def test_gradients_flow_back_through_the_result():
+    gen = torch.Generator().manual_seed(74)
+    logits = _real_values(gen, [3, 5]).requires_grad_()
+    mix = _real_values(gen, [3, 2])
+    inputs = (logits,)
+    try:
+        out = _learner(logits, 2)[1]
+    except Exception:
+        pytest.fail(
+            "a valid call failed on tensors that require gradients: stay in PyTorch, with no "
+            "NumPy or Python-number round trip",
+            pytrace=False,
+        )
+    assert out.requires_grad, (
+        "the result is cut off from the autograd graph: keep every step a torch operation, "
+        "with no detach, no_grad, item or NumPy on the way"
+    )
+    got = torch.autograd.grad((out * mix).sum(), inputs, allow_unused=True)
+    want = torch.autograd.grad(
+        (torch.softmax(torch.topk(logits, 2, dim=1).values, dim=1) * mix).sum(),
+        inputs,
+        allow_unused=True,
+    )
+    for g, w in zip(got, want, strict=True):
+        expected = torch.zeros((), dtype=torch.float64) if w is None else w
+        have = torch.zeros_like(expected) if g is None else g
+        assert torch.allclose(have, expected, rtol=1e-7, atol=1e-9), (
+            "a gradient through the result is wrong or missing: an input or a statistic was "
+            "taken out of the autograd graph"
+        )

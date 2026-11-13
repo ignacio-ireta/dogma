@@ -26,6 +26,10 @@ tanh approximation.
   `W1.shape[1]`; `W1` is not 2-D; `W2` is not `(d_model, d_ff)` with `d_model = W1.shape[1]` and
   `d_ff = W1.shape[0]`; `b1` is not `(d_ff,)`; `b2` is not `(d_model,)`.
 - Must not mutate inputs.
+- Differentiable: the result stays on the autograd graph. When an input has
+  `requires_grad=True`, backpropagating through the result gives the gradient of the formula
+  above. Do not detach, and do not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on
+  the way.
 
 ## Examples
 
@@ -61,6 +65,9 @@ others (changing one token must not change another); the empty hidden layer (`d_
 and weight orientation on non-square, non-symmetric weights; the `ValueError` rules (scalar input,
 feature mismatch, weight and bias shapes); large and small magnitudes, including negative tails
 where `1 + erf` cancels; float64 dtype and shape; and inputs left unchanged.
+
+The hidden tests also backpropagate through the result and compare the gradients with PyTorch's
+own.
 
 The hidden tests draw their bulk inputs from the real dataset `breast_cancer` (see
 `docs/DATASETS.md`).

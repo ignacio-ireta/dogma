@@ -261,3 +261,24 @@ def test_only_the_order_and_equality_of_scores_matter_at_tiny_magnitudes(breast_
         "AP changed when the scores were scaled by a tiny constant: tied scores are exact "
         "equality, so no absolute tolerance may merge distinct thresholds"
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    y = np.array([1, 0, 1, 0, 0, 1])
+    scores = np.array([0.4, 0.9, 0.2, 0.7, 0.5, 0.1])
+    for array in (y, scores):
+        array.setflags(write=False)
+    try:
+        average_precision(y, scores)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

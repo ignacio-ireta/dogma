@@ -1,4 +1,4 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
@@ -49,11 +49,14 @@ reject:
   clause: Must not mutate `X` or `y`.
   killed_by: test_matches_a_brute_force_implementation_at_train_and_new_points
   visible: hidden
-uncovered:
-- clause: 'Returns: `(predict, train_pred)`. - `predict(X_new)` takes a 2-D array with `d` columns and
+- file: reject_returns_a_list_for_the_array.py
+  mistake: returns a nested list of the right numbers where a NumPy array is promised
+  clause: 'Returns: `(predict, train_pred)`. - `predict(X_new)` takes a 2-D array with `d` columns and
     returns a `float64` array of shape `(m,)`, equal to $F_M$ at each row. - `train_pred` is a `float64`
     array of shape `(n,)`, equal to $F_M(X)$.'
-  reason: wrong solution survives, see notes
+  killed_by: test_training_predictions_come_back_as_a_numpy_array
+  visible: hidden
+uncovered:
 - clause: '`X`: 2-D array-like of finite numbers, shape `(n, d)`, with $n\ge1$ and $d\ge1$.'
   reason: a wrong solution for a valid 2-D input has no second path, so any break also raises or breaks
     C5 or C6

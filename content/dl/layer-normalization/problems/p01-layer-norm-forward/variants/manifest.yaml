@@ -1,4 +1,4 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
@@ -50,6 +50,21 @@ reject:
   clause: '`x`: floating-point tensor with `ndim >= 1`, shape `(..., D)`, `D >= 1`. Leading dimensions
     may be any size, including zero. Must not be modified.'
   killed_by: test_non_contiguous_three_dimensional_input_is_normalized
+  visible: hidden
+- file: reject_result_detached_from_the_graph.py
+  mistake: returns the right values cut off from the autograd graph, so no gradient reaches the inputs
+  clause: 'Differentiable: the result stays on the autograd graph. When an input has `requires_grad=True`,
+    backpropagating through the result gives the gradient of the formula above. Do not detach, and do
+    not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on the way.'
+  killed_by: test_gradients_flow_back_through_the_result
+  visible: hidden
+- file: reject_statistics_taken_out_of_the_graph.py
+  mistake: computes the normalising statistics outside the autograd graph, so the values are right and
+    the gradients are wrong
+  clause: 'Differentiable: the result stays on the autograd graph. When an input has `requires_grad=True`,
+    backpropagating through the result gives the gradient of the formula above. Do not detach, and do
+    not leave PyTorch (`.item()`, `.numpy()`, `torch.no_grad()`) on the way.'
+  killed_by: test_gradients_flow_back_through_the_result
   visible: hidden
 uncovered:
 - clause: 'Allowed: Python standard library and PyTorch tensor operations, such as `mean`, `sqrt`, `clone`,

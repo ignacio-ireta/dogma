@@ -265,3 +265,23 @@ def test_column_spanning_many_orders_of_magnitude_has_a_finite_correlation():
         atol=1e-12,
         err_msg="scale each column by its largest magnitude, not its smallest, before squaring",
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    X = np.array([[1.0, 2.0], [3.0, 5.0], [4.0, 4.0]])
+    for array in (X,):
+        array.setflags(write=False)
+    try:
+        correlation_matrix(X)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

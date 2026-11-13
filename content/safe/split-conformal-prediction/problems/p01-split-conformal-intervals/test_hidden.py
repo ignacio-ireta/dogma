@@ -255,3 +255,25 @@ def test_empirical_coverage_meets_one_minus_alpha_within_a_stated_bound():
         "coverage above the finite-sample ceiling: the rank is too large, "
         "or the interval is too wide"
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    cal_pred = np.array([0.0, 1.0, 2.0])
+    cal_true = np.array([0.5, -3.0, 1.0])
+    test_pred = np.array([4.0])
+    for array in (cal_pred, cal_true, test_pred):
+        array.setflags(write=False)
+    try:
+        split_conformal_interval(cal_pred, cal_true, test_pred, 0.5)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

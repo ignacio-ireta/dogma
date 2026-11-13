@@ -1,5 +1,5 @@
 id: cml/rolling-statistics-stationarity-and-autocorrelation/p01-rolling-mean-std
-version: 6
+version: 7
 title: Rolling mean and standard deviation
 language: python
 runtime: py-data

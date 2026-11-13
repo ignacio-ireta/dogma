@@ -349,3 +349,10 @@ def test_infinite_entry_raises_value_error():
         lambda: determinant([[1.0, np.inf], [0.0, 1.0]]),
         "an infinite entry must raise ValueError: validate with np.isfinite, which rejects inf",
     )
+
+
+def test_result_is_a_float_and_not_an_array():
+    value = determinant([[1, 2], [3, 4]])
+    assert isinstance(value, float), (
+        "the determinant must be a float: an array that holds one number is another type"
+    )

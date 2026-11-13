@@ -278,3 +278,25 @@ def test_input_features_are_used_at_full_double_precision():
         "the input features were rounded to single precision before the gradient was computed: "
         "each entry of X must be used as given, at full double precision"
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    X = np.array([[1.0, -2.0], [0.5, 3.0]])
+    y = np.array([1.0, 0.0])
+    w = np.array([0.2, -0.4])
+    for array in (X, y, w):
+        array.setflags(write=False)
+    try:
+        mse_sigmoid_grad(w, X, y)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

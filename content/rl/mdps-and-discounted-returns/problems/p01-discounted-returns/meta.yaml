@@ -1,5 +1,5 @@
 id: rl/mdps-and-discounted-returns/p01-discounted-returns
-version: 1
+version: 2
 title: "Discounted returns for an episode"
 language: python
 runtime: py-numpy

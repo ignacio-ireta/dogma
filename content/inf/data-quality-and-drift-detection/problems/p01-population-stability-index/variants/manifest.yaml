@@ -1,4 +1,4 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
@@ -45,6 +45,11 @@ reject:
     and it is exactly 0 when the shares are identical.
   killed_by: test_two_bins_with_one_extra_actual_mass_match_the_closed_form
   visible: public
+- file: reject_rounds_expected_in_place.py
+  mistake: returns the right result and rounds the caller's expected to six decimals in place
+  clause: Must not mutate its inputs.
+  killed_by: test_read_only_input_arrays_are_accepted_and_left_alone
+  visible: hidden
 uncovered:
 - clause: Repeated interior edges (ties in `expected`) are allowed. They make empty bins, which take `eps`
     as usual.
@@ -53,8 +58,6 @@ uncovered:
   reason: cap of eight wrong solutions per problem
 - clause: Raises `ValueError` when an input is not 1-D, is empty, or has NaN or infinity; when `bins`
     is not an integer of at least 2; or when `eps` is not finite and positive.
-  reason: cap of eight wrong solutions per problem
-- clause: Must not mutate its inputs.
   reason: cap of eight wrong solutions per problem
 sweeps:
 - reject

@@ -25,6 +25,7 @@ bytes per element for the dtype. Use the integer arithmetic exactly as written.
 
 - `config`: a `dict` with the keys above. Values for the three required keys and the window must be Python
   `int` values. The window is `None` or an `int` of at least 1.
+- `num_layers`, `num_kv_heads` and `head_dim` are each at least 1.
 - `seq_len`: a Python `int`, at least 0. Zero means no cached tokens, so the result is 0.
 - `batch`: a Python `int`, at least 1.
 - `dtype`: a `str`, one of `"fp32"` (4 bytes), `"fp16"` (2), `"bf16"` (2) or `"fp8"` (1).

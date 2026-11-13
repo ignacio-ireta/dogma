@@ -1,5 +1,5 @@
 id: cml/cross-entropy/p02-binary-cross-entropy-with-logits
-version: 5
+version: 6
 title: Binary cross-entropy from logits
 language: python
 runtime: py-numpy

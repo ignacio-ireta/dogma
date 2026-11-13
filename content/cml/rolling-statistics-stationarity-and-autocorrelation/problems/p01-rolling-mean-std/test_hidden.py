@@ -425,3 +425,23 @@ def test_first_reading_near_the_float_limit_keeps_its_own_mean():
         "a window holding one reading must report that reading as its mean, even when a later "
         "reading of opposite sign is far away: the arithmetic overflowed",
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    values = np.array([3.0, 1.0, 4.0, 1.0, 5.0])
+    for array in (values,):
+        array.setflags(write=False)
+    try:
+        rolling_mean_std(values, 2)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

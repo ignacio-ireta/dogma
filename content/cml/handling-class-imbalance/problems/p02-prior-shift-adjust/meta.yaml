@@ -1,5 +1,5 @@
 id: cml/handling-class-imbalance/p02-prior-shift-adjust
-version: 2
+version: 3
 title: Prior-shift correction of probabilities
 language: python
 runtime: py-numpy

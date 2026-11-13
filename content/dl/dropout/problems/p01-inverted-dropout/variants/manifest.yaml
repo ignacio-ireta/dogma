@@ -1,4 +1,4 @@
-problem_version: 4
+problem_version: 5
 accept:
 - file: accept_blind.py
   origin: blind
@@ -63,6 +63,13 @@ reject:
     1..64; entries are finite with absolute value <=1e6. Integer and strided arrays are valid; complex,
     bool, and object arrays are invalid.'
   killed_by: test_entry_just_above_the_magnitude_limit_is_rejected
+  visible: hidden
+- file: reject_rounds_x_to_float32_in_place.py
+  mistake: returns the right result and rounds the caller's X to single precision in place
+  clause: 'Returns: three float64 arrays, each the same shape as X. No input mutation or use of the global
+    RNG. Each call recreates the seed, so repeated calls share a mask. Do not enforce an exact count of
+    retained units.'
+  killed_by: test_read_only_input_arrays_are_accepted_and_left_alone
   visible: hidden
 uncovered: []
 sweeps:

@@ -413,3 +413,24 @@ def test_more_texts_than_ids_is_rejected():
         ValueError,
         "chunk texts outnumber chunk ids, and the length mismatch was accepted",
     )
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    vectors = np.array([[3.0, 0.0], [0.0, 4.0]])
+    query_vector = np.array([0.6, 0.8])
+    for array in (vectors, query_vector):
+        array.setflags(write=False)
+    try:
+        build_cited_prompt("q", query_vector, ["a", "b"], ["one", "two"], vectors, 2, 9)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )

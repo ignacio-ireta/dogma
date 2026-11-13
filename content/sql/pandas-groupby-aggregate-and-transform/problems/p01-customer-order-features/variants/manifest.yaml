@@ -1,4 +1,4 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
@@ -65,6 +65,15 @@ reject:
     order. - `customer_running_total`: float64. The sum of that customer''s amounts up to and including
     this order, in sort order, accumulated in float64 (a float32 accumulator loses cents on large totals).'
   killed_by: test_interview_prep_orders_match_the_duckdb_window_oracle
+  visible: hidden
+- file: reject_assumes_a_default_index.py
+  mistake: builds a column from bare values and lets pandas align it, which is right only when the index
+    runs from 0 to n-1
+  clause: '`orders`: a `pandas.DataFrame` with columns `order_id` (int64, unique), `customer_id` (int64),
+    `order_date` (datetime64, or ISO-8601 date strings such as `"2024-03-05"`, dates only with no time
+    part) and `amount` (finite float64, signed amounts including refunds and zero allowed). It may have
+    zero rows.'
+  killed_by: test_orders_with_a_shuffled_index_give_the_same_features
   visible: hidden
 uncovered:
 - clause: 'Raises: nothing. Bad input is the caller''s problem; the function does not catch errors.'

@@ -1,4 +1,4 @@
-problem_version: 3
+problem_version: 4
 accept:
 - file: accept_blind.py
   origin: blind
@@ -59,6 +59,16 @@ reject:
   mistake: scale fitted in linear space for the given exponent
   clause: The fit minimises the squared residuals in log space only. It is not a fit in linear space.
   killed_by: test_seeded_noisy_fit_matches_polyfit_on_the_logs
+  visible: hidden
+- file: reject_rounds_y_in_place.py
+  mistake: returns the right result and rounds the caller's y to six decimals in place
+  clause: '`fit_power_law(x, y)` with `x` and `y` as NumPy arrays: - Both are one-dimensional with the
+    same length `n >= 2`. Any other rank raises `ValueError`, and so does a length mismatch. - Both hold
+    real numbers. Integer and float dtypes are accepted; the function converts them to `float64` and does
+    not change the caller''s arrays. - Every `x_i > 0`, every `y_i > 0`, and every value is finite. Otherwise
+    `ValueError`, because the logarithm is undefined. - Not all `x_i` are equal, otherwise the slope is
+    undefined and the function raises `ValueError`.'
+  killed_by: test_read_only_input_arrays_are_accepted_and_left_alone
   visible: hidden
 uncovered: []
 sweeps:

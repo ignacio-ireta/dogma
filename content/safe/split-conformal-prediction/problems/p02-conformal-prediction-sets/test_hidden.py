@@ -439,3 +439,21 @@ def test_alpha_at_the_open_lower_end_is_rejected():
         "alpha must lie strictly between 0 and 1: the lower end is excluded, "
         "so it must raise ValueError",
     )
+
+
+def test_list_inputs_give_the_same_result_as_arrays():
+    cal = np.array([[0.7, 0.2, 0.1], [0.1, 0.6, 0.3], [0.2, 0.2, 0.6], [0.5, 0.3, 0.2]])
+    labels = np.array([0, 1, 2, 0])
+    test = np.array([[0.7, 0.2, 0.1], [0.3, 0.3, 0.4]])
+    try:
+        from_lists = prediction_sets(cal.tolist(), labels, test.tolist(), 0.4)
+    except Exception:
+        pytest.fail(
+            "a valid call with Python lists failed: the inputs are array-like, so convert them "
+            "with np.asarray before using array methods",
+            pytrace=False,
+        )
+    from_arrays = prediction_sets(cal, labels, test, 0.4)
+    assert np.array_equal(from_lists, from_arrays), (
+        "lists and arrays of the same numbers gave different results"
+    )

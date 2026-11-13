@@ -182,3 +182,25 @@ def test_one_oversized_entry_among_normal_ones_is_rejected():
 
 def test_one_non_finite_entry_among_finite_ones_is_rejected():
     rejects(lambda: dense_backward(np.array([[1.0, np.nan]]), np.ones((2, 1)), np.ones((1, 1))))
+
+
+def test_read_only_input_arrays_are_accepted_and_left_alone():
+    X = np.array([[1.0, 2.0], [0.5, -1.0], [3.0, 0.25]])
+    W = np.array([[0.5, -1.0], [2.0, 0.1]])
+    G = np.array([[1.0, 0.0], [0.5, -0.5], [0.25, 2.0]])
+    for array in (X, W, G):
+        array.setflags(write=False)
+    try:
+        dense_backward(X, W, G)
+    except Exception as exc:
+        if "read-only" in str(exc):
+            pytest.fail(
+                "an input array was written to in place: inputs must not be mutated, so work "
+                "on a copy",
+                pytrace=False,
+            )
+        pytest.fail(
+            "a valid call failed when its input arrays were read-only: a correct solution "
+            "only reads its inputs",
+            pytrace=False,
+        )
