@@ -76,7 +76,7 @@ export function StudyIllustration({
           <path className="art-line" d="m298 325 10-9 10 9 10-9 10 9" />
           <circle className="art-coral" cx="368" cy="343" r="11" />
           <path className="art-line art-violet-line" d="M577 130v16m-8-8h16" />
-          <path className="art-cobalt" d="m205 337 13 24h-26Z" />
+          <path className="art-cobalt" d="m252 337 13 24h-26Z" />
         </>
       )}
     </svg>

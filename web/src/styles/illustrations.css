@@ -40,6 +40,28 @@
   fill: var(--color-art-peach);
 }
 
+/* Limbs are strokes with round caps; the modifier picks the colour. */
+.study-art .art-limb {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.study-art .art-s-coral {
+  stroke: var(--color-coral);
+}
+.study-art .art-s-violet {
+  stroke: var(--color-violet);
+}
+.study-art .art-s-skin {
+  stroke: var(--color-art-umber);
+}
+.study-art .art-s-peach {
+  stroke: var(--color-art-peach);
+}
+.study-art .art-blush {
+  opacity: 0.45;
+}
+
 .study-art .art-line,
 .study-art .art-outlined {
   stroke: var(--color-outline);
@@ -50,6 +72,9 @@
 
 .study-art .art-line {
   fill: none;
+}
+.study-art .art-face {
+  stroke-width: 2;
 }
 .study-art .art-bold-line {
   stroke-width: 5;

@@ -74,6 +74,7 @@ Work stops and resumes across sessions through the status table and the handoff 
 | I-33 | Real datasets everywhere: seeded real draws (`sample_rows`, `sample_window`), the Online Retail snapshot, and every problem moved off random numbers onto real values, sizes and rates (251 of 251), each under the refactor gate | — | I-31c, I-32e | done |
 | I-34 | Test strength, second pass: machine probes (`scripts/exercise_probe.py`) for arguments changed in place, results returned in a laxer form and input forms no test gives; every gap closed by a gated hidden test (plan `2026-11-11-test-strength-2.md`) | — | I-32e, I-33 | in-progress |
 | I-35 | Study-desk layout refinement: prose and lists out of cards and onto ruled, margin-column layouts; the session bar; mono figures for data (spec `2026-11-13-study-desk-layout.md`) | M4 | I-24, I-29 | done |
+| I-36 | Redrawn study figures: the guide and the reader in smooth curves with soft limbs and few-mark faces | M4 | I-35 | done |
 
 ### Content runway (one wave per path week; ARCHITECTURE §7)
 
@@ -345,6 +346,16 @@ counts, minutes, dates and ids in the code face; at most one primary button per 
 **Accept:** `make check` green; no horizontal overflow at 320, 390 and 768 px on every main view;
 before and after screenshots at 1440 and 390 px reviewed.
 
+### I-36 · Redrawn study figures
+
+**Owns:** `web/src/components/illustrations/GuideFigure.tsx`, `ReaderFigure.tsx`, their README,
+the limb and face rules in `web/src/styles/illustrations.css`, one decoration coordinate in
+`StudyIllustration.tsx`. No motif, mapping, palette token, copy or test-expectation change.
+**Do:** keep the two characters, their colours, poses and the static-artwork rule; redraw them
+with smooth curves instead of straight-edged polygons, limbs as round-capped strokes, a small
+head under a large hair shape, and a face of a few marks (brow, eye, nose bump, smile, blush).
+**Accept:** `make check` green; both scenes (full and compact) reviewed in screenshots.
+
 ## 3. Milestones
 
 
@@ -361,6 +372,21 @@ before and after screenshots at 1440 and 390 px reviewed.
 
 *Newest first. One entry per session or agent: what changed · what was verified (exact commands
 and results) · what's left or blocked.*
+
+### 2026-11-14 · Redrawn study figures (agent) · I-36 done
+
+- **Why:** the owner disliked the figures as drawn, the faces most of all, and asked for a better
+  take on the same corporate-Memphis style.
+- **Changed:** `GuideFigure` and `ReaderFigure` are redrawn: bodies in smooth curves, arms and
+  necks as round-capped strokes (`art-limb` with an `art-s-*` colour), small plain heads under
+  large hair shapes, and faces of a few marks with a soft blush. Same characters, palette tokens,
+  poses, coordinate spaces and placement, still static, still hidden from assistive technology.
+  The cobalt triangle in the full scene moved right so it clears the guide's front shoe. The
+  illustrations README states the drawing rules for future figures.
+- **Verified:** `make check` and `make audit`; the full and compact scenes reviewed in
+  screenshots of a standalone render using the production classes and tokens.
+- **Not done:** the 21 topic motifs are unchanged. The Playwright suite was not run (its
+  Chromium is not installed here).
 
 ### 2026-11-13 · Study-desk layout refinement (agent) · I-35 done
 

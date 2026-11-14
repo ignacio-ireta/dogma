@@ -6,6 +6,10 @@ generation, tracing, embedded bitmap, external asset, font-dependent lettering o
 
 - `GuideFigure.tsx`: the coral-jacket presenter with a long stride and pointing hand.
 - `ReaderFigure.tsx`: the violet-shirt reader sitting on a stool with an open book.
+  Both figures follow the same rules: smooth curves only (no straight-edged polygons for
+  bodies), limbs as round-capped strokes (`art-limb` plus an `art-s-*` colour), a small plain
+  head under a large hair shape, and a face made of a few marks: brow, eye, a nose bump on the
+  silhouette, smile, and a soft blush. Keep new figures to that vocabulary.
 - `StudyIllustration.tsx`: the full study scene and the compact exercise-header composition.
 - `*Motifs.tsx`: 20 subject motifs plus a general open-book motif, drawn in a 180 × 120 space.
 - `TopicMotif.tsx`: the complete, type-checked motif collection.
