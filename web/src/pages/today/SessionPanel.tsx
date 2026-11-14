@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { describeError, encodeId } from "../../api/client";
 import { type Energy, getToday, type SessionOut, type TodayOut } from "../../api/learning";
 import { Icon } from "../../components/Icon";
+import { MinutesBar } from "../../components/MinutesBar";
 import { Notice } from "../../components/Notice";
 import { actionProblem, browserInstruction, firstActionTarget, kindLabel } from "./sessionText";
 import { TimedResolveAction } from "./TimedResolveAction";
@@ -74,6 +75,7 @@ export function SessionPanel({
           <Icon name="arrow" />
         </Link>
       )}
+      <MinutesBar blocks={session.blocks} />
       <div className="learning-table-wrap">
         <table className="learning-table">
           <caption className="muted">Your session blocks</caption>

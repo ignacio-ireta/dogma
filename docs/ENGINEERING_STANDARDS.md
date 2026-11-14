@@ -292,6 +292,12 @@ groups / clusters. Colour is never the only signal. Pair it with a label or line
   Keep reading and code surfaces quiet; place illustration on introductory surfaces and compact
   topic headers. Draw figures and subject motifs as editable SVG; keep them decorative and static.
   Normal text must retain 4.5:1 contrast and focus/control boundaries 3:1 where required.
+- Frames are for objects: the editor, the reading sheet, a form, a note, a figure, a control.
+  Prose, lists and groups of facts sit open on the page under a hairline or ink rule, with the
+  section name in a margin column where there is room. Counts, minutes, dates and ids use
+  JetBrains Mono so digits align. One primary button per view; other actions are links. The
+  only motion is functional (the session bar drawing once, the breath while a run is in
+  flight). Details: `docs/superpowers/specs/2026-11-13-study-desk-layout.md`.
 
 ## 8. API
 

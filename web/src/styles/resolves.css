@@ -3,8 +3,7 @@
 
 .resolve,
 .confirm,
-.resolve-verdict,
-.readiness {
+.resolve-verdict {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
@@ -60,9 +59,29 @@
   margin: 0 0 var(--space-2);
 }
 
+/* Readiness is a list of facts, so it is ruled, not boxed. */
+.readiness {
+  margin-block: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: var(--rule-ink);
+}
+
 .readiness__list {
+  list-style: none;
   margin: 0 0 var(--space-3);
-  padding-left: var(--space-5);
+  padding: 0;
+  max-width: 46rem;
+  border-bottom: var(--rule);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.readiness__list li {
+  padding-block: var(--space-2);
+  border-top: var(--rule);
+  overflow-wrap: anywhere;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -76,8 +95,7 @@
 @media (max-width: 40rem) {
   .resolve,
   .confirm,
-  .resolve-verdict,
-  .readiness {
+  .resolve-verdict {
     padding: var(--space-3) var(--space-4);
   }
 }

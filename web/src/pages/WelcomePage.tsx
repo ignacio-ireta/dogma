@@ -21,13 +21,13 @@ export function WelcomePage() {
       />
       <section className="welcome__section" aria-labelledby="welcome-what">
         <h2 id="welcome-what">What dogma is</h2>
-        <p>
+        <p className="welcome__lead">
           dogma is a practice space for data science and AI engineering interviews. You learn one
           idea at a time, solve a real problem on it, and come back later so that it sticks.
         </p>
         <p>Everything runs on this computer. Your code, your notes and your progress stay here.</p>
         <p className="welcome__actions">
-          <Link className="button" to="/today">
+          <Link className="action-link" to="/today">
             Skip to Today
           </Link>
         </p>
@@ -40,7 +40,7 @@ export function WelcomePage() {
         <h2 id="welcome-next">When you're ready</h2>
         <p>Today picks your next step from here on. This page stays in the menu as Start here.</p>
         <p className="welcome__actions">
-          <Link className="button button--primary" to="/today">
+          <Link className="action-link" to="/today">
             Go to Today
           </Link>
         </p>

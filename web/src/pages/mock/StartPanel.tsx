@@ -14,7 +14,7 @@ export function StartPanel({
   readonly onViewDebrief: (sessionId: string) => void;
 }) {
   return (
-    <section className="mock-panel" aria-labelledby="start-mock-title">
+    <section className="mock-panel mock-panel--open" aria-labelledby="start-mock-title">
       <h2 id="start-mock-title">Start a mock</h2>
       <p>
         The planner picks a case, a coding problem you have passed and a theory question from a

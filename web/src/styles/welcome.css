@@ -1,35 +1,67 @@
-/* The introduction and the guide strip on its first problem. Colours come from tokens.css. */
+/* The introduction and the guide strip on its first problem. Colours come from tokens.css.
+   The page is set like a printed handout: numbered sections with their names in a margin column,
+   separated by hairlines. Only objects are framed (the session bar, the buttons). */
 .welcome {
   display: grid;
-  gap: var(--space-5);
+  container: welcome / inline-size;
+  counter-reset: section;
 }
 
 .welcome > .page-heading {
-  margin-bottom: 0;
+  margin-bottom: var(--space-5);
 }
 
 .welcome__section {
   min-width: 0;
-  container-type: inline-size;
-  padding: var(--space-6);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-card);
+  counter-increment: section;
+  padding-block: var(--space-6);
+  border-top: var(--rule-ink);
 }
 
 .welcome__section h2 {
   margin-top: 0;
 }
 
+.welcome__section h2::before {
+  content: counter(section, decimal-leading-zero);
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
 .welcome__section > p {
-  max-width: 44rem;
+  max-width: var(--measure);
+}
+
+.welcome__lead {
+  font-size: var(--text-lg);
+}
+
+@container welcome (min-width: 52rem) {
+  .welcome__section {
+    display: grid;
+    grid-template-columns: var(--margin-col) minmax(0, 1fr);
+    column-gap: var(--space-7);
+  }
+
+  .welcome__section > h2 {
+    grid-column: 1;
+    grid-row: 1 / span 9;
+  }
+
+  .welcome__section > :not(h2) {
+    grid-column: 2;
+  }
 }
 
 .welcome__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
   margin-bottom: 0;
 }
 
@@ -42,77 +74,88 @@
   list-style: none;
   margin: var(--space-4) 0;
   padding: 0;
-  display: grid;
-  gap: var(--space-3);
+  border-bottom: var(--rule);
 }
 
-/* The five blocks read as one row, and the six places as two even rows. */
+/* The five blocks as a ruled list. The number matches the segment in the bar above it. */
 .welcome__blocks {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-}
-
-.welcome__places {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-@container (max-width: 44rem) {
-  .welcome__blocks {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .welcome__places {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@container (max-width: 26rem) {
-  .welcome__places {
-    grid-template-columns: minmax(0, 1fr);
-  }
+  counter-reset: block;
 }
 
 .welcome__block {
+  counter-increment: block;
   display: grid;
-  align-content: start;
-  gap: var(--space-1);
-  padding: var(--space-4);
-  border-radius: var(--radius);
-  background: var(--color-violet-soft);
-  border: 1px solid var(--color-outline);
-  box-shadow: 3px 3px 0 var(--color-outline);
+  grid-template-columns: 1.75rem minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0 var(--space-3);
+  padding-block: var(--space-3);
+  border-top: var(--rule);
   overflow-wrap: anywhere;
 }
 
-.welcome__block:nth-child(3n + 1) {
-  background: var(--color-coral-soft);
+.welcome__block::before {
+  content: counter(block);
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-weight: 600;
 }
 
-.welcome__block:nth-child(3n) {
-  background: var(--color-cobalt-soft);
-}
-
-.welcome__minutes {
+.welcome__block > span:last-child {
+  grid-column: 2 / -1;
   color: var(--color-text-muted);
   font-size: var(--text-sm);
 }
 
+.welcome__minutes {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@container welcome (min-width: 40rem) {
+  .welcome__block {
+    grid-template-columns: 1.75rem 8rem 4.5rem minmax(0, 1fr);
+  }
+
+  .welcome__block > span:last-child {
+    grid-column: auto;
+  }
+}
+
+/* The places as an index: each row is one link, with the same icon the nav uses for it. */
 .welcome__place {
   display: grid;
-  align-content: start;
-  gap: var(--space-2);
-  height: 100%;
-  padding: var(--space-4);
-  border: 1px solid var(--color-outline);
-  border-radius: var(--radius);
+  grid-template-columns: 1.75rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 var(--space-3);
+  padding-block: var(--space-3);
+  border-top: var(--rule);
   color: inherit;
   text-decoration: none;
   overflow-wrap: anywhere;
-  box-shadow: 3px 3px 0 var(--color-hero-line);
-  transition: box-shadow var(--transition);
 }
 
-.welcome__place:hover {
-  box-shadow: 3px 3px 0 var(--color-violet);
+.welcome__place > .icon {
+  align-self: center;
+  color: var(--color-text-muted);
+}
+
+.welcome__place h3 {
+  margin: 0;
+  color: var(--color-link);
+}
+
+.welcome__place p {
+  grid-column: 2;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.welcome__place:hover h3 {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
 }
 
 .welcome__place:focus-visible {
@@ -120,9 +163,14 @@
   outline-offset: 2px;
 }
 
-.welcome__place h3,
-.welcome__place p {
-  margin: 0;
+@container welcome (min-width: 40rem) {
+  .welcome__place {
+    grid-template-columns: 1.75rem 8rem minmax(0, 1fr);
+  }
+
+  .welcome__place p {
+    grid-column: 3;
+  }
 }
 
 .welcome__steps,
@@ -161,18 +209,27 @@
 
 .welcome__glossary {
   margin: var(--space-4) 0 0;
-  display: grid;
-  gap: var(--space-4);
-  grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+  border-bottom: var(--rule);
 }
 
-.welcome__glossary dt {
-  font-weight: 600;
+.welcome__glossary > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-1) var(--space-5);
+  padding-block: var(--space-3);
+  border-top: var(--rule);
 }
 
 .welcome__glossary dd {
-  margin: var(--space-1) 0 0;
+  margin: 0;
   color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+@container welcome (min-width: 40rem) {
+  .welcome__glossary > div {
+    grid-template-columns: 12rem minmax(0, 1fr);
+  }
 }
 
 .tour-strip {
@@ -208,10 +265,4 @@
 
 .tour-strip li::before {
   grid-row: auto;
-}
-
-@media (max-width: 40rem) {
-  .welcome__section {
-    padding: var(--space-4);
-  }
 }

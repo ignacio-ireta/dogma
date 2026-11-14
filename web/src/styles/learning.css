@@ -37,11 +37,31 @@
   border-top: 3px solid var(--color-hero-line);
 }
 
-.today-page > .session-panel,
+/* On the desk, the note and the close form are objects and keep the outlined Memphis frame.
+   The session plan is prose and a table, so it sits open on the page under an ink rule. */
 .today-page > .transition-panel,
 .today-page > .close-panel {
   border: 1px solid var(--color-outline);
   box-shadow: var(--shadow-playful);
+}
+
+.today-page > .session-panel {
+  padding: var(--space-5) 0 0;
+  border: 0;
+  border-top: var(--rule-ink);
+  border-radius: 0;
+  background: var(--color-transparent);
+  box-shadow: none;
+}
+
+.session-panel > .muted:first-child {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.session-panel > p {
+  max-width: var(--measure);
 }
 
 .today-page > .transition-panel {
@@ -50,18 +70,6 @@
 
 .today-page > .close-panel {
   background: var(--color-violet-soft);
-}
-
-.today-page .learning-table tbody tr:nth-child(3n + 1) > :is(th, td) {
-  background: var(--color-coral-soft);
-}
-
-.today-page .learning-table tbody tr:nth-child(3n + 2) > :is(th, td) {
-  background: var(--color-violet-soft);
-}
-
-.today-page .learning-table tbody tr:nth-child(3n) > :is(th, td) {
-  background: var(--color-cobalt-soft);
 }
 .learning-first-action {
   padding: var(--space-4);
@@ -125,10 +133,11 @@
   margin-block: var(--space-4);
 }
 .learning-table {
-  border-collapse: separate;
-  border-spacing: 0 var(--space-3);
+  border-collapse: collapse;
   width: 100%;
+  max-width: 54rem;
   text-align: left;
+  counter-reset: block;
 }
 .learning-table caption {
   text-align: left;
@@ -143,31 +152,37 @@
 }
 .learning-table th,
 .learning-table td {
-  padding: var(--space-4) var(--space-3);
+  padding: var(--space-3) var(--space-4) var(--space-3) 0;
   vertical-align: top;
   font-size: var(--text-sm);
 }
-.learning-table tbody th,
-.learning-table tbody td {
-  background: var(--color-bg);
-  border-block: 1px solid var(--color-border-soft);
+/* A ruled list. Each row is numbered to match its segment in the session bar above. */
+.learning-table tbody tr {
+  counter-increment: block;
+  border-top: var(--rule);
+}
+.learning-table tbody tr:last-child {
+  border-bottom: var(--rule);
 }
 .learning-table tbody th {
-  border-left: 1px solid var(--color-border-soft);
-  border-radius: var(--radius) 0 0 var(--radius);
   color: var(--color-accent);
+  white-space: nowrap;
 }
-.learning-table tbody td:last-child {
-  border-right: 1px solid var(--color-border-soft);
-  border-radius: 0 var(--radius) var(--radius) 0;
-}
-.learning-table tbody tr:nth-child(3) th,
-.learning-table tbody tr:nth-child(3) td {
-  background: var(--color-hero);
+.learning-table tbody th::before {
+  content: counter(block);
+  display: inline-block;
+  width: 1.75rem;
+  font-family: var(--font-mono);
+  font-weight: 600;
 }
 .learning-table td:nth-child(2) {
   white-space: nowrap;
-  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.learning-table thead th:first-child {
+  padding-left: 1.75rem;
 }
 .learning-form {
   display: grid;
@@ -268,18 +283,11 @@
   }
   .learning-table tbody {
     display: grid;
-    gap: var(--space-3);
   }
   .learning-table tbody tr {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    padding: var(--space-4);
-    background: var(--color-bg);
-    border: 1px solid var(--color-border-soft);
-    border-radius: var(--radius);
-  }
-  .learning-table tbody tr:nth-child(3) {
-    background: var(--color-hero);
+    padding-block: var(--space-3);
   }
   .learning-table tbody th,
   .learning-table tbody td {

@@ -73,6 +73,7 @@ Work stops and resumes across sessions through the status table and the handoff 
 | I-32e | Test-strength close-out: enforce the rules in the gate, re-audit, report | — | I-32d | done |
 | I-33 | Real datasets everywhere: seeded real draws (`sample_rows`, `sample_window`), the Online Retail snapshot, and every problem moved off random numbers onto real values, sizes and rates (251 of 251), each under the refactor gate | — | I-31c, I-32e | done |
 | I-34 | Test strength, second pass: machine probes (`scripts/exercise_probe.py`) for arguments changed in place, results returned in a laxer form and input forms no test gives; every gap closed by a gated hidden test (plan `2026-11-11-test-strength-2.md`) | — | I-32e, I-33 | in-progress |
+| I-35 | Study-desk layout refinement: prose and lists out of cards and onto ruled, margin-column layouts; the session bar; mono figures for data (spec `2026-11-13-study-desk-layout.md`) | M4 | I-24, I-29 | done |
 
 ### Content runway (one wave per path week; ARCHITECTURE §7)
 
@@ -330,6 +331,20 @@ accept, every recorded reject, the wrong solution on the old and the new tests, 
 run time). `exercise_gate.py variants` has no mismatch, `lint` has no finding, `exercise_audit.py
 seeds` and `mutate` are no worse than at the start. `make test-all` passes.
 
+### I-35 · Study-desk layout refinement
+
+Spec: `docs/superpowers/specs/2026-11-13-study-desk-layout.md`.
+**Owns:** `web/src/styles/**`, `web/src/components/MinutesBar.tsx` and its test, class names and
+presentational markup in `web/src/pages/welcome/**`, `WelcomePage.tsx`, `today/SessionPanel.tsx`,
+`mock/StartPanel.tsx` and `mock/PartTimings.tsx`, one bullet of ENGINEERING_STANDARDS §7, the spec
+above. No API, route, copy, content or test-expectation change.
+**Do:** keep the Memphis identity and the documented fonts; keep frames for objects (editor,
+reading sheet, forms, notes, figures, controls) and set prose, lists and groups of facts open on
+the page with rules and a margin column; draw the session's blocks to scale from real minutes; set
+counts, minutes, dates and ids in the code face; at most one primary button per view.
+**Accept:** `make check` green; no horizontal overflow at 320, 390 and 768 px on every main view;
+before and after screenshots at 1440 and 390 px reviewed.
+
 ## 3. Milestones
 
 
@@ -346,6 +361,43 @@ seeds` and `mutate` are no worse than at the start. `make test-all` passes.
 
 *Newest first. One entry per session or agent: what changed · what was verified (exact commands
 and results) · what's left or blocked.*
+
+### 2026-11-13 · Study-desk layout refinement (agent) · I-35 done
+
+- **Why:** the owner asked that the browser follow the layout language approved for their other
+  projects, in dogma's own theme: frames for objects only, prose and lists open on the page, data
+  set as instrument output, restrained and purposeful motion. A refinement, not a rebrand.
+- **Changed:** Start here is six numbered sections with names in a margin column and ink rules
+  between them; the five session blocks, the six places and the glossary are ruled lists; "Skip to
+  Today" and "Go to Today" are links, so "Try the first problem" is the one primary button. Today's
+  session plan sits open under a rule with a ruled, numbered block table; the transition note and
+  the close form keep the outlined Memphis frame. New `MinutesBar` draws the session's blocks to
+  scale from their real minutes on both pages. Page headings lost their lavender box for an ink
+  rule. Topic cards on Map, Progress and the problem index are ledger rows; Progress's three
+  figures are a ruled strip; readiness lists, test rows and filters are ruled, not boxed. The
+  header's study week and the sidebar motto are no longer capsules or cards. Minutes, counts,
+  dates, topic ids and test labels use JetBrains Mono. Standards §7 gained one bullet; the spec is
+  `docs/superpowers/specs/2026-11-13-study-desk-layout.md`.
+- **Kept on purpose:** OpenDyslexic Bold as the interface font and Inter for Markdown (§7), so no
+  serif display voice and no tracked uppercase labels; static illustrations; the Problem page's
+  two white panels, editor, tabs and the Run/Submit buttons; the review card and all forms; the
+  palette and every token value. The Memphis spec's outlined, offset surfaces on Today and Start
+  here now sit on objects only; the spec file says where this narrows it.
+- **Verified:** `make check` exit 0 (Python suite, strict mypy, import contracts, all 175 topics
+  verified, biome, tsc, 190 Vitest tests in 34 files, generated API current, production build,
+  audit clean). Three new `MinutesBar` tests. The built app was served by
+  `web/tests/e2e/serve.py` on a scratch data root (the learner's `var/` and `workspace/` were not
+  used) and every main view was captured before and after at 1440 and 390 px, plus a Run result
+  on the vector-projection problem. Measured page overflow is 0 px at 320, 390 and 768 px on
+  Start here, Today, the problem index, the problem page (with and without the guide strip), Map,
+  Review, Mock and Progress.
+- **Not verified / left:** the Playwright suite (`pnpm test:e2e`) could not run because its
+  Chromium build is not installed on this machine; run `pnpm --dir web exec playwright install
+  chromium` and `make test-all` before relying on it. The open-mock, score-form and debrief
+  screens, a failed and a passed Submit, the timed re-solve window and the review card with a due
+  card were not screenshotted (their styles are unchanged except the planned-timings list). Checks
+  used Chromium (Brave) only. `MinutesBar` gives every segment a 1.25rem minimum, so a block
+  under about 6% of a phone-width bar is drawn slightly wider than scale.
 
 ### 2026-11-11 · Real datasets in every problem that takes data · I-33 done
 

@@ -110,6 +110,32 @@ textarea {
   color: var(--color-text-muted);
 }
 
+/* Instrument output: counts, minutes, dates and ids are set in the code face so digits align. */
+.figure {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+/* A secondary action is a link with an arrow, not a second button. */
+.action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.8rem;
+  font-size: var(--text-sm);
+}
+
+.action-link::after {
+  content: "\2192";
+  transition: transform var(--transition);
+}
+
+.action-link:hover::after {
+  transform: translateX(3px);
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -189,12 +215,10 @@ textarea {
 }
 
 .study-week {
-  color: var(--color-text-muted);
+  color: var(--color-text);
   font-size: var(--text-sm);
-  padding: var(--space-1) var(--space-3);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  border-radius: 999px;
+  padding-left: var(--space-5);
+  border-left: var(--rule);
   max-width: 100%;
   overflow-wrap: anywhere;
 }
@@ -216,11 +240,9 @@ textarea {
 }
 
 .nav__note {
-  margin: auto var(--space-1) var(--space-4);
-  padding: var(--space-5) var(--space-4);
-  background: var(--color-coral-soft);
-  border: 1px solid var(--color-outline);
-  border-radius: var(--radius-lg);
+  margin: auto var(--space-3) var(--space-4);
+  padding-top: var(--space-5);
+  border-top: var(--rule-ink);
 }
 
 .nav__note p {
@@ -342,14 +364,10 @@ textarea {
   container-type: inline-size;
   align-items: center;
   justify-content: space-between;
-  min-height: 12rem;
   gap: var(--space-5);
-  padding: var(--space-6) var(--space-7);
+  padding: var(--space-3) 0 var(--space-5);
   margin-bottom: var(--space-6);
-  background: var(--color-hero);
-  border: 1px solid var(--color-hero-line);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
+  border-bottom: var(--rule-ink);
 }
 
 .page-heading__copy {
@@ -366,7 +384,7 @@ textarea {
   margin: 0;
   color: var(--color-text-muted);
   font-size: var(--text-sm);
-  max-width: 55ch;
+  max-width: 52ch;
 }
 
 .eyebrow__line {
@@ -472,7 +490,7 @@ textarea {
   height: 0.65rem;
   border-radius: 50%;
   background: var(--color-accent);
-  border: 2px solid var(--color-hero);
+  border: 2px solid var(--color-bg);
 }
 
 .orbit__point--one {
@@ -554,6 +572,12 @@ textarea {
     justify-content: end;
   }
 
+  .study-week {
+    padding-left: 0;
+    border-left: 0;
+    text-align: right;
+  }
+
   .shell__context-label,
   .shell__mode {
     display: none;
@@ -584,10 +608,6 @@ textarea {
     max-width: min(11rem, 100%);
     font-size: 0.6875rem;
   }
-  .page-heading {
-    padding: var(--space-5);
-    min-height: 11rem;
-  }
   .page-heading__art {
     display: none;
   }
@@ -608,6 +628,65 @@ textarea {
   .nav__link .icon {
     width: 1.1rem;
     height: 1.1rem;
+  }
+}
+
+/* The session bar: a real object on the desk, so it keeps the outlined, offset Memphis frame. */
+.minutes-bar {
+  margin: var(--space-5) 0 var(--space-4);
+  max-width: 46rem;
+}
+
+.minutes-bar__track {
+  display: flex;
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-playful);
+  overflow: hidden;
+  animation: minutes-draw 700ms ease-out both;
+}
+
+.minutes-bar__segment {
+  flex: var(--minutes) 0 0;
+  min-width: 1.25rem;
+  padding: var(--space-2) 0;
+  background: var(--color-violet-soft);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.minutes-bar__segment + .minutes-bar__segment {
+  border-left: 1px solid var(--color-outline);
+}
+
+.minutes-bar__segment:nth-child(3n + 1) {
+  background: var(--color-coral-soft);
+}
+
+.minutes-bar__segment:nth-child(3n) {
+  background: var(--color-cobalt-soft);
+}
+
+.minutes-bar figcaption {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-3);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Drawn once, left to right, the way the session itself runs. */
+@keyframes minutes-draw {
+  from {
+    clip-path: inset(-6px 100% -6px -6px);
+  }
+  to {
+    clip-path: inset(-6px);
   }
 }
 
@@ -695,6 +774,13 @@ kbd {
 .problem__header h1 {
   font-size: clamp(1.5rem, 2.7vw, 2.2rem);
   letter-spacing: -0.035em;
+}
+
+.problem__heading-copy > .muted {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
 }
 
 .problem__layout {
@@ -1042,6 +1128,14 @@ kbd {
 
 .results__running {
   color: var(--color-latent);
+  animation: working 2.4s ease-in-out infinite;
+}
+
+/* The only looping motion in the app: a slow breath while the runner is really working. */
+@keyframes working {
+  50% {
+    opacity: 0.55;
+  }
 }
 
 .verdict__line {
@@ -1093,22 +1187,20 @@ kbd {
   list-style: none;
   margin: var(--space-3) 0 0;
   padding: 0;
-  display: grid;
-  gap: var(--space-2);
+  border-bottom: var(--rule);
 }
 
 .test-row {
   display: grid;
   grid-template-columns: 1.5rem minmax(0, 1fr);
   gap: var(--space-1) var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  background: var(--color-surface);
+  padding: var(--space-2) 0;
+  border-top: var(--rule);
 }
 
 .test-row--fail {
-  border-color: var(--color-error);
+  box-shadow: inset 3px 0 0 var(--color-error);
+  padding-left: var(--space-3);
 }
 
 .test-row__mark {
@@ -1148,23 +1240,19 @@ kbd {
 }
 
 .badge {
+  min-width: 3.6rem;
+  font-family: var(--font-mono);
   font-size: var(--text-sm);
-  padding: 0 var(--space-2);
-  border-radius: 999px;
-  border: 1px solid var(--color-border);
+  font-weight: 600;
   color: var(--color-text-muted);
 }
 
 .badge--public {
-  border-color: var(--color-input);
   color: var(--color-input);
-  background: var(--color-input-soft);
 }
 
 .badge--hidden {
-  border-color: var(--color-latent);
   color: var(--color-latent);
-  background: var(--color-latent-soft);
 }
 
 .results__recorded,
@@ -1242,37 +1330,45 @@ kbd {
   flex: 1;
 }
 
+/* A topic is a ledger row, not a card: its name in the margin column, its facts beside it. */
 .topic-card {
   min-width: 0;
   overflow-wrap: anywhere;
-  padding: var(--space-5);
-  border: 1px solid var(--color-outline);
-  border-radius: var(--radius);
-  background: var(--color-surface);
-  margin-bottom: var(--space-3);
-  box-shadow: 3px 3px 0 var(--color-violet-soft);
-  transition:
-    border-color var(--transition),
-    box-shadow var(--transition);
+  padding-block: var(--space-4);
+  border-top: var(--rule);
 }
 
-.topic-card:hover {
-  border-color: var(--color-accent);
-  box-shadow: 3px 3px 0 var(--color-hero-line);
+/* The track title already draws the rule above its first topic. */
+.problem-catalog__topics > .topic-card:first-child {
+  border-top: 0;
+  padding-top: 0;
 }
 
 .topic-card h3 {
   line-height: 1.7;
+  margin-bottom: var(--space-1);
 }
 
-.problem-catalog__topics {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(23rem, 100%), 1fr));
-  gap: var(--space-4);
+.topic-card > .eyebrow {
+  font-family: var(--font-mono);
+  font-weight: 600;
 }
 
-.problem-catalog__topics .topic-card {
-  margin: 0;
+@media (min-width: 60rem) {
+  .topic-card {
+    display: flow-root;
+  }
+
+  .topic-card > h3,
+  .topic-card > .eyebrow {
+    float: left;
+    clear: left;
+    width: 42%;
+  }
+
+  .topic-card > :not(h3, .eyebrow) {
+    margin-left: 46%;
+  }
 }
 
 .problem-list {
@@ -1282,11 +1378,18 @@ kbd {
 }
 
 .problem-list li {
-  padding-block: var(--space-3);
-  border-top: 1px solid var(--color-border-soft);
+  padding-bottom: var(--space-3);
   font-size: var(--text-sm);
-  display: grid;
-  gap: var(--space-1);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-4);
+}
+
+.problem-list li > .muted {
+  font-family: var(--font-mono);
+  font-weight: 600;
 }
 
 .problem-list a {
